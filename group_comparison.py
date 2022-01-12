@@ -1,7 +1,10 @@
+import os.path
 import glob
 import numpy as np
 import imageio
 from scipy.spatial import cKDTree as ckdtree
+
+home = os.path.expanduser('~')
 
 def get_junctions(ref_junctions):
     """
@@ -65,19 +68,19 @@ def get_intensities(imgfile, nbrs_dict):
 ## TODO: Remove hardcoded paths
 
 # ctrl_brpts frame
-ctrl_ref_junctions = imageio.imread('/home/ashwin/MIAL/aggregation-with-median/Control/avg/brpts/series2-avg_brpts.png')
+ctrl_ref_junctions = imageio.imread(home + '/MIAL/aggregation-with-median/Control/avg/brpts/series2-avg_brpts.png')
 # ctrl_files_dir
-ctrl_files = glob.glob('/home/ashwin/MIAL/live-cell-movies/COSKDEL/COSKDEL/Decon/Series002_decon_converted/std/*')
+ctrl_files = glob.glob(home + '/MIAL/live-cell-movies/COSKDEL/COSKDEL/Decon/Series002_decon_converted/std/*')
 
 # climp_brpts_frame
-climp_ref_junctions = imageio.imread('/home/ashwin/MIAL/aggregation-with-median/Climp/avg/brpts/ClimpSeries1-avg_brpts.png')
+climp_ref_junctions = imageio.imread(home + '/MIAL/aggregation-with-median/Climp/avg/brpts/ClimpSeries1-avg_brpts.png')
 # climp_files_dir
-climp_files = glob.glob('/home/ashwin/MIAL/live-cell-movies/COSKDELCLIMP/COSKDELCLIMP/Decon/Series001_decon_converted/std/*')
+climp_files = glob.glob(home + '/MIAL/live-cell-movies/COSKDELCLIMP/COSKDELCLIMP/Decon/Series001_decon_converted/std/*')
 
 # rtn_brpts_frame
-rtn_ref_junctions = imageio.imread('/home/ashwin/MIAL/aggregation-with-median/RTN/avg/brpts/RTNSeries4-avg_brpts.png')
+rtn_ref_junctions = imageio.imread(home + '/MIAL/aggregation-with-median/RTN/avg/brpts/RTNSeries4-avg_brpts.png')
 # rtn_files_dir
-rtn_files = glob.glob('/home/ashwin/MIAL/live-cell-movies/COSKDELRTN/COSKDELRTN/Decon/Series004_decon_converted/std/*')
+rtn_files = glob.glob(home + '/MIAL/live-cell-movies/COSKDELRTN/COSKDELRTN/Decon/Series004_decon_converted/std/*')
 
 
 
