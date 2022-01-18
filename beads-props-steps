@@ -1,6 +1,6 @@
-MATLAB Steps for beads properties
+# MATLAB Steps for beads properties
 
-img = imread('')
+img = imread('/localhome/asa420/MIAL/processed_samples/1/Series005_decon/Series005_decon_ch01.tif')
 grimg = im2gray(img);
 thr = multithresh(grimg, 2);
 seg = imquantize(img, thr);
@@ -13,4 +13,6 @@ bw = bwconncomp(beads, 8);
 labeled = labelmatrix(bw);
 props = regionprops('table', labeled, 'Area', 'Circularity', 'ConvexArea', 'ConvexHull', 'Eccentricity', 'EulerNumber', 'MajorAxisLength', 'MaxFeretProperties', 'MinFeretProperties', 'MinorAxisLength', 'Orientation', 'Perimeter');
 
+
+props
 # Further props are possible with passing grayscale image, image intensity specific props
