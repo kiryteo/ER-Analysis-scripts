@@ -14,6 +14,11 @@ beads = double(beads);
 
 bw = bwconncomp(beads, 8);
 labeled = labelmatrix(bw);
-props = regionprops('table', labeled, 'Area', 'Circularity', 'ConvexArea', 'ConvexHull', 'Eccentricity', 'EulerNumber', 'MajorAxisLength', 'MaxFeretProperties', 'MinFeretProperties', 'MinorAxisLength', 'Orientation', 'Perimeter');
+props = regionprops('table', labeled, 'Area', 'Circularity', 'ConvexArea', 'Eccentricity', 'EulerNumber', 'MajorAxisLength', 'MaxFeretProperties', 'MinFeretProperties', 'MinorAxisLength', 'Orientation', 'Perimeter');
 
+%dlmwrite('/localhome/asa420/MIAL/Series005_decon_ch01.txt', props, 'delimiter', ' ');
+
+
+
+writetable(props, '/localhome/asa420/MIAL/Live-STED_Series10_avg.txt');
 % Further props are possible with passing grayscale image, image intensity specific props
