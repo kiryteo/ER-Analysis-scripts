@@ -3,6 +3,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import glob
 
+import pdb
 # Features
 # Index(['Area', 'MajorAxisLength', 'MinorAxisLength', 'Eccentricity',
 #        'Orientation', 'ConvexArea', 'Circularity', 'EulerNumber', 'Perimeter',
@@ -29,56 +30,46 @@ conf_data_8 = pd.read_csv(prefix + '3_23_2021 Control COS7 Paired STED Decon_Ser
 sted_data_8 = pd.read_csv(prefix + '3_23_2021 Control COS7 Paired STED Decon_Series004_decon_ch02_densePER__x707_y2014_coverage42-sted.csv')
 synth_data_8 = pd.read_csv(prefix + '3_23_2021 Control COS7 Paired STED Decon_Series004_decon_ch02_densePER__x707_y2014_coverage42-synth.csv')
 
+df = pd.DataFrame()
+ecc_conf = conf_data_8['Eccentricity']
+ecc_sted = sted_data_8['Eccentricity']
+ecc_synth = synth_data_8['Eccentricity']
+
+# pdb.set_trace()
+
+Eccentricity_series = pd.concat([ecc_conf, ecc_sted, ecc_synth])
+
+df['Eccentricity'] = Eccentricity_series
+df['Modality'] = 'Confocal'
+
+df.reset_index()
+
+df['Modality'].iloc[106:212] = 'STED'
+df['Modality'].iloc[212:] = 'Synthetic STED'
+
+df.reset_index()
+#df['label'] = 'Conf' * len(df['conf']) + 'STED' * len(df['sted']) + 'Synth' * len(df['synth'])
+
+sns.swarmplot(x=df['Modality'],y=df['Eccentricity'])
+plt.suptitle('#Feature across modalities for sample - ...')
+plt.show()
+
+exit()
+
+# sns.swarmplot(x=df['Eccentricity'],y)
+plt.show()
+
+
+exit()
+
 conf_data_9 = pd.read_csv(prefix + '3_23_2021 Control COS7 Paired STED Decon_Series004_decon_ch02_densePER__x725_y1383_coverage30-conf.csv')
 sted_data_9 = pd.read_csv(prefix + '3_23_2021 Control COS7 Paired STED Decon_Series004_decon_ch02_densePER__x725_y1383_coverage30-sted.csv')
 synth_data_9 = pd.read_csv(prefix + '3_23_2021 Control COS7 Paired STED Decon_Series004_decon_ch02_densePER__x725_y1383_coverage30-synth.csv')
 
-# conf_data_10 = pd.read_csv('/localhome/asa420/MIAL/Series010_decon_ch00.csv')
-# sted_data_10 = pd.read_csv('/localhome/asa420/MIAL/Series010_decon_ch01.csv')
-#
-# conf_data_12 = pd.read_csv('/localhome/asa420/MIAL/Series012_decon_ch00.csv')
-# sted_data_12 = pd.read_csv('/localhome/asa420/MIAL/Series012_decon_ch01.csv')
-#
-# conf_data_13 = pd.read_csv('/localhome/asa420/MIAL/Series013_decon_ch00.csv')
-# sted_data_13 = pd.read_csv('/localhome/asa420/MIAL/Series013_decon_ch01.csv')
-#
-# conf_data_14 = pd.read_csv('/localhome/asa420/MIAL/Series014_decon_ch00.csv')
-# sted_data_14 = pd.read_csv('/localhome/asa420/MIAL/Series014_decon_ch01.csv')
-#
-# conf_data_15 = pd.read_csv('/localhome/asa420/MIAL/Series015_decon_ch00.csv')
-# sted_data_15 = pd.read_csv('/localhome/asa420/MIAL/Series015_decon_ch01.csv')
-#
-# conf_data_16 = pd.read_csv('/localhome/asa420/MIAL/Series016_decon_ch00.csv')
-# sted_data_16 = pd.read_csv('/localhome/asa420/MIAL/Series016_decon_ch01.csv')
-#
-# conf_data_17 = pd.read_csv('/localhome/asa420/MIAL/Series017_decon_ch00.csv')
-# sted_data_17 = pd.read_csv('/localhome/asa420/MIAL/Series017_decon_ch01.csv')
-
-# Live cell avg files
-# s2 = pd.read_csv('/localhome/asa420/MIAL/Live_Ctrl_STED_Series2_avg.csv')
-# s3 = pd.read_csv('/localhome/asa420/MIAL/Live_Ctrl_STED_Series3_avg.csv')
-# s4 = pd.read_csv('/localhome/asa420/MIAL/Live_Ctrl_STED_Series4_avg.csv')
-# s5 = pd.read_csv('/localhome/asa420/MIAL/Live_Ctrl_STED_Series5_avg.csv')
-# s6 = pd.read_csv('/localhome/asa420/MIAL/Live_Ctrl_STED_Series6_avg.csv')
-# s7 = pd.read_csv('/localhome/asa420/MIAL/Live_Ctrl_STED_Series7_avg.csv')
-# s8 = pd.read_csv('/localhome/asa420/MIAL/Live_Ctrl_STED_Series8_avg.csv')
-# s9 = pd.read_csv('/localhome/asa420/MIAL/Live_Ctrl_STED_Series9_avg.csv')
 
 sns.set_theme(style="whitegrid")
 
-# MFC3
-# ax = sns.swarmplot(x=conf_data['MinFeretCoordinates_3'], color='red', label='Confocal')
-# ax = sns.swarmplot(x=sted_data['MinFeretCoordinates_3'], color='blue', label='STED')
 
-# Area
-# ax = sns.swarmplot(x=conf_data_14['Perimeter'], color='red', label='Confocal', size=1)
-# ax = sns.swarmplot(x=sted_data_14['Perimeter'], color='blue', label='STED', size=1)
-#
-# plt.legend(loc='upper right')
-# plt.title('Series014_decon Perimeter')
-# plt.show()
-
-# exit()
 
 fig, axes = plt.subplots(1, 3)
 
