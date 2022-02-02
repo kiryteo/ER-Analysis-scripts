@@ -32,44 +32,32 @@ control = 'control-features/'
 rtn = 'rtn-features/'
 climp = 'climp-features/'
 
-prefix_ctrl_r1 = prefix + control + 'Series004/'
+# prefix_ctrl_r1 = prefix + control + 'Series004/'
+prefix_ctrl_r1 = prefix + control
 # prefix_ctrl_r2 = prefix + control + 'Series009/'
 
-prefix_climp_r1 = prefix + climp + 'Series003/'
+# prefix_climp_r1 = prefix + climp + 'Series003/'
+prefix_climp_r1 = prefix + climp
 # prefix_climp_r2 = prefix + climp + 'Series012/'
 
-prefix_rtn_r1 = prefix + rtn + 'Series003/'
+# prefix_rtn_r1 = prefix + rtn + 'Series003/'
+prefix_rtn_r1 = prefix + rtn
 # prefix_rtn_r2 = prefix + rtn + 'Series006/'
 
 ############ Replicate 1 analysis ##########
 
-def load_data(group):
-    data = []
-    if group == 'control':
-        data.append(glob.glob(prefix_ctrl_r1 + '*-conf.csv'))
-        data.append(glob.glob(prefix_ctrl_r1 + '*-sted.csv'))
-        data.append(glob.glob(prefix_ctrl_r1 + '*-synth.csv'))
-        # ctrl_r1_conf_files = glob.glob(prefix_ctrl_r1 + '*-conf.csv')
-        # ctrl_r1_sted_files = glob.glob(prefix_ctrl_r1 + '*-sted.csv')
-        # ctrl_r1_synth_files = glob.glob(prefix_ctrl_r1 + '*-synth.csv')
-    elif group == 'climp':
-        data.append(glob.glob(prefix_climp_r1 + '*-conf.csv'))
-        data.append(glob.glob(prefix_climp_r1 + '*-sted.csv'))
-        data.append(glob.glob(prefix_climp_r1 + '*-synth.csv'))
-        # climp_r1_conf_files = glob.glob(prefix_climp_r1 + '*-conf.csv')
-        # climp_r1_sted_files = glob.glob(prefix_climp_r1 + '*-sted.csv')
-        # climp_r1_synth_files = glob.glob(prefix_climp_r1 + '*-synth.csv')
-    elif group=='rtn':
-        data.append(glob.glob(prefix_rtn_r1 + '*-conf.csv'))
-        data.append(glob.glob(prefix_rtn_r1 + '*-sted.csv'))
-        data.append(glob.glob(prefix_rtn_r1 + '*-synth.csv'))
-        # rtn_r1_conf_files = glob.glob(prefix_rtn_r1 + '*-conf.csv')
-        # rtn_r1_sted_files = glob.glob(prefix_rtn_r1 + '*-sted.csv')
-        # rtn_r1_synth_files = glob.glob(prefix_rtn_r1 + '*-synth.csv')
-    else:
-        print("Currently supported groups: control, climp and rtn. Exiting now.")
-        exit()
-    return
+
+ctrl_r1_conf_files = glob.glob(prefix_ctrl_r1 + '*-conf.csv')
+ctrl_r1_sted_files = glob.glob(prefix_ctrl_r1 + '*-sted.csv')
+ctrl_r1_synth_files = glob.glob(prefix_ctrl_r1 + '*-synth.csv')
+
+climp_r1_conf_files = glob.glob(prefix_climp_r1 + '*-conf.csv')
+climp_r1_sted_files = glob.glob(prefix_climp_r1 + '*-sted.csv')
+climp_r1_synth_files = glob.glob(prefix_climp_r1 + '*-synth.csv')
+
+rtn_r1_conf_files = glob.glob(prefix_rtn_r1 + '*-conf.csv')
+rtn_r1_sted_files = glob.glob(prefix_rtn_r1 + '*-sted.csv')
+rtn_r1_synth_files = glob.glob(prefix_rtn_r1 + '*-synth.csv')
 
 def multigroup_plots(feature):
     climp_conf_r1_feature = []
@@ -153,51 +141,55 @@ for conf, sted, synth in zip(rtn_r1_conf_files, rtn_r1_sted_files, rtn_r1_synth_
     sted_rtn_r1_feature += list(sted_data)
     synth_rtn_r1_feature += list(synth_data)
 
+#####################################################
+############## replicate wise analysis ##############
+#####################################################
 
-ctrl_r2_conf_files = glob.glob(prefix_ctrl_r2 + '*-conf.csv')
-ctrl_r2_sted_files = glob.glob(prefix_ctrl_r2 + '*-sted.csv')
-ctrl_r2_synth_files = glob.glob(prefix_ctrl_r2 + '*-synth.csv')
 
-climp_r2_conf_files = glob.glob(prefix_climp_r2 + '*-conf.csv')
-climp_r2_sted_files = glob.glob(prefix_climp_r2 + '*-sted.csv')
-climp_r2_synth_files = glob.glob(prefix_climp_r2 + '*-synth.csv')
+# ctrl_r2_conf_files = glob.glob(prefix_ctrl_r2 + '*-conf.csv')
+# ctrl_r2_sted_files = glob.glob(prefix_ctrl_r2 + '*-sted.csv')
+# ctrl_r2_synth_files = glob.glob(prefix_ctrl_r2 + '*-synth.csv')
+#
+# climp_r2_conf_files = glob.glob(prefix_climp_r2 + '*-conf.csv')
+# climp_r2_sted_files = glob.glob(prefix_climp_r2 + '*-sted.csv')
+# climp_r2_synth_files = glob.glob(prefix_climp_r2 + '*-synth.csv')
+#
+# rtn_r2_conf_files = glob.glob(prefix_rtn_r2 + '*-conf.csv')
+# rtn_r2_sted_files = glob.glob(prefix_rtn_r2 + '*-sted.csv')
+# rtn_r2_synth_files = glob.glob(prefix_rtn_r2 + '*-synth.csv')
+#
+# conf_climp_r2_feature = []
+# conf_ctrl_r2_feature = []
+# conf_rtn_r2_feature = []
+#
+# sted_climp_r2_feature = []
+# sted_ctrl_r2_feature = []
+# sted_rtn_r2_feature = []
+#
+# synth_climp_r2_feature = []
+# synth_ctrl_r2_feature = []
+# synth_rtn_r2_feature = []
 
-rtn_r2_conf_files = glob.glob(prefix_rtn_r2 + '*-conf.csv')
-rtn_r2_sted_files = glob.glob(prefix_rtn_r2 + '*-sted.csv')
-rtn_r2_synth_files = glob.glob(prefix_rtn_r2 + '*-synth.csv')
-
-conf_climp_r2_feature = []
-conf_ctrl_r2_feature = []
-conf_rtn_r2_feature = []
-
-sted_climp_r2_feature = []
-sted_ctrl_r2_feature = []
-sted_rtn_r2_feature = []
-
-synth_climp_r2_feature = []
-synth_ctrl_r2_feature = []
-synth_rtn_r2_feature = []
-
-for r1synth, r2synth in zip(climp_r1_synth_files, climp_r2_synth_files):
-    r1data = pd.read_csv(r1synth)['MajorAxisLength']
-    r2data = pd.read_csv(r2synth)['MajorAxisLength']
-
-    synth_climp_r1_feature += list(r1data)
-    synth_climp_r2_feature += list(r2data)
-
-for r1conf, r2conf in zip(ctrl_r1_synth_files, ctrl_r2_synth_files):
-    r1data = pd.read_csv(r1conf)['MajorAxisLength']
-    r2data = pd.read_csv(r2conf)['MajorAxisLength']
-
-    synth_ctrl_r1_feature += list(r1data)
-    synth_ctrl_r2_feature += list(r2data)
-
-for r1conf, r2conf in zip(rtn_r1_synth_files, rtn_r2_synth_files):
-    r1data = pd.read_csv(r1conf)['MajorAxisLength']
-    r2data = pd.read_csv(r2conf)['MajorAxisLength']
-
-    synth_rtn_r1_feature += list(r1data)
-    synth_rtn_r2_feature += list(r2data)
+# for r1synth, r2synth in zip(climp_r1_synth_files, climp_r2_synth_files):
+#     r1data = pd.read_csv(r1synth)['MajorAxisLength']
+#     r2data = pd.read_csv(r2synth)['MajorAxisLength']
+#
+#     synth_climp_r1_feature += list(r1data)
+#     synth_climp_r2_feature += list(r2data)
+#
+# for r1conf, r2conf in zip(ctrl_r1_synth_files, ctrl_r2_synth_files):
+#     r1data = pd.read_csv(r1conf)['MajorAxisLength']
+#     r2data = pd.read_csv(r2conf)['MajorAxisLength']
+#
+#     synth_ctrl_r1_feature += list(r1data)
+#     synth_ctrl_r2_feature += list(r2data)
+#
+# for r1conf, r2conf in zip(rtn_r1_synth_files, rtn_r2_synth_files):
+#     r1data = pd.read_csv(r1conf)['MajorAxisLength']
+#     r2data = pd.read_csv(r2conf)['MajorAxisLength']
+#
+#     synth_rtn_r1_feature += list(r1data)
+#     synth_rtn_r2_feature += list(r2data)
 
 # print(np.count_nonzero(climp_synth_r1_feature))
 # print(np.count_nonzero(ctrl_synth_r1_feature))
@@ -213,15 +205,17 @@ df = pd.DataFrame()
 # Feature_series = pd.concat([climp_sted_r1_feature, ctrl_sted_r1_feature, rtn_sted_r1_feature])
 # Feature_list = climp_sted_r1_feature + ctrl_sted_r1_feature + rtn_sted_r1_feature
 
-Feature_list = conf_rtn_r1_feature + sted_rtn_r1_feature + synth_rtn_r1_feature
-Feature_list = conf_rtn_r1_feature + sted_rtn_r1_feature + synth_rtn_r1_feature
+# Feature_list = conf_rtn_r1_feature + sted_rtn_r1_feature + synth_rtn_r1_feature
+# Feature_list = conf_climp_r1_feature + sted_climp_r1_feature + synth_climp_r1_feature
+Feature_list = conf_ctrl_r1_feature + sted_ctrl_r1_feature + synth_ctrl_r1_feature
+# Feature_list = conf_rtn_r1_feature + sted_rtn_r1_feature + synth_rtn_r1_feature
 
 # Feature_list = synth_rtn_r1_feature + synth_rtn_r2_feature
 df['Feature'] = pd.Series(Feature_list)
 
-conf_list = ['Confocal'] * len(conf_rtn_r1_feature)
-sted_list = ['STED'] * len(sted_rtn_r1_feature)
-synth_list = ['Synthetic'] * len(synth_rtn_r1_feature)
+conf_list = ['Confocal'] * len(conf_ctrl_r1_feature)
+sted_list = ['STED'] * len(sted_ctrl_r1_feature)
+synth_list = ['Synthetic'] * len(synth_ctrl_r1_feature)
 
 # r1list = ['replicate 1'] * len(synth_rtn_r1_feature)
 # r2list = ['replicate 2'] * len(synth_rtn_r2_feature)
@@ -232,10 +226,10 @@ df['Modality'] = pd.Series(conf_list + sted_list + synth_list)
 df.reset_index()
 
 sns.set_theme(style="whitegrid")
-plt.yscale("log") # For Area feature
+# plt.yscale("log") # For Area feature
 sns.stripplot(x=df['Modality'], y=df['Feature'])
 # plt.legend(loc='upper right')
-plt.suptitle('MajorAxisLength feature values across multiple modalities in RTN group for all samples in replicate 1')
+plt.suptitle('MajorAxisLength feature values across multiple modalities in Control group for all samples')
 # plt.suptitle('MajorAxisLength feature values across Synthetic STED modality in RTN group for all samples in replicate 1 Vs. replicate 2')
 plt.show()
 
