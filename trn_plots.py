@@ -227,7 +227,10 @@ df.reset_index()
 
 sns.set_theme(style="whitegrid")
 # plt.yscale("log") # For Area feature
-sns.stripplot(x=df['Modality'], y=df['Feature'])
+# sns.stripplot(y=df['Modality'], x=df['Feature'])
+# sns.swarmplot(y=df['Modality'], x=df['Feature'])
+sns.boxplot(y=df['Modality'], x=df['Feature'])
+# sns.violinplot(y=df['Modality'], x=df['Feature'])
 # plt.legend(loc='upper right')
 plt.suptitle('MajorAxisLength feature values across multiple modalities in Control group for all samples')
 # plt.suptitle('MajorAxisLength feature values across Synthetic STED modality in RTN group for all samples in replicate 1 Vs. replicate 2')

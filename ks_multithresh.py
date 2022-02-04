@@ -282,7 +282,8 @@ def apply_multithreshold(img, thresholds):
 #     plt.show()
 
 
-def test_thresholds(img, odir, basename):
+# def test_thresholds(img, odir, basename):
+def test_thresholds(img):
     """Runs all the package thresholding algorithms on the input
     image with default parameters and plot the results.
 
@@ -293,41 +294,42 @@ def test_thresholds(img, odir, basename):
     # Applying global entropy Kapur multi-trehshold method
     # start = default_timer()
     threshold_KM = kapur_multithreshold(img, 2)
-    fname_KM = join(odir, "%s_entropyKapurMultiTh.jpg" % basename)
+    # fname_KM = join(odir, "%s_entropyKapurMultiTh.jpg" % basename)
     KM_output = apply_multithreshold(img, threshold_KM)
-    cv2.imwrite(fname_KM, KM_output)
+    # cv2.imwrite(fname_KM, KM_output)
 
     # Applying local Singh method
     # start = default_timer()
     threshold_SM = singh_threshold(img)
-    fname_SM = join(odir, "%s_singh.jpg" % basename)
+    # fname_SM = join(odir, "%s_singh.jpg" % basename)
     SM_output = apply_threshold(img, threshold_SM)
-    cv2.imwrite(fname_SM, SM_output)
+    # cv2.imwrite(fname_SM, SM_output)
 
-    zeros = np.where(KM==0)
+    zeros = np.where(KM_output==0)
     SM_output[zeros] = 0
 
-    multithresh_op = join(odir, "%s_beads.png" % basename)
-    cv2.imwrite(multithresh_op, SM_output)
+    # multithresh_op = join(odir, "%s_beads.png" % basename)
+    # cv2.imwrite(multithresh_op, SM_output)
+    return SM_output
 
 
 # def test_thresholds_main():
-if __name__ == '__main__':
-    """Main entry point for the test thresholds script"""
-
-    # Parsing arguments
-    ap = argparse.ArgumentParser()
-    ap.add_argument("-i", "--image", required=True, help="Input image")
-    ap.add_argument("-o", "--out_dir", required=True, help="Output directory")
-    args = ap.parse_args()
-
-    # Reading image
-    img = cv2.imread(args.image, 0)
-
-    if img is None:
-        print("Invalid input image")
-        exit()
-
-    img_name = basename(args.image).split(".")[0]
-
-    test_thresholds(img, args.out_dir, img_name)
+# if __name__ == '__main__':
+#     """Main entry point for the test thresholds script"""
+#
+#     # Parsing arguments
+#     ap = argparse.ArgumentParser()
+#     ap.add_argument("-i", "--image", required=True, help="Input image")
+#     ap.add_argument("-o", "--out_dir", required=True, help="Output directory")
+#     args = ap.parse_args()
+#
+#     # Reading image
+#     img = cv2.imread(args.image, 0)
+#
+#     if img is None:
+#         print("Invalid input image")
+#         exit()
+#
+#     img_name = basename(args.image).split(".")[0]
+#
+#     test_thresholds(img, args.out_dir, img_name)
