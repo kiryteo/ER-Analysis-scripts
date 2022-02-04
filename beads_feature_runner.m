@@ -1,14 +1,10 @@
 % Running loop for directories
 
-
-
-rtndir = '/localhome/asa420/Documents/ER-Full-data/FixedCell_for_Ashwin/FixedCell_for_Ashwin/numpys/rtn-beads/';
-files = dir(fullfile(rtndir));
-
-files
+beads_dir = '/localhome/asa420/Documents/ER-Full-data/FixedCell_for_Ashwin/FixedCell_for_Ashwin/numpys/climp-beads/';
+files = dir(fullfile(beads_dir));
 
 for k = 3:length(files)
     basefile = files(k).name;
-    fullfname = fullfile(rtndir, basefile);
+    fullfname = fullfile(beads_dir, basefile);
     ks_multithresh_beads(fullfname);
 end

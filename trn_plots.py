@@ -16,90 +16,84 @@ import pdb
 
 # Fixed cell data
 
-# prefix = '/localhome/asa420/Documents/ER-Full-data/FixedCell_for_Ashwin/FixedCell_for_Ashwin/numpys/'
-#
-# climp_conf_files = glob.glob(prefix + 'climp-features/*-conf.csv')
-# climp_sted_files = glob.glob(prefix + 'climp-features/*-sted.csv')
-# climp_synth_files = glob.glob(prefix + 'climp-features/*-synth.csv')
-#
-# exit()
-
-#Climp replicates -
-#Control
 
 prefix = '/localhome/asa420/Documents/ER-Full-data/FixedCell_for_Ashwin/FixedCell_for_Ashwin/numpys/'
 control = 'control-features/'
 rtn = 'rtn-features/'
 climp = 'climp-features/'
 
-# prefix_ctrl_r1 = prefix + control + 'Series004/'
-prefix_ctrl_r1 = prefix + control
-# prefix_ctrl_r2 = prefix + control + 'Series009/'
+def multimodal_plots():
+    pass
 
-# prefix_climp_r1 = prefix + climp + 'Series003/'
-prefix_climp_r1 = prefix + climp
-# prefix_climp_r2 = prefix + climp + 'Series012/'
-
-# prefix_rtn_r1 = prefix + rtn + 'Series003/'
-prefix_rtn_r1 = prefix + rtn
-# prefix_rtn_r2 = prefix + rtn + 'Series006/'
-
-############ Replicate 1 analysis ##########
+def multigroup_plots():
+    pass
 
 
-ctrl_r1_conf_files = glob.glob(prefix_ctrl_r1 + '*-conf.csv')
-ctrl_r1_sted_files = glob.glob(prefix_ctrl_r1 + '*-sted.csv')
-ctrl_r1_synth_files = glob.glob(prefix_ctrl_r1 + '*-synth.csv')
+prefix_control = prefix + control
+prefix_climp = prefix + climp
+prefix_rtn = prefix + rtn
 
-climp_r1_conf_files = glob.glob(prefix_climp_r1 + '*-conf.csv')
-climp_r1_sted_files = glob.glob(prefix_climp_r1 + '*-sted.csv')
-climp_r1_synth_files = glob.glob(prefix_climp_r1 + '*-synth.csv')
 
-rtn_r1_conf_files = glob.glob(prefix_rtn_r1 + '*-conf.csv')
-rtn_r1_sted_files = glob.glob(prefix_rtn_r1 + '*-sted.csv')
-rtn_r1_synth_files = glob.glob(prefix_rtn_r1 + '*-synth.csv')
+# grp_modal_files
 
-def multigroup_plots(feature):
-    climp_conf_r1_feature = []
-    ctrl_conf_r1_feature = []
-    rtn_conf_r1_feature = []
+def load_data(group, modality):
+    if group == 'control':
+        pref = prefix_control
+    elif group == 'climp':
+        pref = prefix_climp
+    elif group == 'rtn':
+        pref = prefix_rtn
+    else:
+        print("Only control, climp, rtn groups supported.")
+        return
+    return glob.glob(pref + '*-' + modality + '.csv')
 
-    climp_sted_r1_feature = []
-    ctrl_sted_r1_feature = []
-    rtn_sted_r1_feature = []
+def get_features(group, modality, feature):
+    group_modality_files = load_data(group, modality)
+    group_modality_feature = []
+    for group in group_modality_files:
+        group_modality_data = pd.read_csv(group)[feature]
+        group_modality_feature += list(group_modality_data)
+    return group_modality_feature
 
-    climp_synth_r1_feature = []
-    ctrl_synth_r1_feature = []
-    rtn_synth_r1_feature = []
+control_conf_ft = get_features('control', 'conf', 'Area')
+control_sted_ft = get_features('control', 'sted', 'Area')
+control_synth_ft = get_features('control', 'synth', 'Area')
 
-    for climp, ctrl, rtn in zip(climp_r1_conf_files, ctrl_r1_conf_files, rtn_r1_conf_files):
-        climp_conf_data = pd.read_csv(climp)[feature]
-        ctrl_conf_data = pd.read_csv(ctrl)[feature]
-        rtn_conf_data = pd.read_csv(rtn)[feature]
+def create_plots():
+    df = pd.DataFrame()
+    # Feature_list = climp_synth_r1_feature + ctrl_synth_r1_feature + rtn_synth_r1_feature
 
-        climp_conf_r1_feature += list(climp_conf_data)
-        ctrl_conf_r1_feature += list(ctrl_conf_data)
-        rtn_conf_r1_feature += list(rtn_conf_data)
+    # Feature_list = conf_climp_r1_feature + sted_climp_r1_feature + synth_climp_r1_feature
+    # Feature_list = conf_ctrl_r1_feature + sted_ctrl_r1_feature + synth_ctrl_r1_feature
+    Feature_list = conf_rtn_r1_feature + sted_rtn_r1_feature + synth_rtn_r1_feature
 
-    for climp, ctrl, rtn in zip(climp_r1_sted_files, ctrl_r1_sted_files, rtn_r1_sted_files):
-        climp_sted_data = pd.read_csv(climp)[feature]
-        ctrl_sted_data = pd.read_csv(ctrl)[feature]
-        rtn_sted_data = pd.read_csv(rtn)[feature]
+    # Feature_list = synth_rtn_r1_feature + synth_rtn_r2_feature
+    df['Feature'] = pd.Series(Feature_list)
 
-        climp_sted_r1_feature += list(climp_sted_data)
-        ctrl_sted_r1_feature += list(ctrl_sted_data)
-        rtn_sted_r1_feature += list(rtn_sted_data)
+    # climp_list = ['Climp'] * len(climp_synth_r1_feature)
+    # ctrl_list = ['Control'] * len(ctrl_synth_r1_feature)
+    # rtn_list = ['RTN'] * len(rtn_synth_r1_feature)
 
-    for climp, ctrl, rtn in zip(climp_r1_synth_files, ctrl_r1_synth_files, rtn_r1_synth_files):
-        climp_synth_data = pd.read_csv(climp)[feature]
-        ctrl_synth_data = pd.read_csv(ctrl)[feature]
-        rtn_synth_data = pd.read_csv(rtn)[feature]
+    conf_list = ['Confocal'] * len(conf_rtn_r1_feature)
+    sted_list = ['STED'] * len(sted_rtn_r1_feature)
+    synth_list = ['Synthetic'] * len(synth_rtn_r1_feature)
 
-        climp_synth_r1_feature += list(climp_synth_data)
-        ctrl_synth_r1_feature += list(ctrl_synth_data)
-        rtn_synth_r1_feature += list(rtn_synth_data)
+    # df['Group'] = pd.Series(climp_list + ctrl_list + rtn_list)
+    df['Modality'] = pd.Series(conf_list + sted_list + synth_list)
 
-# def get_features(group, modality, feature):
+    df.reset_index()
+    sns.set_theme(style="whitegrid")
+    # plt.yscale("log") # For Area feature
+    # sns.stripplot(y=df['Modality'], x=df['Feature'])
+    # sns.swarmplot(y=df['Modality'], x=df['Feature'])
+    sns.boxplot(y=df['Group'], x=df['Feature'])
+    # sns.violinplot(y=df['Modality'], x=df['Feature'])
+    # plt.legend(loc='upper right')
+    plt.suptitle('Eccentricity feature values across multiple groups in Synthetic STED modality for all samples')
+    # plt.suptitle('MajorAxisLength feature values across Synthetic STED modality in RTN group for all samples in replicate 1 Vs. replicate 2')
+    plt.show()
+
 
 
 conf_climp_r1_feature = []
@@ -204,23 +198,29 @@ for conf, sted, synth in zip(rtn_r1_conf_files, rtn_r1_sted_files, rtn_r1_synth_
 df = pd.DataFrame()
 # Feature_series = pd.concat([climp_sted_r1_feature, ctrl_sted_r1_feature, rtn_sted_r1_feature])
 # Feature_list = climp_sted_r1_feature + ctrl_sted_r1_feature + rtn_sted_r1_feature
+Feature_list = climp_synth_r1_feature + ctrl_synth_r1_feature + rtn_synth_r1_feature
 
-# Feature_list = conf_rtn_r1_feature + sted_rtn_r1_feature + synth_rtn_r1_feature
+
 # Feature_list = conf_climp_r1_feature + sted_climp_r1_feature + synth_climp_r1_feature
-Feature_list = conf_ctrl_r1_feature + sted_ctrl_r1_feature + synth_ctrl_r1_feature
+# Feature_list = conf_ctrl_r1_feature + sted_ctrl_r1_feature + synth_ctrl_r1_feature
 # Feature_list = conf_rtn_r1_feature + sted_rtn_r1_feature + synth_rtn_r1_feature
 
 # Feature_list = synth_rtn_r1_feature + synth_rtn_r2_feature
 df['Feature'] = pd.Series(Feature_list)
 
-conf_list = ['Confocal'] * len(conf_ctrl_r1_feature)
-sted_list = ['STED'] * len(sted_ctrl_r1_feature)
-synth_list = ['Synthetic'] * len(synth_ctrl_r1_feature)
+climp_list = ['Climp'] * len(climp_synth_r1_feature)
+ctrl_list = ['Control'] * len(ctrl_synth_r1_feature)
+rtn_list = ['RTN'] * len(rtn_synth_r1_feature)
+
+# conf_list = ['Confocal'] * len(conf_rtn_r1_feature)
+# sted_list = ['STED'] * len(sted_rtn_r1_feature)
+# synth_list = ['Synthetic'] * len(synth_rtn_r1_feature)
 
 # r1list = ['replicate 1'] * len(synth_rtn_r1_feature)
 # r2list = ['replicate 2'] * len(synth_rtn_r2_feature)
 
-df['Modality'] = pd.Series(conf_list + sted_list + synth_list)
+df['Group'] = pd.Series(climp_list + ctrl_list + rtn_list)
+# df['Modality'] = pd.Series(conf_list + sted_list + synth_list)
 # df['Replicate'] = pd.Series(r1list + r2list)
 
 df.reset_index()
@@ -229,10 +229,10 @@ sns.set_theme(style="whitegrid")
 # plt.yscale("log") # For Area feature
 # sns.stripplot(y=df['Modality'], x=df['Feature'])
 # sns.swarmplot(y=df['Modality'], x=df['Feature'])
-sns.boxplot(y=df['Modality'], x=df['Feature'])
+sns.boxplot(y=df['Group'], x=df['Feature'])
 # sns.violinplot(y=df['Modality'], x=df['Feature'])
 # plt.legend(loc='upper right')
-plt.suptitle('MajorAxisLength feature values across multiple modalities in Control group for all samples')
+plt.suptitle('Eccentricity feature values across multiple groups in Synthetic STED modality for all samples')
 # plt.suptitle('MajorAxisLength feature values across Synthetic STED modality in RTN group for all samples in replicate 1 Vs. replicate 2')
 plt.show()
 
@@ -242,7 +242,7 @@ exit()
 # synth_data_8 = pd.read_csv(prefix + '3_23_2021 Control COS7 Paired STED Decon_Series004_decon_ch02_densePER__x707_y2014_coverage42-synth.csv')
 
 
-ecc_conf = conf_data_8['MaxFeretDiameter']
+ecc_conf = conf_data_8['Eccentricity']
 ecc_sted = sted_data_8['Eccentricity']
 ecc_synth = synth_data_8['Eccentricity']
 
