@@ -133,4 +133,17 @@ def multigrp_plots(modality, feature):
     plt.show()
 
 # multimodal_plots('rtn', 'Area')
-multigrp_plots('synth', 'Area')
+# multigrp_plots('synth', 'Area')
+
+from scipy.stats import mannwhitneyu
+
+# def stat_tests(group, feature):
+#     conf_ft = get_features(group, 'conf', feature)
+#     sted_ft = get_features(group, 'sted', feature)
+#
+#     print(conf_ft[4])
+#
+#     U1, p = mannwhitneyu(conf_ft, sted_ft)
+#     print(U1)
+
+# stat_tests('control', 'Area')
