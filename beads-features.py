@@ -19,6 +19,8 @@ home = os.path.expanduser('~')
 # path to data
 prefix = home + '/Documents/ER-Full-data/FixedCell_for_Ashwin/FixedCell_for_Ashwin/numpys/'
 
+prefix = home + '/localhome/asa420/MIAL/data-Feb4-Guang/RTN2'
+
 def get_beads(group, modality):
 
     # path to npy files with images for all modalities
