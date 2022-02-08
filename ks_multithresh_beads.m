@@ -11,7 +11,7 @@ fname_ext = series_name(end);
 fname = split(fname_ext, '.');
 new_fname = strcat(fname(1), '.csv');
 
-prefix = '/localhome/asa420/Documents/ER-Full-data/FixedCell_for_Ashwin/FixedCell_for_Ashwin/numpys/climp-features/';
+prefix = '/localhome/asa420/Documents/CROP/RTN-beads/';
 
 name = strcat(prefix, new_fname{1});
 writetable(props, name);
