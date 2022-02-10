@@ -58,7 +58,8 @@ def get_features(group, modality, feature):
     group_modality_feature = []
     for group in group_modality_files:
         group_modality_data = pd.read_csv(group)[feature]
-        group_modality_feature += list(group_modality_data)
+        # group_modality_feature += list(group_modality_data)
+        group_modality_feature += [x/25 for x in group_modality_data]
     return group_modality_feature
 
 
@@ -154,11 +155,12 @@ def multigrp_plots(modality, feature):
 
     # sns.violinplot(y=df['Modality'], x=df['Feature'])
     # plt.legend(loc='upper right')
-    plt.xlabel('MajorAxisLength of beads', size=14)
+    plt.xlabel('Area of beads', size=14)
     plt.suptitle(feature + ' feature values across multiple groups in ' + modality + ' modality for all samples (PlosBio data)')
     plt.show()
 
 # multimodal_plots('rtn', 'Area')
+# multigrp_plots('STED', 'Area')
 multigrp_plots('STED', 'MajorAxisLength')
 
 # from scipy.stats import mannwhitneyu
