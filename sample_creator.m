@@ -1,8 +1,10 @@
-function op = create_samples(filename, brname)
+function op = create_samples(filename, brname, thname)
 
 [Rootname, Path, ~] = ExtractRootName(filename);
 
 img = imread(filename);
+
+
 %grimg = im2gray(img);
 %bead_fname = [Path Rootname '_beads.png'];
 %brpts_fname = [Path Rootname '_brpts.png'];
@@ -12,19 +14,27 @@ img = imread(filename);
 
 opname = [Path Rootname '_overlay.png'];
 
-beads = imread(brname);
+junctions = imread(brname);
 %beads = imread(brpts_fname);
+cluster = imread(thname);
 
-rgb_beads = cat(3, beads, beads, beads);
+rgb_junc = cat(3, junctions, junctions, junctions);
+%rgb_beads = cat(3, beads, beads, beads);
 rgb_img = cat(3, img, img, img);
+rgb_cl = cat(3, cluster, cluster, cluster);
 
 rgb_img(:,:,1) = 0;
 rgb_img(:,:,3) = 0;
-rgb_beads(:,:,2) = 0;
+%rgb_beads(:,:,2) = 0;
+rgb_junc(:,:,2) = 0;
+rgb_cl(:,:,2) = 0;
 
-overlay = imfuse(rgb_img, rgb_beads);
+%overlay = imfuse(rgb_img, rgb_beads);
+overlay1 = imfuse(rgb_img, rgb_junc);
+overlay2 = imfuse(rgb_img, rgb_cl);
 
-mon = montage({rgb_img, rgb_beads, overlay}, 'size', [1 3], 'BorderSize', [1 1], 'BackgroundColor', 'white');
+%mon = montage({rgb_img, rgb_beads, overlay}, 'size', [1 3], 'BorderSize', [1 1], 'BackgroundColor', 'white');
+mon = montage({rgb_img, rgb_junc, overlay1, rgb_cl, overlay2}, 'size', [1 5], 'BorderSize', [1 1], 'BackgroundColor', 'white');
 mon_im = mon.CData;
 imwrite(mon_im, opname);
 
@@ -55,5 +65,6 @@ end
 %for i=1:1
 %name = ['/localhome/asa420/MIAL/aggregation-with-median/Climp/max/ClimpSeries' int2str(i) '-max.png'];
 %bname = ['/localhome/asa420/MIAL/aggregation-with-median/Climp/Climp-brpts' int2str(i) '-max.png'];
-%sample_creator(name, bname);
+%thname = ['/localhome/asa420/MIAL/aggregation-with-median/Climp/Climp-brpts' int2str(i) '-avg-th-norm.png'];
+%sample_creator(name, bname, thname);
 %end
