@@ -2,6 +2,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import glob
+import os
 
 # Features
 # Index(['Area', 'MajorAxisLength', 'MinorAxisLength', 'Eccentricity',
@@ -15,7 +16,9 @@ import glob
 
 # Fixed cell data
 
-prefix = '/localhome/asa420/Documents/ER-Full-data/FixedCell_for_Ashwin/FixedCell_for_Ashwin/numpys/'
+home = os.path.expanduser('~')
+
+prefix = home + '/Documents/ER-Full-data/FixedCell_for_Ashwin/FixedCell_for_Ashwin/numpys/'
 
 climp_conf_files = glob.glob(prefix + 'climp-features/*-conf.csv')
 climp_sted_files = glob.glob(prefix + 'climp-features/*-sted.csv')
@@ -131,7 +134,7 @@ plt.show()
 
 exit()
 
-prefix = '/localhome/asa420/Documents/ER-Full-data/FixedCell_for_Ashwin/FixedCell_for_Ashwin/numpys/control-features/'
+prefix = home + '/Documents/ER-Full-data/FixedCell_for_Ashwin/FixedCell_for_Ashwin/numpys/control-features/'
 
 conf_data_8 = pd.read_csv(prefix + '3_23_2021 Control COS7 Paired STED Decon_Series004_decon_ch02_densePER__x707_y2014_coverage42-conf.csv')
 sted_data_8 = pd.read_csv(prefix + '3_23_2021 Control COS7 Paired STED Decon_Series004_decon_ch02_densePER__x707_y2014_coverage42-sted.csv')

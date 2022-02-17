@@ -4,8 +4,12 @@ import copy
 import matplotlib.pyplot as plt
 import cv2
 
+import os
+
+home = os.path.expanduser('~')
+
 for i in range(3, 11):
-    path = '/localhome/asa420/MIAL/aggregation-with-median/'
+    path = home + '/MIAL/aggregation-with-median/'
     avg_junc = imageio.imread(path + 'Climp/Climp-brpts{0}-avg.png'.format(str(i)))
     vals = np.unique(avg_junc)
 

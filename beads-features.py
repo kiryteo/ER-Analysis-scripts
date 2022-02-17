@@ -13,7 +13,6 @@ import ks_multithresh
 import cv2
 import scipy.io
 
-
 home = os.path.expanduser('~')
 
 # path to data

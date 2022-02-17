@@ -1,6 +1,9 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import os
+
+home = os.path.expanduser('~')
 
 # Features
 # Index(['Area', 'MajorAxisLength', 'MinorAxisLength', 'Eccentricity',

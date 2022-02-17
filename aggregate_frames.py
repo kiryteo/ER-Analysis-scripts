@@ -9,7 +9,7 @@ from scipy import stats
 home = os.path.expanduser('~')
 
 def Aggregate():
-    path = '/localhome/asa420/MIAL/live-cell-movies/COSKDELRTN/COSKDELRTN/Decon/'
+    path = home + '/MIAL/live-cell-movies/COSKDELRTN/COSKDELRTN/Decon/'
     for i in range(12, 13):
         # dirc = glob.glob(path + 'Series%s_decon_converted/std/*'%(f'{i:03d}'))
         dirc = glob.glob(path + 'Series%s_decon_converted/brpts/*'%(f'{i:03d}'))

@@ -4,6 +4,10 @@ import matplotlib.pyplot as plt
 import glob
 import numpy as np
 import pdb
+import os
+
+home = os.path.expanduser('~')
+
 # Features
 # Index(['Area', 'MajorAxisLength', 'MinorAxisLength', 'Eccentricity',
 #        'Orientation', 'ConvexArea', 'Circularity', 'EulerNumber', 'Perimeter',
@@ -27,7 +31,7 @@ import pdb
 #Climp replicates -
 #Control
 
-prefix = '/localhome/asa420/Documents/ER-Full-data/FixedCell_for_Ashwin/FixedCell_for_Ashwin/numpys/'
+prefix = home + '/Documents/ER-Full-data/FixedCell_for_Ashwin/FixedCell_for_Ashwin/numpys/'
 control = 'control-features/'
 rtn = 'rtn-features/'
 climp = 'climp-features/'
