@@ -12,6 +12,3 @@ for i=1:numel(s)
   mon_im = mon.CData;
   imwrite(mon_im, opname);
 end
-
-%/localhome/asa420/MIAL/live-cell-movies/COSKDELRTN/COSKDELRTN/Decon/Series001_decon_converted/files
-%/localhome/asa420/MIAL/live-cell-movies/COSKDELRTN/COSKDELRTN/Decon/Series001_decon_converted/files/

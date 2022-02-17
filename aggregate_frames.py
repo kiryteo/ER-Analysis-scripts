@@ -7,16 +7,15 @@ from scipy import stats
 
 
 home = os.path.expanduser('~')
+path = home + '/MIAL/live-cell-movies/COSKDELRTN/COSKDELRTN/Decon/'
 
-def Aggregate():
-    path = home + '/MIAL/live-cell-movies/COSKDELRTN/COSKDELRTN/Decon/'
+def Aggregate(path):
     for i in range(12, 13):
         # dirc = glob.glob(path + 'Series%s_decon_converted/std/*'%(f'{i:03d}'))
         dirc = glob.glob(path + 'Series%s_decon_converted/brpts/*'%(f'{i:03d}'))
         imgstack = []
         img_avg = np.zeros((128, 128))
 
-        # print(dirc)
         for each in dirc:
             img = imageio.imread(each)
             img_avg += img
