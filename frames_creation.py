@@ -29,21 +29,68 @@ def skvideo_creator():
 def cv2_creator(num):
 	fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 	# video = cv2.VideoWriter('STED-RTN-Series%s.mp4'%(f'{num:03d}'), fourcc, 1, (1182, 740)) # 8 images in the frame
-	video = cv2.VideoWriter('RTN-Series%s.mp4'%(f'{num:03d}'), fourcc, 1, (1926, 642))
+	# video = cv2.VideoWriter('RTN-Series%s.mp4'%(f'{num:03d}'), fourcc, 1, (1926, 642))
+	video = cv2.VideoWriter('Climp-MP-Series%s.mp4'%(f'{num:03d}'), fourcc, 1, (1930, 386))
 
 	for j in range(100):
-		img = cv2.imread('/localhome/asa420/MIAL/live-cell-movies/COSKDELRTN/COSKDELRTN/Decon/Series%s_decon_converted_skel_frames/Series%s_decon_converted_t%s_ch00.tif_mean_skel.tif'%(f'{num:03d}',f'{num:03d}',f'{j:02d}'))
+		img = cv2.imread('/localhome/asa420/MIAL/live-cell-movies/COSKDELCLIMP/COSKDELCLIMP/Decon/Series%s_decon_converted_MeanProjection_frames/Series%s_decon_converted_t%s_ch00.tif_mean_skel.tif'%(f'{num:03d}',f'{num:03d}',f'{j:02d}'))
 		video.write(img)
 
 	cv2.destroyAllWindows()
 	video.release()
 
-for i in range(7, 17):
-	cv2_creator(i)
+# for i in range(3, 11):
+# 	cv2_creator(i)
 
 # exit()
 
 # /home/ashwin/MIAL/aggregation-with-median/Control/avg/overlay/ControlSeries2-overlay_skel_brpts.png
+
+def frame_creator():
+	prefix = '/localhome/asa420/Desktop/ATL/'
+	for i in range(1, 27):
+		for j in range(100):
+			std = prefix + 'std/A%s_decon_t0%s_ch00_std.png'%(f'{i}',f'{j:02d}')
+			# enh = prefix + 'Series%s_decon_converted/enh/Series%s_decon_converted_t%s_ch00_std_enhance.png'%(f'{j:03d}',f'{j:03d}',f'{i:02d}')
+			skel = prefix + 'skel/A%s_decon_t0%s_ch00_skel.png'%(f'{i}',f'{j:02d}')
+			brpts = prefix + 'brpts/A%s_decon_t0%s_ch00_skel_brpts.png'%(f'{i}',f'{j:02d}')
+			overlay = prefix + 'overlay/A%s_decon_t0%s_ch00_skel_br_overlay.png'%(f'{i}',f'{j:02d}')
+			# avgframe = '/home/ashwin/MIAL/aggregation-with-median/Control/avg/series%s-avg.png'%(str(j))
+			# mxframe = '/home/ashwin/MIAL/aggregation-with-median/Control/max/series%s-max.png'%(str(j))
+			# medframe = '/home/ashwin/MIAL/aggregation-with-median/Control/median/series%s-median.png'%(str(j))
+
+
+			fig = plt.figure(figsize=(12,9))
+			plt.title('Confocal-ATL-Series%s-frame%s'%(f'{i}',f'{j:02d}'), size=18)
+			plt.axis('off')
+			r, c = 1, 4
+
+			fig.add_subplot(r, c, 1)
+			plt.imshow(cv2.imread(std))
+			plt.axis('off')
+			plt.title('Input')
+
+			fig.add_subplot(r, c, 2)
+			plt.imshow(cv2.imread(skel))
+			plt.axis('off')
+			plt.title('Skeleton')
+
+			fig.add_subplot(r, c, 3)
+			plt.imshow(cv2.imread(brpts))
+			plt.axis('off')
+			plt.title('Junctions')
+
+			fig.add_subplot(r, c, 4)
+			plt.imshow(cv2.imread(overlay))
+			plt.axis('off')
+			plt.title('Skeleton + Junctions')
+
+			plt.savefig(prefix + 'frames/A%s_frame%s.png'%(f'{i}',f'{j:02d}'), bbox_inches='tight', pad_inches=0.1)
+			plt.close()
+
+frame_creator()
+
+exit()
 
 def frame_create():
 	for i in range(2, 17):
