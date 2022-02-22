@@ -5,12 +5,69 @@ import turtle
 import cv2
 import numpy as np
 
-import matplotlib.pyplot as plt
 from matplotlib.patches import Circle
-
+import copy
 
 import matplotlib.pyplot as plt
 from skimage import draw
+
+
+def create_circles(junctions, overlay_image, radius):
+    for x, y in zip(junctions[0], junctions[1]):
+        rr, cc = draw.circle_perimeter(x, y, radius=radius, shape=(128, 128))
+        for a, b in zip(rr, cc):
+            overlay_image[a, b] = [0, 255, 255]
+    return overlay_image
+
+
+prefix = '/localhome/asa420/Desktop/Climp/'
+
+
+def create_overlay(total_series, num_frames):
+    for series in range(1, total_series):
+        for frame in range(num_frames):
+            skel = cv2.imread(
+                prefix + 'skel/C%s/C%s_decon_t0%s_ch00_skel.png' \
+				% (f'{series}', f'{series}', f'{frame:02d}'))
+            brpts = cv2.imread(
+                prefix + 'brpts/C%s/C%s_decon_t0%s_ch00_skel_brpts.png' \
+				% (f'{series}', f'{series}', f'{frame:02d}'))
+
+            junctions = np.where(brpts[:, :, 2] == 255)
+            skel = np.where(skel[:, :, 2] == 255)
+
+            overlay_image = copy.deepcopy(skel)
+
+            # rr, cc = draw.circle_perimeter(20, 33, radius=3, shape=arr.shape)
+            # print(bg.shape)
+            # for x, y in zip(junctions[0], junctions[1]):
+            # 	rr, cc = draw.circle_perimeter(x, y, radius=2, shape=(128, 128))
+            # 	for a, b in zip(rr, cc):
+            # 		skel[a,b] = [0,255,255]
+            overlay_op = create_circles(junctions, overlay_image, radius)
+
+            imageio.imwrite(prefix + 'overlay/C%s/C%s_decon_t0%s_ch00_skel_br_overlay.png' % (
+                f'{series}', f'{series}', f'{frame:02d}'), skel)
+
+
+def pil_blend():
+    bg = Image.open('/media/ashwin/Ashwin/live-cell-movies/COSKDEL/COSKDEL/Decon/\
+					Series002_decon_converted/enh/Series002_decon_converted_t00_\
+					ch00_std_enhance_skel.png').convert('RGBA')
+    fg = Image.open('/media/ashwin/Ashwin/live-cell-movies/COSKDEL/COSKDEL/Decon/\
+					Series002_decon_converted/brpts/Series002_decon_converted_t00\
+					_ch00_std_enhance_brpts.png').convert('RGBA')
+    op = Image.blend(bg, fg, 0.5)
+    imageio.imwrite('newov.png', op)
+
+######## Overlay - fuse in matlab
+
+# mask1 = abs(m(:,3)-m(:,1))<0.8;
+# mask2 = abs(m(:,3)-m(:,2))>0.3;
+# mask3 = abs(m(:,2)-m(:,1))>0.3;
+# mask = mask1 & mask2 & mask3;
+# m(mask,:) = 1-m(mask,:);
+# rgb = ind2rgb(I,m);
 
 
 # arr = np.zeros((200, 200))
@@ -28,53 +85,3 @@ from skimage import draw
 #     t.goto(x,y-r) #-r because we want xy as center and Turtles starts from border
 #     t.pd()
 #     t.circle(r)
-
-prefix = '/localhome/asa420/Desktop/Climp/'
-
-
-for i in range(1, 32):
-	for j in range(100):
-		bg = cv2.imread(prefix + 'skel/C%s/C%s_decon_t0%s_ch00_skel.png'%(f'{i}',f'{i}',f'{j:02d}'))
-		fg = cv2.imread(prefix + 'brpts/C%s/C%s_decon_t0%s_ch00_skel_brpts.png'%(f'{i}',f'{i}',f'{j:02d}'))
-
-		# bg = cv2.imread(prefix + 'skel/Ct%s/img_%s_decon_t0%s_skel.png'%(f'{i}',f'{i}',f'{j:02d}'))
-		# fg = cv2.imread(prefix + 'brpts/Ct%s/img_%s_decon_t0%s_skel_brpts.png'%(f'{i}',f'{i}',f'{j:02d}'))
-
-		junctions = np.where(fg[:,:,2]==255)
-		skel = np.where(bg[:,:,2]==255)
-
-		# rr, cc = draw.circle_perimeter(20, 33, radius=3, shape=arr.shape)
-		# print(bg.shape)
-		for x, y in zip(junctions[0], junctions[1]):
-			rr, cc = draw.circle_perimeter(x, y, radius=2, shape=(128, 128))
-			for a, b in zip(rr, cc):
-				bg[a,b] = [0,255,255]
-
-		# bg[rr, cc] = [255,0,255]
-		# bg[skel] = [0,255,255]
-		# fg[junctions] = [255,0,255]
-
-		# bg[junctions] = [255,0,255]
-
-		# op = Image.blend(Image.fromarray(bg), Image.fromarray(fg), 0.8)
-		imageio.imwrite(prefix + 'overlay/C%s/C%s_decon_t0%s_ch00_skel_br_overlay.png'%(f'{i}',f'{i}',f'{j:02d}'), bg)
-		# imageio.imwrite(prefix + 'overlay/Ct%s/img_%s_decon_t0%s_skel_br_overlay.png'%(f'{i}',f'{i}',f'{j:02d}'), bg)
-
-exit()
-
-bg = Image.open('/media/ashwin/Ashwin/live-cell-movies/COSKDEL/COSKDEL/Decon/Series002_decon_converted/enh/Series002_decon_converted_t00_ch00_std_enhance_skel.png').convert('RGBA')
-fg = Image.open('/media/ashwin/Ashwin/live-cell-movies/COSKDEL/COSKDEL/Decon/Series002_decon_converted/brpts/Series002_decon_converted_t00_ch00_std_enhance_brpts.png').convert('RGBA')
-op = Image.blend(bg, fg, 0.5)
-
-imageio.imwrite('newov.png', op)
-
-
-
-######## Overlay - fuse in matlab
-
-# mask1 = abs(m(:,3)-m(:,1))<0.8;
-# mask2 = abs(m(:,3)-m(:,2))>0.3;
-# mask3 = abs(m(:,2)-m(:,1))>0.3;
-# mask = mask1 & mask2 & mask3;
-# m(mask,:) = 1-m(mask,:);
-# rgb = ind2rgb(I,m);

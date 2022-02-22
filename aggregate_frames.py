@@ -10,17 +10,9 @@ home = os.path.expanduser('~')
 # path = home + '/MIAL/live-cell-movies/COSKDELRTN/COSKDELRTN/Decon/'
 path = home + '/Desktop/RTN/skel/'
 
-def get_mean_projection(img):
-    
-
-def get_max_projection(img):
-    pass
-
-
 def Agg(path):
     for i in range(1, 30):
         files = glob.glob(path + 'R%s/*'%(f'{i}'))
-        # print(files[:4])
         imgstack = []
         img_mean = np.zeros((128, 128))
         for each in files:
