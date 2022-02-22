@@ -10,10 +10,10 @@ home = os.path.expanduser('~')
 # path = home + '/MIAL/live-cell-movies/COSKDELRTN/COSKDELRTN/Decon/'
 path = home + '/Desktop/RTN/skel/'
 
-def get_mean_projection():
-    pass
+def get_mean_projection(img):
+    
 
-def get_max_projection():
+def get_max_projection(img):
     pass
 
 
