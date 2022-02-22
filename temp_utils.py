@@ -6,10 +6,10 @@ import numpy
 home = os.path.expanduser('~')
 
 def dirmaker():
-    for i in range(1, 32):
+    for i in range(1, 30):
         # os.makedirs(home + '/Desktop/RTN/skel/R' + str(i))
         # os.makedirs(home + '/Desktop/RTN/brpts/R' + str(i))
-        os.makedirs(home + '/Desktop/Climp/overlay/C' + str(i))
+        os.makedirs(home + '/Desktop/RTN/frames/R' + str(i))
         # os.rename(home + '/Desktop/Climp/brpts/A' + str(i), home + '/Desktop/Climp/brpts/C' + str(i))
         # pref = home + '/Desktop/Climp/brpts/A%s'
 
@@ -40,8 +40,6 @@ def file_rename():
         name = each.split('/')[-1]
         ncomps = name.split('.')
         newname = dir + ncomps[0] + '_' + ncomps[1] + '.' + ncomps[2]
-        # print(newname)
-        # break
         os.rename(each, newname)
 
 def file_move():
@@ -56,9 +54,6 @@ def file_move():
         for tfile in files:
             shutil.move(tfile, newdir)
         # print(files)
-
-# file_move()
-
 
 
 def normalize(img):

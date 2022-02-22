@@ -12,51 +12,61 @@ import os
 import glob
 import scipy
 
-
+home = os.path.expanduser('~')
 
 def standardize_image(img):
     std_img = img - np.min(img) / (np.max(img) - np.min(img))
     return std_img
 
-# dire = glob.glob('/localhome/asa420/Desktop/ATL/files/*')
-# for each in dire:
-#     standardize_image(each)
+def thresh_image(img, threshold=12, max_value=255):
+    return pcv.threshold.binary(gray_img=img, threshold=threshold, max_value=max_value)
 
-# enhanced_image = subprocess.run(['matlab', '-nodesktop', '-nosplash', '-nodisplay', '-r "Vessel2d(\'/localhome/asa420/MIAL/std_img0.png\');exit;" '], stdout=subprocess.PIPE)
+def get_skel(img):
+    return pcv.morphology.skeletonize(mask=img)
 
-# exit()
+def get_brpts(img):
+    return pcv.morphology.find_branch_pts(skel_img=img)
+
+def dilate_brpts(img):
+    return pcv.dilate(gray_img=img, ksize=3, i=1)
+
+def get_tubules(img):
+    thr = thresh_image(img)
+    skel = get_skel(thr)
+    brpts = get_brpts(skel)
+    return skel - brpts
+
+def create_image(img, fname):
+    pcv.print_image(img=img, filename=fname)
 
 def network_extraction(file):
     img, path, filename = pcv.readimage(file)
-    # std_img = standardize_image(img)
+    std_img = standardize_image(img)
     # pcv.print_image(img=std_img, filename=file.split('.')[0] + '_std.png')
-    # thresh = pcv.threshold.binary(gray_img=std_img, threshold=12, max_value=255)
-    # skel = pcv.morphology.skeletonize(mask=thresh)
-    # pcv.print_image(img=skel, filename='')
-    branchpts = pcv.morphology.find_branch_pts(skel_img=img)
-    # pcv.print_image(img=branchpts, filename=file.split('.')[0] + '_brpts.png')
-    pcv.print_image(img=branchpts, filename= '/localhome/asa420/Desktop/Climp/brpts/' + file.split('.')[0].split('/')[-1] + '_brpts.png')
+    thresh = thresh_image(std_img)
+    skeleton = get_skel(thresh)
+    branchpts = get_brpts(skeleton)
+
+    pcv.print_image(img=branchpts, filename= home + '/Desktop/Climp/brpts/' + file.split('.')[0].split('/')[-1] + '_brpts.png')
 
     # fname = file.split('.')[0] + '_skel.png'
     # pcv.print_image(img=skel, filename=fname)
 
-files = glob.glob('/localhome/asa420/Desktop/Climp/skel/*')
+# files = glob.glob('/localhome/asa420/Desktop/Climp/skel/*')
 
-for each in files:
-    network_extraction(each)
-
-
-
-exit()
-
-def enhance_image():
-    for i in range(11, 12):
-        for j in range(13, 100):
-            enhanced_image = subprocess.run(['matlab', '-nodesktop', '-nosplash', '-nodisplay', '-r "Vessel2d(\'/localhome/asa420/Desktop/RTN/std/Series%s_decon_converted/std/Series%s_decon_converted_t%s_ch00_std.png\');exit;" '%(f'{i:03d}', f'{i:03d}', f'{j:02d}')], stdout=subprocess.PIPE)
+# for each in files:
+#     network_extraction(each)
 
 
-# enhance_image()
-# exit()
+def vessel_enhance(fname):
+    return subprocess.run(['matlab', '-nodesktop', '-nosplash', '-nodisplay', '-r "Vessel2d(\'/localhome/asa420/Desktop/RTN/std/Series%s_decon_converted/std/Series%s_decon_converted_t%s_ch00_std.png\');exit;" '%(f'{i:03d}', f'{i:03d}', f'{j:02d}')], stdout=subprocess.PIPE)
+
+# def enhance_image():
+#     for i in range(11, 12):
+#         for j in range(13, 100):
+#             enhanced_image = subprocess.run(['matlab', '-nodesktop', '-nosplash', '-nodisplay', '-r "Vessel2d(\'/localhome/asa420/Desktop/RTN/std/Series%s_decon_converted/std/Series%s_decon_converted_t%s_ch00_std.png\');exit;" '%(f'{i:03d}', f'{i:03d}', f'{j:02d}')], stdout=subprocess.PIPE)
+
+# enhanced_image = subprocess.run(['matlab', '-nodesktop', '-nosplash', '-nodisplay', '-r "Vessel2d(\'/localhome/asa420/MIAL/std_img0.png\');exit;" '], stdout=subprocess.PIPE)
 
 # Get skeleton
 def skeleton_processing(file):
@@ -80,22 +90,8 @@ def skeleton_processing(file):
 
 # enh1 = glob.glob('/localhome/asa420/MIAL/live-cell-movies/COSKDEL/COSKDEL/Decon/Series004_decon_converted/enh/*')
 
-skeleton_processing('/localhome/asa420/MIAL/aggregation-with-median/Climp/avg/ClimpSeries1-avg_enhance.png')
+# skeleton_processing('/localhome/asa420/MIAL/aggregation-with-median/Climp/avg/ClimpSeries1-avg_enhance.png')
 
-# direc = glob.glob('/localhome/asa420/MIAL/aggregation-with-median/Climp/median/*')
-# for each in direc:
-#     skeleton_processing(each)
-
-exit()
-
-
-for i in range(10, 17):
-    enh = glob.glob('/localhome/asa420/MIAL/live-cell-movies/COSKDELRTN/COSKDELRTN/Decon/Series%s_decon_converted/enh/*'%(f'{i:03d}'))
-    for each in enh:
-        skeleton_processing(each)
-
-
-exit()
 
 
 def label_tubules():

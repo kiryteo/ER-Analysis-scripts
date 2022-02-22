@@ -68,28 +68,6 @@ op = Image.blend(bg, fg, 0.5)
 
 imageio.imwrite('newov.png', op)
 
-# import matplotlib.pyplot as plt
-# plt.imshow(op)
-# plt.show()
-
-# import imageio
-# imageio.imwrite('/home/ashwin/MIAL/blob-analysis/selection.png', op)
-# import imageio
-
-# img = imageio.imread('/home/ashwin/MIAL/blob-analysis/selection.png')
-# import numpy as np
-
-# print(np.unique(img))
-
-# import copy
-# new = copy.deepcopy(img)
-
-# new[np.where(img==81)] = 220
-
-# new[np.where(img==92)] = 255
-
-# imageio.imwrite('/home/ashwin/MIAL/blob-analysis/selection-enh-2.png', new)
-
 
 
 ######## Overlay - fuse in matlab
