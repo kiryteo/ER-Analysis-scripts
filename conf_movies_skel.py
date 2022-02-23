@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import os
 import glob
 import scipy
+import cv2
 
 home = os.path.expanduser('~')
 
@@ -42,21 +43,31 @@ def create_image(img, fname):
 def network_extraction(file):
     img, path, filename = pcv.readimage(file)
     std_img = standardize_image(img)
-    # pcv.print_image(img=std_img, filename=file.split('.')[0] + '_std.png')
-    thresh = thresh_image(std_img)
-    skeleton = get_skel(thresh)
-    branchpts = get_brpts(skeleton)
+    pcv.print_image(img=std_img, filename=file.split('.')[0] + '_std.png')
+    # thresh = thresh_image(std_img)
+    # skeleton = get_skel(thresh)
+    # branchpts = get_brpts(skeleton)
 
-    pcv.print_image(img=branchpts, filename= home + '/Desktop/Climp/brpts/' + file.split('.')[0].split('/')[-1] + '_brpts.png')
+    # pcv.print_image(img=branchpts, filename= home + '/Desktop/Climp/brpts/' + file.split('.')[0].split('/')[-1] + '_brpts.png')
 
     # fname = file.split('.')[0] + '_skel.png'
     # pcv.print_image(img=skel, filename=fname)
 
-# files = glob.glob('/localhome/asa420/Desktop/Climp/skel/*')
+def adapt_hist(file):
+    img, path, filename = pcv.readimage(file)
+    clahe = cv2.createCLAHE(clipLimit=5.0, tileGridSize=(8,8))
+    op = clahe.apply(img)
+    pcv.print_image(img=op, filename=file.split('.')[0] + '_adj.png')
+
+files = glob.glob('/localhome/asa420/Desktop/Climp/files/*_ch01_std.png')
 
 # for each in files:
 #     network_extraction(each)
 
+for each in files:
+    adapt_hist(each)
+
+exit()
 
 def vessel_enhance(fname):
     return subprocess.run(['matlab', '-nodesktop', '-nosplash', '-nodisplay', '-r "Vessel2d(\'/localhome/asa420/Desktop/RTN/std/Series%s_decon_converted/std/Series%s_decon_converted_t%s_ch00_std.png\');exit;" '%(f'{i:03d}', f'{i:03d}', f'{j:02d}')], stdout=subprocess.PIPE)

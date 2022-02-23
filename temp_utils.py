@@ -6,28 +6,30 @@ import numpy
 home = os.path.expanduser('~')
 
 def dirmaker():
-    for i in range(1, 30):
+    for i in range(1, 32):
         # os.makedirs(home + '/Desktop/RTN/skel/R' + str(i))
         # os.makedirs(home + '/Desktop/RTN/brpts/R' + str(i))
-        os.makedirs(home + '/Desktop/RTN/frames/R' + str(i))
+        os.makedirs(home + '/Desktop/Climp/mcherry/C' + str(i))
         # os.rename(home + '/Desktop/Climp/brpts/A' + str(i), home + '/Desktop/Climp/brpts/C' + str(i))
         # pref = home + '/Desktop/Climp/brpts/A%s'
 
-# dirmaker()
-#
+dirmaker()
+
 # exit()
 
+
 def mover():
-    dr2 = '/localhome/asa420/Desktop/RTN/brpts/'
-    dr1 = '/localhome/asa420/Desktop/RTN/skel/'
+    dr = '/localhome/asa420/Desktop/Climp/'
+    # dr1 = '/localhome/asa420/Desktop/RTN/skel/'
     # files = glob.glob(dr + '*_skel_brpts.png')
-    for i in range(1, 30):
+    for i in range(1, 32):
         for j in range(100):
-            fname_sk = dr1 + 'R%s_decon_t0%s_ch00_skel.png'%(f'{i}',f'{j:02d}')
-            fname_br = dr2 + 'R%s_decon_t0%s_ch00_skel_brpts.png'%(f'{i}',f'{j:02d}')
-            # fname = dr + 'C%s_decon_t0%s_ch00_skel.png'%(f'{i}',f'{j:02d}')
-            shutil.move(fname_sk, dr1 + 'R%s'%(f'{i}'))
-            shutil.move(fname_br, dr2 + 'R%s'%(f'{i}'))
+            # fname_sk = dr1 + 'R%s_decon_t0%s_ch00_skel.png'%(f'{i}',f'{j:02d}')
+            # fname_br = dr2 + 'R%s_decon_t0%s_ch00_skel_brpts.png'%(f'{i}',f'{j:02d}')
+            fname = dr + 'files/C%s_decon_t0%s_ch01_std_adj.png'%(f'{i}',f'{j:02d}')
+            # shutil.move(fname_sk, dr1 + 'R%s'%(f'{i}'))
+            # shutil.move(fname_br, dr2 + 'R%s'%(f'{i}'))
+            shutil.move(fname, dr + 'mcherry/C%s/'%(f'{i}'))
 
 mover()
 

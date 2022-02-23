@@ -1,8 +1,10 @@
-function op = create_samples(filename, brname, thname)
+%function op = create_samples(filename, brname, thname)
+function op = create_samples(skname, juncname)
 
-[Rootname, Path, ~] = ExtractRootName(filename);
+%[Rootname, Path, ~] = ExtractRootName(filename);
+[Rootname, Path, ~] = ExtractRootName(skname);
 
-img = imread(filename);
+%img = imread(filename);
 
 
 %grimg = im2gray(img);
@@ -12,29 +14,41 @@ img = imread(filename);
 %brpts_fname = '/localhome/asa420/MIAL/aggregation-with-median/Control/max/Ctrl-brpts5-max.png';
 
 
-opname = [Path Rootname '_overlay.png'];
+opname = [Path Rootname '_NW_mean_junc_max.png'];
 
-junctions = imread(brname);
+%junctions = imread(brname);
 %beads = imread(brpts_fname);
-cluster = imread(thname);
+%cluster = imread(thname);
 
-rgb_junc = cat(3, junctions, junctions, junctions);
+mean_skel = imread(skname);
+mean_junc = imread(juncname);
+
+%rgb_junc = cat(3, junctions, junctions, junctions);
 %rgb_beads = cat(3, beads, beads, beads);
-rgb_img = cat(3, img, img, img);
-rgb_cl = cat(3, cluster, cluster, cluster);
+%rgb_img = cat(3, img, img, img);
+%rgb_cl = cat(3, cluster, cluster, cluster);
 
-rgb_img(:,:,1) = 0;
-rgb_img(:,:,3) = 0;
+rgb_mean_skel = cat(3, mean_skel, mean_skel, mean_skel);
+rgb_mean_junc = cat(3, mean_junc, mean_junc, mean_junc);
+
+%rgb_img(:,:,1) = 0;
+%rgb_img(:,:,3) = 0;
+
+rgb_mean_skel(:,:,1) = 0;
+rgb_mean_skel(:,:,3) = 0;
+rgb_mean_junc(:,:,2) = 0;
 %rgb_beads(:,:,2) = 0;
-rgb_junc(:,:,2) = 0;
-rgb_cl(:,:,2) = 0;
+%rgb_junc(:,:,2) = 0;
+%rgb_cl(:,:,2) = 0;
 
 %overlay = imfuse(rgb_img, rgb_beads);
-overlay1 = imfuse(rgb_img, rgb_junc);
-overlay2 = imfuse(rgb_img, rgb_cl);
+%overlay1 = imfuse(rgb_img, rgb_junc);
+%overlay2 = imfuse(rgb_img, rgb_cl);
+overlay = imfuse(rgb_mean_skel, rgb_mean_junc);
 
 %mon = montage({rgb_img, rgb_beads, overlay}, 'size', [1 3], 'BorderSize', [1 1], 'BackgroundColor', 'white');
-mon = montage({rgb_img, rgb_junc, overlay1, rgb_cl, overlay2}, 'size', [1 5], 'BorderSize', [1 1], 'BackgroundColor', 'white');
+%mon = montage({rgb_img, rgb_junc, overlay1, rgb_cl, overlay2}, 'size', [1 5], 'BorderSize', [1 1], 'BackgroundColor', 'white');
+mon = montage({overlay}, 'size', [1 1]);
 mon_im = mon.CData;
 imwrite(mon_im, opname);
 

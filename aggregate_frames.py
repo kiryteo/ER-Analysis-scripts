@@ -8,22 +8,24 @@ from plantcv import plantcv as pcv
 
 home = os.path.expanduser('~')
 # path = home + '/MIAL/live-cell-movies/COSKDELRTN/COSKDELRTN/Decon/'
-path = home + '/Desktop/RTN/skel/'
+path = home + '/Desktop/Climp/brpts/'
+
+
 
 def Agg(path):
-    for i in range(1, 30):
-        files = glob.glob(path + 'R%s/*'%(f'{i}'))
+    for i in range(30, 32):
+        files = glob.glob(path + 'C%s/*'%(f'{i}'))
         imgstack = []
         img_mean = np.zeros((128, 128))
         for each in files:
             img = imageio.imread(each)
             img_mean += img
             imgstack.append(img)
-        pcv.print_image(img=img_mean/len(files), filename=home + '/Desktop/RTN/' + 'R%s-mean.png'%(f'{i}'))
+        pcv.print_image(img=img_mean/len(files), filename=home + '/Desktop/Climp/' + 'C%s-mean-brpts.png'%(f'{i}'))
         # imageio.imwrite(home + '/Desktop/ATL/' + 'A%s-mean.png'%(f'{i}'), img_mean/len(files))
         new = np.stack(imgstack, axis=2)
         maximg = np.amax(new, axis=2)
-        pcv.print_image(img=maximg, filename=home + '/Desktop/RTN/' + 'R%s-max.png'%(f'{i}'))
+        pcv.print_image(img=maximg, filename=home + '/Desktop/Climp/' + 'C%s-max-brpts.png'%(f'{i}'))
         # imageio.imwrite(home + '/Desktop/ATL/' + 'A%s-max.png'%(f'{i}'), maximg)
 
 
