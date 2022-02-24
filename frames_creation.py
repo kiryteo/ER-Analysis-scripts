@@ -5,76 +5,88 @@ import cv2
 home = os.path.expanduser('~')
 
 
-def frame_creator(prefix, total_series, num_frames):
-    prefix = home + '/Desktop/ATL/'
+def frame_creator(total_series, num_frames):
+    prefix = home + '/Desktop/RTN/'
     # for i in range(1, 32):
     # 	for j in range(100):
     for series in range(1, total_series):
         for frame in range(num_frames):
 
-            std = prefix + 'std/A%s_decon_t0%s_ch00_std.png' % (f'{series}', f'{frame:02d}')
-            mcherry = prefix + 'mcherry/A%s/A%s_decon_t0%s_ch01_std_adj.png' % (f'{series}', f'{series}', f'{frame:02d}')
-            skel = prefix + 'skel/A%s/A%s_decon_t0%s_ch00_skel.png' % (f'{series}', f'{series}', f'{frame:02d}')
-            brpts = prefix + 'brpts/A%s/A%s_decon_t0%s_ch00_skel_brpts.png' % (f'{series}', f'{series}', f'{frame:02d}')
-            overlay = prefix + 'overlay/A%s/A%s_decon_t0%s_ch00_skel_br_overlay.png' % (f'{series}', f'{series}', f'{frame:02d}')
-            meanframe = prefix + 'A%s-mean.png' % f'{series}'
+            std = prefix + 'std/Ct%s_decon_t0%s_ch00_std.png' % (f'{series}', f'{frame:02d}')
+            # mcherry = prefix + 'mcherry/R%s/R%s_decon_t0%s_ch01_std_adj.png' % (f'{series}', f'{series}', f'{frame:02d}')
+            skel = prefix + 'skel/Ct%s/Ct%s_decon_t0%s_ch00_skel.png' % (f'{series}', f'{series}', f'{frame:02d}')
+            brpts = prefix + 'brpts/Ct%s/Ct%s_decon_t0%s_ch00_skel_brpts.png' % (f'{series}', f'{series}', f'{frame:02d}')
+            overlay = prefix + 'overlay/Ct%s/Ct%s_decon_t0%s_ch00_skel_br_overlay.png' % (f'{series}', f'{series}', f'{frame:02d}')
+            meanframe = prefix + 'Ct%s-mean.png' % f'{series}'
             # maxframe = prefix + 'Ct%s-max.png' % (f'{series}')
-            mean_br = prefix + 'A%s-mean-brpts.png' % f'{series}'
-            NW_mean_junc_max = prefix + 'A%s-NW_mean_junc_max' % f'{series}'
+            mean_br = prefix + 'Ct%s-mean-brpts.png' % f'{series}'
+            max_br = prefix + 'Ct%s-max-brpts.png' % f'{series}'
+            NW_mean_junc_max = prefix + 'Ct%s-NW_mean_junc_max.png' % f'{series}'
+            # mch_sk_overlay = prefix + 'mcherry/R%s/R%s_decon_t0%s_ch01_std_adj_skel_mcherry_overlay.png' % (f'{series}', f'{series}', f'{frame:02d}')
 
             fig = plt.figure(figsize=(15, 9))
-            plt.title('Confocal-Control-Series%s-frame%s' % (f'{series}', f'{frame:02d}'), size=18)
+            plt.title('Confocal-Ctrl-Series%s-frame%s' % (f'{series}', f'{frame:02d}'), size=18)
             plt.axis('off')
-            r, c = 2, 4
+            r, c = 2, 5
 
             fig.add_subplot(r, c, 1)
             plt.imshow(cv2.imread(std))
             plt.axis('off')
             plt.title('Input')
 
-            fig.add_subplot(r, c, 2)
-            plt.imshow(cv2.imread(mcherry))
-            plt.axis('off')
-            plt.title('MCherry')
+            # fig.add_subplot(r, c, 2)
+            # plt.imshow(cv2.imread(mcherry))
+            # plt.axis('off')
+            # plt.title('MCherry')
 
-            fig.add_subplot(r, c, 3)
+            fig.add_subplot(r, c, 2)
             plt.imshow(cv2.imread(skel))
             plt.axis('off')
             plt.title('Skeleton')
 
-            fig.add_subplot(r, c, 4)
+            # fig.add_subplot(r, c, 4)
+            # plt.imshow(cv2.imread(mch_sk_overlay))
+            # plt.axis('off')
+            # plt.title('MCherry + Skel')
+
+            fig.add_subplot(r, c, 3)
             plt.imshow(cv2.imread(brpts))
             plt.axis('off')
             plt.title('Junctions')
 
-            fig.add_subplot(r, c, 5)
+            fig.add_subplot(r, c, 4)
             plt.imshow(cv2.imread(overlay))
             plt.axis('off')
-            plt.title('Skeleton + Junctions')
+            plt.title('Skel + Junc')
 
-            fig.add_subplot(r, c, 6)
+            fig.add_subplot(r, c, 5)
             plt.imshow(cv2.imread(meanframe))
             plt.axis('off')
-            plt.title('Mean Projection')
+            plt.title('Mean Skel')
 
-            fig.add_subplot(r, c, 7)
+            fig.add_subplot(r, c, 6)
             plt.imshow(cv2.imread(mean_br))
             plt.axis('off')
-            plt.title('Max Projection')
+            plt.title('Mean Junctions')
+
+            fig.add_subplot(r, c, 7)
+            plt.imshow(cv2.imread(max_br))
+            plt.axis('off')
+            plt.title('Max Junctions')
 
             fig.add_subplot(r, c, 8)
             plt.imshow(cv2.imread(NW_mean_junc_max))
             plt.axis('off')
-            plt.title('Max Projection')
+            plt.title('mean skel + max junc')
 
-            plt.savefig(prefix + 'mch-frames/Ct%s/img_%s_frame%s.png' %(f'{series}',\
+            plt.savefig(prefix + 'frames_8/Ct%s/Ct%s_frame%s.png' %(f'{series}',\
 			 			f'{series}', f'{frame:02d}'), bbox_inches='tight',
                         pad_inches=0.1)
             plt.close()
 
-# frame_creator()
+frame_creator(30, 100)
 
-# exit()
+exit()
 
 
 # img = [std, enh, overlay, avgframe, mxframe]

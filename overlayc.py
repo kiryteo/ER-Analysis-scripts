@@ -28,31 +28,24 @@ prefix = '/localhome/asa420/Desktop/Climp/'
 def create_overlay(total_series, num_frames):
     for series in range(1, total_series):
         for frame in range(num_frames):
-            # skel = cv2.imread(
-            #     prefix + 'skel/C%s/C%s_decon_t0%s_ch00_skel.png' \
-			# 	% (f'{series}', f'{series}', f'{frame:02d}'))
-            # brpts = cv2.imread(
-            #     prefix + 'brpts/C%s/C%s_decon_t0%s_ch00_skel_brpts.png' \
-			# 	% (f'{series}', f'{series}', f'{frame:02d}'))
-            skel = cv2.imread(prefix + 'C%s-mean.png')
-            brpts = cv2.imread(prefix + 'C%s-mean-brpts.png')
+            skel = cv2.imread(
+                prefix + 'skel/C%s/C%s_decon_t0%s_ch00_skel.png' \
+				% (f'{series}', f'{series}', f'{frame:02d}'))
+            brpts = cv2.imread(
+                prefix + 'brpts/C%s/C%s_decon_t0%s_ch00_skel_brpts.png' \
+				% (f'{series}', f'{series}', f'{frame:02d}'))
+            # skel = cv2.imread(prefix + 'C%s-mean.png')
+            # brpts = cv2.imread(prefix + 'C%s-mean-brpts.png')
 
-            junctions = np.where(brpts[:, :, 2] == 255)
-            skel = np.where(skel[:, :, 2] == 255)
+            junctions = np.where(brpts[:, :, 2] != 0)
+            # network = np.where(skel[:, :, 2] != 0)
 
             overlay_image = copy.deepcopy(skel)
-
-            # rr, cc = draw.circle_perimeter(20, 33, radius=3, shape=arr.shape)
-            # print(bg.shape)
-            # for x, y in zip(junctions[0], junctions[1]):
-            # 	rr, cc = draw.circle_perimeter(x, y, radius=2, shape=(128, 128))
-            # 	for a, b in zip(rr, cc):
-            # 		skel[a,b] = [0,255,255]
             overlay_op = create_circles(junctions, overlay_image, radius)
 
-            # imageio.imwrite(prefix + 'overlay/C%s/C%s_decon_t0%s_ch00_skel_br_overlay.png' % (
-            #     f'{series}', f'{series}', f'{frame:02d}'), overlay_op)
-            imageio.imwrite(prefix + 'C%s-NW_mean_junc_mean.png', overlay_op)
+            imageio.imwrite(prefix + 'overlay/C%s/C%s_decon_t0%s_ch00_skel_br_overlay.png' % (
+                f'{series}', f'{series}', f'{frame:02d}'), overlay_op)
+            # imageio.imwrite(prefix + 'C%s-NW_mean_junc_mean.png', overlay_op)
 
 def create_overlay_br(total_series):
     for series in range(1, total_series):
