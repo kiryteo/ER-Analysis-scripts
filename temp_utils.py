@@ -6,11 +6,11 @@ import numpy
 home = os.path.expanduser('~')
 
 def dirmaker():
-    for i in range(1, 32):
+    for i in range(1, 30):
         # os.makedirs(home + '/Desktop/RTN/skel/R' + str(i))
         # os.makedirs(home + '/Desktop/RTN/brpts/R' + str(i))
         # os.makedirs(home + '/Desktop/Climp/mcherry/C' + str(i))
-        os.makedirs(home + '/Desktop/Control/frames_8/Ct' + str(i))
+        os.makedirs(home + '/Desktop/RTN/frames_10/R' + str(i))
         # os.rename(home + '/Desktop/Climp/brpts/A' + str(i), home + '/Desktop/Climp/brpts/C' + str(i))
         # pref = home + '/Desktop/Climp/brpts/A%s'
 

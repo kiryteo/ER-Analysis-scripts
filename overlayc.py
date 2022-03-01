@@ -20,19 +20,19 @@ def create_circles(junctions, overlay_image, radius):
     return overlay_image
 
 
-prefix = '/localhome/asa420/Desktop/Climp/'
-
-# /localhome/asa420/Desktop/Climp/C3-mean.png
-
+prefix = '/localhome/asa420/Desktop/RTN/'
 
 def create_overlay(total_series, num_frames):
-    for series in range(1, total_series):
+    for series in range(1, total_series+1):
         for frame in range(num_frames):
-            skel = cv2.imread(
-                prefix + 'skel/C%s/C%s_decon_t0%s_ch00_skel.png' \
-				% (f'{series}', f'{series}', f'{frame:02d}'))
+            mch = cv2.imread(
+                prefix + 'mcherry/R%s/R%s_decon_t0%s_ch01_std_adj.png' % (f'{series}', f'{series}', f'{frame:02d}')
+            )
+            # skel = cv2.imread(
+            #     prefix + 'skel/C%s/C%s_decon_t0%s_ch00_skel.png' \
+			# 	% (f'{series}', f'{series}', f'{frame:02d}'))
             brpts = cv2.imread(
-                prefix + 'brpts/C%s/C%s_decon_t0%s_ch00_skel_brpts.png' \
+                prefix + 'brpts/R%s/R%s_decon_t0%s_ch00_skel_brpts.png' \
 				% (f'{series}', f'{series}', f'{frame:02d}'))
             # skel = cv2.imread(prefix + 'C%s-mean.png')
             # brpts = cv2.imread(prefix + 'C%s-mean-brpts.png')
@@ -40,12 +40,16 @@ def create_overlay(total_series, num_frames):
             junctions = np.where(brpts[:, :, 2] != 0)
             # network = np.where(skel[:, :, 2] != 0)
 
-            overlay_image = copy.deepcopy(skel)
-            overlay_op = create_circles(junctions, overlay_image, radius)
+            overlay_image = copy.deepcopy(mch)
+            overlay_op = create_circles(junctions, overlay_image, radius=1)
 
-            imageio.imwrite(prefix + 'overlay/C%s/C%s_decon_t0%s_ch00_skel_br_overlay.png' % (
+            imageio.imwrite(prefix + 'mch_junc_overlay/R%s/R%s_decon_t0%s_ch00_mch_junc_overlay.png' % (
                 f'{series}', f'{series}', f'{frame:02d}'), overlay_op)
             # imageio.imwrite(prefix + 'C%s-NW_mean_junc_mean.png', overlay_op)
+
+create_overlay(29, 100)
+
+exit()
 
 def create_overlay_br(total_series):
     for series in range(1, total_series):
@@ -77,9 +81,9 @@ def create_overlay_br(total_series):
 
         imageio.imwrite(prefix + 'C%s-NW_mean_junc_max.png' % f'{series}', skel)
 
-create_overlay_br(32)
+#create_overlay_br(32)
 
-exit()
+#exit()
 
 def pil_blend():
 
