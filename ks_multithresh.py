@@ -343,42 +343,42 @@ def _get_variance(hist, c_hist, cdf, thresholds):
     return variance
 
 
-def _get_thresholds(hist, c_hist, cdf, nthrs):
-    """Get the thresholds that maximize the variance between regions
-
-    @param hist: The normalized histogram of the image
-    @type hist: ndarray
-    @param c_hist: The normalized histogram of the image
-    @type c_hist: ndarray
-    @param cdf: The cummulative distribution function of the histogram
-    @type cdf: ndarray
-    @param nthrs: The number of thresholds
-    @type nthrs: int
-    """
-    # Thresholds combinations
-    thr_combinations = combinations(range(255), nthrs)
-
-    max_var = 0
-    opt_thresholds = None
-
-    # Extending histograms for convenience
-    c_hist = np.append(c_hist, [0])
-    cdf = np.append(cdf, [0])
-
-    for thresholds in thr_combinations:
-        # Extending thresholds for convenience
-        e_thresholds = [-1]
-        e_thresholds.extend(thresholds)
-        e_thresholds.extend([len(hist) - 1])
-
-        # Computing variance for the current combination of thresholds
-        regions_var = _get_variance(hist, c_hist, cdf, e_thresholds)
-
-        if regions_var > max_var:
-            max_var = regions_var
-            opt_thresholds = thresholds
-
-    return opt_thresholds
+# def _get_thresholds(hist, c_hist, cdf, nthrs):
+#     """Get the thresholds that maximize the variance between regions
+#
+#     @param hist: The normalized histogram of the image
+#     @type hist: ndarray
+#     @param c_hist: The normalized histogram of the image
+#     @type c_hist: ndarray
+#     @param cdf: The cummulative distribution function of the histogram
+#     @type cdf: ndarray
+#     @param nthrs: The number of thresholds
+#     @type nthrs: int
+#     """
+#     # Thresholds combinations
+#     thr_combinations = combinations(range(255), nthrs)
+#
+#     max_var = 0
+#     opt_thresholds = None
+#
+#     # Extending histograms for convenience
+#     c_hist = np.append(c_hist, [0])
+#     cdf = np.append(cdf, [0])
+#
+#     for thresholds in thr_combinations:
+#         # Extending thresholds for convenience
+#         e_thresholds = [-1]
+#         e_thresholds.extend(thresholds)
+#         e_thresholds.extend([len(hist) - 1])
+#
+#         # Computing variance for the current combination of thresholds
+#         regions_var = _get_variance(hist, c_hist, cdf, e_thresholds)
+#
+#         if regions_var > max_var:
+#             max_var = regions_var
+#             opt_thresholds = thresholds
+#
+#     return opt_thresholds
 
 
 def otsu_multithreshold(image=None, hist=None, nthrs=2):
@@ -470,7 +470,7 @@ def test_thresholds(img, odir, basename):
     zeros = np.where(KM_output==0)
     SM_output[zeros] = 0
 
-    multithresh_op = join(odir, "%s_beads.png" % basename)
+    multithresh_op = join(odir, "%s_op.png" % basename)
     cv2.imwrite(multithresh_op, SM_output)
     # return SM_output
 
@@ -505,8 +505,8 @@ if __name__ == '__main__':
 
     img_name = basename(args.image).split(".")[0]
 
-    # test_thresholds(img, args.out_dir, img_name)
-    test_thresholds_otml(img, args.out_dir, img_name)
+    test_thresholds(img, args.out_dir, img_name)
+    # test_thresholds_otml(img, args.out_dir, img_name)
 
 # import glob
 #
