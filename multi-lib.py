@@ -247,8 +247,15 @@ def exp():
 
 # exp()
 
-
-
+import glob
+for i in range(2, 17):
+    dirname = '/localhome/asa420/MIAL/data/live-cell-movies/COSKDEL/COSKDEL/Decon/Series0%s_decon_converted/std/*'%(f'{i:02d}')
+    files = glob.glob(dirname)
+    for each in files:
+        img = io.imread(each)
+        erode = skimage_erode_img(img)
+        fname = each.split('.')[0] + '_erode.png'
+        cv2.imwrite(fname, erode)
 
 
 # skel_dip_away = dip.EuclideanSkeleton(dipimg, endPixelCondition='loose ends away') ####### not useful
