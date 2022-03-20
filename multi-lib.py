@@ -191,6 +191,9 @@ def high_pass_filter(img):
 
 def exp():
 
+    ### Dont use clahe
+    # clahe = cv2.createCLAHE()
+    # cl1 = clahe.apply(stdimg)
     loc = thresh_loc(stdimg, 3)
     er1 = skimage_erode_img(loc)
     # loc = thresh_loc(er1)
@@ -212,12 +215,15 @@ def exp():
 
     # io.imsave('locer1.png', er1)
 
-    fig, ax = plt.subplots(1, 5)
-    ax[0].imshow(stdimg)
+    fig, ax = plt.subplots(1, 3)
+    ax[0].imshow(cl1)
     ax[1].imshow(er1)
     ax[2].imshow(loc)
-    ax[3].imshow(ph[3])
-    ax[4].imshow(phloc)
+    # ax[0].imshow(stdimg)
+    # ax[1].imshow(er1)
+    # ax[2].imshow(loc)
+    # ax[3].imshow(ph[3])
+    # ax[4].imshow(phloc)
     # ax[3].imshow(er2)
     # ax[4].imshow(loc2)
     # ax[5].imshow(er3)
@@ -247,15 +253,15 @@ def exp():
 
 # exp()
 
-import glob
-for i in range(2, 17):
-    dirname = '/localhome/asa420/MIAL/data/live-cell-movies/COSKDEL/COSKDEL/Decon/Series0%s_decon_converted/std/*'%(f'{i:02d}')
-    files = glob.glob(dirname)
-    for each in files:
-        img = io.imread(each)
-        erode = skimage_erode_img(img)
-        fname = each.split('.')[0] + '_erode.png'
-        cv2.imwrite(fname, erode)
+def create_erode_img():
+    for i in range(7, 17):
+        dirname = '/localhome/asa420/MIAL/data/live-cell-movies/COSKDELRTN/COSKDELRTN/Decon/Series0%s_decon_converted/std/*'%(f'{i:02d}')
+        files = glob.glob(dirname)
+        for each in files:
+            img = io.imread(each)
+            erode = skimage_erode_img(img)
+            fname = each.split('.')[0] + '_erode.png'
+            cv2.imwrite(fname, erode)
 
 
 # skel_dip_away = dip.EuclideanSkeleton(dipimg, endPixelCondition='loose ends away') ####### not useful

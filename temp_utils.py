@@ -6,31 +6,41 @@ import numpy
 home = os.path.expanduser('~')
 
 def dirmaker():
-    for i in range(1, 30):
+    for i in range(1, 17):
         # os.makedirs(home + '/Desktop/RTN/skel/R' + str(i))
         # os.makedirs(home + '/Desktop/RTN/brpts/R' + str(i))
         # os.makedirs(home + '/Desktop/Climp/mcherry/C' + str(i))
-        os.makedirs(home + '/Desktop/RTN/frames_10/R' + str(i))
+        os.makedirs(home + '/MIAL/data/live-cell-movies/COSKDELCLIMP/COSKDELCLIMP/Decon/Series0%s_decon_converted/erenh/'%(f'{i:02d}'))
+        # os.makedirs(home + '/Desktop/RTN/frames_10/R' + str(i))
         # os.rename(home + '/Desktop/Climp/brpts/A' + str(i), home + '/Desktop/Climp/brpts/C' + str(i))
         # pref = home + '/Desktop/Climp/brpts/A%s'
 
-dirmaker()
-
-exit()
+# dirmaker()
+# exit()
 
 
 def mover():
-    dr = '/localhome/asa420/Desktop/Climp/'
+    for i in range(11, 17):
+        origdir = home + '/MIAL/data/live-cell-movies/COSKDELRTN/Decon/Series0%s_decon_converted/erode/*'%(f'{i:02d}')
+        newdir = home + '/MIAL/data/live-cell-movies/COSKDELRTN/Decon/Series0%s_decon_converted/erenh/'%(f'{i:02d}')
+        files = glob.glob(origdir)
+        for file in files:
+            end = file.split('/')[-1].split('_')[-1]
+            if end == 'enhance.png':
+                shutil.move(file, newdir)
+
+
+    # dr = '/localhome/asa420/Desktop/Climp/'
     # dr1 = '/localhome/asa420/Desktop/RTN/skel/'
     # files = glob.glob(dr + '*_skel_brpts.png')
-    for i in range(1, 32):
-        for j in range(100):
-            # fname_sk = dr1 + 'R%s_decon_t0%s_ch00_skel.png'%(f'{i}',f'{j:02d}')
-            # fname_br = dr2 + 'R%s_decon_t0%s_ch00_skel_brpts.png'%(f'{i}',f'{j:02d}')
-            fname = dr + 'files/C%s_decon_t0%s_ch01_std_adj.png'%(f'{i}',f'{j:02d}')
-            # shutil.move(fname_sk, dr1 + 'R%s'%(f'{i}'))
-            # shutil.move(fname_br, dr2 + 'R%s'%(f'{i}'))
-            shutil.move(fname, dr + 'mcherry/C%s/'%(f'{i}'))
+    # for i in range(1, 32):
+    #     for j in range(100):
+    #         # fname_sk = dr1 + 'R%s_decon_t0%s_ch00_skel.png'%(f'{i}',f'{j:02d}')
+    #         # fname_br = dr2 + 'R%s_decon_t0%s_ch00_skel_brpts.png'%(f'{i}',f'{j:02d}')
+    #         fname = dr + 'files/C%s_decon_t0%s_ch01_std_adj.png'%(f'{i}',f'{j:02d}')
+    #         # shutil.move(fname_sk, dr1 + 'R%s'%(f'{i}'))
+    #         # shutil.move(fname_br, dr2 + 'R%s'%(f'{i}'))
+    #         shutil.move(fname, dr + 'mcherry/C%s/'%(f'{i}'))
 
 mover()
 
