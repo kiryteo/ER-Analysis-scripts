@@ -5,12 +5,14 @@ import numpy
 
 home = os.path.expanduser('~')
 
+
 def dirmaker():
-    for i in range(1, 17):
+    for i in range(1, 30):
+        os.makedirs(home + '/MIAL/data/confocal_movies/R%s'%f'{i}')
         # os.makedirs(home + '/Desktop/RTN/skel/R' + str(i))
         # os.makedirs(home + '/Desktop/RTN/brpts/R' + str(i))
         # os.makedirs(home + '/Desktop/Climp/mcherry/C' + str(i))
-        os.makedirs(home + '/MIAL/data/live-cell-movies/COSKDELCLIMP/COSKDELCLIMP/Decon/Series0%s_decon_converted/erenh/'%(f'{i:02d}'))
+        # os.makedirs(home + '/MIAL/data/live-cell-movies/COSKDELCLIMP/COSKDELCLIMP/Decon/Series0%s_decon_converted/erenh/'%(f'{i:02d}'))
         # os.makedirs(home + '/Desktop/RTN/frames_10/R' + str(i))
         # os.rename(home + '/Desktop/Climp/brpts/A' + str(i), home + '/Desktop/Climp/brpts/C' + str(i))
         # pref = home + '/Desktop/Climp/brpts/A%s'
@@ -18,6 +20,21 @@ def dirmaker():
 # dirmaker()
 # exit()
 
+
+def mover():
+    files = glob.glob(home + '/MIAL/data/confocal_movies/Control/std/*')
+    for each in files:
+        fname = each.split('/')[-1]
+        series = fname.split('_')[0]
+        # series = fname.split('_')[1]
+        # shutil.move(each, home + '/MIAL/data/confocal_movies/img' + series + '/')
+        if fname.split('_')[-1] == 'std.png':
+            shutil.move(each, home + '/MIAL/data/confocal_movies/' + series + '/')
+
+
+
+mover()
+exit()
 
 def mover():
     for i in range(11, 17):
@@ -42,9 +59,8 @@ def mover():
     #         # shutil.move(fname_br, dr2 + 'R%s'%(f'{i}'))
     #         shutil.move(fname, dr + 'mcherry/C%s/'%(f'{i}'))
 
-mover()
-
-exit()
+# mover()
+# exit()
 
 def file_rename():
     dir = home + '/Documents/ER-Full-data/FixedCell_for_Ashwin/FixedCell_for_Ashwin/numpys/rtn/'

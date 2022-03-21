@@ -30,21 +30,21 @@ dire = glob.glob('/localhome/asa420/MIAL/data/translated_confocal_livecell/live_
 #
 # exit()
 
-gt, path, fname = pcv.readimage('/localhome/asa420/Downloads/AnalyzER_Simon_Fraser_University/gt1.tif')
-img, path, fname = pcv.readimage('/localhome/asa420/Downloads/AnalyzER_Simon_Fraser_University/img1.jpg')
-grimg = rtog(img)
-stdimg = standardize_image(grimg)
-thr = thresh_image(stdimg)
-skel = get_skel(thr)
-gt = pcv.invert(gt)
-#skel = pcv.invert(skel)
-
-pcv.print_image(img=grimg, filename='/localhome/asa420/Downloads/AnalyzER_Simon_Fraser_University/img1_gr.png')
+# gt, path, fname = pcv.readimage('/localhome/asa420/Downloads/AnalyzER_Simon_Fraser_University/gt1.tif')
+# img, path, fname = pcv.readimage('/localhome/asa420/Downloads/AnalyzER_Simon_Fraser_University/img1.jpg')
+# grimg = rtog(img)
+# stdimg = standardize_image(grimg)
+# thr = thresh_image(stdimg)
+# skel = get_skel(thr)
+# gt = pcv.invert(gt)
+#
+# pcv.print_image(img=grimg, filename='/localhome/asa420/Downloads/AnalyzER_Simon_Fraser_University/img1_gr.png')
 
 # pcv.print_image(img=gt, filename='/localhome/asa420/Downloads/AnalyzER_Simon_Fraser_University/gt1_op.tif')
 # pcv.print_image(img=skel, filename='/localhome/asa420/Downloads/AnalyzER_Simon_Fraser_University/img1_op.jpg')
 
-exit()
+# exit()
+
 def runner():
     for each in dire:
         files = glob.glob(each + '/*')
