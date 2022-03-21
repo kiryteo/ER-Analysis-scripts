@@ -6,9 +6,10 @@ import numpy
 home = os.path.expanduser('~')
 
 
+
 def dirmaker():
-    for i in range(1, 30):
-        os.makedirs(home + '/MIAL/data/confocal_movies/R%s'%f'{i}')
+    for i in range(1, 17):
+        os.makedirs(home + '/MIAL/data/live-cell-movies/COSKDELRTN/R%s'%f'{i}')
         # os.makedirs(home + '/Desktop/RTN/skel/R' + str(i))
         # os.makedirs(home + '/Desktop/RTN/brpts/R' + str(i))
         # os.makedirs(home + '/Desktop/Climp/mcherry/C' + str(i))
@@ -20,10 +21,25 @@ def dirmaker():
 # dirmaker()
 # exit()
 
-
 def mover():
-    files = glob.glob(home + '/MIAL/data/confocal_movies/Control/std/*')
-    for each in files:
+    # files = glob.glob(home + '/MIAL/data/confocal_movies/Control/std/*')\
+    dirs = glob.glob('/localhome/asa420/MIAL/data/live-cell-movies/COSKDELRTN/Decon/*')
+    for each in dirs:
+        dirend = each.split('/')[-1].split('_')[-1]
+        sernum = each.split('/')[-1].split('_')[0][-3:]
+        if dirend == 'converted':
+            files = glob.glob(each + '/std/*')
+            if int(sernum) <= 9:
+                for file in files:
+                    shutil.copy(file, '/localhome/asa420/MIAL/data/live-cell-movies/COSKDELRTN/R%s'%f'{int(sernum)}')
+            else:
+                for file in files:
+                    shutil.copy(file, '/localhome/asa420/MIAL/data/live-cell-movies/COSKDELRTN/R%s'%f'{int(sernum)}')
+
+mover()
+exit()
+
+for each in files:
         fname = each.split('/')[-1]
         series = fname.split('_')[0]
         # series = fname.split('_')[1]
@@ -33,8 +49,8 @@ def mover():
 
 
 
-mover()
-exit()
+# mover()
+# exit()
 
 def mover():
     for i in range(11, 17):

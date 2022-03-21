@@ -2,12 +2,14 @@ from plantcv import plantcv as pcv
 import numpy as np
 import glob
 import pickle
-
+import skimage
 
 def standardize_image(img):
     std_img = img - np.min(img) / (np.max(img) - np.min(img))
     return std_img
 
+def skimage_erode_img(img):
+    return skimage.morphology.erosion(img)
 
 def rtog(img):
     return pcv.rgb2gray(rgb_img=img)
@@ -24,7 +26,10 @@ def get_brpts(img):
     return pcv.morphology.find_branch_pts(skel_img=img)
 
 
-dire = glob.glob('/localhome/asa420/MIAL/data/translated_confocal_livecell/live_cell_enhanced_128/*')
+# dire = glob.glob('/localhome/asa420/MIAL/data/translated_confocal_livecell/live_cell_enhanced_128/*')
+
+dire = glob.glob('/localhome/asa420/MIAL/data/confocal_movies/dirs/*')
+
 #
 # print(dire[0])
 #
@@ -56,9 +61,10 @@ def runner():
         for file in files:
             dt[file] = []
             img, path, filename = pcv.readimage(file)
-            img = rtog(img)
+            # img = rtog(img)
             img = standardize_image(img)
-            thresh = thresh_image(img)
+            erimg = skimage_erode_img(img)
+            thresh = thresh_image(erimg)
 
             skel = get_skel(thresh)
             skel_avg += skel
@@ -92,4 +98,4 @@ def runner():
             pickle.dump(dt, hn)
 
 
-# runner()
+runner()
