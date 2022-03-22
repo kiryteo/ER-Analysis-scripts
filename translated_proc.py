@@ -28,7 +28,7 @@ def get_brpts(img):
 
 # dire = glob.glob('/localhome/asa420/MIAL/data/translated_confocal_livecell/live_cell_enhanced_128/*')
 
-dire = glob.glob('/localhome/asa420/MIAL/data/confocal_movies/dirs/*')
+dire = glob.glob('/localhome/asa420/MIAL/data/live-cell-movies/dirs/*')
 
 #
 # print(dire[0])
@@ -61,7 +61,7 @@ def runner():
         for file in files:
             dt[file] = []
             img, path, filename = pcv.readimage(file)
-            # img = rtog(img)
+            img = rtog(img)
             img = standardize_image(img)
             erimg = skimage_erode_img(img)
             thresh = thresh_image(erimg)
@@ -78,10 +78,13 @@ def runner():
             dt[file].append(brpts)
 
         mean_skel = skel_avg / 100
+        nm = each.split('/')[-1]
+        # pcv.print_image(img=mean_skel, filename=nm+'.png')
         mean_junc = junc_avg / 100
 
         maxskel = np.stack(skel_list, axis=2)
         maxskel = np.amax(maxskel, axis=2)
+        # pcv.print_image(img=maxskel, filename=nm+'_max.png')
 
         maxjunc = np.stack(junc_list, axis=2)
         maxjunc = np.amax(maxjunc, axis=2)
