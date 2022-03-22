@@ -2,10 +2,30 @@ import glob
 import os
 import shutil
 import numpy
+import skimage.io as io
 
 home = os.path.expanduser('~')
 
+# dirlist = glob.glob('/localhome/asa420/MIAL/data/live-cell-movies/COSKDELRTN/Decon/*')
+# for each in dirlist:
+#     if each.split('/')[-1].split('_')[-1] == 'converted':
+#         files = glob.glob(each + '/std/*')
+#         for file in files:
+#             shutil.copy(file, '/localhome/asa420/MIAL/data/live-cell-movies/unet-exp/images/RTN/')
 
+
+exit()
+
+path = '/localhome/asa420/MIAL/data/mean-proj-annotations/RTN/'
+dire = glob.glob(path + '*')
+
+for each in dire:
+    img = io.imread(each)
+    op = (img==255).astype('int')
+    fname = path + each.split('/')[-1].split('.')[0] + '_annot.png'
+    io.imsave(fname, op)
+
+exit()
 
 def dirmaker():
     for i in range(1, 17):
@@ -36,8 +56,8 @@ def mover():
                 for file in files:
                     shutil.copy(file, '/localhome/asa420/MIAL/data/live-cell-movies/COSKDELRTN/R%s'%f'{int(sernum)}')
 
-mover()
-exit()
+# mover()
+# exit()
 
 for each in files:
         fname = each.split('/')[-1]
