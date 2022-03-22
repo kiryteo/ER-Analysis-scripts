@@ -153,7 +153,15 @@ def newskels(imgpath):
         # img = imageio.imread(each)
         skelmean += each
         # imgstack.append(img)
-    pcv.print_image(img=skelmean, filename='er1-mean-skel.png')
+    # pcv.print_image(img=skelmean, filename='er1-mean-skel.png')
+
+    op = (skelmean > 0).astype('int') * 255
+    pref = '/localhome/asa420/MIAL/data/live-cell-movies/unet-exp/images/control/'
+
+    fn = imgpath.split('/')[-1].split('.')[0] + '_projection.png'
+    pcv.print_image(img=op, filename=pref + fn)
+    # plt.imshow(op)
+    # plt.show()
 
     # fig, ax = plt.subplots(2, 6)
     # ax[0][0].imshow(img)
@@ -171,8 +179,20 @@ def newskels(imgpath):
     #
     # plt.show()
 
-# newskels('/localhome/asa420/ER-Analysis-scripts/er1_enhance.png')
+import glob
 
+dirs = glob.glob('/localhome/asa420/MIAL/data/live-cell-movies/COSKDEL/Decon/*')
+for each in dirs:
+    dirend = each.split('/')[-1].split('_')[-1]
+    sernum = each.split('/')[-1].split('_')[0][-3:]
+    if dirend == 'converted':
+        files = glob.glob(each + '/erenh/*')
+        for file in files:
+            newskels(file)
+
+exit()
+# newskels('/localhome/asa420/MIAL/data/live-cell-movies/COSKDEL/Decon/Series002_decon_converted/erenh/Series002_decon_converted_t01_ch00_std_erode_enhance.png')
+# exit()
 
 # dipimg = io.imread('/localhome/asa420/ER-Analysis-scripts/er1_enhance.png').astype('bool')
 # skel_dip_three = dip.EuclideanSkeleton(dipimg, endPixelCondition='three neighbors')

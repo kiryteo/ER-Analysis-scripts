@@ -14,8 +14,8 @@ from sklearn.metrics import jaccard_score
 
 # img0 = io.imread('/localhome/asa420/MIAL/data/live-cell-movies/COSKDEL/COSKDEL/Decon/Series002_decon_converted/std/Series002_decon_converted_t79_ch00_std.png')
 #
-stdimg = io.imread('/localhome/asa420/MIAL/data/live-cell-movies/COSKDEL/COSKDEL/Decon/Series002_decon_converted/std/Series002_decon_converted_t65_ch00_std.png')
-img = io.imread('/localhome/asa420/MIAL/data/live-cell-movies/COSKDEL/COSKDEL/Decon/Series002_decon_converted/enh/Series002_decon_converted_t65_ch00_std_enhance.png')
+# stdimg = io.imread('/localhome/asa420/MIAL/data/live-cell-movies/COSKDEL/COSKDEL/Decon/Series002_decon_converted/std/Series002_decon_converted_t65_ch00_std.png')
+# img = io.imread('/localhome/asa420/MIAL/data/live-cell-movies/COSKDEL/COSKDEL/Decon/Series002_decon_converted/enh/Series002_decon_converted_t65_ch00_std_enhance.png')
 
 # img0 =
 
@@ -69,6 +69,7 @@ def dip_skel(img):
     skel_dip_two = dip.EuclideanSkeleton(dipimg, endPixelCondition='two neighbors')
     skel_dip_one = dip.EuclideanSkeleton(dipimg, endPixelCondition='one neighbor')
     skel_dip_nat = dip.EuclideanSkeleton(dipimg, endPixelCondition='natural')
+    return skel_dip_nat, skel_dip_one, skel_dip_two, skel_dip_three
 
 def thresh_image(img, threshold=12, max_value=255):
     return pcv.threshold.binary(gray_img=img, threshold=threshold, max_value=max_value)
@@ -132,7 +133,7 @@ def plot_samples():
     #
     # plt.show()
 
-stdimg = io.imread('/localhome/asa420/MIAL/data/live-cell-movies/COSKDEL/COSKDEL/Decon/Series002_decon_converted/std/Series002_decon_converted_t00_ch00_std.png')
+# stdimg = io.imread('/localhome/asa420/MIAL/data/live-cell-movies/COSKDEL/COSKDEL/Decon/Series002_decon_converted/std/Series002_decon_converted_t00_ch00_std.png')
 
 def exp():
     er1 = skimage_erode_img(stdimg)
@@ -174,6 +175,8 @@ def exp():
     plt.colorbar()
     plt.show()
 
-exp()
+# exp()
 
 # skel_dip_away = dip.EuclideanSkeleton(dipimg, endPixelCondition='loose ends away') ####### not useful
+
+

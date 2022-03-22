@@ -53,52 +53,59 @@ dire = glob.glob('/localhome/asa420/MIAL/data/live-cell-movies/dirs/*')
 def runner():
     for each in dire:
         files = glob.glob(each + '/*')
-        dt = {}
-        skel_list = []
-        skel_avg = np.zeros((128, 128))
-        junc_list = []
-        junc_avg = np.zeros((128, 128))
+        # dt = {}
+        # skel_list = []
+        # skel_avg = np.zeros((128, 128))
+        er_avg = np.zeros((128, 128))
+        # junc_list = []
+        # junc_avg = np.zeros((128, 128))
         for file in files:
-            dt[file] = []
+            # dt[file] = []
             img, path, filename = pcv.readimage(file)
-            img = rtog(img)
+            # img = rtog(img)
             img = standardize_image(img)
             erimg = skimage_erode_img(img)
-            thresh = thresh_image(erimg)
+            er_avg += erimg
+            # thresh = thresh_image(erimg)
 
-            skel = get_skel(thresh)
-            skel_avg += skel
-            skel_list.append(skel)
+            # skel = get_skel(thresh)
+            # skel_avg += skel
+            # skel_list.append(skel)
+            #
+            # brpts = get_brpts(skel)
+            # junc_avg += brpts
+            # junc_list.append(brpts)
+            #
+            # dt[file].append(skel)
+            # dt[file].append(brpts)
 
-            brpts = get_brpts(skel)
-            junc_avg += brpts
-            junc_list.append(brpts)
-
-            dt[file].append(skel)
-            dt[file].append(brpts)
-
-        mean_skel = skel_avg / 100
         nm = each.split('/')[-1]
-        # pcv.print_image(img=mean_skel, filename=nm+'.png')
-        mean_junc = junc_avg / 100
-
-        maxskel = np.stack(skel_list, axis=2)
-        maxskel = np.amax(maxskel, axis=2)
+        mean_er = er_avg / 100
+        pcv.print_image(img=mean_er, filename=nm+'_er.png')
+        # mean_er_thresh = thresh_image(mean_er)
+        # mean_er_skel = get_skel(mean_er_thresh)
+        # pcv.print_image(img=mean_er_skel, filename=nm+'_erskel.png')
+        # mean_skel = skel_avg / 100
+        # # pcv.print_image(img=mean_skel, filename=nm+'.png')
+        # mean_junc = junc_avg / 100
+        #
+        # maxskel = np.stack(skel_list, axis=2)
+        # maxskel = np.amax(maxskel, axis=2)
         # pcv.print_image(img=maxskel, filename=nm+'_max.png')
 
-        maxjunc = np.stack(junc_list, axis=2)
-        maxjunc = np.amax(maxjunc, axis=2)
-
-        dirname = each.split('/')[-1]
-        dt[dirname] = []
-        dt[dirname].append(mean_skel)
-        dt[dirname].append(maxskel)
-        dt[dirname].append(mean_junc)
-        dt[dirname].append(maxjunc)
-
-        dtname = dirname + '.pickle'
-        with open(dtname, 'wb') as hn:
-            pickle.dump(dt, hn)
+        # maxjunc = np.stack(junc_list, axis=2)
+        # maxjunc = np.amax(maxjunc, axis=2)
+        #
+        # dirname = each.split('/')[-1]
+        # dt[dirname] = []
+        # dt[dirname].append(mean_skel)
+        # dt[dirname].append(maxskel)
+        # dt[dirname].append(mean_junc)
+        # dt[dirname].append(maxjunc)
+        #
+        # dtname = dirname + '.pickle'
+        # with open(dtname, 'wb') as hn:
+        #     pickle.dump(dt, hn)
 
 
 runner()
