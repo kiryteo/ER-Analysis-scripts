@@ -156,7 +156,7 @@ def newskels(imgpath):
     # pcv.print_image(img=skelmean, filename='er1-mean-skel.png')
 
     op = (skelmean > 0).astype('int') * 255
-    pref = '/localhome/asa420/MIAL/data/live-cell-movies/unet-exp/images/control/'
+    pref = '/localhome/asa420/MIAL/data/live-cell-movies/unet-exp/images/rtn/'
 
     fn = imgpath.split('/')[-1].split('.')[0] + '_projection.png'
     pcv.print_image(img=op, filename=pref + fn)
@@ -181,7 +181,7 @@ def newskels(imgpath):
 
 import glob
 
-dirs = glob.glob('/localhome/asa420/MIAL/data/live-cell-movies/COSKDEL/Decon/*')
+dirs = glob.glob('/localhome/asa420/MIAL/data/live-cell-movies/COSKDELRTN/Decon/*')
 for each in dirs:
     dirend = each.split('/')[-1].split('_')[-1]
     sernum = each.split('/')[-1].split('_')[0][-3:]
@@ -194,11 +194,6 @@ exit()
 # newskels('/localhome/asa420/MIAL/data/live-cell-movies/COSKDEL/Decon/Series002_decon_converted/erenh/Series002_decon_converted_t01_ch00_std_erode_enhance.png')
 # exit()
 
-# dipimg = io.imread('/localhome/asa420/ER-Analysis-scripts/er1_enhance.png').astype('bool')
-# skel_dip_three = dip.EuclideanSkeleton(dipimg, endPixelCondition='three neighbors')
-#
-# plt.imshow(skel_dip_three)
-# plt.show()
 
 def high_pass_filter(img):
     er3 = io.imread('/localhome/asa420/ER-Analysis-scripts/ero5.png')
@@ -208,6 +203,7 @@ def high_pass_filter(img):
     plt.imshow(op)
     plt.colorbar()
     plt.show()
+
 
 def exp():
 
@@ -272,6 +268,7 @@ def exp():
     # dilavg = skimage_dilate_img(favg)
 
 # exp()
+
 
 def create_erode_img():
     for i in range(7, 17):
