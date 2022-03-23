@@ -6,6 +6,17 @@ import skimage.io as io
 
 home = os.path.expanduser('~')
 
+# /localhome/asa420/MIAL/data/live-cell-movies/unet-exp/images/rtn/Series001_decon_converted_t00_ch00_std.png
+#
+# /localhome/asa420/MIAL/data/live-cell-movies/unet-exp/PGT/rtn/Series001_decon_converted_t00_ch00_std_erode_enhance_projection.png
+
+
+dl = glob.glob('/localhome/asa420/MIAL/data/live-cell-movies/unet-exp/images/rtn/*')
+print(dl[0])
+#ids = [os.path.splitext(file)[0] for file in dl if not file.startswith('.')]
+
+#print(ids[0])
+exit()
 # dirlist = glob.glob('/localhome/asa420/MIAL/data/live-cell-movies/COSKDELRTN/Decon/*')
 # for each in dirlist:
 #     if each.split('/')[-1].split('_')[-1] == 'converted':

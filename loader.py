@@ -21,11 +21,20 @@ class Skeldataset(Dataset):
         self.pgtdir = Path(pgtdir)
         self.mpdir = Path(mpdir)
 
+        # imgdir = 'data/images'
+        self.ids = glob.glob(imgdir + '/climp/*') + glob.glob(imgdir + '/control/*') + glob.glob(imgdir + '/rtn/*')
+
     def __len__(self):
         return len(self.ids)
 
     def __getitem__(self, idx):
-        name = self.
-        return image, pgt, mplabel
+        name = self.ids[idx]
+        img_file = Image.open(name)
+        pgt_file_name = name.split('/')
+        pgt_file = pgt_file_name[0] + '/PGT/' + pgt_file_name[2] + pgt_file_name[3].split('.')[0] + '_erode_enhance_projection.png'
+        pgt_file = Image.open(pgt_file)
+        sernum = int(name.split('/')[-1].split('_')[0][-3:])
+        mplabel = name.split('/')[0] + '/MPSkel/' + name.split('/')[2] + str(sernum) + '.png'
+        return img_file, pgt_file, mplabel
 
 

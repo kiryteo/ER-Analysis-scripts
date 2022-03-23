@@ -487,35 +487,35 @@ def test_thresholds_otml(img, odir, basename):
 
 
 # def test_thresholds_main():
-if __name__ == '__main__':
-    """Main entry point for the test thresholds script"""
-
-    # Parsing arguments
-    ap = argparse.ArgumentParser()
-    ap.add_argument("-i", "--image", required=True, help="Input image")
-    ap.add_argument("-o", "--out_dir", required=True, help="Output directory")
-    args = ap.parse_args()
-
-    # Reading image
-    img = cv2.imread(args.image, 0)
-
-    if img is None:
-        print("Invalid input image")
-        exit()
-
-    img_name = basename(args.image).split(".")[0]
-
-    test_thresholds(img, args.out_dir, img_name)
+# if __name__ == '__main__':
+#     """Main entry point for the test thresholds script"""
+#
+#     # Parsing arguments
+#     ap = argparse.ArgumentParser()
+#     ap.add_argument("-i", "--image", required=True, help="Input image")
+#     ap.add_argument("-o", "--out_dir", required=True, help="Output directory")
+#     args = ap.parse_args()
+#
+#     # Reading image
+#     img = cv2.imread(args.image, 0)
+#
+#     if img is None:
+#         print("Invalid input image")
+#         exit()
+#
+#     img_name = basename(args.image).split(".")[0]
+#
+#     test_thresholds(img, args.out_dir, img_name)
     # test_thresholds_otml(img, args.out_dir, img_name)
 
-# import glob
-#
-# def run_test_thresh(img):
-#     fname = basename(img).split(".")[0]
-#     img = cv2.imread(img, 0)
-#     out_dir = '/localhome/asa420/MIAL/data-Feb4-Guang/RTN2/'
-#     test_thresholds(img, out_dir, fname)
-#
-# sted_files = glob.glob('/localhome/asa420/MIAL/data-Feb4-Guang/RTN2/STED-files/*')
-# for each in sted_files:
-#     run_test_thresh(each)
+import glob
+
+def run_test_thresh(img):
+    fname = basename(img).split(".")[0]
+    img = cv2.imread(img, 0)
+    out_dir = '/localhome/asa420/MIAL/data-Feb4-Guang/RTN2/'
+    test_thresholds(img, out_dir, fname)
+
+sted_files = glob.glob('/localhome/asa420/MIAL/data-Feb4-Guang/RTN2/STED-files/*')
+for each in sted_files:
+    run_test_thresh(each)
