@@ -444,8 +444,8 @@ def apply_multithreshold(img, thresholds):
     return t_image * wp_val
 
 
-def test_thresholds(img, odir, basename):
-# def test_thresholds(img):
+#def test_thresholds(img, odir, basename):
+def test_thresholds(img):
     """Runs all the package thresholding algorithms on the input
     image with default parameters and plot the results.
 
@@ -470,9 +470,9 @@ def test_thresholds(img, odir, basename):
     zeros = np.where(KM_output==0)
     SM_output[zeros] = 0
 
-    multithresh_op = join(odir, "%s_op.png" % basename)
-    cv2.imwrite(multithresh_op, SM_output)
-    # return SM_output
+    # multithresh_op = join(odir, "%s_op.png" % basename)
+    # cv2.imwrite(multithresh_op, SM_output)
+    return SM_output
 
 def test_thresholds_otml(img, odir, basename):
     th = otsu_multithreshold(img, nthrs=2)

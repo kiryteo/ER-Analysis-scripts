@@ -3,6 +3,7 @@ import numpy as np
 import glob
 import pickle
 import skimage
+import ks_multithresh
 
 def standardize_image(img):
     std_img = img - np.min(img) / (np.max(img) - np.min(img))
@@ -50,22 +51,48 @@ dire = glob.glob('/localhome/asa420/MIAL/data/live-cell-movies/dirs/*')
 
 # exit()
 
+def get_erenh():
+    for each in glob.glob('/localhome/asa420/MIAL/data/live-cell-movies/COSKDEL/Decon/*'):
+        if each.split('/')[-1].split('_')[-1] == 'converted':
+            files = glob.glob(each + '/erode/*')
+
+
 def runner():
     for each in dire:
+        group = each[0]
+        if group == 'C':
+            erpath = '/localhome/asa420/MIAL/data/live-cell-movies/COSKDELCLIMP/Decon/'
+        elif group == 'i':
+            erpath = '/localhome/asa420/MIAL/data/live-cell-movies/COSKDEL/Decon/'
+        else:
+            erpath = '/localhome/asa420/MIAL/data/live-cell-movies/COSKDELRTN/Decon/'
+
+        series = int(each[1:])
+        if series < 10:
+            dname = erpath + 'Series00' + str(series) + '_decon_converted/erenh/'
+        else:
+            dname = erpath + 'Series0' + str(series) + '_decon_converted/erenh/'
         files = glob.glob(each + '/*')
-        # dt = {}
-        # skel_list = []
-        # skel_avg = np.zeros((128, 128))
+        dt = {}
+        skel_list = []
+        skel_avg = np.zeros((128, 128))
         er_avg = np.zeros((128, 128))
-        # junc_list = []
-        # junc_avg = np.zeros((128, 128))
+        junc_list = []
+        junc_avg = np.zeros((128, 128))
         for file in files:
             # dt[file] = []
             img, path, filename = pcv.readimage(file)
             # img = rtog(img)
             img = standardize_image(img)
+
+            beads = ks_multithresh.test_thresholds(img)
+
             erimg = skimage_erode_img(img)
+
             er_avg += erimg
+
+            erenh = dname + file.split('/')[-1].split('.')[0] + '_erode_enhance.png'
+
             # thresh = thresh_image(erimg)
 
             # skel = get_skel(thresh)
