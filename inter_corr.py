@@ -20,6 +20,7 @@ imdir = '/localhome/asa420/MIAL/data/live-cell-movies/COSKDEL/Decon/Series002_de
 #
 # exit()
 
+
 l = []
 for i in range(2,3):
     im1 = io.imread(imdir + 'Series002_decon_converted_t%s_ch00_std.png'%f'{i:02d}')
