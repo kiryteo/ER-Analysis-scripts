@@ -34,18 +34,24 @@ class Skeldataset(Dataset):
     def __getitem__(self, idx):
         name = self.ids[idx]
         img_file = Image.open(name)
-        # img_file = io.imread(name)
+        img_file = io.imread(name)
+        img_file = np.expand_dims(img_file, axis=0)
         pgt_file_name = name.split('/')
         pgt_file = home + '/unet-exp/data/PGT/' + pgt_file_name[6] + '/' + pgt_file_name[7].split('.')[0] + '_erode_enhance_projection.png'
         # pgt_file = pgt_file_name[0] + '/PGT/' + pgt_file_name[2] + '/' + pgt_file_name[3].split('.')[0] + '_erode_enhance_projection.png'
-        pgt_file = Image.open(pgt_file)
-        # pgt_file = io.imread(pgt_file)
+        # pgt_file = Image.open(pgt_file)
+        pgt_file = io.imread(pgt_file)
+        pgt_file = np.expand_dims(pgt_file, axis=0)
         sernum = int(name.split('/')[-1].split('_')[0][-3:])
         # mplabel = name.split('/')[0] + '/MPSkel/' + name.split('/')[2] + '/' + str(sernum) + '.png'
         mplabel = home + '/unet-exp/data/MPSkel/' + name.split('/')[6] + '/' + str(sernum) + '.png'
-        mplabel = Image.open(mplabel)
-        # mplabel = io.imread(mplabel)
-        return img_file, pgt_file, mplabel
+        # mplabel = Image.open(mplabel)
+        mplabel = io.imread(mplabel)
+        mplabel = np.expand_dims(mplabel, axis=0)
+
+        composite_input = np.concat((img_file, pgt_file), axis=1)
+
+        return composite_input, mplabel
 
 # imgdir = '/localhome/asa420/unet-exp/data/images'
 # ids = glob.glob(imgdir + '/climp/*') + glob.glob(imgdir + '/control/*') + glob.glob(imgdir + '/rtn/*')
@@ -80,4 +86,6 @@ tloader = DataLoader(skdata, batch_size=32, shuffle=True)
 
 dataiter = iter(tloader)
 im, pg, mp = dataiter.next()
+
+print(im.shape)
 
