@@ -45,5 +45,19 @@ def group_movies_creator(total_series, num_frames, width, height):
     for series in range(1, total_series+1):
         series_movie_creator(series, num_frames, width, height)
 
-group_movies_creator(23, 100, 1415, 740)
+# group_movies_creator(23, 100, 1415, 740)
 # group_movies_creator(29, 100, 1926, 642)
+
+
+def hist_movie_creator():
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    prefix = '/localhome/asa420/MIAL/data/live-cell-movies/COSKDELRTN/Decon/Series005_decon_converted/hist/'
+    video = cv2.VideoWriter('STED_RTN_Series5_hist.mp4', fourcc, 1.5, (584, 453))
+    for frame in range(100):
+        img = cv2.imread(prefix + 'Series005_decon_converted_t%s_hist.png'%f'{frame:02d}')
+        video.write(img)
+
+    cv2.destroyAllWindows()
+    video.release()
+
+hist_movie_creator()
