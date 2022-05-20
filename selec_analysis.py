@@ -100,10 +100,38 @@ def process_props():
 
     print(fl)
 
+import matplotlib.pyplot as plt
+from scipy.signal import chirp, find_peaks, peak_widths
 
 def fwhm_analysis():
     with open(dirs_path + 'climp_intensity.pkl', 'rb') as fl:
         intensity_data = pickle.load(fl)
 
+    # print(intensity_data.keys())
+    width_list = []
+    for k, v in intensity_data.items():
+        print(len(v))
+        for i in range(1, len(v)):
+            peaks, _ = find_peaks(v[i])
+            res_half = peak_widths(v[i], peaks, rel_height=0.5)
+            width_list.append(res_half[0])
+            # print(res_half[0])
+            # plt.plot(res_half[0])
+            # plt.show()
+            break
 
+        # print(v[23])
+        # peaks, _ = find_peaks(v[23])
+        # reshalf = peak_widths(v[23], peaks, rel_height=0.5)
+        # print(reshalf[0])
+        # resfull = peak_widths(v[23], peaks, rel_height=1.0)
+        # print(resfull[0])
+        # mx = max(v[23])
+        # xs = [x for x in range(len(v[23])) if v[23][x] > mx/2.0 ]
+        # print(min(xs), max(xs))
+        # plt.plot(v[23])
+        # plt.show()
+        break
+
+fwhm_analysis()
 
