@@ -6,6 +6,7 @@ import glob
 import numpy as np
 import cv2
 import pickle
+import pandas as pd
 
 # er_files = glob.glob('/localhome/asa420/MIAL/data/selective_analysis/climp/climp_s1/files/*')
 # skel_files = glob.glob('/localhome/asa420/MIAL/data/selective_analysis/climp/climp_s1/skel/*')
@@ -22,7 +23,9 @@ def get_props(skel):
 
     return dil_tubules, props
 
+
 dirs_path = '/localhome/asa420/MIAL/data/selective_analysis/'
+
 
 def get_prop_dicts():
     for grp in ['climp', 'ctrl', 'rtn']:
@@ -56,12 +59,16 @@ def get_prop_dicts():
                 for eccentricity_val in features:
                     eccentricity_data.append((eccentricity_val['eccentricity']))
 
-        print(np.mean(area_data))
-        print(np.mean(axis_major_length_data))
-        print(np.mean(axis_minor_length_data))
-        print(np.mean(area_convex_data))
-        print(np.mean(eccentricity_data))
+        # print(np.mean(area_data))
+        # print(np.mean(axis_major_length_data))
+        # print(np.mean(axis_minor_length_data))
+        # print(np.mean(area_convex_data))
+        # print(np.mean(eccentricity_data))
+        print(len(area_data))
 
+get_prop_dicts()
+
+exit()
 
 def get_intensity_features():
     for grp in ['climp', 'ctrl', 'rtn']:
@@ -80,7 +87,7 @@ def get_intensity_features():
                 er_file = imageio.imread(er_name)
                 intensity_vals[er_name] = {}
                 for i in range(1, len(np.unique(dil_tubules))):
-                    a, b = np.where(dil_tubules==i)[0], np.where(dil_tubules==i)[1]
+                    a, b = np.where(dil_tubules == i)[0], np.where(dil_tubules == i)[1]
                     if len(a) > 10:
                         # intensity_features[file][i] = {}
                         # intensity_features[file][i]['X'] = a
@@ -100,25 +107,35 @@ def process_props():
 
     print(fl)
 
+
 import matplotlib.pyplot as plt
 from scipy.signal import chirp, find_peaks, peak_widths
+import seaborn as sns
 
-def fwhm_analysis():
-    with open(dirs_path + 'climp_intensity.pkl', 'rb') as fl:
+sns.set_theme(style="whitegrid")
+
+# fig, axes = plt.subplots(3, 3)
+
+def fwhm_analysis(grp):
+    with open(dirs_path + '%s_intensity.pkl'%(f'{grp}'), 'rb') as fl:
         intensity_data = pickle.load(fl)
 
     # print(intensity_data.keys())
     width_list = []
     for k, v in intensity_data.items():
-        print(len(v))
+        # print(len(v))
         for i in range(1, len(v)):
-            peaks, _ = find_peaks(v[i])
-            res_half = peak_widths(v[i], peaks, rel_height=0.5)
-            width_list.append(res_half[0])
+            try:
+                peaks, _ = find_peaks(v[i])
+                res_half = peak_widths(v[i], peaks, rel_height=0.5)
+                width_list.extend(res_half[0])
+            except:
+                pass
+
             # print(res_half[0])
             # plt.plot(res_half[0])
             # plt.show()
-            break
+            # break
 
         # print(v[23])
         # peaks, _ = find_peaks(v[23])
@@ -131,7 +148,63 @@ def fwhm_analysis():
         # print(min(xs), max(xs))
         # plt.plot(v[23])
         # plt.show()
-        break
+        # break
+    # print(width_list[0])
 
-fwhm_analysis()
+    # plt.plot(width_list)
+    # plt.hist(width_list, bins=50)
+    # plt.show()
+    # sns.boxplot(x=width_list)
+    #
+    # plt.show()
+    return width_list
 
+climp_width_list = fwhm_analysis('climp')
+ctrl_width_list = fwhm_analysis('ctrl')
+rtn_width_list = fwhm_analysis('rtn')
+
+def remove_ones(feature_list):
+    return [val for val in feature_list if val > 3]
+
+# climp_width_list = remove_ones(climp_width_list)
+# ctrl_width_list = remove_ones(ctrl_width_list)
+# rtn_width_list = remove_ones(rtn_width_list)
+
+# print(np.median(climp_width_list))
+# print(np.median(ctrl_width_list))
+# print(np.median(rtn_width_list))
+
+# exit()
+# fig, axes = plt.subplots(1, 2)
+
+df = pd.DataFrame()
+widths = climp_width_list + ctrl_width_list + rtn_width_list
+df['FWHM'] = pd.Series(widths)
+
+climplen = ['Climp'] * len(climp_width_list)
+ctrllen = ['Ctrl'] * len(ctrl_width_list)
+rtnlen = ['RTN'] * len(rtn_width_list)
+
+df['Group'] = pd.Series(climplen + ctrllen + rtnlen)
+
+sns.set_theme(style='whitegrid')
+# sns.stripplot(x=df['FWHM'], y=df['Group'])
+sns.boxplot(x=df['FWHM'], y=df['Group'])
+# sns.swarmplot(x=df['FWHM'], y=df['Group'])
+plt.suptitle('FWHM values for blobs in three groups')
+plt.show()
+
+# numbins=20
+# min_limit = min(min(ctrl_width_list), min(climp_width_list), min(rtn_width_list))
+# max_limit = max(max(ctrl_width_list), max(climp_width_list), max(rtn_width_list))
+# bins = np.linspace(min_limit, max_limit, numbins+1)
+# plt.hist(ctrl_width_list, bins, alpha=0.33, color='Blue', label='Control')
+# plt.hist(climp_width_list, bins, alpha=0.33, color='Red', label='Climp')
+# plt.hist(rtn_width_list, bins, alpha=0.34, color='Green', label='RTN')
+# plt.legend(loc='upper right')
+# #plt.suptitle('Junction Area analysis', size=15)
+# #plt.title('Mean intensity within specified radius around the reference frame junctions (radius/ euc. dist = 2)', size=12)
+# plt.show()
+# plt.close()
+
+# plt.show()
