@@ -4,7 +4,24 @@ import shutil
 import numpy
 import skimage.io as io
 
+
 home = os.path.expanduser('~')
+
+dname = '/localhome/asa420/MIAL/data/live-cell-movies/COSKDELRTN/Decon/Series015_decon_converted/matching/'
+
+files = glob.glob(dname + '*')
+def match_enh_mover():
+    ndir = '/localhome/asa420/MIAL/data/live-cell-movies/COSKDELRTN/Decon/Series015_decon_converted/match_enh/'
+    os.makedirs(ndir)
+    for each in files:
+        if 'enhance' in each:
+            shutil.move(each, ndir)
+
+match_enh_mover()
+
+exit()
+
+
 
 # /localhome/asa420/MIAL/data/live-cell-movies/unet-exp/images/rtn/Series001_decon_converted_t00_ch00_std.png
 #

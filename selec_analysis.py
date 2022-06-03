@@ -7,12 +7,12 @@ import numpy as np
 import cv2
 import pickle
 import pandas as pd
+from scipy import stats
+from scipy.stats import norm
 
-# er_files = glob.glob('/localhome/asa420/MIAL/data/selective_analysis/climp/climp_s1/files/*')
-# skel_files = glob.glob('/localhome/asa420/MIAL/data/selective_analysis/climp/climp_s1/skel/*')
 
-
-def get_props(skel):
+def get_props(enh):
+    skel = pcv.morphology.skeletonize(mask=enh)
     brpts = pcv.morphology.find_branch_pts(skel_img=skel)
     dil_brpts = skimage.morphology.binary_dilation(brpts).astype('int')
     tubules = skel - dil_brpts
@@ -32,10 +32,12 @@ def get_prop_dicts():
         data = {}
         series_names = glob.glob(dirs_path + grp + '/*')
         for series in series_names:
-            ser_files = glob.glob(series + '/skel/*')
+            ser_files = glob.glob(series + '/match_enh/*')
             for file in ser_files:
-                skel = imageio.imread(file)
-                dil_tubules, props = get_props(skel)
+                print(file)
+                exit()
+                enh = imageio.imread(file)
+                dil_tubules, props = get_props(enh)
                 data[file] = props
 
         area_data = []
@@ -45,7 +47,7 @@ def get_prop_dicts():
         eccentricity_data = []
 
         for series in series_names:
-            ser_files = glob.glob(series + '/skel/*')
+            ser_files = glob.glob(series + '/enh/*')
             for file in ser_files:
                 features = data[file][:]
                 for area_val in features:
@@ -64,25 +66,22 @@ def get_prop_dicts():
         # print(np.mean(axis_minor_length_data))
         # print(np.mean(area_convex_data))
         # print(np.mean(eccentricity_data))
-        print(len(area_data))
+        # print(len(area_data))
 
-get_prop_dicts()
-
-exit()
 
 def get_intensity_features():
     for grp in ['climp', 'ctrl', 'rtn']:
         series_names = glob.glob(dirs_path + grp + '/*')
-
         # intensity_features = {}
         intensity_vals = {}
         for series in series_names:
-            ser_files = glob.glob(series + '/skel/*')
+
+            ser_files = glob.glob(series + '/match_enh/*')
             for file in ser_files:
-                skel = imageio.imread(file)
-                dil_tubules, props = get_props(skel)
+                enh = imageio.imread(file)
+                dil_tubules, props = get_props(enh)
                 # intensity_features[file] = {}
-                er_name = series + '/std/' + file.split('/')[-1][:-17] + '.png'
+                er_name = series + '/matching/' + file.split('/')[-1][:-12] + '.png'
                 # print(er_name)
                 er_file = imageio.imread(er_name)
                 intensity_vals[er_name] = {}
@@ -95,11 +94,13 @@ def get_intensity_features():
 
                         intensity_vals[er_name][i] = er_file[a, b]
                         # print(er_file[a, b])
-        with open(dirs_path + grp + '_intensity.pkl', 'wb') as fl:
+        with open(dirs_path + grp + '_match_intensity.pkl', 'wb') as fl:
             op = pickle.dump(intensity_vals, fl)
 
 
 # get_intensity_features()
+# exit()
+
 
 def process_props():
     with open(dirs_path + 'climp.pkl', 'rb') as fl:
@@ -159,9 +160,103 @@ def fwhm_analysis(grp):
     # plt.show()
     return width_list
 
-climp_width_list = fwhm_analysis('climp')
-ctrl_width_list = fwhm_analysis('ctrl')
-rtn_width_list = fwhm_analysis('rtn')
+from scipy.optimize import curve_fit
+
+def exp_func(x, a, b, c):
+    return a* np.exp(-b*x) + c
+
+def ncurve(width_l):
+    x = np.arange(len(width_l))
+    ffunc = lambda x, a, x0, s: a*np.exp(-0.5*(x-x0)**2/s**2)
+    p, _ = curve_fit(ffunc, x, width_l)
+    x0 = p[1]
+    plt.plot(x, width_l)
+    plt.plot(x, ffunc(x, *p))
+    plt.show()
+
+def fwhm_analysis_fr(grp):
+    with open(dirs_path + '%s_intensity.pkl'%(f'{grp}'), 'rb') as fl:
+        intensity_data = pickle.load(fl)
+
+    # print(intensity_data.keys())
+    width_list = []
+    for k, v in intensity_data.items():
+        width_l = []
+        for i in range(len(v)):
+            try:
+                peaks, _ = find_peaks(v[i])
+                res_half = peak_widths(v[i], peaks, rel_height=0.5)
+
+                width_l.extend(list(res_half)[0])
+            except:
+                pass
+
+        # ncurve(width_l)
+        # sns.displot(width_l)
+        # plt.show()
+
+        # width_l = (width_l - min(width_l)) / (max(width_l) - min(width_l))
+        width_list.extend(width_l)
+
+        # df['FWHM'] = width_l
+        # df['grp'] = pd.Series('climp' * len(width_l))
+        # sns.boxplot(x=df['FWHM'], y=df['grp'])
+        # plt.hist(width_l)
+        # plt.show()
+        # break
+
+    return width_list
+
+df = pd.DataFrame()
+climp_width_list = fwhm_analysis_fr('climp')
+ctrl_width_list = fwhm_analysis_fr('ctrl')
+rtn_width_list = fwhm_analysis_fr('rtn')
+
+print(stats.skew(climp_width_list))
+print(stats.kurtosis(climp_width_list))
+
+sns.distplot(np.log(climp_width_list))
+sns.distplot(np.log(ctrl_width_list))
+sns.distplot(np.log(rtn_width_list))
+plt.show()
+
+exit()
+
+
+cl = pd.Series(climp_width_list)
+# climplen = pd.Series(['Climp'] * len(climp_width_list))
+
+ct = pd.Series(ctrl_width_list)
+# ctrllen = pd.Series(['Climp'] * len(ctrl_width_list))
+
+rtn = pd.Series(rtn_width_list)
+# rtnlen = pd.Series(['Climp'] * len(rtn_width_list))
+
+df['FWHM'] = pd.Series(climp_width_list + ctrl_width_list + rtn_width_list)
+climplen = ['Climp'] * len(climp_width_list)
+ctrllen = ['Ctrl'] * len(ctrl_width_list)
+rtnlen = ['RTN'] * len(rtn_width_list)
+#
+df['Group'] = pd.Series(climplen + ctrllen + rtnlen)
+
+sns.distplot(df['FWHM'])
+#sns.boxplot(x=df['FWHM'], y=df['Group'])
+plt.show()
+
+exit()
+
+#
+
+#
+
+
+# plt.plot(climp_width_list)
+# plt.show()
+# print(ctrl_width_list)
+# plt.plot(np.quantile(ctrl_width_list, 0.75))
+# plt.show()
+
+exit()
 
 def remove_ones(feature_list):
     return [val for val in feature_list if val > 3]
