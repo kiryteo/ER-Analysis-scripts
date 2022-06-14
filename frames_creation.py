@@ -1,9 +1,61 @@
 import os
 import matplotlib.pyplot as plt
 import cv2
+from PIL import Image
+import imageio
 
 home = os.path.expanduser('~')
 
+std = '/localhome/asa420/MIAL/data/selective_analysis/rtn/rtn_s10/std/Series010_decon_converted_t06_ch00_std.png'
+skel = '/localhome/asa420/MIAL/data/selective_analysis/rtn/rtn_s10/skel/Series010_decon_converted_t62_ch00_std_enhance_skel.png'
+brpts = '/localhome/asa420/ER-Analysis-scripts/rtn_t6_brpts.png'
+dil_brpts = '/localhome/asa420/ER-Analysis-scripts/rtn_t6_dilbr.png'
+tubules = '/localhome/asa420/ER-Analysis-scripts/rtn_t6_tub.png'
+# labeled_tubules = '/localhome/asa420/ER-Analysis-scripts/lab_tub.png'
+# overlay = '/localhome/asa420/ER-Analysis-scripts/er1-ov.png'
+
+
+fig = plt.figure(figsize=(15, 3))
+plt.title('Ctrl_S7_t00', size=18)
+plt.axis('off')
+r, c = 1, 6
+
+fig.add_subplot(r, c, 1)
+plt.imshow(cv2.imread(std))
+plt.axis('off')
+plt.title('Input')
+
+fig.add_subplot(r, c, 2)
+plt.imshow(cv2.imread(skel))
+plt.axis('off')
+plt.title('Skeleton')
+
+fig.add_subplot(r, c, 3)
+plt.imshow(cv2.imread(brpts))
+plt.axis('off')
+plt.title('Junctions')
+
+fig.add_subplot(r, c, 4)
+plt.imshow(cv2.imread(dil_brpts))
+plt.axis('off')
+plt.title('dilated junctions')
+
+fig.add_subplot(r, c, 5)
+plt.imshow(cv2.imread(tubules))
+plt.axis('off')
+plt.title('Tubules')
+
+fig.add_subplot(r, c, 6)
+plt.imshow(cv2.imread(overlay))
+plt.axis('off')
+plt.title('ER + tubules + junctions')
+
+
+plt.savefig('Ctrl_s7_t00.png', bbox_inches='tight')
+            # pad_inches=0.1)
+plt.close()
+
+exit()
 
 def frame_creator(total_series, num_frames):
     prefix = home + '/Desktop/RTN/'
