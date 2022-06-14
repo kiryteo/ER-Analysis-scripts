@@ -18,22 +18,38 @@ import os
 home = os.path.expanduser('~')
 
 dirs_path = home + '/MIAL/data/selective_analysis/'
+plos_data_path = home + '/MIAL/data/CROP-n/Plos_data_crops/'
 
 
 def get_len_list(dil_tubules):
+    """
+    Get length for individual tubules
+    @param dil_tubules: dilated tubules
+    @return: list of lengths for all tubules
+    """
     tub_len_list = []
     for i in range(1, len(np.unique(dil_tubules))):
-        a, b = np.where(dil_tubules == i)[0], np.where(dil_tubules == i)[1]
-        tub_len_list.append(len(a))
+        X, Y = np.where(dil_tubules == i)[0], np.where(dil_tubules == i)[1]
+        tub_len_list.append(len(X))
     return tub_len_list
 
 
-def refine_dil_tubules(dil_tubules):
+def refine_dil_tubules(dil_tubules, img):
+    """
+    Refine the dilated tubules shape to
+    match the original ER shape [get rid
+    of unnecessary signals created via
+    dilation].
+    @type dil_tubules: object
+    @param img: Original ER input
+    @param dil_tubules: dilated tubules
+    @return: refined tubules
+    """
     for i in range(1, len(np.unique(dil_tubules))):
-        a, b = np.where(dil_tubules == i)[0], np.where(dil_tubules == i)[1]
-        for j, k in zip(a, b):
-            if img[j, k] == 0:
-                dil_tubules[j, k] = 0
+        X, Y = np.where(dil_tubules == i)[0], np.where(dil_tubules == i)[1]
+        for x, y in zip(X, Y):
+            if img[x, y] == 0:
+                dil_tubules[x, y] = 0
     return dil_tubules
 
 
@@ -58,13 +74,14 @@ def get_props(enh, samples=False) -> object:
     # print(dil_tubules.shape)
     # print(np.unique(dil_tubules))
 
-    if samples==True:
-        pcv.print_image(brpts, 'rtn_t62_brpts.png')
-        pcv.print_image(dil_brpts, 'rtn_t62_dilbr.png')
-        pcv.print_image(tubules, 'rtn_t62_tub.png')
-        pcv.print_image(tubules, 'rtn_t62_tub2.png')
-        pcv.print_image(lab_tubules, 'rtn_t62_lab_tub.png')
-        pcv.print_image(dil_tubules, '/localhome/asa420/MIAL/data/CROP-n/Plos_data_crops/Climp_crops/Series038_decon_ch02-3_dil_tub.png')
+    # if samples==True:
+        # pcv.print_image(brpts, 'rtn_t62_brpts.png')
+        # pcv.print_image(dil_brpts, 'rtn_t62_dilbr.png')
+        # pcv.print_image(tubules, 'rtn_t62_tub.png')
+        # pcv.print_image(tubules, 'rtn_t62_tub2.png')
+        # pcv.print_image(lab_tubules, 'rtn_t62_lab_tub.png')
+        # pcv.print_image(dil_tubules, '/localhome/asa420/MIAL/data/CROP-n/Plos_data_crops/Climp_crops/Series038_decon_ch02-3_dil_tub.png')
+        # pcv.print_image(refined_tubules, 'dfdf')
 
 
     tub_len_list = get_len_list(dil_tubules)
@@ -80,17 +97,55 @@ def get_props(enh, samples=False) -> object:
 
     return dil_tubules, props, tub_len_list
 
-img, _, _ = pcv.readimage('/localhome/asa420/MIAL/data/CROP-n/Plos_data_crops/Climp_crops/Climp_enh/Series038_decon_ch02-3_enhance.png')
+img, _, _ = pcv.readimage('/localhome/asa420/MIAL/data/CROP-n/Plos_data_crops/RTN_crops/RTN_enh/Series006_decon_ch02-3_enhance.png')
 dt, _, tlist = get_props(img)
 
-print(img.shape)
+erfile = imageio.imread('/localhome/asa420/MIAL/data/CROP-n/Plos_data_crops/RTN_crops/samples/Series006_decon_ch02-3.tif')
 
+dil_tubules = refine_dil_tubules(dt, erfile)
+pcv.print_image(dil_tubules, '/localhome/asa420/MIAL/data/CROP-n/Plos_data_crops/RTN_crops/Series006_decon_ch02-3_dil_lab.png')
 
-
-plt.imshow(dt)
-plt.show()
+#
+# print(img.shape)
+#
+#
 
 exit()
+
+
+def get_intensity_features_plos():
+    """
+    Get intensity values along the tubules.
+    @return: None
+    """
+    for grp in ['Climp', 'CTRL', 'RTN', 'ATL']:
+        enh_samples = glob.glob(plos_data_path + grp + '_crops/' + grp + '_enh/*')
+        # intensity_features = {}
+        intensity_vals = {}
+        for sample in enh_samples:
+            enh = imageio.imread(sample)
+            dil_tubules, props, tub_len_list = get_props(enh)
+
+            er_name = plos_data_path + grp + '_crops/samples/' + sample.split('/')[-1][:-12] + '.tif'
+            er_file = imageio.imread(er_name)
+
+            er_file = (er_file - er_file.min()) / (er_file.max() - er_file.min())
+
+            dil_tubules = refine_dil_tubules(dil_tubules, er_file)
+
+            intensity_vals[er_name] = {}
+            for i in range(1, len(np.unique(dil_tubules))):
+                a, b = np.where(dil_tubules == i)[0], np.where(dil_tubules == i)[1]
+                if len(a) > 10:
+                        # intensity_features[file][i] = {}
+                        # intensity_features[file][i]['X'] = a
+                        # intensity_features[file][i]['Y'] = b
+
+                    intensity_vals[er_name][i] = er_file[a, b]
+                        # print(er_file[a, b])
+        with open(plos_data_path + grp + '_plos_intensity.pkl', 'wb') as fl:
+            op = pickle.dump(intensity_vals, fl)
+
 
 
 def normalize_er_samples():
@@ -282,6 +337,48 @@ def fwhm_analysis(grp):
     # print(width_list[0])
 
     return width_list
+
+
+def fwhm_analysis_plos(grp):
+    with open(plos_data_path + '%s_plos_intensity.pkl' % (f'{grp}'), 'rb') as fl:
+        intensity_data = pickle.load(fl)
+
+    width_list = []
+    for k, v in intensity_data.items():
+        width_l = []
+        for i in range(len(v)):
+            try:
+                peaks, _ = find_peaks(v[i])
+                res_half = peak_widths(v[i], peaks, rel_height=0.5)
+
+                width_l.extend(list(res_half)[0])
+            except:
+                pass
+
+        # sns.displot(width_l)
+        # plt.show()
+
+        width_list.extend(width_l)
+
+    return width_list
+
+
+atl_list = fwhm_analysis_plos('ATL')
+climp_list = fwhm_analysis_plos('Climp')
+ctrl_list = fwhm_analysis_plos('CTRL')
+rtn_list = fwhm_analysis_plos('RTN')
+
+sns.distplot(atl_list, label='ATL')
+sns.distplot(climp_list, label='Climp')
+sns.distplot(ctrl_list, label='Control')
+sns.distplot(rtn_list, label='RTN')
+plt.xlabel('FWHM values')
+plt.legend()
+# plt.suptitle('Pipeline: std->vess->skel->brpts->tubules->dilated tubules->intensity analysis, log scale')
+# plt.suptitle('Pipeline: std->hist_matching->vess->skel->brpts->tubules->dilated tubules->intensity analysis')
+plt.show()
+
+exit()
 
 
 def fwhm_analysis_fr(grp):
