@@ -6,6 +6,54 @@ import imageio
 
 home = os.path.expanduser('~')
 
+pre = '/localhome/asa420/MIAL/data/CROP-n/Plos_data_crops/RTN_crops/'
+
+ser, num = 6, 3
+grp = 'RTN'
+
+er = pre + 'samples/Series%s_decon_ch02-%s.tif'%(f'{ser:03d}', f'{num}')
+lab_tub = pre + 'labeled_tub/Series%s_decon_ch02-%s_lab.tif'%(f'{ser:03d}', f'{num}')
+dil_tub = pre + 'labeled_dil_tubules/Series%s_decon_ch02-%s_dil_tub.tif'%(f'{ser:03d}', f'{num}')
+overlay = pre + 'skel/Series%s_decon_ch02-%s_fuse.png'%(f'{ser:03d}', f'{num}')
+skelbr = pre + 'Series%s_decon_ch02-%s_skel_br.png'%(f'{ser:03d}', f'{num}')
+
+
+fig = plt.figure(figsize=(15, 4))
+plt.title(grp + '_S%s_%s'%(f'{ser:01d}', f'{num:01d}'), size=18)
+plt.axis('off')
+r, c = 1, 5
+
+fig.add_subplot(r, c, 1)
+plt.imshow(cv2.imread(er))
+plt.axis('off')
+plt.title('Input')
+
+fig.add_subplot(r, c, 2)
+plt.imshow(cv2.imread(overlay))
+plt.axis('off')
+plt.title('Input+Skel')
+
+fig.add_subplot(r, c, 3)
+plt.imshow(cv2.imread(skelbr))
+plt.axis('off')
+plt.title('Skel+junc')
+
+fig.add_subplot(r, c, 4)
+plt.imshow(cv2.imread(lab_tub))
+plt.axis('off')
+plt.title('Tubule skeleton')
+
+fig.add_subplot(r, c, 5)
+plt.imshow(cv2.imread(dil_tub))
+plt.axis('off')
+plt.title('Dilated tubules')
+
+plt.savefig(grp + '_S%s_%s.png'%(f'{ser:01d}', f'{num:01d}'), bbox_inches='tight')
+# pad_inches=0.1)
+plt.close()
+
+exit()
+
 std = '/localhome/asa420/MIAL/data/selective_analysis/rtn/rtn_s10/std/Series010_decon_converted_t06_ch00_std.png'
 skel = '/localhome/asa420/MIAL/data/selective_analysis/rtn/rtn_s10/skel/Series010_decon_converted_t62_ch00_std_enhance_skel.png'
 brpts = '/localhome/asa420/ER-Analysis-scripts/rtn_t6_brpts.png'

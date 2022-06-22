@@ -14,6 +14,7 @@ from scipy.signal import chirp, find_peaks, peak_widths
 import seaborn as sns
 from scipy.optimize import curve_fit
 import os
+from scipy.stats import shapiro, normaltest, pearsonr, mannwhitneyu, kruskal
 
 home = os.path.expanduser('~')
 
@@ -84,7 +85,7 @@ def get_props(enh, samples=False) -> object:
         # pcv.print_image(refined_tubules, 'dfdf')
 
 
-    tub_len_list = get_len_list(dil_tubules)
+    # tub_len_list = get_len_list(dil_tubules)
 
     # erip = imageio.imread('/localhome/asa420/MIAL/data/selective_analysis/ctrl/ctrl_s7/std/Series007_decon_converted_t00_ch00_std.png')
     # erip[a, b] = 255
@@ -92,25 +93,19 @@ def get_props(enh, samples=False) -> object:
     props = skimage.measure.regionprops(dil_tubules)
     # props = skimage.measure.regionprops(lab_tubules)
 
-    # plt.imshow(erip)
-    # plt.show()
+    return dil_tubules, props
 
-    return dil_tubules, props, tub_len_list
 
-img, _, _ = pcv.readimage('/localhome/asa420/MIAL/data/CROP-n/Plos_data_crops/RTN_crops/RTN_enh/Series006_decon_ch02-3_enhance.png')
-dt, _, tlist = get_props(img)
-
-erfile = imageio.imread('/localhome/asa420/MIAL/data/CROP-n/Plos_data_crops/RTN_crops/samples/Series006_decon_ch02-3.tif')
-
-dil_tubules = refine_dil_tubules(dt, erfile)
-pcv.print_image(dil_tubules, '/localhome/asa420/MIAL/data/CROP-n/Plos_data_crops/RTN_crops/Series006_decon_ch02-3_dil_lab.png')
-
+# img, _, _ = pcv.readimage('/localhome/asa420/MIAL/data/CROP-n/Plos_data_crops/ATL_crops/ATL_enh/Series037_decon_ch02-1_enhance.png')
+# dt, _, tlist = get_props(img)
 #
-# print(img.shape)
+# erfile = imageio.imread('/localhome/asa420/MIAL/data/CROP-n/Plos_data_crops/ATL_crops/samples/Series037_decon_ch02-1.tif')
+#
+# # dil_tubules = refine_dil_tubules(dt, erfile)
+# pcv.print_image(dt, '/localhome/asa420/MIAL/data/CROP-n/Plos_data_crops/ATL_crops/Series037_decon_ch02-1_lab.png')
 #
 #
-
-exit()
+# exit()
 
 
 def get_intensity_features_plos():
@@ -124,19 +119,23 @@ def get_intensity_features_plos():
         intensity_vals = {}
         for sample in enh_samples:
             enh = imageio.imread(sample)
-            dil_tubules, props, tub_len_list = get_props(enh)
+            dil_tubules, props = get_props(enh)
 
             er_name = plos_data_path + grp + '_crops/samples/' + sample.split('/')[-1][:-12] + '.tif'
             er_file = imageio.imread(er_name)
 
             er_file = (er_file - er_file.min()) / (er_file.max() - er_file.min())
 
+            er_file = er_file * 255
+
             dil_tubules = refine_dil_tubules(dil_tubules, er_file)
+
+            # tub_len_list = get_len_list(dil_tubules)
 
             intensity_vals[er_name] = {}
             for i in range(1, len(np.unique(dil_tubules))):
                 a, b = np.where(dil_tubules == i)[0], np.where(dil_tubules == i)[1]
-                if len(a) > 10:
+                if len(a) > 10 and len(a) < 200:
                         # intensity_features[file][i] = {}
                         # intensity_features[file][i]['X'] = a
                         # intensity_features[file][i]['Y'] = b
@@ -178,6 +177,90 @@ def normalize_er_samples():
     return intensity_vals
 
 
+def remove_outliers(x):
+    # return [a for a in x if a < 200]
+    return [a for a in x if a < 200 and a > 10]
+
+
+def get_tub_len_plos():
+    data = {}
+    for grp in ['Climp', 'CTRL', 'RTN', 'ATL']:
+        data[grp] = []
+        enh_samples = glob.glob(plos_data_path + grp + '_crops/' + grp + '_enh/*')
+        # intensity_features = {}
+        intensity_vals = {}
+        for sample in enh_samples:
+            enh = imageio.imread(sample)
+            dil_tubules, props = get_props(enh)
+
+            er_name = plos_data_path + grp + '_crops/samples/' + sample.split('/')[-1][:-12] + '.tif'
+            er_file = imageio.imread(er_name)
+
+            er_file = (er_file - er_file.min()) / (er_file.max() - er_file.min())
+
+            dil_tubules = refine_dil_tubules(dil_tubules, er_file)
+
+            tub_len_list = get_len_list(dil_tubules)
+            data[grp].extend(tub_len_list)
+
+    at = data['ATL']
+    cl = data['Climp']
+    ct = data['CTRL']
+    rt = data['RTN']
+
+    # print(at)
+
+    # stat, p_atcl = mannwhitneyu(at, cl)
+    # stat, p_atct = mannwhitneyu(at, ct)
+    # stat, p_atrt = mannwhitneyu(at, rt)
+    # stat, p_clct = mannwhitneyu(cl, ct)
+    # stat, p_clrt = mannwhitneyu(cl, rt)
+    # stat, p_ctrt = mannwhitneyu(ct, rt)
+    # print(p_atcl)
+    # print(p_atct)
+    # print(p_atrt)
+    # print(p_clct)
+    # print(p_clrt)
+    # print(p_ctrt)
+
+    # print("/n")
+
+    # stat, p_atcl = kruskal(at, cl, ct, rt)
+    # # stat, p_atct = kruskal(at, ct)
+    # # stat, p_atrt = kruskal(at, rt)
+    # # stat, p_clct = kruskal(cl, ct)
+    # # stat, p_clrt = kruskal(cl, rt)
+    # # stat, p_ctrt = kruskal(ct, rt)
+    # print(p_atcl)
+    # print(p_atct)
+    # print(p_atrt)
+    # print(p_clct)
+    # print(p_clrt)
+    # print(p_ctrt)
+
+    # at = remove_outliers(at)
+    # cl = remove_outliers(cl)
+    # ct = remove_outliers(ct)
+    # rt = remove_outliers(rt)
+
+    at = np.log(remove_outliers(at))
+    cl = np.log(remove_outliers(cl))
+    ct = np.log(remove_outliers(ct))
+    rt = np.log(remove_outliers(rt))
+
+    sns.distplot(at, hist=False, label='ATL')
+    sns.distplot(cl, hist=False, label='Climp')
+    sns.distplot(ct, hist=False, label='Control')
+    sns.distplot(rt, hist=False, label='RTN')
+    plt.xlabel('Tubules length (in pixels, log scale)')
+    # plt.xlabel('FWHM values (log scale)')
+    plt.legend()
+    # # plt.suptitle('Pipeline: std->vess->skel->brpts->tubules->dilated tubules->intensity analysis, log scale')
+    # # plt.suptitle('Pipeline: std->hist_matching->vess->skel->brpts->tubules->dilated tubules->intensity analysis')
+    plt.title('Tubule length values per group (PLOS data analysis)')
+    plt.show()
+
+
 def get_tubule_length():
     data = {}
     for grp in ['climp', 'ctrl', 'rtn']:
@@ -208,11 +291,6 @@ def get_tubule_length():
     # plt.suptitle('Pipeline: std->hist_matching->vess->skel->brpts->tubules->dilated tubules->intensity analysis')
     # plt.title('Tubule length values per group')
     plt.show()
-
-
-def remove_outliers(x):
-    # return [a for a in x if a < 200]
-    return [a for a in x if a < 200 and a > 10]
 
 
 def get_prop_dicts():
@@ -339,6 +417,27 @@ def fwhm_analysis(grp):
     return width_list
 
 
+def rtn_intensity_profiles_plos():
+    with open(plos_data_path + 'CTRL_plos_intensity.pkl', 'rb') as fl:
+        intensity_data = pickle.load(fl)
+
+    ser221 = intensity_data['/localhome/asa420/MIAL/data/CROP-n/Plos_data_crops/CTRL_crops/samples/Series002_decon_ch02-3.tif']
+
+    tubule = ser221[29]
+    plt.xlabel('Tubule length')
+    plt.ylabel('Intensity value')
+    plt.title('Intensity profile, CTRL-Series002-3, tubule ID 29')
+    plt.plot(tubule)
+    plt.show()
+    # for k, v in intensity_data.items():
+    #     print(k)
+
+
+
+rtn_intensity_profiles_plos()
+exit()
+
+
 def fwhm_analysis_plos(grp):
     with open(plos_data_path + '%s_plos_intensity.pkl' % (f'{grp}'), 'rb') as fl:
         intensity_data = pickle.load(fl)
@@ -368,14 +467,40 @@ climp_list = fwhm_analysis_plos('Climp')
 ctrl_list = fwhm_analysis_plos('CTRL')
 rtn_list = fwhm_analysis_plos('RTN')
 
-sns.distplot(atl_list, label='ATL')
-sns.distplot(climp_list, label='Climp')
-sns.distplot(ctrl_list, label='Control')
-sns.distplot(rtn_list, label='RTN')
+# stat, atcl = mannwhitneyu(atl_list, climp_list)
+# stat, atct = mannwhitneyu(atl_list, ctrl_list)
+# stat, atrt = mannwhitneyu(atl_list, rtn_list)
+# stat, clct = mannwhitneyu(climp_list, ctrl_list)
+# stat, clrt = mannwhitneyu(climp_list, rtn_list)
+# stat, ctrt = mannwhitneyu(ctrl_list, rtn_list)
+
+
+# print(atcl)
+# print(atct)
+# print(atrt)
+# print(clct)
+# print(clrt)
+# print(ctrt)
+
+# st, p = kruskal(atl_list, climp_list, ctrl_list, rtn_list)
+# print(p)
+#
+# exit()
+
+# atl_list = np.log(atl_list)
+# climp_list = np.log(climp_list)
+# ctrl_list = np.log(ctrl_list)
+# rtn_list = np.log(rtn_list)
+
+sns.distplot(atl_list, hist=False, label='ATL')
+sns.distplot(climp_list, hist=False, label='Climp')
+sns.distplot(ctrl_list, hist=False, label='Control')
+sns.distplot(rtn_list, hist=False, label='RTN')
 plt.xlabel('FWHM values')
 plt.legend()
 # plt.suptitle('Pipeline: std->vess->skel->brpts->tubules->dilated tubules->intensity analysis, log scale')
 # plt.suptitle('Pipeline: std->hist_matching->vess->skel->brpts->tubules->dilated tubules->intensity analysis')
+plt.title('FWHM values per group (PLOS data analysis)')
 plt.show()
 
 exit()
