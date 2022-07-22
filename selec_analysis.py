@@ -10,11 +10,14 @@ import pandas as pd
 from scipy import stats
 from scipy.stats import norm
 import matplotlib.pyplot as plt
-from scipy.signal import chirp, find_peaks, peak_widths
+from scipy.signal import chirp, find_peaks, peak_widths, peak_prominences
+from scipy.ndimage import gaussian_filter1d
 import seaborn as sns
 from scipy.optimize import curve_fit
 import os
 from scipy.stats import shapiro, normaltest, pearsonr, mannwhitneyu, kruskal
+
+from KDEpy import FFTKDE
 
 home = os.path.expanduser('~')
 
@@ -71,7 +74,7 @@ def get_props(enh, samples=False) -> object:
     # tubules = (tubules == 255).astype('int') * 255 # for viz
     tubules = (tubules == 255).astype('int')
     lab_tubules = skimage.measure.label(tubules)
-    dil_tubules = skimage.morphology.dilation(lab_tubules)
+    # dil_tubules = skimage.morphology.dilation(lab_tubules)
     # print(dil_tubules.shape)
     # print(np.unique(dil_tubules))
 
@@ -90,10 +93,10 @@ def get_props(enh, samples=False) -> object:
     # erip = imageio.imread('/localhome/asa420/MIAL/data/selective_analysis/ctrl/ctrl_s7/std/Series007_decon_converted_t00_ch00_std.png')
     # erip[a, b] = 255
 
-    props = skimage.measure.regionprops(dil_tubules)
-    # props = skimage.measure.regionprops(lab_tubules)
+    # props = skimage.measure.regionprops(dil_tubules)
+    props = skimage.measure.regionprops(lab_tubules)
 
-    return dil_tubules, props
+    return lab_tubules, props
 
 
 # img, _, _ = pcv.readimage('/localhome/asa420/MIAL/data/CROP-n/Plos_data_crops/ATL_crops/ATL_enh/Series037_decon_ch02-1_enhance.png')
@@ -119,7 +122,8 @@ def get_intensity_features_plos():
         intensity_vals = {}
         for sample in enh_samples:
             enh = imageio.imread(sample)
-            dil_tubules, props = get_props(enh)
+            # dil_tubules, props = get_props(enh)
+            lab_tubules, props = get_props(enh)
 
             er_name = plos_data_path + grp + '_crops/samples/' + sample.split('/')[-1][:-12] + '.tif'
             er_file = imageio.imread(er_name)
@@ -128,13 +132,13 @@ def get_intensity_features_plos():
 
             er_file = er_file * 255
 
-            dil_tubules = refine_dil_tubules(dil_tubules, er_file)
+            # dil_tubules = refine_dil_tubules(dil_tubules, er_file)
 
             # tub_len_list = get_len_list(dil_tubules)
 
             intensity_vals[er_name] = {}
-            for i in range(1, len(np.unique(dil_tubules))):
-                a, b = np.where(dil_tubules == i)[0], np.where(dil_tubules == i)[1]
+            for i in range(1, len(np.unique(lab_tubules))):
+                a, b = np.where(lab_tubules == i)[0], np.where(lab_tubules == i)[1]
                 if len(a) > 10 and len(a) < 200:
                         # intensity_features[file][i] = {}
                         # intensity_features[file][i]['X'] = a
@@ -142,9 +146,12 @@ def get_intensity_features_plos():
 
                     intensity_vals[er_name][i] = er_file[a, b]
                         # print(er_file[a, b])
-        with open(plos_data_path + grp + '_plos_intensity.pkl', 'wb') as fl:
+        with open(plos_data_path + grp + '_plos_skel_intensity.pkl', 'wb') as fl:
             op = pickle.dump(intensity_vals, fl)
 
+
+# get_intensity_features_plos()
+# exit()
 
 
 def normalize_er_samples():
@@ -198,7 +205,7 @@ def get_tub_len_plos():
 
             er_file = (er_file - er_file.min()) / (er_file.max() - er_file.min())
 
-            dil_tubules = refine_dil_tubules(dil_tubules, er_file)
+            # dil_tubules = refine_dil_tubules(dil_tubules, er_file)
 
             tub_len_list = get_len_list(dil_tubules)
             data[grp].extend(tub_len_list)
@@ -238,26 +245,47 @@ def get_tub_len_plos():
     # print(p_clrt)
     # print(p_ctrt)
 
-    # at = remove_outliers(at)
-    # cl = remove_outliers(cl)
-    # ct = remove_outliers(ct)
-    # rt = remove_outliers(rt)
+    at = remove_outliers(at)
+    cl = remove_outliers(cl)
+    ct = remove_outliers(ct)
+    rt = remove_outliers(rt)
 
-    at = np.log(remove_outliers(at))
-    cl = np.log(remove_outliers(cl))
-    ct = np.log(remove_outliers(ct))
-    rt = np.log(remove_outliers(rt))
+    # at = np.log(remove_outliers(at))
+    # cl = np.log(remove_outliers(cl))
+    # ct = np.log(remove_outliers(ct))
+    # rt = np.log(remove_outliers(rt))
 
-    sns.distplot(at, hist=False, label='ATL')
-    sns.distplot(cl, hist=False, label='Climp')
-    sns.distplot(ct, hist=False, label='Control')
-    sns.distplot(rt, hist=False, label='RTN')
-    plt.xlabel('Tubules length (in pixels, log scale)')
-    # plt.xlabel('FWHM values (log scale)')
-    plt.legend()
-    # # plt.suptitle('Pipeline: std->vess->skel->brpts->tubules->dilated tubules->intensity analysis, log scale')
-    # # plt.suptitle('Pipeline: std->hist_matching->vess->skel->brpts->tubules->dilated tubules->intensity analysis')
-    plt.title('Tubule length values per group (PLOS data analysis)')
+    # sns.distplot(at, hist=False, label='ATL')
+    # sns.distplot(cl, hist=False, label='Climp')
+    # sns.distplot(ct, hist=False, label='Control')
+    # sns.distplot(rt, hist=False, label='RTN')
+    # plt.xlabel('Tubules length (in pixels, log scale)')
+    # # plt.xlabel('FWHM values (log scale)')
+    # plt.legend()
+    # # # plt.suptitle('Pipeline: std->vess->skel->brpts->tubules->dilated tubules->intensity analysis, log scale')
+    # # # plt.suptitle('Pipeline: std->hist_matching->vess->skel->brpts->tubules->dilated tubules->intensity analysis')
+    # plt.title('Tubule length values per group (PLOS data analysis)')
+    # plt.show()
+
+
+    # x, y = FFTKDE(bw='silverman').fit(at, at).evaluate()
+    # plt.plot(x, y)
+    # plt.show()
+
+    plt.hist(at)
+    plt.hist(cl)
+    plt.hist(ct)
+    plt.hist(rt)
+
+    # kde = FFTKDE(bw='silverman', kernel='box')
+    # x1, y1 = kde.fit(at)()
+    # plt.plot(x1, y1)
+    # x2, y2 = kde.fit(cl)()
+    # plt.plot(x2, y2)
+    # x3, y3 = kde.fit(ct)()
+    # plt.plot(x3, y3)
+    # x4, y4 = kde.fit(rt)()
+    # plt.plot(x4, y4)
     plt.show()
 
 
@@ -417,38 +445,155 @@ def fwhm_analysis(grp):
     return width_list
 
 
-def rtn_intensity_profiles_plos():
-    with open(plos_data_path + 'CTRL_plos_intensity.pkl', 'rb') as fl:
+import sys
+from numpy import NaN, Inf, arange, isscalar, asarray, array
+
+def peakdet(v, delta, x = None):
+    """
+    Converted from MATLAB script at http://billauer.co.il/peakdet.html
+
+    Returns two arrays
+
+    function [maxtab, mintab]=peakdet(v, delta, x)
+    %PEAKDET Detect peaks in a vector
+    %        [MAXTAB, MINTAB] = PEAKDET(V, DELTA) finds the local
+    %        maxima and minima ("peaks") in the vector V.
+    %        MAXTAB and MINTAB consists of two columns. Column 1
+    %        contains indices in V, and column 2 the found values.
+    %
+    %        With [MAXTAB, MINTAB] = PEAKDET(V, DELTA, X) the indices
+    %        in MAXTAB and MINTAB are replaced with the corresponding
+    %        X-values.
+    %
+    %        A point is considered a maximum peak if it has the maximal
+    %        value, and was preceded (to the left) by a value lower by
+    %        DELTA.
+
+    % Eli Billauer, 3.4.05 (Explicitly not copyrighted).
+    % This function is released to the public domain; Any use is allowed.
+
+    """
+    maxtab = []
+    mintab = []
+
+    if x is None:
+        x = arange(len(v))
+
+    v = asarray(v)
+
+    if len(v) != len(x):
+        sys.exit('Input vectors v and x must have same length')
+
+    if not isscalar(delta):
+        sys.exit('Input argument delta must be a scalar')
+
+    if delta <= 0:
+        sys.exit('Input argument delta must be positive')
+
+    mn, mx = Inf, -Inf
+    mnpos, mxpos = NaN, NaN
+
+    lookformax = True
+
+    for i in arange(len(v)):
+        this = v[i]
+        if this > mx:
+            mx = this
+            mxpos = x[i]
+        if this < mn:
+            mn = this
+            mnpos = x[i]
+
+        if lookformax:
+            if this < mx-delta:
+                maxtab.append((mxpos, mx))
+                mn = this
+                mnpos = x[i]
+                lookformax = False
+        else:
+            if this > mn+delta:
+                mintab.append((mnpos, mn))
+                mx = this
+                mxpos = x[i]
+                lookformax = True
+
+    return array(maxtab), array(mintab)
+
+# if __name__=="__main__":
+#     from matplotlib.pyplot import plot, scatter, show
+#     series = [0,0,0,2,0,0,0,-2,0,0,0,2,0,0,0,-2,0]
+#     maxtab, mintab = peakdet(series,.3)
+#     plot(series)
+#     scatter(array(maxtab)[:,0], array(maxtab)[:,1], color='blue')
+#     scatter(array(mintab)[:,0], array(mintab)[:,1], color='red')
+#     show()
+
+
+def scan_line_matching():
+    with open(plos_data_path + group + '_plos_skel_intensity.pkl', 'rb') as fl:
         intensity_data = pickle.load(fl)
 
-    ser221 = intensity_data['/localhome/asa420/MIAL/data/CROP-n/Plos_data_crops/CTRL_crops/samples/Series002_decon_ch02-3.tif']
+    ser221 = intensity_data['/localhome/asa420/MIAL/data/CROP-n/Plos_data_crops/' + group + '_crops/samples/Series037_decon_ch02-1.tif']
 
-    tubule = ser221[29]
-    plt.xlabel('Tubule length')
-    plt.ylabel('Intensity value')
-    plt.title('Intensity profile, CTRL-Series002-3, tubule ID 29')
-    plt.plot(tubule)
-    plt.show()
+    for i in range(1, len(ser221)):
+        try:
+            tubule = ser221[i]
+
+
+
+def rtn_intensity_profiles_plos(group):
+    with open(plos_data_path + group + '_plos_skel_intensity.pkl', 'rb') as fl:
+        intensity_data = pickle.load(fl)
+
+    ser221 = intensity_data['/localhome/asa420/MIAL/data/CROP-n/Plos_data_crops/' + group + '_crops/samples/Series037_decon_ch02-1.tif']
+
+    for i in range(1, len(ser221)):
+        try:
+            tubule = ser221[i]
+            # peaks, _ = find_peaks(tubule, prominence=10, width=2)
+            # tubule = gaussian_filter1d(tubule, 1)
+
+            # w, _, _ = peak_widths([max(tubule)])
+
+            # maxtab, mintab = peakdet(tubule, .3)
+            # peaks, _ = find_peaks(tubule, prominence=8)
+            peaks, _ = find_peaks(tubule, height=5, threshold=2, prominence=8)
+            # promi, _ = peak_prominences(tubule, peaks)
+
+            plt.xlabel('Tubule length')
+            plt.ylabel('Intensity value')
+            plt.title('Intensity profile, ' + group + '_Series037_1_id_%s'%f'{i}')
+            plt.plot(tubule)
+            plt.plot(peaks, tubule[peaks], "x")
+            # plt.scatter(array(maxtab)[:,0], array(maxtab)[:,1], color='blue')
+            # plt.scatter(array(mintab)[:,0], array(mintab)[:,1], color='red')
+            # plt.show()
+            plt.savefig('/localhome/asa420/MIAL/data/CROP-n/Plos_data_crops/intensity_profiles/' + group + '_Series037_1_id_%s'%f'{i}')
+            plt.close()
+        except:
+            pass
     # for k, v in intensity_data.items():
     #     print(k)
 
-
-
-rtn_intensity_profiles_plos()
-exit()
+# rtn_intensity_profiles_plos('ATL')
+# exit()
 
 
 def fwhm_analysis_plos(grp):
-    with open(plos_data_path + '%s_plos_intensity.pkl' % (f'{grp}'), 'rb') as fl:
+    with open(plos_data_path + '%s_plos_skel_intensity.pkl' % (f'{grp}'), 'rb') as fl:
         intensity_data = pickle.load(fl)
 
     width_list = []
     for k, v in intensity_data.items():
         width_l = []
+        # for i in range(1, 3):
         for i in range(len(v)):
             try:
-                peaks, _ = find_peaks(v[i])
+                # peaks, _ = find_peaks(v[i], distance=10)
+                peaks,  _ = find_peaks(v[i], height=5, threshold=2, prominence=8)
                 res_half = peak_widths(v[i], peaks, rel_height=0.5)
+                # plt.plot(res_half)
+                # plt.show()
 
                 width_l.extend(list(res_half)[0])
             except:
@@ -460,6 +605,10 @@ def fwhm_analysis_plos(grp):
         width_list.extend(width_l)
 
     return width_list
+
+
+# fwhm_analysis_plos('Climp')
+# exit()
 
 
 atl_list = fwhm_analysis_plos('ATL')
@@ -626,6 +775,7 @@ plt.show()
 # plt.close()
 
 # plt.show()
+
 
 def exp_func(x, a, b, c):
     return a * np.exp(-b * x) + c
