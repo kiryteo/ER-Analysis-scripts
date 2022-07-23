@@ -6,10 +6,56 @@ import imageio
 
 home = os.path.expanduser('~')
 
-pre = '/localhome/asa420/MIAL/data/CROP-n/Plos_data_crops/RTN_crops/'
 
-ser, num = 6, 3
-grp = 'RTN'
+input = '/localhome/asa420/MIAL/data/confocal_movies/RTN/files/'
+preproc = '/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/preproc/'
+skel = '/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/skel/'
+
+meansk = '/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/'
+
+svpath = '/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/frames/'
+
+for i in range(1, 32):
+    os.makedirs(meansk + 'frames/R%s'%f'{i}')
+    for j in range(100):
+        img = input + 'R%s_decon_t0%s_ch00.tif'%(f'{i}', f'{j:02d}')
+        proc = preproc + 'R%s/R%s_decon_t0%s_ch00_proc.png'%(f'{i}', f'{i}', f'{j:02d}')
+        sk = skel + 'R%s/R%s_decon_t0%s_ch00_skel.png'%(f'{i}', f'{i}', f'{j:02d}')
+        meanfr = meansk + 'R%s_mean.png'%(f'{i}')
+
+        img = imageio.imread(img)
+        std_img = ((img) / (img.max() - img.min())) * 255
+
+        fig = plt.figure(figsize=(8, 4))
+        plt.title('R%s_decon_t0%s_ch00_frame'%(f'{i}', f'{j:02d}'))
+        plt.axis('off')
+        r, c = 1, 4
+
+        fig.add_subplot(r, c, 1)
+        plt.imshow(std_img)
+        plt.axis('off')
+        plt.title('Input')
+
+        fig.add_subplot(r, c, 2)
+        plt.imshow(cv2.imread(proc))
+        plt.axis('off')
+        plt.title('Preprocessing')
+
+        fig.add_subplot(r, c, 3)
+        plt.imshow(cv2.imread(sk))
+        plt.axis('off')
+        plt.title('Network')
+
+        fig.add_subplot(r, c, 4)
+        plt.imshow(cv2.imread(meanfr))
+        plt.axis('off')
+        plt.title('Mean Skel')
+
+        plt.savefig(svpath + 'R%s/R%s_decon_t0%s_ch00_frame.png'%(f'{i}',f'{i}', f'{j:02d}'), bbox_inches='tight')
+        # pad_inches=0.1)
+        plt.close()
+
+exit()
 
 er = pre + 'samples/Series%s_decon_ch02-%s.tif'%(f'{ser:03d}', f'{num}')
 lab_tub = pre + 'labeled_tub/Series%s_decon_ch02-%s_lab.tif'%(f'{ser:03d}', f'{num}')

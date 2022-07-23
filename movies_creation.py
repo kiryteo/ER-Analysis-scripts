@@ -49,6 +49,38 @@ def group_movies_creator(total_series, num_frames, width, height):
 # group_movies_creator(29, 100, 1926, 642)
 
 
+
+
+def graph_movie_creator():
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    prefix = '/localhome/asa420/MIAL/data/confocal_movies/Climp/graph_overlay_endpts/'
+    video = cv2.VideoWriter('Climp_Confocal_S29_graphs_endpts.mp4', fourcc, 1.5, (480, 480))
+    for frame in range(100):
+        img = cv2.imread(prefix + 'C29_decon_t0%s_ch01_graph_overlay.png'%f'{frame:02d}')
+        video.write(img)
+
+    cv2.destroyAllWindows()
+    video.release()
+
+# graph_movie_creator()
+# exit()
+
+
+def graph_overlay_movie_creator():
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    prefix = '/localhome/asa420/MIAL/data/confocal_movies/ATL/graphs/'
+    video = cv2.VideoWriter('ATL_Confocal_graph_series1.mp4', fourcc, 1.5, (480, 480))
+    for frame in range(100):
+        img = cv2.imread(prefix + 'A1_decon_t0%s_ch01_std_std_adj_adapthist.png'%f'{frame:02d}')
+        video.write(img)
+
+    cv2.destroyAllWindows()
+    video.release()
+
+
+# graph__overlay_movie_creator()
+
+
 def hist_movie_creator():
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     prefix = '/localhome/asa420/MIAL/data/live-cell-movies/COSKDELRTN/Decon/Series005_decon_converted/hist/'
@@ -60,4 +92,18 @@ def hist_movie_creator():
     cv2.destroyAllWindows()
     video.release()
 
-hist_movie_creator()
+
+def conf_movies_new():
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    prefix = '/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/frames/'
+    for i in range(1, 32):
+        video = cv2.VideoWriter('Conf_Control_Series%s.mp4'%f'{i}', fourcc, 1.5, (640, 350))
+        for frame in range(100):
+            img = cv2.imread(prefix + 'Ct%s/Ct%s_decon_t0%s_ch00_frame.png'%(f'{i}', f'{i}', f'{frame:02d}'))
+            video.write(img)
+
+        cv2.destroyAllWindows()
+        video.release()
+
+
+conf_movies_new()
