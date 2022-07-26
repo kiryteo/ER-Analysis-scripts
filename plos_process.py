@@ -7,6 +7,60 @@ import cv2
 import os
 from plantcv import plantcv as pcv
 import glob
+from skimage import restoration
+
+
+def extract_fuzzy_region():
+    for i in range(2, 3):
+        img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_mean_proj/A%s_mean.png'%f'{i}')
+        kernel = restoration.ellipsoid_kernel((2, 2), 2)
+        fuz = restoration.rolling_ball(img, kernel=kernel)
+        op = skimage.morphology.erosion(fuz)
+        op = skimage.morphology.erosion(op)
+        # cv2.imwrite('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/RTN_mean_proj/R%s_mean_fuzz.png'%f'{i}', op)
+        fig = plt.figure(figsize=(8, 4))
+        # plt.title('R%s_fuzzy'%f'{i}')
+        plt.axis('off')
+        r, c = 1, 2
+
+        fig.add_subplot(r, c, 1)
+        plt.imshow(img)
+        plt.axis('off')
+
+        fig.add_subplot(r, c, 2)
+        plt.imshow(op)
+        plt.axis('off')
+
+        plt.show()
+
+extract_fuzzy_region()
+exit()
+
+
+def fuzzy_frames():
+    for i in range(1, 30):
+        img_path = '/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/RTN_mean_proj/R%s_mean.png'%f'{i}'
+        fuzzy_path = '/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/fuzzy/R%s_mean_fuzz.png'%f'{i}'
+
+        fig = plt.figure(figsize=(8, 4))
+        plt.title('R%s_fuzzy'%f'{i}')
+        plt.axis('off')
+        r, c = 1, 2
+
+        fig.add_subplot(r, c, 1)
+        plt.imshow(cv2.imread(img_path))
+        plt.axis('off')
+
+        fig.add_subplot(r, c, 2)
+        plt.imshow(cv2.imread(fuzzy_path))
+        plt.axis('off')
+
+        plt.savefig('R%s_fuzzy_frame_cv.png'%f'{i}', bbox_inches='tight')
+        plt.close()
+
+fuzzy_frames()
+exit()
+
 
 def preprocess_samples(group):
     path_pref = '/localhome/asa420/MIAL/data/confocal_movies/' + group + '/files/'
@@ -65,41 +119,42 @@ def Agg(path):
 
 # Agg('/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/skel/')
 
-exit()
+# exit()
 
 # plt.imshow(mei)
 # plt.imshow(fr)
-fig = plt.figure(figsize=(8, 6))
+
+# fig = plt.figure(figsize=(8, 6))
 # plt.title('A1_decon_t001_ch00_frame')
-plt.axis('off')
-r, c = 2, 3
+# plt.axis('off')
+# r, c = 2, 3
 #
 
-fig.add_subplot(r, c, 1)
-plt.imshow(aop)
-plt.axis('off')
-
-fig.add_subplot(r, c, 2)
-plt.imshow(loc)
-plt.axis('off')
-
-fig.add_subplot(r, c, 3)
-plt.imshow(bu1)
-plt.axis('off')
-# plt.title('Input')
-
-fig.add_subplot(r, c, 4)
-plt.imshow(bu2)
-plt.axis('off')
-# plt.title('sharp')
-
-fig.add_subplot(r, c, 5)
-plt.imshow(bu3)
-plt.axis('off')
-
-fig.add_subplot(r, c, 6)
-plt.imshow(bu4)
-plt.axis('off')
+# fig.add_subplot(r, c, 1)
+# plt.imshow(aop)
+# plt.axis('off')
+#
+# fig.add_subplot(r, c, 2)
+# plt.imshow(loc)
+# plt.axis('off')
+#
+# fig.add_subplot(r, c, 3)
+# plt.imshow(bu1)
+# plt.axis('off')
+# # plt.title('Input')
+#
+# fig.add_subplot(r, c, 4)
+# plt.imshow(bu2)
+# plt.axis('off')
+# # plt.title('sharp')
+#
+# fig.add_subplot(r, c, 5)
+# plt.imshow(bu3)
+# plt.axis('off')
+#
+# fig.add_subplot(r, c, 6)
+# plt.imshow(bu4)
+# plt.axis('off')
 
 # plt.imshow(bu)
 
@@ -121,7 +176,7 @@ plt.axis('off')
 # plt.imshow(bu8)
 # plt.axis('off')
 
-plt.show()
+# plt.show()
 
 # cv2.imwrite('cv2_res.png', img8)
 
@@ -129,4 +184,4 @@ plt.show()
 # print(img.min())
 #
 #
-exit()
+# exit()
