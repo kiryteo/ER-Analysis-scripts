@@ -14,6 +14,272 @@ import scipy.stats
 from skimage import measure
 from scipy import ndimage
 from PIL import Image
+from skimage.transform import warp
+from skimage.registration import optical_flow_tvl1, optical_flow_ilk
+from skimage.color import rgb2gray
+
+
+def sk_mov_creator():
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    video = cv2.VideoWriter('A2_skel.mp4', fourcc, 1.5, (128, 128))
+    for i in range(100):
+        im = cv2.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t0%s_ch00_skel.png'%f'{i:02d}')
+        video.write(im)
+
+    cv2.destroyAllWindows()
+    video.release()
+
+sk_mov_creator()
+exit()
+
+def fuz_movie_creator():
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    video = cv2.VideoWriter('RTN_Series4_fuzzy_area.mp4', fourcc, 1.5, (790, 290))
+
+    for i in range(100):
+        im = cv2.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/fuzz_frames/R4_decon_t0%s_frame.png'%f'{i:02d}')
+        video.write(im)
+
+    cv2.destroyAllWindows()
+    video.release()
+
+
+def fuz_frame_creator():
+    mask = Image.open('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/fuzzy_bin/R4_fuzz_bin.png')
+    for i in range(100):
+        # im1 = cv2.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel_fuz/A2_decon_t0%s_skel_fuz.png'%f'{i:02d}')
+        # video.write(im1)
+        er = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/files/R4_decon_t0%s_ch00.tif'%f'{i:02d}')
+        er = (er - er.min()) / (er.max() - er.min())
+
+        im1 = Image.open('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/skel/R4/R4_decon_t0%s_ch00_skel.png'%f'{i:02d}')
+        o1 = np.array(Image.blend(im1, mask, 0.5))
+
+        o1 = cv2.cvtColor(o1, cv2.COLOR_BGR2RGB)
+
+        fig = plt.figure(figsize=(8,3))
+        # plt.title()
+        plt.axis('off')
+        r, c = 1, 4
+
+        fig.add_subplot(r, c, 1)
+        plt.imshow(er)
+        plt.axis('off')
+        plt.title('Input ER')
+
+        fig.add_subplot(r, c, 2)
+        plt.imshow(im1)
+        plt.axis('off')
+        plt.title('Network')
+
+        fig.add_subplot(r, c, 3)
+        plt.imshow(mask)
+        plt.axis('off')
+        plt.title('Fuzzy area')
+
+        fig.add_subplot(r, c, 4)
+        plt.imshow(o1)
+        plt.axis('off')
+        plt.title('Overlay')
+
+        fig.tight_layout()
+        plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/fuzz_frames/R4_decon_t0%s_frame.png'%f'{i:02d}', bbox_inches='tight')
+
+        plt.close()
+
+    # plt.show()
+#     imageio.imwrite('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel_fuz/A2_decon_t0%s_skel_fuz.png'%f'{i:02d}', o1)
+    # print(o1.shape)
+    # video.write(np.array(fig))
+
+
+# fuz_frame_creator()
+
+
+def opt_flow():
+
+    im1 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t000_ch00_skel.png')
+    im2 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t001_ch00_skel.png')
+
+    im1 = rgb2gray(im1)
+    im2 = rgb2gray(im2)
+
+    v, u = optical_flow_tvl1(im1, im2)
+
+    nr, nc = im1.shape
+
+    row_coords, col_coords = np.meshgrid(np.arange(nr), np.arange(nc),
+                                         indexing='ij')
+
+    image2_warp = warp(im2, np.array([row_coords + v, col_coords + u]),
+                   mode='edge')
+
+    # build an RGB image with the unregistered sequence
+    seq_im = np.zeros((nr, nc, 3))
+    seq_im[..., 0] = im2
+    seq_im[..., 1] = im1
+    seq_im[..., 2] = im1
+
+    # build an RGB image with the registered sequence
+    reg_im = np.zeros((nr, nc, 3))
+    reg_im[..., 0] = image2_warp
+    reg_im[..., 1] = im1
+    reg_im[..., 2] = im1
+
+    # build an RGB image with the registered sequence
+    target_im = np.zeros((nr, nc, 3))
+    target_im[..., 0] = im1
+    target_im[..., 1] = im1
+    target_im[..., 2] = im1
+
+    # --- Show the result
+
+    fig, (ax0, ax1, ax2) = plt.subplots(3, 1, figsize=(5, 10))
+
+    ax0.imshow(seq_im)
+    ax0.set_title("Unregistered sequence")
+    ax0.set_axis_off()
+
+    ax1.imshow(reg_im)
+    ax1.set_title("Registered sequence")
+    ax1.set_axis_off()
+
+    ax2.imshow(target_im)
+    ax2.set_title("Target")
+    ax2.set_axis_off()
+
+    fig.tight_layout()
+    plt.show()
+
+
+def opt_flow_mag():
+    norm_list = []
+    global image0
+    global image1
+    for i in range(99):
+        image0 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t0%s_ch00_skel.png'%f'{i:02d}')
+        image1 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t0%s_ch00_skel.png'%f'{i+1:02d}')
+
+        image0 = rgb2gray(image0)
+        image1 = rgb2gray(image1)
+        v, u = optical_flow_ilk(image0, image1, radius=15)
+
+    # --- Compute flow magnitude
+        norm = np.sqrt(u ** 2 + v ** 2)
+        norm_list.append(norm)
+
+    mn = np.mean(norm_list)
+
+    # print(mn)
+    # --- Display
+    # fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(8, 4))
+    fig = plt.figure(figsize=(4,2))
+
+    # --- Sequence image sample
+
+    # ax0.imshow(image0, cmap='gray')
+    # ax0.set_title("Sequence image sample")
+    # ax0.set_axis_off()
+
+    # --- Quiver plot arguments
+
+    nvec = 20  # Number of vectors to be displayed along each image dimension
+    nl, nc = image0.shape
+    step = max(nl//nvec, nc//nvec)
+
+    y, x = np.mgrid[:nl:step, :nc:step]
+    u_ = u[::step, ::step]
+    v_ = v[::step, ::step]
+
+    ax1.imshow(norm)
+    ax1.quiver(x, y, u_, v_, color='r', units='dots',
+               angles='xy', scale_units='xy', lw=3)
+    ax1.set_title("Optical flow magnitude and vector field")
+    ax1.set_axis_off()
+    fig.tight_layout()
+
+    plt.show()
+
+
+# opt_flow_mag()
+# exit()
+
+def opt_flow_lk():
+
+    for i in range(3):
+        image0 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t0%s_ch00_skel.png'%f'{i:02d}')
+        image1 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t0%s_ch00_skel.png'%f'{i+1:02d}')
+
+        image0 = rgb2gray(image0)
+        image1 = rgb2gray(image1)
+        v, u = optical_flow_ilk(image0, image1, radius=15)
+
+        # --- Compute flow magnitude
+        norm = np.sqrt(u ** 2 + v ** 2)
+
+        # --- Display
+        fig, (ax0, ax1, ax2) = plt.subplots(1, 3, figsize=(8, 4))
+
+        # --- Sequence image sample
+
+        ax0.imshow(image0, cmap='gray')
+        ax0.set_title("Frame %s"%f'{i}')
+        ax0.set_axis_off()
+
+        ax1.imshow(image1, cmap='gray')
+        ax1.set_title("Frame %s"%f'{i+1}')
+        ax1.set_axis_off()
+
+        # --- Quiver plot arguments
+
+        nvec = 20  # Number of vectors to be displayed along each image dimension
+        nl, nc = image0.shape
+        step = max(nl//nvec, nc//nvec)
+
+        y, x = np.mgrid[:nl:step, :nc:step]
+        u_ = u[::step, ::step]
+        v_ = v[::step, ::step]
+
+        ax2.imshow(norm)
+        ax2.quiver(x, y, u_, v_, color='r', units='dots',
+                   angles='xy', scale_units='xy', lw=3)
+        ax2.set_title("Optical flow magnitude and vector field")
+        ax2.set_axis_off()
+        fig.tight_layout()
+
+        # plt.show()
+        plt.savefig('Vector_field_frame_%s_%s'%(f'{i}', f'{i+1}'), bbox_inches='tight')
+        plt.close()
+
+
+# opt_flow_lk()
+# exit()
+
+# def opt_flow():
+#     im1 = cv2.imread('')
+#     im2 = cv2.imread('')
+#
+#     # params for ShiTomasi corner detection
+#     feature_params = dict( maxCorners = 100,
+#                        qualityLevel = 0.3,
+#                        minDistance = 7,
+#                        blockSize = 7 )
+#
+# # Parameters for lucas kanade optical flow
+#     lk_params = dict( winSize  = (15,15),
+#                   maxLevel = 2,
+#                   criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
+#
+#     im1_gray = cv2.cvtColor(im1, cv2.COLOR_BGR2GRAY)
+#     im2_gray = cv2.cvtColor(im2, cv2.COLOR_BGR2GRAY)
+#     p0 = cv2.goodFeaturesToTrack(im1_gray, mask=None, **feature_params)
+#     mask = np.zeros_like(im1_gray)
+#
+#     p1, st, err = cv2.calcOpticalFlowPyrLK(im1_gray, im2_gray, p0, None, **lk_params)
+#
+#     good_new = p1[st==1]
+#     good_old = p0[st==1]
+
 
 
 
