@@ -29,8 +29,8 @@ def sk_mov_creator():
     cv2.destroyAllWindows()
     video.release()
 
-sk_mov_creator()
-exit()
+# sk_mov_creator()
+# exit()
 
 def fuz_movie_creator():
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -152,6 +152,93 @@ def opt_flow():
     plt.show()
 
 
+def mag_opt_flow():
+
+    im0 = rgb2gray(imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t001_ch00_skel.png'))
+    im1 = rgb2gray(imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t002_ch00_skel.png'))
+    v, u = optical_flow_ilk(im0, im1, radius=5)
+
+    norm = np.sqrt(u**2 + v**2)
+
+    normst = np.stack((norm,norm,norm), axis=2)
+
+    lt = np.where(im0==255)
+    imst = np.stack((im0,im0,im0), axis=2)
+    imst[lt] = [255, 0, 255]
+
+    # nt = np.where(norm==)
+    # normst = np.stack((norm,norm,norm), axis=2)
+    # normst
+
+    # print(np.unique(norm))
+
+    # print(np.unique(imst))
+    # imc = cv2.cvtColor(im0, cv2.COLOR_GRAY2RGB)
+    # plt.imshow(imst)
+    # plt.show()
+    op = 0.5 * imst + 0.5 * normst
+    # print(norm)
+    plt.imshow(op)
+    plt.show()
+
+# mag_opt_flow()
+# exit()
+
+
+norm_list = []
+norm_mn = np.zeros((128, 128))
+
+for i in range(99):
+    image0 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A15/A15_decon_t0%s_ch00_skel.png'%f'{i:02d}')
+    image1 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A15/A15_decon_t0%s_ch00_skel.png'%f'{i+1:02d}')
+
+    image0 = rgb2gray(image0)
+    image1 = rgb2gray(image1)
+    v, u = optical_flow_ilk(image0, image1)#, radius=15)
+
+    # --- Compute flow magnitude
+    norm = np.sqrt(u ** 2 + v ** 2)
+    norm_mn += norm
+
+
+op = norm_mn / 99
+
+op = (op - op.min()) / (op.max() - op.min())
+op = op * 255.
+
+# print(np.unique(op))
+# print(op.max())
+#
+# print(op.shape)
+# one_lt = np.where(op==255.)
+# op[one_lt] = 0.
+
+# print(np.unique(op))
+
+op = 1 - op
+# op = op * 255.
+
+opst = np.stack((op,op,op), axis=2)
+
+# opst[:,:,1] = [255, 0, 0]
+
+# plt.imshow(opst)
+# plt.show()
+# exit()
+
+im0 = rgb2gray(imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A15/A15_decon_t000_ch00_skel.png'))
+lt = np.where(im0==255)
+imst = np.stack((im0,im0,im0), axis=2)
+imst[lt] = [255, 0, 255]
+
+overlay = 0.5 * imst + 0.5 * opst
+
+# plt.savefig('opt_flow_magnitude', bbox_inches='tight')
+# plt.close()
+plt.imshow(overlay)
+plt.show()
+exit()
+
 def opt_flow_mag():
     norm_list = []
     global image0
@@ -166,7 +253,7 @@ def opt_flow_mag():
 
     # --- Compute flow magnitude
         norm = np.sqrt(u ** 2 + v ** 2)
-        norm_list.append(norm)
+        # norm_list.append(norm)
 
     mn = np.mean(norm_list)
 
