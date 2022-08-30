@@ -16,7 +16,32 @@ import sknw
 # plt.show()
 
 # ske = skeletonize(~img).astype(np.uint16)
+img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A2_decon_t000_ch00.tif')
 
+img = (img - img.min()) / (img.max() - img.min())
+
+ske = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t000_ch00_skel.png')
+# ske = (ske - ske.min()) / (ske.max() - ske.min())
+graph = sknw.build_sknw(ske, iso=False)
+
+plt.imshow(img, cmap='gray')
+
+# draw edges by pts
+for (s,e) in graph.edges():
+    ps = graph[s][e]['pts']
+    plt.plot(ps[:,1], ps[:,0], 'green')
+
+# draw node by o
+nodes = graph.nodes()
+ps = np.array([nodes[i]['o'] for i in nodes])
+plt.plot(ps[:,1], ps[:,0], 'r.')
+
+# title and show
+plt.title('Skeleton to Graph')
+plt.show()
+
+
+exit()
 
 for i in range(1):
     ske = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Climp/skel/C29/C29_decon_t0%s_ch00_skel.png'%f'{i:02d}')
