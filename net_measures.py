@@ -152,7 +152,14 @@ def combined_graph_feature_plot():
 
 def get_feature(group):
     group_total_features = []
-    for i in range(1, 27):
+    if group == 'ATL':
+        num_series = 26
+    elif group == 'Climp' or group == 'Control':
+        num_series = 31
+    else:
+        num_series = 29
+
+    for i in range(1, num_series+1):
         avg_deg_list = np.array(Graph_features.get_features_avg_degree(group, i))
         group_total_features.append(avg_deg_list)
 
@@ -164,9 +171,43 @@ def get_feature(group):
         # lt.append(np.mean(l))
         timestep_features.append(l)
 
+    return timestep_features
+
 
 def plot_feature_graphs():
+
     Graph_features = GetGraphFeatures()
+
+    ATL_timestep_features = get_feature('ATL')
+    Climp_timestep_features = get_feature('Climp')
+    Control_timestep_features = get_feature('Control')
+    RTN_timestep_features = get_feature('RTN')
+
+    boxplot_dict = {}
+
+    for idx, tstep in enumerate(lt_climp):
+        boxplot_dict[idx+1] = tstep
+
+    # dct = {"ATL": lt, "Climp": lt_climp}
+    #
+    fig, ax = plt.subplots()
+    ax.boxplot(boxplot_dict.values())
+    # ax.set_xticks(ind)
+    ax.set_xticklabels(boxplot_dict.keys())
+    plt.ylim([1.25, 2.6])
+    plt.title('Climp average degree variation for all movies across t=1 to t=100')
+    plt.xlabel('Timestamp')
+    plt.ylabel('average degree')
+
+    # sns.boxplot(lt)
+    # sns.boxplot(lt_climp)
+    # plt.plot(lt_climp, label='mean Climp')
+    # plt.plot(lt_std_climp, label='std Climp')
+    # plt.legend()
+    plt.savefig('Climp average degree variation', bbox_inches='tight', pad_inches=1)
+
+    # plt.show()
+    plt.close()
 
     # ATL_total = []
     # for i in range(1, 27):
@@ -188,27 +229,27 @@ def plot_feature_graphs():
 
 
 
-    Climp_total = []
-    for i in range(1, 32):
-        group = 'Climp'
-
-        avg_deg_list = np.array(Graph_features.get_features_avg_degree(group, i))
-        #avg_deg_list = (avg_deg_list - min(avg_deg_list)) / (max(avg_deg_list) - min(avg_deg_list))
-
-        # print(avg_deg_list)
-
-
-        Climp_total.append(avg_deg_list)
+    # Climp_total = []
+    # for i in range(1, 32):
+    #     group = 'Climp'
     #
-    lt_climp = []
-    lt_std_climp = []
-    for i in range(100):
-        l = []
-        for each in Climp_total:
-            l.append(each[i])
-        # lt_climp.append(np.mean(l))
-        # lt_std_climp.append(np.std(l))
-        lt_climp.append(l)
+    #     avg_deg_list = np.array(Graph_features.get_features_avg_degree(group, i))
+    #     #avg_deg_list = (avg_deg_list - min(avg_deg_list)) / (max(avg_deg_list) - min(avg_deg_list))
+    #
+    #     # print(avg_deg_list)
+    #
+    #
+    #     Climp_total.append(avg_deg_list)
+    # #
+    # lt_climp = []
+    # lt_std_climp = []
+    # for i in range(100):
+    #     l = []
+    #     for each in Climp_total:
+    #         l.append(each[i])
+    #     # lt_climp.append(np.mean(l))
+    #     # lt_std_climp.append(np.std(l))
+    #     lt_climp.append(l)
 
 
     # Ctrl_total = []
