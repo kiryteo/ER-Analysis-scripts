@@ -3,7 +3,7 @@ import skimage
 import imageio
 import sknw
 import matplotlib.pyplot as plt
-import bct
+import numpy as np
 import seaborn as sns
 
 
@@ -57,7 +57,8 @@ def get_nx_graph(group, series_num):
         series_init = 'R'
 
     for i in range(100):
-        ske = imageio.imread(prefix + '%s/%s_decon_t0%s_ch00_skel.png'%(f'{series_init}{series_num}', f'{series_init}{series_num}', f'{i:02d}'))
+        ske = imageio.imread(prefix + '%s/%s_decon_t0%s_ch00_skel.png' % (
+        f'{series_init}{series_num}', f'{series_init}{series_num}', f'{i:02d}'))
         grph = sknw.build_sknw(ske)
         G = nx.Graph()
 
@@ -68,49 +69,55 @@ def get_nx_graph(group, series_num):
     return graph_dict
 
 
+def get_features_nodes(group, series_num):
+    dt = get_nx_graph(group, series_num)
+    nodes_list = []
+    for idx, graph in dt.items():
+        nodes_list.append(len(graph.nodes))
+    return nodes_list
+
+
 class GetGraphFeatures:
     def __init__(self):
-        self.nodes_list = []
-        self.edges_list = []
-        self.avg_deg_list = []
-        self.conn_comp_list = []
-        self.bet_cen_list = []
+        pass
 
-    def get_features_nodes(self, group, series_num):
+    @staticmethod
+    def get_features_edges(group, series_num):
         dt = get_nx_graph(group, series_num)
+        edges_list = []
         for idx, graph in dt.items():
-            self.nodes_list.append(len(graph.nodes))
-        return self.nodes_list
+            edges_list.append(len(graph.edges))
+        return edges_list
 
-    def get_features_edges(self, group, series_num):
+    @staticmethod
+    def get_features_avg_degree(group, series_num):
         dt = get_nx_graph(group, series_num)
-        for idx, graph in dt.items():
-            self.edges_list.append(len(graph.edges))
-        return self.edges_list
-
-    def get_features_avg_degree(self, group, series_num):
-        dt = get_nx_graph(group, series_num)
+        avg_deg_list = []
         for idx, graph in dt.items():
             deg = graph.degree()
             deg_sum = 0
             for (a, b) in deg:
                 deg_sum += b
-            self.avg_deg_list.append(deg_sum)
-        return self.avg_deg_list
+            avg_deg_list.append(deg_sum)
+        return avg_deg_list
 
-    def get_features_conn_components(self, group, series_num):
+    @staticmethod
+    def get_features_conn_components(group, series_num):
         dt = get_nx_graph(group, series_num)
+        conn_comp_list = []
         for idx, graph in dt.items():
-            self.conn_comp_list.append(nx.number_connected_components(graph))
-        return self.conn_comp_list
+            conn_comp_list.append(nx.number_connected_components(graph))
+        return conn_comp_list
 
-    def get_features_betn_centrality(self, group, series_num):
+    @staticmethod
+    def get_features_betn_centrality(group, series_num):
         dt = get_nx_graph(group, series_num)
+        bet_cen_list = []
         for idx, graph in dt.items():
             # print(nx.betweenness_centrality(graph).values())
-            self.bet_cen_list.append(
+            bet_cen_list.append(
                 sum(nx.betweenness_centrality(graph).values()) / len(nx.betweenness_centrality(graph)))
-        return self.bet_cen_list
+        return bet_cen_list
 
 
 def plot_feature_graphs():
@@ -118,14 +125,20 @@ def plot_feature_graphs():
     for i in range(1, 27):
         # ATL_list = []
         group = 'ATL'
-        bet_cet_list = Graph_features.get_features_betn_centrality(group, i)
-        plt.title('%s_Series_%s_betweenness_centrality_measure'%(f'{group}', f'{i}'))
+        bet_cet_list = []
+        bet_cet_list = np.array(Graph_features.get_features_betn_centrality(group, i))
+        bet_cet_list = (bet_cet_list - min(bet_cet_list)) / (max(bet_cet_list) - min(bet_cet_list))
+        plt.title('%s_Series_%s_betweenness_centrality_measure' % (f'{group}', f'{i}'))
         plt.ylabel('centrality')
         plt.xlabel('Frame number')
         plt.plot(bet_cet_list)
         # plt.show()
-        plt.savefig('%s_Series_%s_btn_centrality'%(f'{group}', f'{i}'), bbox_inches='tight')
+        plt.savefig('%s_Series_%s_btn_centrality' % (f'{group}', f'{i}'), bbox_inches='tight')
         plt.close()
+
+
+plot_feature_graphs()
+exit()
 
 
 def get_avg_degree_unweighted():
@@ -145,19 +158,6 @@ def get_avg_clustering():
 
     for i in range(100):
         avg_cl = nx.average_clustering()
-
-# l = []
-# for k, v in betn_dict.items():
-#     l.append(v)
-#
-# print(cl_dict)
-
-# plt.plot(l)
-# plt.show()
-
-# print(max_degree_list)
-# plt.plot(max_degree_list)
-# plt.show()
 
 
 # for i in range(100):
