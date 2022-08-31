@@ -98,7 +98,7 @@ class GetGraphFeatures:
             deg_sum = 0
             for (a, b) in deg:
                 deg_sum += b
-            avg_deg_list.append(deg_sum)
+            avg_deg_list.append(deg_sum/ len(deg))
         return avg_deg_list
 
     @staticmethod
@@ -120,17 +120,171 @@ class GetGraphFeatures:
         return bet_cen_list
 
 
+
+def combined_graph_feature_plot():
+
+    fig = plt.figure()
+    plt.axis('off')
+    r,c = 4, 1
+
+    atl = imageio.imread('/localhome/asa420/MIAL/graph_features/ATL_avg_degree_boxplot.png')
+    climp = imageio.imread('/localhome/asa420/MIAL/graph_features/Climp_avg_degree_boxplot.png')
+    control = imageio.imread('/localhome/asa420/MIAL/graph_features/Control_avg_degree_boxplot.png')
+    rtn = imageio.imread('/localhome/asa420/MIAL/graph_features/RTN_avg_degree_boxplot.png')
+
+    fig.add_subplot(r,c,1)
+    plt.imshow(atl)
+
+    fig.add_subplot(r,c,2)
+    plt.imshow(climp)
+
+    fig.add_subplot(r,c,3)
+    plt.imshow(control)
+
+    fig.add_subplot(r,c,4)
+    plt.imshow(rtn)
+
+    plt.show()
+
+# combined_graph_feature_plot()
+# exit()
+
+
+def get_feature(group):
+    group_total_features = []
+    for i in range(1, 27):
+        avg_deg_list = np.array(Graph_features.get_features_avg_degree(group, i))
+        group_total_features.append(avg_deg_list)
+
+    timestep_features = []
+    for i in range(100):
+        l = []
+        for each in group_total_features:
+            l.append(each[i])
+        # lt.append(np.mean(l))
+        timestep_features.append(l)
+
+
 def plot_feature_graphs():
     Graph_features = GetGraphFeatures()
-    ATL_total = []
-    for i in range(1, 27):
-        # ATL_list = []
-        group = 'ATL'
+
+    # ATL_total = []
+    # for i in range(1, 27):
+    #     group = 'ATL'
+    #
+    #     avg_deg_list = np.array(Graph_features.get_features_avg_degree(group, i))
+    #
+    #     ATL_total.append(avg_deg_list)
+    # #
+    # lt_atl = []
+    # lt_std = []
+    # for i in range(100):
+    #     l = []
+    #     for each in ATL_total:
+    #         l.append(each[i])
+    #     # lt.append(np.mean(l))
+    #     # lt_std.append(np.std(l))
+    #     lt_atl.append(l)
+
+
+
+    Climp_total = []
+    for i in range(1, 32):
+        group = 'Climp'
 
         avg_deg_list = np.array(Graph_features.get_features_avg_degree(group, i))
         #avg_deg_list = (avg_deg_list - min(avg_deg_list)) / (max(avg_deg_list) - min(avg_deg_list))
 
-        ATL_total.append(avg_deg_list)
+        # print(avg_deg_list)
+
+
+        Climp_total.append(avg_deg_list)
+    #
+    lt_climp = []
+    lt_std_climp = []
+    for i in range(100):
+        l = []
+        for each in Climp_total:
+            l.append(each[i])
+        # lt_climp.append(np.mean(l))
+        # lt_std_climp.append(np.std(l))
+        lt_climp.append(l)
+
+
+    # Ctrl_total = []
+    # for i in range(1, 32):
+    #     group = 'Control'
+    #
+    #     avg_deg_list = np.array(Graph_features.get_features_avg_degree(group, i))
+    #     #avg_deg_list = (avg_deg_list - min(avg_deg_list)) / (max(avg_deg_list) - min(avg_deg_list))
+    #
+    #     # print(avg_deg_list)
+    #
+    #
+    #     Ctrl_total.append(avg_deg_list)
+    # #
+    # lt_ctrl = []
+    # for i in range(100):
+    #     l = []
+    #     for each in Ctrl_total:
+    #         l.append(each[i])
+    #     # lt_climp.append(np.mean(l))
+    #     # lt_std_climp.append(np.std(l))
+    #     lt_ctrl.append(l)
+
+
+
+    # RTN_total = []
+    # for i in range(1, 30):
+    #     group = 'RTN'
+    #
+    #     avg_deg_list = np.array(Graph_features.get_features_avg_degree(group, i))
+    #     #avg_deg_list = (avg_deg_list - min(avg_deg_list)) / (max(avg_deg_list) - min(avg_deg_list))
+    #
+    #     # print(avg_deg_list)
+    #
+    #
+    #     RTN_total.append(avg_deg_list)
+    # #
+    # lt_rtn = []
+    # for i in range(100):
+    #     l = []
+    #     for each in RTN_total:
+    #         l.append(each[i])
+    #     # lt_climp.append(np.mean(l))
+    #     # lt_std_climp.append(np.std(l))
+    #     lt_rtn.append(l)
+
+
+    dct = {}
+
+    # ind = np.arange(1, 101)
+
+    for idx, tstep in enumerate(lt_climp):
+        dct[idx+1] = tstep
+
+    # print(dct)
+
+    # dct = {"ATL": lt, "Climp": lt_climp}
+    #
+    fig, ax = plt.subplots()
+    ax.boxplot(dct.values())
+    # ax.set_xticks(ind)
+    ax.set_xticklabels(dct.keys())
+    plt.ylim([1.25, 2.6])
+    plt.title('Climp average degree variation for all movies across t=1 to t=100')
+    plt.xlabel('Timestamp')
+    plt.ylabel('average degree')
+
+    # sns.boxplot(lt)
+    # sns.boxplot(lt_climp)
+    # plt.plot(lt_climp, label='mean Climp')
+    # plt.plot(lt_std_climp, label='std Climp')
+    # plt.legend()
+    plt.savefig('Climp average degree variation', bbox_inches='tight', pad_inches=1)
+
+    # plt.show()
+    plt.close()
 
         # bet_cet_list = []
         # bet_cet_list = np.array(Graph_features.get_features_betn_centrality(group, i))
@@ -147,6 +301,7 @@ def plot_feature_graphs():
 
 plot_feature_graphs()
 exit()
+
 
 
 def get_avg_degree_unweighted():
