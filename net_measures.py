@@ -58,7 +58,7 @@ def get_nx_graph(group, series_num):
 
     for i in range(100):
         ske = imageio.imread(prefix + '%s/%s_decon_t0%s_ch00_skel.png' % (
-        f'{series_init}{series_num}', f'{series_init}{series_num}', f'{i:02d}'))
+            f'{series_init}{series_num}', f'{series_init}{series_num}', f'{i:02d}'))
         grph = sknw.build_sknw(ske)
         G = nx.Graph()
 
@@ -69,17 +69,19 @@ def get_nx_graph(group, series_num):
     return graph_dict
 
 
-def get_features_nodes(group, series_num):
-    dt = get_nx_graph(group, series_num)
-    nodes_list = []
-    for idx, graph in dt.items():
-        nodes_list.append(len(graph.nodes))
-    return nodes_list
 
 
 class GetGraphFeatures:
     def __init__(self):
         pass
+
+    @staticmethod
+    def get_features_nodes(group, series_num):
+        dt = get_nx_graph(group, series_num)
+        nodes_list = []
+        for idx, graph in dt.items():
+            nodes_list.append(len(graph.nodes))
+        return nodes_list
 
     @staticmethod
     def get_features_edges(group, series_num):
@@ -98,7 +100,7 @@ class GetGraphFeatures:
             deg_sum = 0
             for (a, b) in deg:
                 deg_sum += b
-            avg_deg_list.append(deg_sum/ len(deg))
+            avg_deg_list.append(deg_sum / len(deg))
         return avg_deg_list
 
     @staticmethod
@@ -120,37 +122,38 @@ class GetGraphFeatures:
         return bet_cen_list
 
 
-
 def combined_graph_feature_plot():
-
     fig = plt.figure()
     plt.axis('off')
-    r,c = 4, 1
+    r, c = 4, 1
 
     atl = imageio.imread('/localhome/asa420/MIAL/graph_features/ATL_avg_degree_boxplot.png')
     climp = imageio.imread('/localhome/asa420/MIAL/graph_features/Climp_avg_degree_boxplot.png')
     control = imageio.imread('/localhome/asa420/MIAL/graph_features/Control_avg_degree_boxplot.png')
     rtn = imageio.imread('/localhome/asa420/MIAL/graph_features/RTN_avg_degree_boxplot.png')
 
-    fig.add_subplot(r,c,1)
+    fig.add_subplot(r, c, 1)
     plt.imshow(atl)
 
-    fig.add_subplot(r,c,2)
+    fig.add_subplot(r, c, 2)
     plt.imshow(climp)
 
-    fig.add_subplot(r,c,3)
+    fig.add_subplot(r, c, 3)
     plt.imshow(control)
 
-    fig.add_subplot(r,c,4)
+    fig.add_subplot(r, c, 4)
     plt.imshow(rtn)
 
     plt.show()
+
 
 # combined_graph_feature_plot()
 # exit()
 
 
-def get_feature(group):
+
+
+def get_feature(group, feature):
     group_total_features = []
     if group == 'ATL':
         num_series = 26
@@ -159,10 +162,40 @@ def get_feature(group):
     else:
         num_series = 29
 
-    for i in range(1, num_series+1):
-        avg_deg_list = np.array(Graph_features.get_features_avg_degree(group, i))
-        group_total_features.append(avg_deg_list)
+    if feature == 'avg_degree':
+        for i in range(1, num_series + 1):
+            feature_list = np.array(Graph_features.get_features_avg_degree(group, i))
+            group_total_features.append(feature_list)
 
+    elif feature == 'conn_components':
+        for i in range(1, num_series + 1):
+            feature_list = np.array(Graph_features.get_features_conn_components(group, i))
+            group_total_features.append(feature_list)
+
+    elif feature == 'nodes':
+        for i in range(1, num_series + 1):
+            feature_list = np.array(Graph_features.get_features_nodes(group, i))
+            group_total_features.append(feature_list)
+
+    elif feature == 'edges':
+        for i in range(1, num_series + 1):
+            feature_list = np.array(Graph_features.get_features_avg_degree(group, i))
+            group_total_features.append(feature_list)
+
+    elif feature == 'betn_centrality':
+        for i in range(1, num_series + 1):
+            feature_list = np.array(Graph_features.get_features_avg_degree(group, i))
+            group_total_features.append(feature_list)
+
+
+    else:
+        print("Select the correct graph feature.")
+        exit()
+
+    return group_total_features
+
+
+def get_timestep_features(group_total_features):
     timestep_features = []
     for i in range(100):
         l = []
@@ -175,18 +208,24 @@ def get_feature(group):
 
 
 def plot_feature_graphs():
-
     Graph_features = GetGraphFeatures()
 
-    ATL_timestep_features = get_feature('ATL')
-    Climp_timestep_features = get_feature('Climp')
-    Control_timestep_features = get_feature('Control')
-    RTN_timestep_features = get_feature('RTN')
+    atl_avg_degree = get_feature('ATL', 'degree')
+    ATL_timestep_features = get_timestep_features(atl_avg_degree)
+
+    climp_avg_degree = get_feature('Climp', 'degree')
+    Climp_timestep_features = get_timstep_features(climp_avg_degree)
+
+    control_avg_degree = get_feature('Control', 'degree')
+    Control_timestep_features = get_timstep_features(control_avg_degree)
+
+    rtn_avg_degree = get_feature('RTN', 'degree')
+    RTN_timestep_features = get_timstep_features(rtn_avg_degree)
 
     boxplot_dict = {}
 
-    for idx, tstep in enumerate(lt_climp):
-        boxplot_dict[idx+1] = tstep
+    for idx, tstep in enumerate(ATL_timestep_features):
+        boxplot_dict[idx + 1] = tstep
 
     # dct = {"ATL": lt, "Climp": lt_climp}
     #
@@ -194,7 +233,7 @@ def plot_feature_graphs():
     ax.boxplot(boxplot_dict.values())
     # ax.set_xticks(ind)
     ax.set_xticklabels(boxplot_dict.keys())
-    plt.ylim([1.25, 2.6])
+    # plt.ylim([1.25, 2.6])
     plt.title('Climp average degree variation for all movies across t=1 to t=100')
     plt.xlabel('Timestamp')
     plt.ylabel('average degree')
@@ -227,8 +266,6 @@ def plot_feature_graphs():
     #     # lt_std.append(np.std(l))
     #     lt_atl.append(l)
 
-
-
     # Climp_total = []
     # for i in range(1, 32):
     #     group = 'Climp'
@@ -251,7 +288,6 @@ def plot_feature_graphs():
     #     # lt_std_climp.append(np.std(l))
     #     lt_climp.append(l)
 
-
     # Ctrl_total = []
     # for i in range(1, 32):
     #     group = 'Control'
@@ -272,8 +308,6 @@ def plot_feature_graphs():
     #     # lt_climp.append(np.mean(l))
     #     # lt_std_climp.append(np.std(l))
     #     lt_ctrl.append(l)
-
-
 
     # RTN_total = []
     # for i in range(1, 30):
@@ -296,13 +330,12 @@ def plot_feature_graphs():
     #     # lt_std_climp.append(np.std(l))
     #     lt_rtn.append(l)
 
-
     dct = {}
 
     # ind = np.arange(1, 101)
 
     for idx, tstep in enumerate(lt_climp):
-        dct[idx+1] = tstep
+        dct[idx + 1] = tstep
 
     # print(dct)
 
@@ -327,22 +360,21 @@ def plot_feature_graphs():
     # plt.show()
     plt.close()
 
-        # bet_cet_list = []
-        # bet_cet_list = np.array(Graph_features.get_features_betn_centrality(group, i))
-        # bet_cet_list = (bet_cet_list - min(bet_cet_list)) / (max(bet_cet_list) - min(bet_cet_list))
-        # plt.title('%s_Series_%s_betweenness_centrality_measure' % (f'{group}', f'{i}'))
-        # plt.title('%s_Series_%s_avg_degree_measure' % (f'{group}', f'{i}'))
-        # plt.ylabel('Avg degree')
-        # plt.xlabel('Frame number')
-        # plt.plot(avg_deg_list)
-        # # plt.show()
-        # plt.savefig('%s_Series_%s_avg_degree' % (f'{group}', f'{i}'), bbox_inches='tight')
-        # plt.close()
+    # bet_cet_list = []
+    # bet_cet_list = np.array(Graph_features.get_features_betn_centrality(group, i))
+    # bet_cet_list = (bet_cet_list - min(bet_cet_list)) / (max(bet_cet_list) - min(bet_cet_list))
+    # plt.title('%s_Series_%s_betweenness_centrality_measure' % (f'{group}', f'{i}'))
+    # plt.title('%s_Series_%s_avg_degree_measure' % (f'{group}', f'{i}'))
+    # plt.ylabel('Avg degree')
+    # plt.xlabel('Frame number')
+    # plt.plot(avg_deg_list)
+    # # plt.show()
+    # plt.savefig('%s_Series_%s_avg_degree' % (f'{group}', f'{i}'), bbox_inches='tight')
+    # plt.close()
 
 
 plot_feature_graphs()
 exit()
-
 
 
 def get_avg_degree_unweighted():
@@ -362,7 +394,6 @@ def get_avg_clustering():
 
     for i in range(100):
         avg_cl = nx.average_clustering()
-
 
 # for i in range(100):
 #     avg_deg_list = []
