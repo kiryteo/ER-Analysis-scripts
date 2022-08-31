@@ -16,30 +16,70 @@ import sknw
 # plt.show()
 
 # ske = skeletonize(~img).astype(np.uint16)
-img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A2_decon_t000_ch00.tif')
 
-img = (img - img.min()) / (img.max() - img.min())
+lt = []
+for i in range(100):
+    # img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A4_decon_t0%s_ch00.tif'%f'{i:02d}')
+    #
+    # img = (img - img.min()) / (img.max() - img.min())
 
-ske = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t000_ch00_skel.png')
-# ske = (ske - ske.min()) / (ske.max() - ske.min())
-graph = sknw.build_sknw(ske, iso=False)
+    ske = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A4/A4_decon_t0%s_ch00_skel.png'%f'{i:02d}')
 
-plt.imshow(img, cmap='gray')
+    graph = sknw.build_sknw(ske, iso=False)
 
-# draw edges by pts
-for (s,e) in graph.edges():
-    ps = graph[s][e]['pts']
-    plt.plot(ps[:,1], ps[:,0], 'green')
+    # plt.imshow(img, cmap='gray')
 
-# draw node by o
-nodes = graph.nodes()
-ps = np.array([nodes[i]['o'] for i in nodes])
-plt.plot(ps[:,1], ps[:,0], 'r.')
+    # draw edges by pts
+    # for (s,e) in graph.edges():
+    #     ps = graph[s][e]['pts']
+    #     plt.plot(ps[:,1], ps[:,0], 'green')
 
-# title and show
-plt.title('Skeleton to Graph')
+    # draw node by o
+    nodes = graph.nodes()
+    # ps = np.array([nodes[i]['o'] for i in nodes])
+    # plt.plot(ps[:,1], ps[:,0], 'r.')
+    lt.append(len(nodes))
+    # title and show
+    # plt.title('Skeleton to Graph')
+    # plt.show()
+    # plt.axis('off')
+    # plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/graphs/A4/A4_decon_t0%s_ch00_graph.png'%f'{i:02d}', bbox_inches='tight', pad_inches=0)
+    # plt.close()
+
+plt.plot(lt)
+plt.title('')
+# plt.hist(lt)
 plt.show()
 
+exit()
+
+for i in range(100):
+    img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A4_decon_t0%s_ch00.tif'%f'{i:02d}')
+
+    img = (img - img.min()) / (img.max() - img.min())
+
+    ske = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A4/A4_decon_t0%s_ch00_skel.png'%f'{i:02d}')
+
+    graph = sknw.build_sknw(ske, iso=False)
+
+    plt.imshow(img, cmap='gray')
+
+    # draw edges by pts
+    for (s,e) in graph.edges():
+        ps = graph[s][e]['pts']
+        plt.plot(ps[:,1], ps[:,0], 'green')
+
+    # draw node by o
+    nodes = graph.nodes()
+    ps = np.array([nodes[i]['o'] for i in nodes])
+    plt.plot(ps[:,1], ps[:,0], 'r.')
+
+    # title and show
+    # plt.title('Skeleton to Graph')
+    # plt.show()
+    plt.axis('off')
+    plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/graphs/A4/A4_decon_t0%s_ch00_graph.png'%f'{i:02d}', bbox_inches='tight', pad_inches=0)
+    plt.close()
 
 exit()
 

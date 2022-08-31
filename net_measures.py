@@ -4,6 +4,7 @@ import imageio
 import sknw
 import matplotlib.pyplot as plt
 import bct
+import seaborn as sns
 
 
 def create_graphs():
@@ -50,10 +51,40 @@ def get_nx_graph():
 
 
 dt = get_nx_graph()
+nodes_list = []
+edges_list = []
+avg_deg_list = []
+conn_comp_list = []
+bet_cen_list = []
 for idx, graph in dt.items():
-    cl = nx.average_degree_connectivity(graph)
-    print(cl)
-    break
+    # cl = nx.average_degree_connectivity(graph)
+    # print(cl)
+    # print(graph)
+    # print(graph.nodes)
+    # print(graph.edges)
+
+    nodes_list.append(len(graph.nodes))
+    edges_list.append(len(graph.edges))
+    deg = graph.degree()
+    sm = 0
+    for (a, b) in deg:
+        sm += b
+    avg_deg_list.append(sm / len(deg))
+    # print(sm / len(deg))
+    # sum_edges = sum(cl.values())
+    # print(sum_edges / len(graph.nodes))
+    # break
+    # conn_comp_list.append(nx.number_connected_components(graph))
+    # bet_cen_list.append(sum(nx.betweenness_centrality(graph).values())/ len(nx.betweenness_centrality(graph)))
+    # break
+
+# plt.plot(edges_list)
+# sns.distplot(edges_list)
+# plt.scatter(avg_deg_list)
+# # plt.hist(avg_deg_list)
+
+# plt.plot(bet_cen_list)
+plt.show()
 
 exit()
 
