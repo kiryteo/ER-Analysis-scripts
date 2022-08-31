@@ -122,19 +122,27 @@ class GetGraphFeatures:
 
 def plot_feature_graphs():
     Graph_features = GetGraphFeatures()
+    ATL_total = []
     for i in range(1, 27):
         # ATL_list = []
         group = 'ATL'
-        bet_cet_list = []
-        bet_cet_list = np.array(Graph_features.get_features_betn_centrality(group, i))
-        bet_cet_list = (bet_cet_list - min(bet_cet_list)) / (max(bet_cet_list) - min(bet_cet_list))
-        plt.title('%s_Series_%s_betweenness_centrality_measure' % (f'{group}', f'{i}'))
-        plt.ylabel('centrality')
-        plt.xlabel('Frame number')
-        plt.plot(bet_cet_list)
-        # plt.show()
-        plt.savefig('%s_Series_%s_btn_centrality' % (f'{group}', f'{i}'), bbox_inches='tight')
-        plt.close()
+
+        avg_deg_list = np.array(Graph_features.get_features_avg_degree(group, i))
+        #avg_deg_list = (avg_deg_list - min(avg_deg_list)) / (max(avg_deg_list) - min(avg_deg_list))
+
+        ATL_total.append(avg_deg_list)
+
+        # bet_cet_list = []
+        # bet_cet_list = np.array(Graph_features.get_features_betn_centrality(group, i))
+        # bet_cet_list = (bet_cet_list - min(bet_cet_list)) / (max(bet_cet_list) - min(bet_cet_list))
+        # plt.title('%s_Series_%s_betweenness_centrality_measure' % (f'{group}', f'{i}'))
+        # plt.title('%s_Series_%s_avg_degree_measure' % (f'{group}', f'{i}'))
+        # plt.ylabel('Avg degree')
+        # plt.xlabel('Frame number')
+        # plt.plot(avg_deg_list)
+        # # plt.show()
+        # plt.savefig('%s_Series_%s_avg_degree' % (f'{group}', f'{i}'), bbox_inches='tight')
+        # plt.close()
 
 
 plot_feature_graphs()
