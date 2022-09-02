@@ -5,6 +5,7 @@ import sknw
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+import pandas as pd
 
 
 def create_graphs():
@@ -154,6 +155,7 @@ def combined_graph_feature_plot():
 
 
 def get_feature(group, feature):
+    Graph_features = GetGraphFeatures()
     group_total_features = []
     if group == 'ATL':
         num_series = 26
@@ -208,45 +210,107 @@ def get_timestep_features(group_total_features):
 
 
 def plot_feature_graphs():
-    Graph_features = GetGraphFeatures()
 
-    atl_avg_degree = get_feature('ATL', 'degree')
-    ATL_timestep_features = get_timestep_features(atl_avg_degree)
+    atl_feature = get_feature('ATL', 'betn_centrality')
+    ATL_timestep_features = get_timestep_features(atl_feature)
 
-    climp_avg_degree = get_feature('Climp', 'degree')
-    Climp_timestep_features = get_timstep_features(climp_avg_degree)
+    climp_feature = get_feature('Climp', 'betn_centrality')
+    Climp_timestep_features = get_timestep_features(climp_feature)
 
-    control_avg_degree = get_feature('Control', 'degree')
-    Control_timestep_features = get_timstep_features(control_avg_degree)
+    control_feature = get_feature('Control', 'betn_centrality')
+    Control_timestep_features = get_timestep_features(control_feature)
 
-    rtn_avg_degree = get_feature('RTN', 'degree')
-    RTN_timestep_features = get_timstep_features(rtn_avg_degree)
+    rtn_feature = get_feature('RTN', 'betn_centrality')
+    RTN_timestep_features = get_timestep_features(rtn_feature)
 
-    boxplot_dict = {}
+    # df = pd.DataFrame()
+    # df['atl'] = ATL_timestep_features
+    # df['climp'] = Climp_timestep_features
+    # df['control'] = Control_timestep_features
+    # df['rtn'] = RTN_timestep_features
+
+
+
+    boxplot_dict_atl = {}
 
     for idx, tstep in enumerate(ATL_timestep_features):
-        boxplot_dict[idx + 1] = tstep
+        boxplot_dict_atl[idx + 1] = tstep
 
+
+    # print(boxplot_dict_atl)
+    # exit()
+
+    boxplot_dict_climp = {}
+
+    for idx, tstep in enumerate(Climp_timestep_features):
+        boxplot_dict_climp[idx + 1] = tstep
+
+    boxplot_dict_ctrl = {}
+
+    for idx, tstep in enumerate(Control_timestep_features):
+        boxplot_dict_ctrl[idx + 1] = tstep
+
+    boxplot_dict_rtn = {}
+
+    for idx, tstep in enumerate(RTN_timestep_features):
+        boxplot_dict_rtn[idx + 1] = tstep
+    #
+    # df['atl'] = boxplot_dict_atl.values()
+    # df['climp'] = boxplot_dict_climp.values()
+    # df['control'] = boxplot_dict_ctrl.values()
+    # df['rtn'] = boxplot_dict_rtn.values()
+    #
+    # sns.boxplot(data=df, palette='flare')
+    # plt.show()
     # dct = {"ATL": lt, "Climp": lt_climp}
+
     #
     fig, ax = plt.subplots()
-    ax.boxplot(boxplot_dict.values())
+    c = 'red'
+    d = 'green'
+    e = 'blue'
+    f = 'yellow'
+    bp1 = ax.boxplot(boxplot_dict_atl.values(), patch_artist=True, boxprops=dict(facecolor=c, color=c),
+               capprops=dict(color=c),
+               whiskerprops=dict(color=c),
+               flierprops=dict(color=c, markeredgecolor=c),
+               medianprops=dict(color=c))
+    bp2 = ax.boxplot(boxplot_dict_climp.values(), patch_artist=True, boxprops=dict(facecolor=d, color=d),
+               capprops=dict(color=d),
+               whiskerprops=dict(color=d),
+               flierprops=dict(color=d, markeredgecolor=d),
+               medianprops=dict(color=d))
+    bp3 = ax.boxplot(boxplot_dict_ctrl.values(), patch_artist=True, boxprops=dict(facecolor=e, color=e),
+               capprops=dict(color=e),
+               whiskerprops=dict(color=e),
+               flierprops=dict(color=e, markeredgecolor=e),
+               medianprops=dict(color=e))
+    bp4 = ax.boxplot(boxplot_dict_rtn.values(), patch_artist=True, boxprops=dict(facecolor=f, color=f),
+               capprops=dict(color=f),
+               whiskerprops=dict(color=f),
+               flierprops=dict(color=f, markeredgecolor=f),
+               medianprops=dict(color=f))
     # ax.set_xticks(ind)
-    ax.set_xticklabels(boxplot_dict.keys())
-    # plt.ylim([1.25, 2.6])
-    plt.title('Climp average degree variation for all movies across t=1 to t=100')
+    # ax.set_xticklabels(np.arange(1, 101), rotation=45)
+    # ax.set_xticklabels(boxplot_dict_atl.keys())
+    # plt.ylim([1.25, 2.6]) # avg degree
+    # plt.ylim([25, 360]) #num nodes
+    # plt.ylim([0, 120]) # conn components
+    plt.title('Betweenness centrality variation for all movies across t=1 to t=100')
     plt.xlabel('Timestamp')
-    plt.ylabel('average degree')
-
-    # sns.boxplot(lt)
-    # sns.boxplot(lt_climp)
-    # plt.plot(lt_climp, label='mean Climp')
-    # plt.plot(lt_std_climp, label='std Climp')
+    plt.ylabel('Betweenness centrality')
     # plt.legend()
-    plt.savefig('Climp average degree variation', bbox_inches='tight', pad_inches=1)
-
-    # plt.show()
-    plt.close()
+    ax.legend([bp1["boxes"][0], bp2["boxes"][0], bp3["boxes"][0], bp4["boxes"][0]], ['ATL', 'Climp', 'Control', 'RTN'], loc='upper right')
+    #
+    # # sns.boxplot(lt)
+    # # sns.boxplot(lt_climp)
+    # # plt.plot(lt_climp, label='mean Climp')
+    # # plt.plot(lt_std_climp, label='std Climp')
+    # # plt.legend()
+    # # plt.savefig('Climp average degree variation', bbox_inches='tight', pad_inches=1)
+    #
+    plt.show()
+    # plt.close()
 
     # ATL_total = []
     # for i in range(1, 27):
@@ -330,35 +394,35 @@ def plot_feature_graphs():
     #     # lt_std_climp.append(np.std(l))
     #     lt_rtn.append(l)
 
-    dct = {}
-
-    # ind = np.arange(1, 101)
-
-    for idx, tstep in enumerate(lt_climp):
-        dct[idx + 1] = tstep
-
-    # print(dct)
-
-    # dct = {"ATL": lt, "Climp": lt_climp}
+    # dct = {}
     #
-    fig, ax = plt.subplots()
-    ax.boxplot(dct.values())
-    # ax.set_xticks(ind)
-    ax.set_xticklabels(dct.keys())
-    plt.ylim([1.25, 2.6])
-    plt.title('Climp average degree variation for all movies across t=1 to t=100')
-    plt.xlabel('Timestamp')
-    plt.ylabel('average degree')
-
-    # sns.boxplot(lt)
-    # sns.boxplot(lt_climp)
-    # plt.plot(lt_climp, label='mean Climp')
-    # plt.plot(lt_std_climp, label='std Climp')
-    # plt.legend()
-    plt.savefig('Climp average degree variation', bbox_inches='tight', pad_inches=1)
-
-    # plt.show()
-    plt.close()
+    # # ind = np.arange(1, 101)
+    #
+    # for idx, tstep in enumerate(lt_climp):
+    #     dct[idx + 1] = tstep
+    #
+    # # print(dct)
+    #
+    # # dct = {"ATL": lt, "Climp": lt_climp}
+    # #
+    # fig, ax = plt.subplots()
+    # ax.boxplot(dct.values())
+    # # ax.set_xticks(ind)
+    # ax.set_xticklabels(dct.keys())
+    # plt.ylim([1.25, 2.6])
+    # plt.title('Climp average degree variation for all movies across t=1 to t=100')
+    # plt.xlabel('Timestamp')
+    # plt.ylabel('average degree')
+    #
+    # # sns.boxplot(lt)
+    # # sns.boxplot(lt_climp)
+    # # plt.plot(lt_climp, label='mean Climp')
+    # # plt.plot(lt_std_climp, label='std Climp')
+    # # plt.legend()
+    # plt.savefig('Climp average degree variation', bbox_inches='tight', pad_inches=1)
+    #
+    # # plt.show()
+    # plt.close()
 
     # bet_cet_list = []
     # bet_cet_list = np.array(Graph_features.get_features_betn_centrality(group, i))
