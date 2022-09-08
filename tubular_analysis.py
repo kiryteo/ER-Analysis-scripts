@@ -180,7 +180,10 @@ exit()
 
 
 
-def get_dil_reg_vals():
+def get_dil_reg_vals(input):
+
+    X, Y = np.where(input==102)
+    for i, j in zip(X, Y):
 
     xd = x2 - x1
     yd = y2 - y1
