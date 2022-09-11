@@ -166,52 +166,61 @@ lab_tubules = tub_analysis()
 
 dil_lab_tubules = skimage.morphology.dilation(lab_tubules)
 
-print(np.where(lab_tubules==102))
-print(np.where(dil_lab_tubules==102))
-# plt.imshow(dil_lab_tubules)
+# print(np.where(lab_tubules==102))
+# print(np.where(dil_lab_tubules==102))
+# plt.imshow(lab_tubules)
 # plt.show()
 
-X, Y = np.where(lab_tubules==102)
+# X, Y = np.where(lab_tubules==84)
+#
+# dil_intensity_dict = {}
+# dil_int_list = []
+# for i, j in zip(X, Y):
+#     dil_int_list.append(lab_tubules[i,j])
+#     dil_intensity_dict[(i, j)] = ((lab_tubules[i,j] + lab_tubules[i+1,j] + lab_tubules[i-1,j] + lab_tubules[i, j+1] + lab_tubules[i, j-1]) / 5)
+#
+#
+# print(dil_int_list)
+# print(dil_intensity_dict)
+#
+# exit()
 
-for i, j in zip(X, Y):
-    print(i, j)
+
+
+
+lt = {}
+for each in range(1, len(np.unique(lab_tubules))):
+    tub_len = len(np.where(lab_tubules==each)[0])
+    if tub_len > 5:
+        # lt.append(np.where(lab_tubules==each))
+        lt[each] = np.where(lab_tubules==each)
+
+
+# print(lt)
+
+
+
+# lt = []
+# lt.append(np.where(lab_tubules==102))
+#
+#
+coords = {}
+for num, pts in lt.items():
+    coords[num] = []
+    for (x, y) in zip(pts[0], pts[1]):
+        coords[num].append((x,y))
+
+        # for (a, b) in zip(x, y):
+        #     coords[num].append((a,b))
+
+#         coords.append((a,b))
+#     # print(x, y)
+#
+print(coords)
 
 exit()
 
 
-
-def get_dil_reg_vals(input):
-
-    X, Y = np.where(input==102)
-    for i, j in zip(X, Y):
-
-    xd = x2 - x1
-    yd = y2 - y1
-
-
-# for i, val in enumerate(input):
-
-input = []
-
-
-
-def region_avg(input, x1, x2, y1, y2):
-    if abs(yd > xd):
-        return (input[x1-1,y1] + input[x1,y1] + input[x1+1,y1]) / 3
-    elif abs(xd > yd):
-        return (input[x1,y1-1] + input[x1,y1] + input[x1,y1+1]) / 3
-
-# lt = []
-# for each in range(1, len(np.unique(lab_tubules))):
-#     tub_len = len(np.where(lab_tubules==each)[0])
-#     if tub_len > 5:
-#         lt.append(np.where(lab_tubules==each))
-
-
-lt = []
-lt.append(np.where(lab_tubules==102))
-
-# print(lt)
 
 intensity_vals = []
 for i in range(100):
