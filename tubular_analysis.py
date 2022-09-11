@@ -196,29 +196,15 @@ for each in range(1, len(np.unique(lab_tubules))):
         lt[each] = np.where(lab_tubules==each)
 
 
-# print(lt)
+# lt = {}
+# lt[102] = (np.where(lab_tubules==102))
 
 
-
-# lt = []
-# lt.append(np.where(lab_tubules==102))
-#
-#
 coords = {}
 for num, pts in lt.items():
     coords[num] = []
     for (x, y) in zip(pts[0], pts[1]):
         coords[num].append((x,y))
-
-        # for (a, b) in zip(x, y):
-        #     coords[num].append((a,b))
-
-#         coords.append((a,b))
-#     # print(x, y)
-#
-print(coords)
-
-exit()
 
 
 
@@ -227,13 +213,21 @@ for i in range(100):
     l = []
     img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif'%f'{i:02d}')
     img = (img - img.min()) / (img.max() - img.min())
-    for each in lt:
-        l.append(img[each])
+    for num, points in coords.items():
+        for (x, y) in points:
+            if (x > 0 and x < 127) and (y > 0 and y < 127):
+                l.append((img[x,y] + img[x+1,y] + img[x-1,y] + img[x,y-1] + img[x,y+1]) / 5)
+            else:
+                l.append(img[x,y])
     intensity_vals.append(l)
 
 # print(intensity_vals)
-# exit()
 # print(len(intensity_vals))
+# # exit()
+#
+# for tl in intensity_vals:
+#     print(len(tl))
+
 
 newlt = []
 
@@ -242,11 +236,16 @@ for tub_list in range(len(intensity_vals[0])):
         newlt.append(intensity_vals[frame][tub_list])
 
 
+
 mean_list = []
 for i in range(0, len(newlt), 100):
     mean_list.append(np.mean(newlt[i:i+100], axis=0))
 
-# print(mean_list[5])
+
+
+print(mean_list[5])
+exit()
+
 for i, val in enumerate(mean_list):
     plt.plot(mean_list[i])
     plt.title('Intensity profile for highlighted tubule', fontsize=24)
