@@ -14,6 +14,7 @@ import cv2
 from KDEpy import FFTKDE
 from skimage import exposure
 
+
 # from skan import draw
 #
 # tub = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/A1_mean_skel_tubules.png')
@@ -40,7 +41,6 @@ from skimage import exposure
 # exit()
 
 def tub_analysis(mean_img):
-
     mean_proj_img = imageio.imread(mean_img)
 
     # perform thresholding + binarization + skel
@@ -78,7 +78,7 @@ def tub_analysis(mean_img):
     dil_brpts = pcv.dilate(gray_img=brpts_img, ksize=3, i=1)
     tubules = skel - dil_brpts
 
-    tubules[np.where(tubules<0)] = 0
+    tubules[np.where(tubules < 0)] = 0
 
     # label tubules
     lab_tubules = skimage.measure.label(tubules)
@@ -90,6 +90,7 @@ def tub_analysis(mean_img):
     # plt.show()
 
     # print(len(np.where(branchpts==255)[0]))
+
 
 #
 # lab_tubules = tub_analysis()
@@ -140,40 +141,98 @@ def junction_flow(mean_img):
     # return newps, dil_brpts
     return newps
 
-newps = junction_flow('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_mean_proj/A1_mean.png')
+
+# newps = junction_flow('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_mean_proj/A1_mean.png')
 
 # print(newps)
 
-def junction_analysis(group):
-    l_mean = []
-    l_std = []
+def get_junc_vals(path, newps):
+    l = []
+    img = imageio.imread(path)
+    img = (img - img.min()) / (img.max() - img.min())
+    for each in newps:
+        x, y = each[0], each[1]
+        mean_val = (img[x + 1, y] + img[x - 1, y] + img[x, y] + img[x, y - 1] + img[x, y + 1]) / 5
+        l.append(mean_val)
+    return l
 
+
+def junction_analysis(group):
+    # l_mean = []
+    # l_std = []
+
+    prefix = '/localhome/asa420/MIAL/data/confocal_movies/'
     # junc_vals stores the
     junc_vals = []
-    for i in range(100):
-        l = []
-        if group == 'ATL':
-            path = '/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif'%f'{i:02d}'
-        elif group == 'Climp':
-            path = '/localhome/asa420/MIAL/data/confocal_movies/Climp/files/C1_decon_t0%s_ch00.tif'%f'{i:02d}'
-        elif group == 'Control':
-            path = '/localhome/asa420/MIAL/data/confocal_movies/Control/files/img_1_decon_t0%s.tif'%f'{i:02d}'
-        else:
-            path = '/localhome/asa420/MIAL/data/confocal_movies/RTN/files/R1_decon_t0%s_ch00.tif'%f'{i:02d}'
-        img = imageio.imread(path)
+    if group == 'ATL':
+        for series_num in range(1, 27):
+            for i in range(100):
+                path = prefix + 'ATL/files/A%s_decon_t0%s_ch00.tif' % (f'{series_num}', f'{i:02d}')
 
-        # p2, p98 = np.percentile(img, (2, 98))
-        # img = exposure.rescale_intensity(img, in_range=(p2, p98))
+                newps = junction_flow(prefix + 'ATL/new_op_jul/ATL_mean_proj/A%s_mean.png' % f'{series_num}')
+                l = get_junc_vals(path, newps)
+                junc_vals.append(l)
+
+    elif group == 'Climp':
+        for series_num in range(1, 31):
+            for i in range(100):
+                path = prefix + 'Climp/files/C%s_decon_t0%s_ch00.tif' % (f'{series_num}', f'{i:02d}')
+
+                newps = junction_flow(prefix + 'Climp/new_op_jul/Climp_mean_proj/C%s_mean.png' % f'{series_num}')
+                l = get_junc_vals(path, newps)
+                junc_vals.append(l)
+
+    elif group == 'Control':
+        for series_num in range(1, 31):
+            for i in range(100):
+                path = prefix + 'Control/files/img_%s_decon_t0%s.tif' % (f'{series_num}', f'{i:02d}')
+
+                newps = junction_flow(prefix + 'Control/new_op_jul/Ctrl_mean_proj/Ct%s_mean.png' % f'{series_num}')
+                l = get_junc_vals(path, newps)
+                junc_vals.append(l)
+
+    else:
+        for series_num in range(1, 30):
+            for i in range(100):
+                path = prefix + 'RTN/files/R%s_decon_t0%s_ch00.tif' % (f'{series_num}', f'{i:02d}')
+
+                newps = junction_flow(prefix + 'RTN/new_op_jul/RTN_mean_proj/R%s_mean.png' % f'{series_num}')
+                l = get_junc_vals(path, newps)
+                junc_vals.append(l)
+
+        # if group == 'ATL':
+        #     path = prefix + 'ATL/files/A%s_decon_t0%s_ch00.tif' % (f'{series_num}', f'{i:02d}')
+        #
+        #     newps = junction_flow(prefix + 'ATL/new_op_jul/ATL_mean_proj/A%s_mean.png' % f'{series_num}')
+        #
+        # elif group == 'Climp':
+        #     path = prefix + 'Climp/files/C%s_decon_t0%s_ch00.tif' % (f'{series_num}', f'{i:02d}')
+        #
+        #     newps = junction_flow(prefix + 'Climp/new_op_jul/Climp_mean_proj/C%s_mean.png' % f'{series_num}')
+        #
+        # elif group == 'Control':
+        #     path = prefix + 'Control/files/img_%s_decon_t0%s.tif' % (f'{series_num}', f'{i:02d}')
+        #
+        #     newps = junction_flow(prefix + 'Control/new_op_jul/Ctrl_mean_proj/Ct%s_mean.png' % f'{series_num}')
+        #
+        # else:
+        #     path = prefix + 'RTN/files/R%s_decon_t0%s_ch00.tif' % (f'{series_num}', f'{i:02d}')
+        #
+        #     newps = junction_flow(prefix + 'RTN/new_op_jul/RTN_mean_proj/R%s_mean.png' % f'{series_num}')
+        # img = imageio.imread(path)
+        #
+        # # p2, p98 = np.percentile(img, (2, 98))
+        # # img = exposure.rescale_intensity(img, in_range=(p2, p98))
         # img = (img - img.min()) / (img.max() - img.min())
-        img = exposure.equalize_hist(img)
-        # print(img.max())
-        # print(img.min())
-
-        for each in newps:
-            x, y = each[0], each[1]
-            mean_val = (img[x+1, y] + img[x-1, y] + img[x, y] + img[x, y-1] + img[x, y+1]) / 5
-            l.append(mean_val)
-        junc_vals.append(l)
+        # # img = exposure.equalize_hist(img)
+        # # print(img.max())
+        # # print(img.min())
+        #
+        # for each in newps:
+        #     x, y = each[0], each[1]
+        #     mean_val = (img[x + 1, y] + img[x - 1, y] + img[x, y] + img[x, y - 1] + img[x, y + 1]) / 5
+        #     l.append(mean_val)
+        # junc_vals.append(l)
 
     # for jun in junc_vals:
     #     l_mean.append(np.mean(jun))
@@ -183,34 +242,68 @@ def junction_analysis(group):
     return junc_vals
 
 
-atl_junc_vals = junction_analysis('ATL')
-climp_junc_vals = junction_analysis('Climp')
-ctrl_junc_vals = junction_analysis('Control')
-rtn_junc_vals = junction_analysis('RTN')
+atl_junc_vals = junction_analysis(3, 'ATL')
+# atl_junc_vals3 = junction_analysis(3,'ATL')
+# atl_junc_vals4 = junction_analysis(4,'ATL')
+# atl_junc_vals5 = junction_analysis(5,'ATL')
+# atl_junc_vals6 = junction_analysis(6,'ATL')
+# atl_junc_vals7 = junction_analysis(7,'ATL')
+# atl_junc_vals8 = junction_analysis(8,'ATL')
 
-kde_atl = FFTKDE(bw='silverman', kernel='triweight')
-xatl, yatl = FFTKDE(bw='silverman', kernel='triweight').fit(atl_junc_vals)(2**11)
-yatl[xatl<=0.001] = 0
+# print(atl_junc_vals)
+# climp_junc_vals = junction_analysis(3,'Climp')
+# ctrl_junc_vals = junction_analysis(3,'Control')
+# rtn_junc_vals = junction_analysis(3,'RTN')
+
+xatl, yatl = FFTKDE(bw='silverman', kernel='triweight').fit(atl_junc_vals)(2 ** 11)
+yatl[xatl <= 0.001] = 0
 yatl = yatl * 2
 
-xcl, ycl = FFTKDE(bw='silverman', kernel='triweight').fit(climp_junc_vals)(2**11)
-ycl[xcl<=0.001] = 0
+# xatl4, yatl4 = FFTKDE(bw='silverman', kernel='triweight').fit(atl_junc_vals4)(2**11)
+# yatl4[xatl4<=0.001] = 0
+# yatl4 = yatl4 * 2
+#
+# xatl5, yatl5 = FFTKDE(bw='silverman', kernel='triweight').fit(atl_junc_vals5)(2**11)
+# yatl5[xatl5<=0.001] = 0
+# yatl5 = yatl5 * 2
+#
+#
+# xatl6, yatl6 = FFTKDE(bw='silverman', kernel='triweight').fit(atl_junc_vals6)(2**11)
+# yatl6[xatl6<=0.001] = 0
+# yatl6 = yatl6 * 2
+#
+# xatl7, yatl7 = FFTKDE(bw='silverman', kernel='triweight').fit(atl_junc_vals7)(2**11)
+# yatl7[xatl7<=0.001] = 0
+# yatl7 = yatl7 * 2
+#
+#
+# xatl8, yatl8 = FFTKDE(bw='silverman', kernel='triweight').fit(atl_junc_vals8)(2**11)
+# yatl8[xatl8<=0.001] = 0
+# yatl8 = yatl8 * 2
+
+
+xcl, ycl = FFTKDE(bw='silverman', kernel='triweight').fit(climp_junc_vals)(2 ** 11)
+ycl[xcl <= 0.001] = 0
 ycl = ycl * 2
 
-xct, yct = FFTKDE(bw='silverman', kernel='triweight').fit(ctrl_junc_vals)(2**11)
-yct[xct<=0.001] = 0
+xct, yct = FFTKDE(bw='silverman', kernel='triweight').fit(ctrl_junc_vals)(2 ** 11)
+yct[xct <= 0.001] = 0
 yct = yct * 2
 
-xrt, yrt = FFTKDE(bw='silverman', kernel='triweight').fit(rtn_junc_vals)(2**11)
-yrt[xrt<=0.001] = 0
+xrt, yrt = FFTKDE(bw='silverman', kernel='triweight').fit(rtn_junc_vals)(2 ** 11)
+yrt[xrt <= 0.001] = 0
 yrt = yrt * 2
 
+# plt.plot(xatl3, yatl3, label='ATL3')
+# plt.plot(xatl4, yatl4, label='ATL4')
+# plt.plot(xatl5, yatl5, label='ATL5')
+# plt.plot(xatl6, yatl6, label='ATL6')
+# plt.plot(xatl7, yatl7, label='ATL7')
+# plt.plot(xatl8, yatl8, label='ATL8')
 plt.plot(xatl, yatl, label='ATL')
 plt.plot(xcl, ycl, label='Climp')
 plt.plot(xct, yct, label='Control')
 plt.plot(xrt, yrt, label='RTN')
-
-
 
 # sns.distplot(atl_junc_vals[0], label='ATL')
 # sns.distplot(climp_junc_vals[0], label='Climp')
@@ -225,27 +318,24 @@ plt.show()
 # plt.show()
 
 
-
 exit()
-
 
 
 def get_tubule_XY(lab_tubules):
     lt = {}
     # lt = []
     for each in range(1, len(np.unique(lab_tubules))):
-        tub_len = len(np.where(lab_tubules==each)[0])
+        tub_len = len(np.where(lab_tubules == each)[0])
         if tub_len > 5:
             # lt.append(np.where(lab_tubules==each))
-            lt[each] = np.where(lab_tubules==each)
+            lt[each] = np.where(lab_tubules == each)
 
     coords = {}
     for num, pts in lt.items():
         coords[num] = []
         for (x, y) in zip(pts[0], pts[1]):
-            coords[num].append((x,y))
+            coords[num].append((x, y))
     return coords
-
 
 
 # lt = []
@@ -270,17 +360,19 @@ def get_ndt(coords):
         # print(coord_list)
         ndt[tubule_num] = []
         for i in range(100):
-            img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif'%f'{i:02d}')
+            img = imageio.imread(
+                '/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif' % f'{i:02d}')
             img = (img - img.min()) / (img.max() - img.min())
             l = []
             for (x, y) in coord_list:
                 if (x > 0 and x < 127) and (y > 0 and y < 127):
-                    mean_val = (img[x,y] + img[x+1,y] + img[x-1,y] + img[x,y-1] + img[x,y+1]) / 5
+                    mean_val = (img[x, y] + img[x + 1, y] + img[x - 1, y] + img[x, y - 1] + img[x, y + 1]) / 5
                 else:
-                    mean_val = img[x,y]
+                    mean_val = img[x, y]
                 l.append(mean_val)
             ndt[tubule_num].append(l)
     return ndt
+
 
 def get_ndt_mean(ndt):
     mean_list = []
@@ -294,7 +386,7 @@ def get_ndt_mean(ndt):
 def variance_analysis():
     ATL_vals = []
     for series_num in range(1, 15):
-        mean_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_mean_proj/A%s_mean.png'%f'{series_num}'
+        mean_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_mean_proj/A%s_mean.png' % f'{series_num}'
         lab_tubules = tub_analysis(mean_img)
         coords = get_tubule_XY(lab_tubules)
         ndt = get_ndt(coords)
@@ -307,7 +399,7 @@ def variance_analysis():
 
     Climp_vals = []
     for series_num in range(1, 15):
-        mean_img = '/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/Climp_mean_proj/C%s_mean.png'%f'{series_num}'
+        mean_img = '/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/Climp_mean_proj/C%s_mean.png' % f'{series_num}'
         lab_tubules = tub_analysis(mean_img)
         coords = get_tubule_XY(lab_tubules)
         ndt = get_ndt(coords)
@@ -320,7 +412,7 @@ def variance_analysis():
 
     Ctrl_vals = []
     for series_num in range(1, 15):
-        mean_img = '/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/Ctrl_mean_proj/Ct%s_mean.png'%f'{series_num}'
+        mean_img = '/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/Ctrl_mean_proj/Ct%s_mean.png' % f'{series_num}'
         lab_tubules = tub_analysis(mean_img)
         coords = get_tubule_XY(lab_tubules)
         ndt = get_ndt(coords)
@@ -333,7 +425,7 @@ def variance_analysis():
 
     RTN_vals = []
     for series_num in range(1, 15):
-        mean_img = '/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/RTN_mean_proj/R%s_mean.png'%f'{series_num}'
+        mean_img = '/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/RTN_mean_proj/R%s_mean.png' % f'{series_num}'
         lab_tubules = tub_analysis(mean_img)
         coords = get_tubule_XY(lab_tubules)
         ndt = get_ndt(coords)
@@ -350,6 +442,7 @@ def variance_analysis():
     sns.distplot(RTN_vals, label='RTN')
     plt.legend()
     plt.show()
+
 
 # variance_analysis()
 # exit()
@@ -390,15 +483,13 @@ for i, val in enumerate(mean_list):
     # plt.show()
     var_list.append(np.var(mean_list[i]))
 
-
 # plt.hist(var_list)
 import seaborn as sns
+
 sns.boxplot(var_list)
 plt.show()
 
 exit()
-
-
 
 mean_proj_img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_mean_proj/A1_mean.png')
 # plt.imshow(mean_proj_img)
