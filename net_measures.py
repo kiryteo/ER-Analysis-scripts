@@ -78,6 +78,12 @@ class GetGraphFeatures:
 
     @staticmethod
     def get_features_nodes(group, series_num):
+        """
+
+        @param group: group to analyze
+        @param series_num: sequence number
+        @return: list: number of nodes in the graph (frame)
+        """
         dt = get_nx_graph(group, series_num)
         nodes_list = []
         for idx, graph in dt.items():
@@ -155,6 +161,13 @@ def combined_graph_feature_plot():
 
 
 def get_feature(group, feature):
+    """
+
+    @param group: string: group to analyze
+    @param feature: string: feature to analyze
+    @return: list (n, n): group_total_features
+    """
+
     Graph_features = GetGraphFeatures()
     group_total_features = []
     if group == 'ATL':
@@ -196,6 +209,11 @@ def get_feature(group, feature):
 
     return group_total_features
 
+atl_nodes = get_feature('ATL', 'nodes')
+print(len(atl_nodes))
+print(len(atl_nodes[0]))
+
+exit()
 
 def get_timestep_features(group_total_features):
     timestep_features = []
