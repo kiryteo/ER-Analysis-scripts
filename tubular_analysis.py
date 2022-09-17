@@ -396,7 +396,11 @@ def plot_junc_analysis():
     # sns.distplot(t3, label='Control')
     # sns.distplot(t4, label='RTN')
     sns.boxplot(data=df, x='Junction Intensity variance', y='Group and channel')
-    plt.legend()
+    # b.set_xticklabels(b.get_xticks(), size=8)
+    # b.set_yticklabels(b.get_yticks(), size=8)
+    # plt.legend()
+    # sns.set(font_scale=3)
+    plt.rcParams.update({'font.size': 12})
     plt.title('Junction intensity flow variance over time for all movies across groups')
     plt.show()
     # print(len(l1[0]))
@@ -526,8 +530,8 @@ def plot_junc_analysis():
     # plt.show()
 
 
-plot_junc_analysis()
-exit()
+# plot_junc_analysis()
+# exit()
 
 # from skan import draw
 #
@@ -650,15 +654,32 @@ def get_tubule_XY(lab_tubules):
 # coords = get_tubule_XY(lab_tubules)
 
 
-def get_ndt(coords):
+def get_ndt(series_num, coords, group):
+    global img
     ndt = {}
     for tubule_num, coord_list in coords.items():
         # print(coord_list)
         ndt[tubule_num] = []
+        # if group == 'ATL':
+        #     fp = 'A'
+        # elif group == 'Climp':
+        #     fp = 'C'
+        # elif group == 'Control':
+        #     fp = 'Ct'
+        # else:
+        #     fp = 'R'
+        pref = '/localhome/asa420/MIAL/data/confocal_movies/'
+
+        if group == 'ATL' or group == 'Climp' or group == 'RTN':
+            path = pref + '%s/files/%s_decon_t0'%(f'{group}', f'{group[0]}{series_num}')
+        else:
+            path = pref + '%s/files/img_%s_decon_t0'%(f'{group}', f'{series_num}')
+
         for i in range(100):
-            img = imageio.imread(
-                '/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif' % f'{i:02d}')
+            fpath = path + '%s_ch00.tif'%f'{i:02d}'
+            img = imageio.imread(fpath)
             img = (img - img.min()) / (img.max() - img.min())
+
             l = []
             for (x, y) in coord_list:
                 if (x > 0 and x < 127) and (y > 0 and y < 127):
@@ -682,9 +703,18 @@ def get_ndt_mean(ndt):
     return mean_list
 
 
+#
+# mean_img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_mean_proj/A1_mean.png')
+# lab_tubules = tub_analysis(mean_img)
+# coords = get_tubule_XY(lab_tubules)
+# ndt = get_ndt(coords)
+# mean_list = get_ndt_mean(ndt)
+#
+# exit()
+
 def variance_analysis():
     ATL_vals = []
-    for series_num in range(1, 2):
+    for series_num in range(1, 27):
         mean_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_mean_proj/A%s_mean.png' % f'{series_num}'
         lab_tubules = tub_analysis(mean_img)
         coords = get_tubule_XY(lab_tubules)
@@ -700,7 +730,7 @@ def variance_analysis():
         ATL_vals.extend(var_list)
 
     Climp_vals = []
-    for series_num in range(1, 2):
+    for series_num in range(1, 31):
         mean_img = '/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/Climp_mean_proj/C%s_mean.png' % f'{series_num}'
         lab_tubules = tub_analysis(mean_img)
         coords = get_tubule_XY(lab_tubules)
@@ -716,7 +746,7 @@ def variance_analysis():
         Climp_vals.extend(var_list)
 
     Ctrl_vals = []
-    for series_num in range(1, 2):
+    for series_num in range(1, 31):
         mean_img = '/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/Ctrl_mean_proj/Ct%s_mean.png' % f'{series_num}'
         lab_tubules = tub_analysis(mean_img)
         coords = get_tubule_XY(lab_tubules)
@@ -732,7 +762,7 @@ def variance_analysis():
         Ctrl_vals.extend(var_list)
 
     RTN_vals = []
-    for series_num in range(1, 2):
+    for series_num in range(1, 30):
         mean_img = '/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/RTN_mean_proj/R%s_mean.png' % f'{series_num}'
         lab_tubules = tub_analysis(mean_img)
         coords = get_tubule_XY(lab_tubules)
@@ -763,8 +793,10 @@ def variance_analysis():
     l2 = np.concatenate((cl,ct,a,r))
     df['group'] = pd.Series(l2)
 
-    sns.violinplot(data=df, x='variance_values', y='group')
+    sns.boxplot(data=df, x='variance_values', y='group')
     # plt.legend()
+    plt.rcParams.update({'font.size': 12})
+    plt.title('Tubule intensity variance over time for all movies across groups')
     plt.show()
 
 
