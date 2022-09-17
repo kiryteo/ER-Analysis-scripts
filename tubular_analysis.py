@@ -355,18 +355,14 @@ def get_junc_variance(group_junc):
 def plot_junc_analysis():
     atl_egfp_junc_vals = junction_analysis('ATL', 0)
     atl_mch_junc_vals = junction_analysis('ATL', 1)
-    # print(len(atl_junc_vals))
-    # print(len(atl_junc_vals[100]))
-    # print(len(atl_junc_vals[0][0]))
 
     climp_egfp_junc_vals = junction_analysis('Climp', 0)
     climp_mch_junc_vals = junction_analysis('Climp', 1)
 
-    # ctrl_junc_vals = junction_analysis('Control')
-
     rtn_egfp_junc_vals = junction_analysis('RTN', 0)
     rtn_mch_junc_vals = junction_analysis('RTN', 1)
 
+    ctrl_egfp_junc_vals = junction_analysis('Control', 0)
     # ctrl_temporal = np.array(ctrl_junc_vals).T.tolist()
 
 
@@ -375,64 +371,31 @@ def plot_junc_analysis():
     # print(len(temporal_vals))
     # print(len(atl_junc_vals[0]))
 
+    atl_egfp = get_junc_variance(atl_egfp_junc_vals)
+    atl_mch = get_junc_variance(atl_mch_junc_vals)
 
-    # t1 = []
-    # for i in range(0, len(atl_egfp_junc_vals), 100):
-    #     l1 = atl_egfp_junc_vals[i:i+100]
-    #     l1 = np.array(l1).T.tolist()
-    #
-    #     for each in l1:
-    #         var_val = np.var(each)
-    #         t1.append(var_val)
+    climp_egfp = get_junc_variance(climp_egfp_junc_vals)
+    climp_mch = get_junc_variance(climp_mch_junc_vals)
 
-    t1mch = []
-    for i in range(0, len(atl_egfp_junc_vals), 100):
-        l1 = atl_egfp_junc_vals[i:i+100]
-        l1 = np.array(l1).T.tolist()
+    rtn_egfp = get_junc_variance(rtn_egfp_junc_vals)
+    rtn_mch = get_junc_variance(rtn_mch_junc_vals)
 
-        for each in l1:
-            var_val = np.var(each)
-            t1mch.append(var_val)
+    ctrl_egfp = get_junc_variance(ctrl_egfp_junc_vals)
 
-    t2 = []
-    for i in range(0, len(climp_junc_vals), 100):
-        l1 = climp_junc_vals[i:i+100]
-        l1 = np.array(l1).T.tolist()
-
-        for each in l1:
-            var_val = np.var(each)
-            t2.append(var_val)
-
-    t3 = []
-    for i in range(0, len(ctrl_junc_vals), 100):
-        l1 = ctrl_junc_vals[i:i+100]
-        l1 = np.array(l1).T.tolist()
-
-        for each in l1:
-            var_val = np.var(each)
-            t3.append(var_val)
-
-    t4 = []
-    for i in range(0, len(rtn_junc_vals), 100):
-        l1 = rtn_junc_vals[i:i+100]
-        l1 = np.array(l1).T.tolist()
-
-        for each in l1:
-            var_val = np.var(each)
-            t4.append(var_val)
 
     df = pd.DataFrame()
-    tseries = pd.Series(np.concatenate((t1,t2,t3,t4)))
-    ls = pd.Series(np.concatenate((['ATL']*len(t1), ['Climp']*len(t2), ['Control']*len(t3), ['RTN']*len(t4))))
+    # tseries = pd.Series(np.concatenate((t1,t2,t3,t4)))
+    tseries = pd.Series(np.concatenate((atl_egfp, atl_mch, climp_egfp, climp_mch, rtn_egfp, rtn_mch, ctrl_egfp)))
+    ls = pd.Series(np.concatenate((['ATL_egfp']*len(atl_egfp), ['ATL_mch']*len(atl_mch), ['Climp_egfp']*len(climp_egfp), ['Climp_mch']*len(climp_mch), ['RTN_egfp']*len(rtn_egfp), ['RTN_mch']*len(rtn_mch), ['Control_egfp']*len(ctrl_egfp))))
 
     df['Junction Intensity variance'] = tseries
-    df['Group'] = ls
+    df['Group and channel'] = ls
 
     # sns.distplot(t1, label='ATL')
     # sns.distplot(t2, label='Climp')
     # sns.distplot(t3, label='Control')
     # sns.distplot(t4, label='RTN')
-    sns.boxplot(data=df, x='Junction Intensity variance', y='Group')
+    sns.boxplot(data=df, x='Junction Intensity variance', y='Group and channel')
     plt.legend()
     plt.title('Junction intensity flow variance over time for all movies across groups')
     plt.show()
