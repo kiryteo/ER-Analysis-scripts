@@ -14,19 +14,33 @@ import cv2
 from KDEpy import FFTKDE
 from skimage import exposure
 from skimage import filters
+from skimage import metrics
+
+from PIL import Image
+from PIL import ImageChops
+
+
+
+
+def simp_fourier():
+    for i in range(100):
+        img = imageio.imread(
+            '/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif' % f'{i:02d}')
+        fmag = np.abs(np.fft.fft(img))
 
 
 def intensity_variation():
     l = []
     for i in range(100):
-        img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif'%f'{i:02d}')
+        img = imageio.imread(
+            '/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif' % f'{i:02d}')
         # img = exposure.equalize_hist(img)
         # l.append(img.max())
         # l.append(img.mean())
         l.append(np.median(img))
     plt.plot(l)
     plt.xlabel('Frame number')
-    plt.ylabel('Median intensity value')#Max intensity value')
+    plt.ylabel('Median intensity value')  # Max intensity value')
     plt.title('Median intensity per frame - confocal ATL series 1')
     plt.show()
 
@@ -36,10 +50,10 @@ def intensity_variation():
 
 
 def junction_location_plotter():
-    mean_proj_img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_mean_proj/A1_mean.png')
+    mean_proj_img = imageio.imread(
+        '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_mean_proj/A1_mean.png')
     # plt.imshow(mean_proj_img)
 
-    # bin_img = mean_proj_img > 0
     thresh = threshold_otsu(mean_proj_img)
     bin_img = mean_proj_img > thresh
 
@@ -66,7 +80,6 @@ def junction_location_plotter():
     # nx.draw_networkx(G, pos=pos, with_labels=True, node_size=10)
     degree_list = G.degree
 
-    # print(ps)
 
     # get all the nodes with degree greater than 2
     newps = []
@@ -90,7 +103,8 @@ def junction_location_plotter():
     #     plt.plot(ps[:,1], ps[:,0], 'green')
 
     for i in range(100):
-        img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t0%s_ch00_skel.png'%f'{i:02d}')
+        img = imageio.imread(
+            '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t0%s_ch00_skel.png' % f'{i:02d}')
         plt.imshow(img, cmap='gray')
         # plt.plot(ps[:, 1], ps[:, 0], 'y.')
         plt.plot(nps[:, 1], nps[:, 0], 'r.')
@@ -98,18 +112,18 @@ def junction_location_plotter():
         plt.show()
 
 
-
-
 def get_unique_components(path):
     img = imageio.imread(path)
     cc = skimage.measure.label(img)
     return len(np.unique(cc)) - 1
 
+
 def count_connected_components():
     l1 = []
     for num in range(1, 31):
         for i in range(100):
-            path = '/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/skel/Ct%s/Ct%s_decon_t0%s_ch00_skel.png'%(f'{num}', f'{num}', f'{i:02d}')
+            path = '/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/skel/Ct%s/Ct%s_decon_t0%s_ch00_skel.png' % (
+            f'{num}', f'{num}', f'{i:02d}')
             num_components = get_unique_components(path)
             l1.append(num_components)
 
@@ -126,21 +140,24 @@ def count_connected_components():
     l2 = []
     for num in range(1, 27):
         for i in range(100):
-            path = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A%s/A%s_decon_t0%s_ch00_skel.png'%(f'{num}', f'{num}', f'{i:02d}')
+            path = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A%s/A%s_decon_t0%s_ch00_skel.png' % (
+            f'{num}', f'{num}', f'{i:02d}')
             num_components = get_unique_components(path)
             l2.append(num_components)
 
     l3 = []
     for num in range(1, 31):
         for i in range(100):
-            path = '/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/skel/C%s/C%s_decon_t0%s_ch00_skel.png'%(f'{num}', f'{num}', f'{i:02d}')
+            path = '/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/skel/C%s/C%s_decon_t0%s_ch00_skel.png' % (
+            f'{num}', f'{num}', f'{i:02d}')
             num_components = get_unique_components(path)
             l3.append(num_components)
 
     l4 = []
     for num in range(1, 30):
         for i in range(100):
-            path = '/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/skel/R%s/R%s_decon_t0%s_ch00_skel.png'%(f'{num}', f'{num}', f'{i:02d}')
+            path = '/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/skel/R%s/R%s_decon_t0%s_ch00_skel.png' % (
+            f'{num}', f'{num}', f'{i:02d}')
 
             num_components = get_unique_components(path)
             l4.append(num_components)
@@ -159,12 +176,9 @@ def count_connected_components():
 # exit()
 
 def preproc_rolling_ball():
-    img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/preproc/A1/A1_decon_t000_ch00_proc.png')
+    img = imageio.imread(
+        '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/preproc/A1/A1_decon_t000_ch00_proc.png')
     op = skimage.restoration.rolling_ball(img, radius=1)
-    # op = skimage.morphology.erosion(op)
-    # op = skimage.morphology.erosion(op)
-    # op = skimage.morphology.erosion(op)
-    # op = skimage.morphology.erosion(op)
 
     edges = filters.roberts(op)
     edges = skimage.morphology.area_closing(edges, area_threshold=2)
@@ -178,16 +192,21 @@ def preproc_rolling_ball():
     fig, ax = plt.subplots()
     r, c = 1, 3
 
-    fig.add_subplot(r,c,1)
+    fig.add_subplot(r, c, 1)
     plt.imshow(img)
 
-    fig.add_subplot(r,c,2)
+    fig.add_subplot(r, c, 2)
     plt.imshow(edges)
 
-    fig.add_subplot(r,c,3)
+    fig.add_subplot(r, c, 3)
     plt.imshow(skel)
 
     plt.show()
+
+# class JunctionAnalysis:
+#     def __init__(self):
+#         pass
+
 
 
 def junction_flow(mean_img):
@@ -220,20 +239,16 @@ def junction_flow(mean_img):
 
     # Obtain the junctions
     brpts_img = np.zeros((128, 128))
-    # brpts_img[newps] = 1.
     for each in newps:
         brpts_img[each[0], each[1]] = 255.
 
     # Dilate junctions and remove them to get individual tubules
     # dil_brpts = pcv.dilate(gray_img=brpts_img, ksize=3, i=1)
 
+    return newps, brpts_img
     # return newps, dil_brpts
-    return newps
+    # return newps
 
-
-# newps = junction_flow('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_mean_proj/A1_mean.png')
-
-# print(newps)
 
 def get_junc_vals(path, newps):
     l = []
@@ -242,7 +257,8 @@ def get_junc_vals(path, newps):
     # img = exposure.equalize_hist(img)
     for each in newps:
         x, y = each[0], each[1]
-        mean_val = (img[x + 1, y] + img[x - 1, y] + img[x, y] + img[x, y - 1] + img[x, y + 1] + img[x+1, y+1] + img[x-1, y-1] + img[x-1, y+1] + img[x+1, y-1]) / 9
+        mean_val = (img[x + 1, y] + img[x - 1, y] + img[x, y] + img[x, y - 1] + img[x, y + 1] + img[x + 1, y + 1] + img[
+            x - 1, y - 1] + img[x - 1, y + 1] + img[x + 1, y - 1]) / 9
         # mean_val = (img[x + 1, y] + img[x - 1, y] + img[x, y] + img[x, y - 1] + img[x, y + 1]) / 5
         l.append(mean_val)
         # if mean_val == 0:
@@ -250,6 +266,14 @@ def get_junc_vals(path, newps):
         # else:
         #     l.append(mean_val)
     return l
+
+
+
+# newps = junction_flow('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_mean_proj/A1_mean.png')
+
+# print(newps)
+
+
 
 
 def junction_analysis(group, channel):
@@ -306,7 +330,6 @@ def junction_analysis(group, channel):
                 l = get_junc_vals(path, newps)
                 junc_vals.append(l)
 
-
         # # p2, p98 = np.percentile(img, (2, 98))
         # # img = exposure.rescale_intensity(img, in_range=(p2, p98))
         # img = (img - img.min()) / (img.max() - img.min())
@@ -326,8 +349,6 @@ def junction_analysis(group, channel):
     return junc_vals
 
 
-
-
 # atl_junc_vals3 = junction_analysis(3,'ATL')
 # atl_junc_vals4 = junction_analysis(4,'ATL')
 # atl_junc_vals5 = junction_analysis(5,'ATL')
@@ -342,7 +363,7 @@ import pandas as pd
 def get_junc_variance(group_junc):
     variance_val_list = []
     for i in range(0, len(group_junc), 100):
-        l1 = group_junc[i:i+100]
+        l1 = group_junc[i:i + 100]
         l1 = np.array(l1).T.tolist()
 
         for each in l1:
@@ -350,6 +371,100 @@ def get_junc_variance(group_junc):
             variance_val_list.append(var_val)
 
     return variance_val_list
+
+
+def dil_junctions():
+    global brpts
+    prefix = '/localhome/asa420/MIAL/data/confocal_movies/'
+    for series_num in range(1, 2):
+        newps, brpts = junction_flow(prefix + 'ATL/new_op_jul/ATL_mean_proj/A%s_mean.png' % f'{series_num}')
+        #print(dil_brpts)
+    return brpts
+
+
+brpts = dil_junctions()
+op1 = skimage.measure.label(brpts)
+dil_brpts = skimage.morphology.dilation(brpts)
+op = skimage.measure.label(dil_brpts)
+# op = clear_border(op)
+
+prop = skimage.measure.regionprops(op)
+for i, each in enumerate(prop):
+    if each['area'] > 5:
+        op[np.where(op==i)] = 0
+
+# print(np.unique(op))
+    # print(each['area'])
+# print(np.unique(dil_brpts))
+# plt.imshow(op1)
+# plt.show()
+
+
+pt55 = np.where(op==50)
+# print(pt55)
+fft_abs = []
+
+
+for i in range(100):
+    img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif'%f'{i:02d}')
+    img = (img - img.min())/(img.max() - img.min())
+    patch = img[pt55]
+    # print(patch.shape)
+    print(patch[0])
+    k = patch[0]
+    print(np.fft.fft(k))
+    # fft_abs.append(np.abs())
+
+
+exit()
+# for i in range(100):
+#     # print(len(fft_abs[i]))
+#     print(fft_abs[i])
+
+n = []
+for i in range(100):
+    n.append(fft_abs[i])
+
+plt.plot(n)
+plt.xlabel('timeframe')
+plt.ylabel('FFT magnitude')
+plt.show()
+
+exit()
+# for i in range(100):
+#     path = prefix + 'ATL/files/A%s_decon_t0%s_ch0%s.tif' % (f'{series_num}', f'{i:02d}', f'{channel}')
+#
+# l = get_junc_vals(path, newps)
+# junc_vals.append(l)
+
+
+def fourier_vals():
+    atl_egfp_junc_vals = junction_analysis('ATL', 0)
+    # temporal_vals = np.transpose(atl_junc_vals)
+    # print(len(atl_egfp_junc_vals))
+    # for i in range(0, 101, 100):
+    #     l1 = atl_egfp_junc_vals[i:i+100]
+    #     l1 = np.array(l1).T.tolist()
+
+    l1 = atl_egfp_junc_vals[0:100]
+    l1 = np.array(l1).T.tolist()
+
+    # print(len(l1))
+    print(l1[0])
+    # print(len(l1[0]))
+    # print(l1[0])
+    # dt = l1[0]
+
+    # print(dt)
+
+    # ft = np.fft.fft(l1[1])
+    # plt.plot(np.abs(ft))
+    # plt.show()
+    # print(len(l1))
+
+fourier_vals()
+exit()
+
 
 
 def plot_junc_analysis():
@@ -364,7 +479,6 @@ def plot_junc_analysis():
 
     ctrl_egfp_junc_vals = junction_analysis('Control', 0)
     # ctrl_temporal = np.array(ctrl_junc_vals).T.tolist()
-
 
     # temporal_vals = list(map(list, zip(*atl_junc_vals)))
 
@@ -382,11 +496,13 @@ def plot_junc_analysis():
 
     ctrl_egfp = get_junc_variance(ctrl_egfp_junc_vals)
 
-
     df = pd.DataFrame()
     # tseries = pd.Series(np.concatenate((t1,t2,t3,t4)))
     tseries = pd.Series(np.concatenate((atl_egfp, atl_mch, climp_egfp, climp_mch, rtn_egfp, rtn_mch, ctrl_egfp)))
-    ls = pd.Series(np.concatenate((['ATL_egfp']*len(atl_egfp), ['ATL_mch']*len(atl_mch), ['Climp_egfp']*len(climp_egfp), ['Climp_mch']*len(climp_mch), ['RTN_egfp']*len(rtn_egfp), ['RTN_mch']*len(rtn_mch), ['Control_egfp']*len(ctrl_egfp))))
+    ls = pd.Series(np.concatenate((['ATL_egfp'] * len(atl_egfp), ['ATL_mch'] * len(atl_mch),
+                                   ['Climp_egfp'] * len(climp_egfp), ['Climp_mch'] * len(climp_mch),
+                                   ['RTN_egfp'] * len(rtn_egfp), ['RTN_mch'] * len(rtn_mch),
+                                   ['Control_egfp'] * len(ctrl_egfp))))
 
     df['Junction Intensity variance'] = tseries
     df['Group and channel'] = ls
@@ -395,7 +511,8 @@ def plot_junc_analysis():
     # sns.distplot(t2, label='Climp')
     # sns.distplot(t3, label='Control')
     # sns.distplot(t4, label='RTN')
-    sns.boxplot(data=df, x='Junction Intensity variance', y='Group and channel')
+    # sns.boxplot(data=df, x='Junction Intensity variance', y='Group and channel')
+    sns.violinplot(data=df, x='Junction Intensity variance', y='Group and channel')
     # b.set_xticklabels(b.get_xticks(), size=8)
     # b.set_yticklabels(b.get_yticks(), size=8)
     # plt.legend()
@@ -426,6 +543,10 @@ def plot_junc_analysis():
     # ctl1 = ctrl_temporal[0][:100]
 
     # ft = np.fft.fft(atl1)
+    # k = np.abs(ft)
+    #
+    # plt.plot(k)
+    # plt.show()
     # print(ft)
 
     # plt.plot(ctl1)
@@ -489,7 +610,6 @@ def plot_junc_analysis():
     # xatl8, yatl8 = FFTKDE(bw='silverman', kernel='triweight').fit(atl_junc_vals8)(2**11)
     # yatl8[xatl8<=0.001] = 0
     # yatl8 = yatl8 * 2
-
 
     # xcl, ycl = FFTKDE(bw='silverman', kernel='triweight').fit(climp_junc_vals)(2 ** 11)
     # ycl[xcl <= 0.001] = 0
@@ -620,7 +740,6 @@ def tub_analysis(mean_img):
 # plt.show()
 
 
-
 def get_tubule_XY(lab_tubules):
     lt = {}
     # lt = []
@@ -655,28 +774,22 @@ def get_tubule_XY(lab_tubules):
 
 
 def get_ndt(series_num, coords, group):
-    global img
     ndt = {}
     for tubule_num, coord_list in coords.items():
         # print(coord_list)
         ndt[tubule_num] = []
-        # if group == 'ATL':
-        #     fp = 'A'
-        # elif group == 'Climp':
-        #     fp = 'C'
-        # elif group == 'Control':
-        #     fp = 'Ct'
-        # else:
-        #     fp = 'R'
         pref = '/localhome/asa420/MIAL/data/confocal_movies/'
 
         if group == 'ATL' or group == 'Climp' or group == 'RTN':
-            path = pref + '%s/files/%s_decon_t0'%(f'{group}', f'{group[0]}{series_num}')
+            path = pref + '%s/files/%s_decon_t0' % (f'{group}', f'{group[0]}{series_num}')
         else:
-            path = pref + '%s/files/img_%s_decon_t0'%(f'{group}', f'{series_num}')
+            path = pref + '%s/files/img_%s_decon_t0' % (f'{group}', f'{series_num}')
 
         for i in range(100):
-            fpath = path + '%s_ch00.tif'%f'{i:02d}'
+            if group == 'Control':
+                fpath = path + '%s.tif' % f'{i:02d}'
+            else:
+                fpath = path + '%s_ch00.tif' % f'{i:02d}'
             img = imageio.imread(fpath)
             img = (img - img.min()) / (img.max() - img.min())
 
@@ -718,7 +831,7 @@ def variance_analysis():
         mean_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_mean_proj/A%s_mean.png' % f'{series_num}'
         lab_tubules = tub_analysis(mean_img)
         coords = get_tubule_XY(lab_tubules)
-        ndt = get_ndt(coords)
+        ndt = get_ndt(series_num, coords, 'ATL')
         mean_list = get_ndt_mean(ndt)
         var_list = []
         for each in mean_list:
@@ -734,7 +847,7 @@ def variance_analysis():
         mean_img = '/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/Climp_mean_proj/C%s_mean.png' % f'{series_num}'
         lab_tubules = tub_analysis(mean_img)
         coords = get_tubule_XY(lab_tubules)
-        ndt = get_ndt(coords)
+        ndt = get_ndt(series_num, coords, 'Climp')
         mean_list = get_ndt_mean(ndt)
         var_list = []
         for each in mean_list:
@@ -750,7 +863,7 @@ def variance_analysis():
         mean_img = '/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/Ctrl_mean_proj/Ct%s_mean.png' % f'{series_num}'
         lab_tubules = tub_analysis(mean_img)
         coords = get_tubule_XY(lab_tubules)
-        ndt = get_ndt(coords)
+        ndt = get_ndt(series_num, coords, 'Control')
         mean_list = get_ndt_mean(ndt)
         var_list = []
         for each in mean_list:
@@ -766,7 +879,7 @@ def variance_analysis():
         mean_img = '/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/RTN_mean_proj/R%s_mean.png' % f'{series_num}'
         lab_tubules = tub_analysis(mean_img)
         coords = get_tubule_XY(lab_tubules)
-        ndt = get_ndt(coords)
+        ndt = get_ndt(series_num, coords, 'RTN')
         mean_list = get_ndt_mean(ndt)
         var_list = []
         for each in mean_list:
@@ -790,10 +903,11 @@ def variance_analysis():
     cl = ['Climp'] * len(Climp_vals)
     ct = ['Control'] * len(Ctrl_vals)
     r = ['RTN'] * len(RTN_vals)
-    l2 = np.concatenate((cl,ct,a,r))
+    l2 = np.concatenate((cl, ct, a, r))
     df['group'] = pd.Series(l2)
 
-    sns.boxplot(data=df, x='variance_values', y='group')
+    # sns.boxplot(data=df, x='variance_values', y='group')
+    sns.violinplot(data=df, x='variance_values', y='group')
     # plt.legend()
     plt.rcParams.update({'font.size': 12})
     plt.title('Tubule intensity variance over time for all movies across groups')
@@ -846,8 +960,6 @@ sns.boxplot(var_list)
 plt.show()
 
 exit()
-
-
 
 # plt.axis('off')
 # plt.suptitle('Junction detection')
