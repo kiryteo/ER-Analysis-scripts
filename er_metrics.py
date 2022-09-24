@@ -10,36 +10,8 @@ import numpy as np
 from skimage import metrics
 import scipy
 from scipy import spatial
-
-
-def get_if_corr(img1_patch_vals, img2_patch_vals):
-    """
-
-    @param img1_patch_vals:
-    @param img2_patch_vals:
-    @return: inter-frame correlation value for each patch
-    """
-    for i in range(len(img1_patch_vals)):
-        valnum = np.corrcoef(img1_patch_vals[i], img2_patch_vals[i])
-        return valnum[0, 1]
-
-
-def ssim_patch(img1_patch_vals, img2_patch_vals):
-    for i in range(len(img1_patch_vals)):
-        ssim = metrics.structural_similarity(np.array(img1_patch_vals[i]), np.array(img2_patch_vals[i]))
-        print(ssim)
-        break
-
-
-def cos_sim():
-    for i in range(len(img1_patch_vals)):
-        cosim = 1 - spatial.distance.cosine((img1_patch_vals[i]), (img2_patch_vals[i]))
-        print(cosim)
-        break
-
-# cos_sim()
-
 from scipy import ndimage
+
 
 EPS = np.finfo(float).eps
 
@@ -87,58 +59,6 @@ def mutual_information_2d(x, y, sigma=1, normalized=False):
 
     return mi
 
-# def mutual_information(hgram):
-#     pxy = hgram / float(np.sum(hgram))
-#     px = np.sum(pxy, axis=1) # marginal for x over y
-#     py = np.sum(pxy, axis=0) # marginal for y over x
-#     px_py = px[:, None] * py[None, :] # Broadcast to multiply marginals
-#     # Now we can do the calculation using the pxy, px_py 2D arrays
-#     nzs = pxy > 0 # Only non-zero pxy values contribute to the sum
-#     return np.sum(pxy[nzs] * np.log(pxy[nzs] / px_py[nzs]))
-
-def nmi():
-    for i in range(len(img1_patch_vals)):
-        nmi_val = mutual_information_2d((img1_patch_vals[i]), (img2_patch_vals[i]))
-        print(nmi_val)
-        break
-
-
-# def cross_corr():
-#     for i in range(len(img1_patch_vals)):
-#         n1 = np.linalg.norm(img1_patch_vals[i])
-#         n1_data = img1_patch_vals[i] / n1
-#         n2 = np.linalg.norm(img2_patch_vals[i])
-#         n2_data = img2_patch_vals[i] / n2
-#         cc = np.correlate(n1_data, n2_data, mode='full')
-#         print(cc)
-#         break
-
-# cross_corr()
-
-# for each in img1_patch_vals:
-#     print(np.var(each))
-
-
-# def norm_cc():
-#     for i in range(len(img1_patch_vals)):
-#         i1 = np.array(img1_patch_vals[i])
-#         i2 = np.array(img2_patch_vals[i])
-#         dist_euclidean = np.sqrt(sum((i1 - i2)**2)) / i1.size
-#         dist_manhattan = sum(abs(i1 - i2)) / i1.size
-#         dist_ncc = sum( (i1 - np.mean(i1)) * (i2 - np.mean(i2)) ) / (
-#         (i1.size - 1) * stdev(i1) * stdev(i2) )
-#         print(dist_ncc)
-#         break
-
-
-
-def norm_cc():
-    for i in range(len(img1_patch_vals)):
-        i1 = np.array(img1_patch_vals[i])
-        i2 = np.array(img2_patch_vals[i])
-        print(scipy.signal.correlate(i1, i2))
-        break
-
 
 def junction_flow(mean_img):
     mean_proj_img = imageio.imread(mean_img)
@@ -182,71 +102,144 @@ def get_junction_image(newps):
 
 
 
-
-
-# i1 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t000_ch00.tif')
-# i2 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t001_ch00.tif')
-#
-# i1 = (i1 - i1.min())/(i1.max() - i1.min())
-# i2 = (i2 - i2.min())/(i2.max() - i2.min())
-
-
-
 # patch1_vals -> list of intensity values per patch
 
 def dil_junctions():
-    global brpts, newps
+    global newps
     prefix = '/localhome/asa420/MIAL/data/confocal_movies/'
     for series_num in range(1, 2):
         newps = junction_flow(prefix + 'ATL/new_op_jul/ATL_mean_proj/A%s_mean.png' % f'{series_num}')
     return newps
 
 
-newps = dil_junctions()
-
-
 def get_junc_patches(newps, img):
     img_patches = []
     for num, coordinate in enumerate(newps):
         x, y = newps[num]
-        coord_vals = [img[x-1,y], img[x+1,y], img[x,y], img[x,y-1], img[x,y+1], img[x-1,y-1], img[x-1,y+1], img[x+1,y-1], img[x+1,y+1]]
-        img_patches.append(coord_vals)
+        if x > 1 and x < 126 and y > 1 and y < 126:
+            coord_vals = [img[x-1,y], img[x+1,y], img[x,y], img[x,y-1], img[x,y+1], img[x-1,y-1], img[x-1,y+1], img[x+1,y-1], img[x+1,y+1], img[x+2, y], img[x-2, y], img[x, y+2], img[x, y-2]]
+            img_patches.append(coord_vals)
     return img_patches
 
 
-def get_group_IF_correlation():
+def get_group_dif(group, metric):
+    grp_list = []
+    global met_val
+    prefix = '/localhome/asa420/MIAL/data/confocal_movies/'
+    if group == 'ATL' or 'Climp' or 'RTN':
+        for series_num in range(1, 25):
+            newps = junction_flow(prefix + '%s/new_op_jul/%s_mean_proj/%s_mean.png' % (f'{group}', f'{group}',f'{group[0]}{series_num}'))
+            ser_list = []
+            for i in range(98):
+                i1 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s1_decon_t0%s_ch00.tif'%(f'{group}', f'{group[0]}', f'{i:02d}'))
+                i2 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s1_decon_t0%s_ch00.tif'%(f'{group}', f'{group[0]}', f'{i+1:02d}'))
 
-    for num_series in range(27):
+                i1 = (i1 - i1.min())/(i1.max() - i1.min())
+                i2 = (i2 - i2.min())/(i2.max() - i2.min())
 
-    ATL1_list = []
-    for i in range(98):
-        i1 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif'%f'{i:02d}')
-        i2 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif'%f'{i+1:02d}')
+                img1_patch_vals = get_junc_patches(newps, i1)
+                img2_patch_vals = get_junc_patches(newps, i2)
 
-        i1 = (i1 - i1.min())/(i1.max() - i1.min())
-        i2 = (i2 - i2.min())/(i2.max() - i2.min())
+                l = []
+                for i in range(len(img1_patch_vals)):
+                    if metric == 'ssim':
+                        met_val = metrics.structural_similarity(np.array(img1_patch_vals[i]), np.array(img2_patch_vals[i]))
+                    elif metric == 'cos_sim':
+                        met_val = 1 - spatial.distance.cosine((img1_patch_vals[i]), (img2_patch_vals[i]))
+                    elif metric == 'norm_cc':
+                        i1 = np.array(img1_patch_vals[i])
+                        i2 = np.array(img1_patch_vals[i])
+                        met_val = scipy.signal.correlate(i1, i2)
+                    elif metric == 'nmi':
+                        met_val = mutual_information_2d(img1_patch_vals[i], img2_patch_vals[i])
+                    elif metric == 'IF_corr':
+                        valnum = np.corrcoef(img1_patch_vals[i], img2_patch_vals[i])
+                        met_val = valnum[0, 1]
 
-        img1_patch_vals = get_junc_patches(newps, i1)
-        img2_patch_vals = get_junc_patches(newps, i2)
+                    l.append(met_val)
+                ser_list.extend(l)
+            grp_list.extend(ser_list)
+        return grp_list
+    else:
+        for series_num in range(1, 25):
+            newps = junction_flow(prefix + 'Control/new_op_jul/Ctrl_mean_proj/Cts_mean.png')
+            ser_list = []
+            for i in range(98):
+                i1 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Control/files/Ct1_decon_t0%s_ch00.tif'%f'{i:02d}')
+                i2 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Control/files/Ct1_decon_t0%s_ch00.tif'%f'{i+1:02d}')
 
-        # print(img1_patch_vals)
-        # print(img2_patch_vals)
+                i1 = (i1 - i1.min())/(i1.max() - i1.min())
+                i2 = (i2 - i2.min())/(i2.max() - i2.min())
 
-        # print(len(img1_patch_vals))
-        # print(img1_patch_vals)
+                img1_patch_vals = get_junc_patches(newps, i1)
+                img2_patch_vals = get_junc_patches(newps, i2)
 
-        # val = get_if_corr(img1_patch_vals, img2_patch_vals)
-        l = []
-        for i in range(len(img1_patch_vals)):
-            valnum = np.corrcoef(img1_patch_vals[i], img2_patch_vals[i])
-            l.append(valnum[0, 1])
+                l = []
+                for i in range(len(img1_patch_vals)):
+                    if metric == 'ssim':
+                        met_val = metrics.structural_similarity(np.array(img1_patch_vals[i]), np.array(img2_patch_vals[i]))
+                    elif metric == 'cos_sim':
+                        met_val = 1 - spatial.distance.cosine((img1_patch_vals[i]), (img2_patch_vals[i]))
+                    elif metric == 'norm_cc':
+                        i1 = np.array(img1_patch_vals[i])
+                        i2 = np.array(img1_patch_vals[i])
+                        met_val = scipy.signal.correlate(i1, i2)
+                    elif metric == 'nmi':
+                        met_val = mutual_information_2d(img1_patch_vals[i], img2_patch_vals[i])
+                    elif metric == 'IF_corr':
+                        valnum = np.corrcoef(img1_patch_vals[i], img2_patch_vals[i])
+                        met_val = valnum[0, 1]
 
-        ATL1_list.append(l)
-    return ATL1_list
+                    l.append(met_val)
+                ser_list.extend(l)
+            grp_list.extend(ser_list)
+        return grp_list
 
 
-atl_list = get_group_IF_correlation()
-sns.distplot(atl_list)
+rtn = get_group_dif('RTN', 'nmi')
+atl = get_group_dif('ATL', 'nmi')
+climp = get_group_dif('Climp', 'nmi')
+ctrl = get_group_dif('Control', 'nmi')
+
+# atl = get_group_dif('ATL', 'ssim')
+# climp = get_group_dif('Climp', 'ssim')
+# ctrl = get_group_dif('Control', 'ssim')
+
+sns.distplot(rtn, hist=False, label='RTN')
+sns.distplot(atl, hist=False, label='ATL')
+sns.distplot(climp, hist=False, label='Climp')
+sns.distplot(ctrl, hist=False, label='Control')
+
+plt.legend()
+plt.title('Junction area (3x3 patch) intensity variation over time for all movies across groups')
+plt.xlabel('Normalized Mutual Information values')
+
+# atl = get_group_cos_sim('ATL')
+# climp = get_group_cos_sim('Climp')
+# sns.distplot(rtn)
+# sns.distplot(atl)
+# sns.distplot(climp)
+# # plt.xlim((0,1))
+plt.show()
+
+exit()
+
+
+
+
+
+dt = atl_list[0] < np.quantile(atl_list[0], 0.95)
+
+# sns.distplot(atl_list[0], hist=False)
+# sns.distplot(atl_list[1], hist=False)
+# sns.distplot(atl_list[2], hist=False)
+# sns.distplot(atl_list[3], hist=False)
+# sns.distplot(atl_list[4], hist=False)
+# sns.distplot(atl_list[5], hist=False)
+# sns.distplot(atl_list[6], hist=False)
+# sns.distplot(atl_list[7], hist=False)
+# sns.distplot(atl_list[8], hist=False)
+sns.distplot(dt)
 plt.show()
 
 # valnum = np.corrcoef(img1, im2)
