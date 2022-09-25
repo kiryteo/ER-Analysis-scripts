@@ -117,22 +117,60 @@ def get_junc_patches(newps, img):
     for num, coordinate in enumerate(newps):
         x, y = newps[num]
         if x > 1 and x < 126 and y > 1 and y < 126:
-            coord_vals = [img[x-1,y], img[x+1,y], img[x,y], img[x,y-1], img[x,y+1], img[x-1,y-1], img[x-1,y+1], img[x+1,y-1], img[x+1,y+1], img[x+2, y], img[x-2, y], img[x, y+2], img[x, y-2]]
+            coord_vals = [img[x-1,y], img[x+1,y], img[x,y], img[x,y-1], img[x,y+1], img[x-1,y-1], img[x-1,y+1], img[x+1,y-1], img[x+1,y+1]]#, img[x+2, y], img[x-2, y], img[x, y+2], img[x, y-2]]
             img_patches.append(coord_vals)
     return img_patches
+
+
+mean_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_mean_proj/A1_mean.png'
+newps = junction_flow(mean_img)
+
+sl = []
+for i in range(99):
+    img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif'%f'{i:02d}')
+    img = (img - img.min())/(img.max() - img.min())
+
+    im1_patch_vals = get_junc_patches(newps, img)
+    sl.append(im1_patch_vals)
+
+slt = np.array(sl)
+
+a = slt[:,0,0]
+
+# print(a.shape)
+
+op = np.abs(np.fft.fft(a))
+
+print(op)
+# plt.plot(op)
+# plt.show()
+
+# print(a)
+# print(im1_patch_vals)
+# im1_patch_vals[1] = np.reshape(im1_patch_vals[1], (3,3))
+# # print(im1_patch_vals[0])
+# print(len(im1_patch_vals))
+# print(len(im1_patch_vals[0]))
+#
+# op = np.abs(np.fft.fft2(im1_patch_vals[1]))
+# # plt.imshow(op)
+# plt.plot(op)
+# plt.show()
+
+exit()
 
 
 def get_group_dif(group, metric):
     grp_list = []
     global met_val
     prefix = '/localhome/asa420/MIAL/data/confocal_movies/'
-    if group == 'ATL' or 'Climp' or 'RTN':
+    if group == 'Control':
         for series_num in range(1, 25):
-            newps = junction_flow(prefix + '%s/new_op_jul/%s_mean_proj/%s_mean.png' % (f'{group}', f'{group}',f'{group[0]}{series_num}'))
+            newps = junction_flow(prefix + 'Control/new_op_jul/Ctrl_mean_proj/Ct%s_mean.png'%f'{series_num}')
             ser_list = []
             for i in range(98):
-                i1 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s1_decon_t0%s_ch00.tif'%(f'{group}', f'{group[0]}', f'{i:02d}'))
-                i2 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s1_decon_t0%s_ch00.tif'%(f'{group}', f'{group[0]}', f'{i+1:02d}'))
+                i1 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Control/files/img_%s_decon_t0%s.tif'%(f'{series_num}', f'{i:02d}'))
+                i2 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Control/files/img_%s_decon_t0%s.tif'%(f'{series_num}', f'{i+1:02d}'))
 
                 i1 = (i1 - i1.min())/(i1.max() - i1.min())
                 i2 = (i2 - i2.min())/(i2.max() - i2.min())
@@ -162,11 +200,11 @@ def get_group_dif(group, metric):
         return grp_list
     else:
         for series_num in range(1, 25):
-            newps = junction_flow(prefix + 'Control/new_op_jul/Ctrl_mean_proj/Cts_mean.png')
+            newps = junction_flow(prefix + '%s/new_op_jul/%s_mean_proj/%s_mean.png' % (f'{group}', f'{group}',f'{group[0]}{series_num}'))
             ser_list = []
             for i in range(98):
-                i1 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Control/files/Ct1_decon_t0%s_ch00.tif'%f'{i:02d}')
-                i2 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Control/files/Ct1_decon_t0%s_ch00.tif'%f'{i+1:02d}')
+                i1 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s_decon_t0%s_ch00.tif'%(f'{group}', f'{group[0]}{series_num}', f'{i:02d}'))
+                i2 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s_decon_t0%s_ch00.tif'%(f'{group}', f'{group[0]}{series_num}', f'{i+1:02d}'))
 
                 i1 = (i1 - i1.min())/(i1.max() - i1.min())
                 i2 = (i2 - i2.min())/(i2.max() - i2.min())
@@ -196,30 +234,39 @@ def get_group_dif(group, metric):
         return grp_list
 
 
-rtn = get_group_dif('RTN', 'nmi')
-atl = get_group_dif('ATL', 'nmi')
-climp = get_group_dif('Climp', 'nmi')
-ctrl = get_group_dif('Control', 'nmi')
+rtn = get_group_dif('RTN', 'IF_corr')
+atl = get_group_dif('ATL', 'IF_corr')
+climp = get_group_dif('Climp', 'IF_corr')
+ctrl = get_group_dif('Control', 'IF_corr')
 
-# atl = get_group_dif('ATL', 'ssim')
-# climp = get_group_dif('Climp', 'ssim')
-# ctrl = get_group_dif('Control', 'ssim')
+import pandas as pd
 
-sns.distplot(rtn, hist=False, label='RTN')
-sns.distplot(atl, hist=False, label='ATL')
-sns.distplot(climp, hist=False, label='Climp')
-sns.distplot(ctrl, hist=False, label='Control')
+df = pd.DataFrame()
+df['IF_correlation_vals'] = pd.Series(np.concatenate((atl, climp, ctrl, rtn)))
+a = ['ATL'] * len(atl)
+cl = ['Climp'] * len(climp)
+ct = ['Control'] * len(ctrl)
+r = ['RTN'] * len(rtn)
+l2 = pd.Series(np.concatenate((a, cl, ct, r)))
+df['group'] = l2
 
-plt.legend()
+# sns.distplot(rtn, hist=False, label='RTN')
+# sns.distplot(atl, hist=False, label='ATL')
+# sns.distplot(climp, hist=False, label='Climp')
+# sns.distplot(ctrl, hist=False, label='Control')
+
+sns.violinplot(data=df, x='IF_correlation_vals', y='group')
+
+# plt.legend()
 plt.title('Junction area (3x3 patch) intensity variation over time for all movies across groups')
-plt.xlabel('Normalized Mutual Information values')
+# plt.xlabel('Interframe correlation between consecutive frames')
 
 # atl = get_group_cos_sim('ATL')
 # climp = get_group_cos_sim('Climp')
 # sns.distplot(rtn)
 # sns.distplot(atl)
 # sns.distplot(climp)
-# # plt.xlim((0,1))
+# plt.xlim((0,1))
 plt.show()
 
 exit()

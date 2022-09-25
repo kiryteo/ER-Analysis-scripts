@@ -18,8 +18,44 @@ from skimage import metrics
 
 from PIL import Image
 from PIL import ImageChops
+from skimage.filters import threshold_local, threshold_otsu
 
 
+def mp_input():
+    er_mean = np.zeros((128,128))
+    for i in range(100):
+        img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif'%f'{i:02d}')
+        img = (img - img.min())/(img.max() - img.min())
+        er_mean += img
+    cv2.imwrite('atl1_er_mean.png', (er_mean/100)*255)
+
+# mp_input()
+# exit()
+
+def preprocess_samples():
+    img = imageio.imread('atl1_er_mean.png')
+    aop = skimage.morphology.area_opening(img, area_threshold=2)
+    erod = skimage.morphology.erosion(aop)
+    aop = skimage.morphology.area_opening(erod, area_threshold=2)
+    cl = skimage.morphology.area_closing(aop, area_threshold=32)
+    aop = skimage.morphology.area_opening(cl, area_threshold=2)
+    loc = threshold_local(aop, 3)
+    loc = threshold_local(loc, 3)
+    cv2.imwrite('atl1_er_mean_proc.png', loc)
+
+# preprocess_samples()
+
+# img = imageio.imread('atl1_er_mean_proc_enhance.png')
+# sk = pcv.morphology.skeletonize(img)
+# cv2.imwrite('atl1_er_skel.png', sk)
+
+atl_mean = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_mean_proj/A1_mean.png')
+thr = threshold_otsu(atl_mean)
+op = atl_mean > thr
+sk = pcv.morphology.skeletonize(op)
+cv2.imwrite('atl1_sk.png', sk)
+
+exit()
 
 
 def simp_fourier():
