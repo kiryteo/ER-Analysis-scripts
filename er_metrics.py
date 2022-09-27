@@ -128,49 +128,102 @@ def get_junc_patches(newps, img):
     return img_patches
 
 
-mean_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl9_er_mean_proc_enhance_skel.png'
-newps = junction_flow(mean_img)
+def per_patch_pixel_variance(group):
 
-sl = []
-for i in range(100):
-    img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif'%f'{i:02d}')
-    img = (img - img.min())/(img.max() - img.min())
+    grp_list = []
+    for num_series in range(1, 25):
+        mean_img = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png'%(f'{group}', f'{group.lower()}{num_series}')
+        newps = junction_flow(mean_img)
 
-    im1_patch_vals = get_junc_patches(newps, img)
-    sl.append(im1_patch_vals)
+        sl = []
 
-# print(len(sl[0]))
-# print(len(sl[1]))
+        for frame in range(100):
+            if group == 'Control':
+                path = '/localhome/asa420/MIAL/data/confocal_movies/%s/files/img_%s_decon_t0%s.tif'%(f'{group}', f'{num_series}', f'{frame:02d}' )
+            else:
+                path = '/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s_decon_t0%s_ch00.tif'%(f'{group}', f'{group[0]}{num_series}', f'{frame:02d}')
+            img = imageio.imread(path)
+            img = (img - img.min()) / (img.max() - img.min())
 
-# slt shape: (9, num_patches, 100)
-slt = np.array(sl)
+            im1_patch_vals = get_junc_patches(newps, img)
+            sl.append(im1_patch_vals)
 
-print(slt.T.shape)
+            # slt shape: (9, num_patches, 100)
+            slt = np.array(sl)
 
-# a shape: (100, 9)
-# a = slt[:,0,:]
+            # Obtain variance per pixel in the patch
+            # over 100 frames so we get 9 values per patch and then
+            # get the index of dispersion per patch
+
+            ser_list = []
+            for patch_num in range(len(sl[0])):
+                a = slt[:, patch_num, :]
+                vl = []
+                for each in a.T:
+                    vl.append(np.var(each))
+
+                ser_list.append(np.var(vl) / np.mean(vl))
+
+            grp_list.extend(ser_list)
+
+    return grp_list * 1000
 
 
-# the idea here is to obtain variance per pixel in the patch
-# over 100 frames so we get 9 values per patch and then
-# get the index of dispersion per patch
+atl_list = per_patch_pixel_variance('ATL')
+climp_list = per_patch_pixel_variance('Climp')
+ctrl_list = per_patch_pixel_variance('Control')
+rtn_list = per_patch_pixel_variance('RTN')
 
-a1lt = []
-for i in range(len(sl[0])):
-    a = slt[:,i,:]
-    vl = []
-    for each in a.T:
-        vl.append(np.var(each))
-
-    a1lt.append(np.var(vl)/ np.mean(vl))
-
-# print(np.mean(vl))
-
-print(a1lt)
-
-# print(a.shape)
+# print(atl_list)
+# print(len(atl_list[0]))
+sns.boxplot(atl_list)
+sns.boxplot(climp_list)
+sns.boxplot(ctrl_list)
+sns.boxplot(rtn_list)
+plt.show()
 
 exit()
+
+
+def per_patch_if_corr():
+    grp_list = []
+    for num_series in range(1, 25):
+        mean_img = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png'%(f'{group}', f'{group.lower()}{num_series}')
+        newps = junction_flow(mean_img)
+
+        sl = []
+
+        for frame in range(100):
+            if group == 'Control':
+                path = '/localhome/asa420/MIAL/data/confocal_movies/%s/files/img_%s_decon_t0%s.tif'%(f'{group}', f'{num_series}', f'{frame:02d}' )
+            else:
+                path = '/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s_decon_t0%s_ch00.tif'%(f'{group}', f'{group[0]}{num_series}', f'{frame:02d}')
+            img = imageio.imread(path)
+            img = (img - img.min()) / (img.max() - img.min())
+
+            im1_patch_vals = get_junc_patches(newps, img)
+            sl.append(im1_patch_vals)
+
+            # slt shape: (9, num_patches, 100)
+            slt = np.array(sl)
+
+            # Obtain variance per pixel in the patch
+            # over 100 frames so we get 9 values per patch and then
+            # get the index of dispersion per patch
+
+            ser_list = []
+            for patch_num in range(len(sl[0])):
+                a = slt[:, patch_num, :]
+                vl = []
+                for each in a.T:
+                    vl.append(np.var(each))
+
+                ser_list.append(np.var(vl) / np.mean(vl))
+
+            grp_list.extend(ser_list)
+
+    return grp_list
+
 
 op = np.abs(np.fft.fft(a))
 
@@ -201,7 +254,7 @@ def get_group_dif(group, metric):
         for series_num in range(1, 25):
             newps = junction_flow(prefix + 'Control/new_op_jul/Ctrl_mean_proj/Ct%s_mean.png'%f'{series_num}')
             ser_list = []
-            for i in range(98):
+            for i in range(99):
                 i1 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Control/files/img_%s_decon_t0%s.tif'%(f'{series_num}', f'{i:02d}'))
                 i2 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Control/files/img_%s_decon_t0%s.tif'%(f'{series_num}', f'{i+1:02d}'))
 
