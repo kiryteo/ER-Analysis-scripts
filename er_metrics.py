@@ -61,13 +61,19 @@ def mutual_information_2d(x, y, sigma=1, normalized=False):
 
 
 def junction_flow(mean_img):
-    mean_proj_img = imageio.imread(mean_img)
 
-    # perform thresholding + binarization + skel
-    thresh = threshold_otsu(mean_proj_img)
-    bin_img = mean_proj_img > thresh
+    # if mean_img is obtained via skel mean projection
+    # step, then use otsu else directly read the image
 
-    skel = pcv.morphology.skeletonize(mask=bin_img)
+    # mean_proj_img = imageio.imread(mean_img)
+    #
+    # # perform thresholding + binarization + skel
+    # thresh = threshold_otsu(mean_proj_img)
+    # bin_img = mean_proj_img > thresh
+
+    # skel = pcv.morphology.skeletonize(mask=mean_proj_img)
+
+    skel = imageio.imread(mean_img)
 
     # Build graph from the skeleton
     g = sknw.build_sknw(skel, iso=False)
@@ -122,22 +128,49 @@ def get_junc_patches(newps, img):
     return img_patches
 
 
-mean_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_mean_proj/A1_mean.png'
+mean_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl9_er_mean_proc_enhance_skel.png'
 newps = junction_flow(mean_img)
 
 sl = []
-for i in range(99):
+for i in range(100):
     img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif'%f'{i:02d}')
     img = (img - img.min())/(img.max() - img.min())
 
     im1_patch_vals = get_junc_patches(newps, img)
     sl.append(im1_patch_vals)
 
+# print(len(sl[0]))
+# print(len(sl[1]))
+
+# slt shape: (9, num_patches, 100)
 slt = np.array(sl)
 
-a = slt[:,0,0]
+print(slt.T.shape)
+
+# a shape: (100, 9)
+# a = slt[:,0,:]
+
+
+# the idea here is to obtain variance per pixel in the patch
+# over 100 frames so we get 9 values per patch and then
+# get the index of dispersion per patch
+
+a1lt = []
+for i in range(len(sl[0])):
+    a = slt[:,i,:]
+    vl = []
+    for each in a.T:
+        vl.append(np.var(each))
+
+    a1lt.append(np.var(vl)/ np.mean(vl))
+
+# print(np.mean(vl))
+
+print(a1lt)
 
 # print(a.shape)
+
+exit()
 
 op = np.abs(np.fft.fft(a))
 
