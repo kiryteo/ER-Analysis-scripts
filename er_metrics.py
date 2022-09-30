@@ -11,6 +11,9 @@ from skimage import metrics
 import scipy
 from scipy import spatial
 from scipy import ndimage
+from mpl_toolkits import mplot3d
+from scipy.ndimage import uniform_filter1d
+from skan import draw
 
 
 EPS = np.finfo(float).eps
@@ -100,6 +103,38 @@ def junction_flow(mean_img):
     return newps
 
 
+# newps = junction_flow('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png')
+# nps = []
+# for each in newps:
+#     nps.append([each[0], each[1]])
+#
+# nps = np.array(nps)
+
+# def proc_skel_overlay(nps):
+#     # fig, ax = plt.subplots()
+#     for i in range(100):
+#         img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif'%f'{i:02d}')
+#     # img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean/atl1_er_mean.png')
+#         img = (img - img.min()) / (img.max() - img.min())
+#         # proc = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc.png')
+#     # sk = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png')
+#
+#
+#         # op = draw.overlay_skeleton_2d(img, sk, dilate=0, axes=ax)
+#         plt.axis('off')
+#         plt.imshow(img, cmap='gray')
+#         plt.plot(nps[:,1], nps[:, 0], 'r.')
+#         # plt.show()
+#         plt.savefig('ATL_S1_t%s.png'%f'{i:02d}', bbox_inches='tight', pad_inches=0)
+#         plt.close()
+
+# proc_skel_overlay(nps)
+
+import cv2
+
+
+
+
 def get_junction_image(newps):
     brpts_img = np.zeros((128, 128))
     for each in newps:
@@ -128,8 +163,228 @@ def get_junc_patches(newps, img):
     return img_patches
 
 
-def per_patch_pixel_variance(group):
+def junc_patch_mean(newps, img):
+    junc_patches = []
+    for num, coordinate in enumerate(newps):
+        x, y = newps[num]
+        if x > 1 and x < 126 and y > 1 and y < 126:
+            coord_vals = [img[x-1,y], img[x+1,y], img[x,y], img[x,y-1], img[x,y+1], img[x-1,y-1], img[x-1,y+1], img[x+1,y-1], img[x+1,y+1]]#, img[x+2, y], img[x-2, y], img[x, y+2], img[x, y-2]]
+            junc_mean = np.mean(coord_vals)
+            # if junc_mean > thr:
+            junc_patches.append(junc_mean)
+    return junc_patches
 
+
+def per_patch_variation(group, channel):
+    for num_series in range(1, 2):
+        mean_img = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png'%(f'{group}', f'{group.lower()}{num_series}')
+        newps = junction_flow(mean_img)
+
+        sl = []
+
+        for frame in range(100):
+            if group == 'Control':
+                path = '/localhome/asa420/MIAL/data/confocal_movies/%s/files/img_%s_decon_t0%s.tif'%(f'{group}', f'{num_series}', f'{frame:02d}' )
+            else:
+                path = '/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s_decon_t0%s_ch0%s.tif'%(f'{group}', f'{group[0]}{num_series}', f'{frame:02d}', f'{channel}')
+            img = imageio.imread(path)
+            img = (img - img.min()) / (img.max() - img.min())
+
+            # im1_patch_vals = get_junc_patches(newps, img)
+            im1_patch_vals = junc_patch_mean(newps, img)
+            sl.append(im1_patch_vals)
+
+        slt = np.array(sl)
+        print(slt.shape)
+        print(len(sl))
+        print(len(sl[0]))
+        exit()
+        fig = plt.figure()
+        ax = plt.axes(projection='3d')
+        X = slt
+        Y = slt.T
+
+
+def per_patch_pixel_fourier(group, channel):
+    grp_dict = {}
+    for num_series in range(1, 2):
+        mean_img = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png'%(f'{group}', f'{group.lower()}{num_series}')
+        newps = junction_flow(mean_img)
+
+        sl = []
+
+        for frame in range(100):
+            if group == 'Control':
+                path = '/localhome/asa420/MIAL/data/confocal_movies/%s/files/img_%s_decon_t0%s.tif'%(f'{group}', f'{num_series}', f'{frame:02d}' )
+            else:
+                path = '/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s_decon_t0%s_ch0%s.tif'%(f'{group}', f'{group[0]}{num_series}', f'{frame:02d}', f'{channel}')
+            img = imageio.imread(path)
+            img = (img - img.min()) / (img.max() - img.min())
+
+            # thr = threshold_otsu(img)
+
+            # im1_patch_vals = get_junc_patches(newps, img)
+            im1_patch_vals = junc_patch_mean(newps, img)
+            # print(max(im1_patch_vals))
+            # print(min(im1_patch_vals))
+            sl.append(im1_patch_vals)
+
+        # print(len(sl))
+        # print(len(sl[0]))
+        # exit()
+
+        for each in sl:
+            print(len(each))
+
+        exit()
+
+        # slt shape: (9, num_patches, 100)
+        slt = np.array(sl).T
+        # print(slt.shape)
+        # slt shape -> (93, 100)
+
+    #     grp_dict[num_series] = slt
+    #
+    # return grp_dict
+
+
+# atl_egfp = per_patch_pixel_fourier('ATL', 0)
+per_patch_pixel_fourier('ATL', 0)
+
+exit()
+
+
+# atl_mc = per_patch_pixel_fourier('ATL', 1)
+# climp_egfp = per_patch_pixel_fourier('Climp', 0)
+# climp_mc = per_patch_pixel_fourier('Climp', 1)
+# rtn_egfp = per_patch_pixel_fourier('RTN', 0)
+# rtn_mc = per_patch_pixel_fourier('RTN', 1)
+#
+
+def inter_channel_correlation(c1, c2):
+    data = []
+    for (v1, v2) in zip(c1.values(), c2.values()):
+        for mv1, mv2 in zip(v1, v2):
+            data.append(np.corrcoef(mv1, mv2)[0,1])
+
+    return data
+
+
+atl_data = inter_channel_correlation(atl_egfp, atl_mc)
+climp_data = inter_channel_correlation(climp_egfp, climp_mc)
+rtn_data = inter_channel_correlation(rtn_egfp, rtn_mc)
+
+sns.distplot(atl_data, label='ATL')
+sns.distplot(climp_data, label='Climp')
+sns.distplot(rtn_data, label='RTN')
+plt.legend()
+plt.title('Per patch correlation coefficient between EGFP and mCherry channels', fontsize=16)
+plt.xlabel('Correlation coefficient', fontsize=12)
+plt.show()
+
+exit()
+
+        # for p in range(5):
+        #     grp_list.extend(uniform_filter1d(slt[p], 5))
+
+    # return  grp_list
+        # for p in range(5):
+        #     plt.plot(uniform_filter1d(slt[p], 5))
+        #
+        # plt.xlabel("Timesteps", fontsize=16)
+        # plt.title('%s condition Series 1, mean patch intensity'%f'{group}')
+        # plt.show()
+    #
+    #     ssl = []
+    #     for each in slt:
+    #         ssl.append(np.var(each))
+    #
+    #     grp_list.extend(ssl)
+    #
+    # return grp_list
+        # print(ssl.max())
+        # print(max(ssl), len(ssl))
+        # sns.displot(ssl, kind='kde', bw_adjust=0.25)
+
+    # plt.xlabel('Timestep', fontsize=16)
+    # plt.ylabel()
+    # plt.title()
+    # plt.show()
+    # exit()
+
+        # plt.ylabel('Intensity values', fontsize=16)
+        # plt.xlabel('Timestep', fontsize=16)
+        #
+        # plt.title('Intensity values per patch in RTN Series 1 movie (total 93 patches)')
+        # plt.show()
+        # exit()
+
+
+        # Obtain variance per pixel in the patch
+        # over 100 frames so we get 9 values per patch and then
+        # get the index of dispersion per patch
+
+        # ser_list = []
+        # for junc_num, junc in enumerate(slt):
+        #     ser_list.append(np.var(junc) / np.mean(junc))
+
+        # print(len(ser_list))
+        # for tf in range(len(sl)):
+        #     # a = slt.T[patch_num]
+        #     a = slt[tf]
+        #
+        #     # print(a.shape)
+        #     # exit()
+        #     ser_list.append(np.var(a) / np.mean(a))
+            # sns.distplot(a, hist=False)
+            # plt.plot(a)
+
+            # ser_list.append(np.abs(np.fft.fft(a)))
+        # plt.xlabel()
+
+        # label = 'movie num: ' + str(num_series)
+        # plt.plot(ser_list, label=label)
+        # # grp_list.extend(ser_list)
+    # plt.ylabel('Index of dispersion values', fontsize=16)
+    # plt.xlabel('Timestep', fontsize=16)
+    # plt.title('Index of dispersion for all patches (junctions) in a movie over time - RTN group', fontsize=20)
+    # plt.legend()
+    # plt.show()
+    # print(grp_list)
+    # return grp_list
+
+
+atl_list = per_patch_pixel_fourier('ATL', 0)
+climp_list = per_patch_pixel_fourier('Climp', 0)
+ctrl_list = per_patch_pixel_fourier('Control', 0)
+rtn_list = per_patch_pixel_fourier('RTN', 0)
+
+# print(atl_list)
+import pandas as pd
+df = pd.DataFrame()
+
+df['patch_intensity_vals'] = pd.Series(atl_list + climp_list + ctrl_list + rtn_list)
+df['group'] = pd.Series()
+
+exit()
+# ATL_list = per_patch_pixel_fourier('ATL', 0)
+# Climp_list = per_patch_pixel_fourier('Climp', 0)
+# Ctrl_list = per_patch_pixel_fourier('Control', 0)
+# RTN_list = per_patch_pixel_fourier('RTN', 0)
+#
+# sns.distplot(ATL_list, hist=False, label='ATL')
+# sns.distplot(Climp_list, hist=False, label='Climp')
+# sns.distplot(Ctrl_list, hist=False, label='Control')
+# sns.distplot(RTN_list, hist=False, label='RTN')
+#
+# plt.legend()
+# plt.xlabel('Variance')
+# plt.title('')
+# plt.show()
+
+# exit()
+
+def per_patch_pixel_variance(group):
     grp_list = []
     for num_series in range(1, 25):
         mean_img = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png'%(f'{group}', f'{group.lower()}{num_series}')
@@ -148,39 +403,39 @@ def per_patch_pixel_variance(group):
             im1_patch_vals = get_junc_patches(newps, img)
             sl.append(im1_patch_vals)
 
-            # slt shape: (9, num_patches, 100)
-            slt = np.array(sl)
+        # slt shape: (9, num_patches, 100)
+        slt = np.array(sl)
 
-            # Obtain variance per pixel in the patch
-            # over 100 frames so we get 9 values per patch and then
-            # get the index of dispersion per patch
+        # Obtain variance per pixel in the patch
+        # over 100 frames so we get 9 values per patch and then
+        # get the index of dispersion per patch
 
-            ser_list = []
-            for patch_num in range(len(sl[0])):
-                a = slt[:, patch_num, :]
-                vl = []
-                for each in a.T:
-                    vl.append(np.var(each))
+        ser_list = []
+        for patch_num in range(len(sl[0])):
+            a = slt[:, patch_num, :]
+        vl = []
+        for each in a.T:
+            vl.append(np.var(each))
 
-                ser_list.append(np.var(vl) / np.mean(vl))
+        ser_list.append(np.var(vl) / np.mean(vl))
 
-            grp_list.extend(ser_list)
+        grp_list.extend(ser_list)
 
-    return grp_list * 1000
+    return grp_list
 
 
-atl_list = per_patch_pixel_variance('ATL')
-climp_list = per_patch_pixel_variance('Climp')
-ctrl_list = per_patch_pixel_variance('Control')
-rtn_list = per_patch_pixel_variance('RTN')
+# atl_list = per_patch_pixel_variance('ATL')
+# climp_list = per_patch_pixel_variance('Climp')
+# ctrl_list = per_patch_pixel_variance('Control')
+# rtn_list = per_patch_pixel_variance('RTN')
 
 # print(atl_list)
 # print(len(atl_list[0]))
-sns.boxplot(atl_list)
-sns.boxplot(climp_list)
-sns.boxplot(ctrl_list)
-sns.boxplot(rtn_list)
-plt.show()
+# sns.boxplot(atl_list)
+# sns.boxplot(climp_list)
+# sns.boxplot(ctrl_list)
+# sns.boxplot(rtn_list)
+# plt.show()
 
 exit()
 
@@ -225,9 +480,9 @@ def per_patch_if_corr():
     return grp_list
 
 
-op = np.abs(np.fft.fft(a))
+# op = np.abs(np.fft.fft(a))
 
-print(op)
+# print(op)
 # plt.plot(op)
 # plt.show()
 
