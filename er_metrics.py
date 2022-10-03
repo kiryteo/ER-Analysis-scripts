@@ -64,6 +64,11 @@ def mutual_information_2d(x, y, sigma=1, normalized=False):
 
 
 def junction_flow(mean_img):
+    """
+
+    @param mean_img: Input mean projection skel image
+    @return: list of Nodes with degree > 2
+    """
 
     # if mean_img is obtained via skel mean projection
     # step, then use otsu else directly read the image
@@ -136,6 +141,11 @@ import cv2
 
 
 def get_junction_image(newps):
+    """
+
+    @param newps: List of nodes
+    @return: Image with nodes -> 1, else 0
+    """
     brpts_img = np.zeros((128, 128))
     for each in newps:
         brpts_img[each[0], each[1]] = 255.
@@ -154,6 +164,12 @@ def dil_junctions():
 
 
 def get_junc_patches(newps, img):
+    """
+
+    @param newps: List of nodes
+    @param img: ER input sample
+    @return: junction neighbourhood patch (3x3)
+    """
     img_patches = []
     for num, coordinate in enumerate(newps):
         x, y = newps[num]
@@ -164,6 +180,12 @@ def get_junc_patches(newps, img):
 
 
 def junc_patch_mean(newps, img):
+    """
+
+    @param newps: List of nodes
+    @param img: ER input sample
+    @return: mean value of the junction neighbourhood patch (3x3)
+    """
     junc_patches = []
     for num, coordinate in enumerate(newps):
         x, y = newps[num]
@@ -176,6 +198,12 @@ def junc_patch_mean(newps, img):
 
 
 def per_patch_variation(group, channel):
+    """
+
+    @param group: Select the condition for analysis
+    @param channel: Select the protein channel for analysis
+    @return: Metric output for variation over time
+    """
     for num_series in range(1, 2):
         mean_img = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png'%(f'{group}', f'{group.lower()}{num_series}')
         newps = junction_flow(mean_img)
