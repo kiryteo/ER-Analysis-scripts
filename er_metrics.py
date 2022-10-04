@@ -187,6 +187,7 @@ def junc_patch_mean(newps, img):
     @return: mean value of the junction neighbourhood patch (3x3)
     """
     junc_patches = []
+    dt = {}
     for num, coordinate in enumerate(newps):
         x, y = newps[num]
         if x > 1 and x < 126 and y > 1 and y < 126:
@@ -194,7 +195,8 @@ def junc_patch_mean(newps, img):
             junc_mean = np.mean(coord_vals)
             # if junc_mean > thr:
             junc_patches.append(junc_mean)
-    return junc_patches
+            dt[(x, y)] = junc_mean
+    return junc_patches, dt
 
 
 def per_patch_variation(group, channel):
@@ -235,11 +237,13 @@ def per_patch_variation(group, channel):
 
 def per_patch_pixel_fourier(group, channel):
     grp_dict = {}
+    nd = {}
     for num_series in range(1, 2):
         mean_img = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png'%(f'{group}', f'{group.lower()}{num_series}')
         newps = junction_flow(mean_img)
 
         sl = []
+        sldt = []
 
         for frame in range(100):
             if group == 'Control':
@@ -252,23 +256,35 @@ def per_patch_pixel_fourier(group, channel):
             # thr = threshold_otsu(img)
 
             # im1_patch_vals = get_junc_patches(newps, img)
-            im1_patch_vals = junc_patch_mean(newps, img)
+            im1_patch_vals, dt = junc_patch_mean(newps, img)
             # print(max(im1_patch_vals))
             # print(min(im1_patch_vals))
             sl.append(im1_patch_vals)
+            sldt.append(dt)
 
-        # print(len(sl))
-        # print(len(sl[0]))
-        # exit()
-
-        for each in sl:
-            print(len(each))
-
-        exit()
+        # for each in sl:
+        #     print(len(each))
 
         # slt shape: (9, num_patches, 100)
         slt = np.array(sl).T
-        # print(slt.shape)
+
+#        sldt -> dict with key per junction and its mean patch value
+        # sldt_ar = np.array(sldt).T
+        # klist = sldt_ar[0].keys()
+
+
+        for k in klist:
+
+
+
+        # for fr in range(len(slt)):
+        #     plt.plot(slt[fr])
+        #     plt.title('')
+        #     plt.show()
+
+
+        exit()
+
         # slt shape -> (93, 100)
 
     #     grp_dict[num_series] = slt
