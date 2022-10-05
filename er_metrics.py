@@ -1,6 +1,6 @@
 import imageio
 import skimage
-from skimage.filters import threshold_otsu
+from skimage.filters import threshold_otsu, threshold_local
 import matplotlib.pyplot as plt
 from plantcv import plantcv as pcv
 import seaborn as sns
@@ -14,6 +14,52 @@ from scipy import ndimage
 from mpl_toolkits import mplot3d
 from scipy.ndimage import uniform_filter1d
 from skan import draw
+import copy
+import os
+import cv2
+
+#
+# img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/preproc/A1/A1_decon_t000_ch00_proc.png')
+# loc = threshold_local(img, 5, offset=0)
+# img[np.where(img<loc)] = 0
+#
+# cv2.imwrite('A1_t0_thrloc.png', img)
+#
+# # plt.imshow(img)
+# # plt.show()
+# #
+# exit()
+
+
+
+# def proc_thr():
+#     img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/preproc/A1/A1_decon_t000_ch00_proc.png')
+#
+#     fig, ax = plt.subplots()
+#     r, c = 1, 2
+#
+#     fig.add_subplot(r,c,1)
+#     plt.imshow(img)
+#
+#     # ot = threshold_otsu(img)
+#     # c = copy.deepcopy(img)
+#     #
+#     # print(ot)
+#     #
+#     # oval = np.where(c<ot)
+#     # print(oval)
+#     # c[oval] = 0
+#     # fig.add_subplot(r,c,2)
+#     # plt.imshow(img)
+#
+#     thr = threshold_local(img, 5, offset=0)
+#     lvals = np.where(img<thr)
+#     img[lvals] = 0
+#     fig.add_subplot(r,c,2)
+#     plt.imshow(img)
+#     plt.show()
+
+
 
 
 EPS = np.finfo(float).eps
@@ -235,6 +281,126 @@ def per_patch_variation(group, channel):
         Y = slt.T
 
 
+def patch_variation_viz():
+    mean_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
+
+    newps = junction_flow(mean_img)
+    sl = []
+    dtl = []
+
+    for i in range(100):
+        path = '/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif'%f'{i:02d}'
+        img = imageio.imread(path)
+        img = (img - img.min()) / (img.max() - img.min())
+
+        im1_patch_vals, dt = junc_patch_mean(newps, img)
+        sl.append(im1_patch_vals)
+        dtl.append(dt)
+
+    # slt = np.array(sl).T
+    # print(slt.shape)
+
+    coord_dt = {}
+    for each in dtl:
+        for k, v in each.items():
+            if k in coord_dt.keys():
+                coord_dt[k].append(v)
+            else:
+                coord_dt[k] = []
+                coord_dt[k].append(v)
+
+    return coord_dt
+
+# coord_dt = patch_variation_viz()
+
+def junc_intensity_plot_creator(coord_dt):
+    for k, v in coord_dt.items():
+        plt.plot(v)
+        plt.xlabel('Timeframe')
+        plt.ylabel('Intensity values')
+        plt.title('ATL 1, Junction coordinates: %s intensity variation'%f'{k[1], k[0]}')
+        plt.savefig('ATL_1_Junction_%s.png'%f'{k[1], k[0]}', bbox_inches='tight', pad_inches=0.2)
+        plt.close()
+
+
+def junction_location_plotter():
+    mean_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
+
+    newps = junction_flow(mean_img)
+
+    nps = []
+    for each in newps:
+        nps.append([each[0], each[1]])
+
+    nps = np.array(nps)
+
+    # print(nps[46, 1], nps[46, 0])
+    #
+    # exit()
+    plt.imshow(mean_proj_img, cmap='gray')
+
+    # for (s,e) in g.edges():
+    #     ps = g[s][e]['pts']
+    #     plt.plot(ps[:,1], ps[:,0], 'green')
+    # for dr in range(len(nps)):
+    #     os.makedirs('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/A1_junc_viz/junc%s'%f'{dr+1}')
+
+    for i in range(100):
+        # img = imageio.imread(
+        #     '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t0%s_ch00_skel.png' % f'{i:02d}')
+        img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif'%f'{i:02d}')
+        img = (img - img.min()) / (img.max() - img.min())
+        # img = img * 255.
+                # # plt.plot(ps[:, 1], ps[:, 0], 'y.')
+        for j in range(46, 47):
+            # plt.figure(figsize=(128/77, 128/77))
+            plt.imshow(img, cmap='gray')
+            plt.axis('off')
+            # plt.title('t=%s'%f'{i}')
+            plt.plot(nps[j, 1], nps[j, 0], 'r.')
+        # y = nps[0, 1]
+        # x = nps[0, 0]
+        # cv2.rectangle(img, (x-1, y-1), (x+1, y+1), (0, 0, 255), 2)
+
+
+            plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/A1_junc_viz/j%s/ATL1_t%s'%(f'{j+1}', f'{i:02d}'), bbox_inches='tight', pad_inches=0)
+
+            plt.close()
+
+# /localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/A1_junc1_skel/
+
+
+junction_location_plotter()
+exit()
+
+def crop_img():
+    mean_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
+
+    newps = junction_flow(mean_img)
+
+    nps = []
+    for each in newps:
+        nps.append([each[0], each[1]])
+
+    nps = np.array(nps)
+    for i in range(100):
+        img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/A1_junc_viz/j47/ATL1_t%s.png'%f'{i:02d}')
+
+        # plt.imshow(img)
+        # plt.show()
+        # y = nps[74,1]
+        # x = nps[74,0]
+        # #
+        # # # print(y, x)
+        cimg = img[134-30:134+30, 175-30:175+30]
+
+
+        imageio.imsave('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/A1_junc_viz/j47/crops/ATL1_t%s.png'%f'{i:02d}', cimg)
+
+
+# crop_img()
+# exit()
+
 def per_patch_pixel_fourier(group, channel):
     grp_dict = {}
     nd = {}
@@ -256,24 +422,36 @@ def per_patch_pixel_fourier(group, channel):
             # thr = threshold_otsu(img)
 
             # im1_patch_vals = get_junc_patches(newps, img)
-            im1_patch_vals, dt = junc_patch_mean(newps, img)
+            im1_patch_vals = junc_patch_mean(newps, img)
             # print(max(im1_patch_vals))
             # print(min(im1_patch_vals))
             sl.append(im1_patch_vals)
-            sldt.append(dt)
+            # sldt.append(dt)
 
         # for each in sl:
         #     print(len(each))
 
         # slt shape: (9, num_patches, 100)
         slt = np.array(sl).T
+        ht = slt.flatten()
+
+        lval = np.quantile(ht, 0.05)
+        hval = np.quantile(ht, 0.95)
+
+        print(lval)
+        print(hval)
+
+        plt.hist(ht)
+        plt.show()
+
+        exit()
 
 #        sldt -> dict with key per junction and its mean patch value
         # sldt_ar = np.array(sldt).T
         # klist = sldt_ar[0].keys()
 
 
-        for k in klist:
+        # for k in klist:
 
 
 
