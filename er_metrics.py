@@ -19,6 +19,8 @@ import os
 import cv2
 from scipy.spatial import cKDTree
 
+max_val = 999
+
 #
 # img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/preproc/A1/A1_decon_t000_ch00_proc.png')
 # loc = threshold_local(img, 5, offset=0)
@@ -341,10 +343,10 @@ def junc_intensity_plot_creator(coord_dt):
 
 
 
-def junc_area_locator():
+def junc_area_locator(group, num_series):
     # mean_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
 
-    mean_img = '/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/er_mean_proc/control1_er_mean_proc_enhance_skel.png'
+    mean_img = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png'%(f'{group}', f'{group.lower()}{num_series}')
 
     newps = junction_flow(mean_img)
 
@@ -361,17 +363,16 @@ def junc_area_locator():
     # nps_img = get_junction_image(nps)
 
     dt = {}
-    for i in range(100):
-        # img = imageio.imread(
-        #     '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t0%s_ch00_skel.png' % f'{i:02d}')
-
-        # ER Input image
-        # img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif'%f'{i:02d}')
-        # img = (img - img.min()) / (img.max() - img.min())
+    for frame in range(100):
 
         # ER Skel image
-        # sk_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t0%s_ch00_skel.png'%f'{i:02d}'
-        sk_img = '/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/skel/Ct1/Ct1_decon_t0%s_ch00_skel.png'%f'{i:02d}'
+
+        if group == 'Control':
+            pref = 'Ct'
+        else:
+            pref = group[0]
+
+        sk_img = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/skel/%s/%s_decon_t0%s_ch00_skel.png'%(f'{group}', f'{pref}{num_series}', f'{pref}{num_series}', f'{frame:02d}')
 
         sk_newps = junction_flow(sk_img)
 
@@ -379,46 +380,113 @@ def junc_area_locator():
         for each in sk_newps:
             sk_nps.append([each[0], each[1]])
 
-        # print(np.array(sk_nps).shape)
-        # exit()
-
         sk_nps = np.array(sk_nps)
 
         sk_nps_sorted = sorted(sk_nps, key=lambda t: t[0])
-        # print(sk_nps_sorted[0])
-        # exit()
 
         for elem in nps_sorted:
             for sk_elem in sk_nps_sorted:
                 dst = ((sk_elem[0] - elem[0])**2 + (sk_elem[1] - elem[1])**2)
                 if dst <= 9:
                     if (elem[0], elem[1]) in dt.keys():
-                        dt[(elem[0], elem[1])].append((sk_elem, dst))
+                        dt[(elem[0], elem[1])].append([sk_elem, frame, dst])
                     else:
                         dt[(elem[0], elem[1])] = []
-                        dt[(elem[0], elem[1])].append((sk_elem, dst))
+                        dt[(elem[0], elem[1])].append([sk_elem, frame, dst])
 
-    l = []
     dt_refined = {}
     for k, v in dt.items():
-        if len(v) >= 50:
+        if len(v) > 50:
             dt_refined[k] = v
 
     return dt_refined
 
 
-# junc_to_analyze = junc_area_locator()
-# l = list(junc_to_analyze.keys())
-# for k, v in junc_to_analyze.items():
-#     print(len(v))
+def get_mean_patch_intensity(er_input, b, a):
+    m_val = (er_input[b, a] + er_input[b-1, a-1] + er_input[b+1, a+1] + er_input[b, a+1] + er_input[b, a-1] + er_input[b+1, a-1] + er_input[b-1, a+1] + er_input[b+1, a] + er_input[b-1, a]) / 9
+    return m_val
+
+
+def get_junc_lists(group, num_series):
+    junc_to_analyze = junc_area_locator(group, num_series)
+    newdt = {}
+    for k, v in junc_to_analyze.items():
+        v_new = []
+
+        j = 0
+        for i in range(100):
+            if j < len(v):
+                data = v[j]
+                if data[1] == i:
+                    v_new.append(data)
+                    j = j + 1
+                else:
+                    v_new.append(max_val)
+            else:
+                v_new.append(max_val)
+
+        newdt[k] = v_new
+    return newdt
+
+
+def junc_intensity_variation(group, num_series):
+    newdt = get_junc_lists(group, num_series)
+
+    if group == 'Control':
+        ref_input = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Control/files/img_%s_decon_t000.tif'%f'{num_series}')
+    else:
+        ref_input = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s_decon_t000_ch00.tif'%(f'{group}', f'{group[0]}{num_series}'))
+
+    ref_input = (ref_input - ref_input.min()) / (ref_input.max() - ref_input.min())
+
+    mean_val_dt = {}
+    for k, v in newdt.items():
+        mean_val_dt[k] = []
+        a, b = k[0], k[1]
+        m_val = get_mean_patch_intensity(ref_input, a, b)
+
+        if v[0] == max_val:
+            mean_val_dt[k].append(m_val)
+        else:
+            a, b = v[0][0][0], v[0][0][1]
+            m_val = get_mean_patch_intensity(ref_input, a, b)
+            mean_val_dt[k].append(m_val)
+
+        for i in range(1, 100):
+            if group == 'Control':
+                er_input = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Control/files/img_%s_decon_t0%s.tif'%(f'{num_series}', f'{i:02d}'))
+            else:
+                er_input = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s_decon_t0%s_ch00.tif'%(f'{group}', f'{group[0]}{num_series}', f'{i:02d}'))
+
+            er_input = (er_input - er_input.min()) / (er_input.max() - er_input.min())
+            if v[i] is not max_val:
+                a, b = v[i][0][0], v[i][0][1]
+                m_val = get_mean_patch_intensity(er_input, a, b)
+                mean_val_dt[k].append(m_val)
+            else:
+                # print(a, b)
+                # m_val = get_mean_patch_intensity(er_input, a, b)
+                m_val = get_mean_patch_intensity(er_input, k[0], k[1])
+                mean_val_dt[k].append(m_val)
+
+    return mean_val_dt
+
+mean_val_dt = junc_intensity_variation('RTN', 2)
 #
+for k1, v1 in mean_val_dt.items():
+    plt.title('Junction ref location: %s'%f'{k1}')
+    plt.plot(v1, linestyle='--', marker='o')
+    plt.show()
 
-# exit()
+exit()
+# for i in range(100):
+#     img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif'%f'{i:02d}')
+#     img = (img - img.min()) / (img.max() - img.min())
+#
+#     plt.imshow(img, cmap='gray')
+#     plt.plot(79, 3, 'b.')
+#     plt.show()
 
-
-def refined_junc_analysis():
-    ndt = {}
-    dt_refined = junc_area_locator()
 
 
 def junction_location_plotter(group, num_series):
