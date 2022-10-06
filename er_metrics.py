@@ -407,11 +407,19 @@ def junc_area_locator():
     return dt_refined
 
 
-# junc_to_analyze = junc_area_locator()
+junc_to_analyze = junc_area_locator()
+# l = list(junc_to_analyze.keys())
 # for k, v in junc_to_analyze.items():
 #     print(len(v))
 #
-# exit()
+
+exit()
+
+
+def refined_junc_analysis():
+    ndt = {}
+    dt_refined = junc_area_locator()
+
 
 
 def junction_location_plotter():
@@ -487,8 +495,8 @@ def junction_location_plotter():
 # /localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/A1_junc1_skel/
 
 
-junction_location_plotter()
-exit()
+# junction_location_plotter()
+# exit()
 
 
 def crop_img():
