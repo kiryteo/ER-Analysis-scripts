@@ -407,13 +407,13 @@ def junc_area_locator():
     return dt_refined
 
 
-junc_to_analyze = junc_area_locator()
+# junc_to_analyze = junc_area_locator()
 # l = list(junc_to_analyze.keys())
 # for k, v in junc_to_analyze.items():
 #     print(len(v))
 #
 
-exit()
+# exit()
 
 
 def refined_junc_analysis():
@@ -421,11 +421,11 @@ def refined_junc_analysis():
     dt_refined = junc_area_locator()
 
 
+def junction_location_plotter(group, num_series):
 
-def junction_location_plotter():
     # mean_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
 
-    mean_img = '/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/er_mean_proc/control1_er_mean_proc_enhance_skel.png'
+    mean_img = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png'%(f'{group}', f'{group.lower()}{num_series}')
 
     newps = junction_flow(mean_img)
 
@@ -446,19 +446,22 @@ def junction_location_plotter():
     # for dr in range(len(nps)):
     #     os.makedirs('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/A1_junc_viz/junc%s'%f'{dr+1}')
 
-    for i in range(100):
-        # img = imageio.imread(
-        #     '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t0%s_ch00_skel.png' % f'{i:02d}')
+    for frame in range(100):
 
         # ER Input image
-        # img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif'%f'{i:02d}')
-        img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Control/files/img_1_decon_t0%s.tif'%f'{i:02d}')
+        if group == 'Control':
+            path = '/localhome/asa420/MIAL/data/confocal_movies/%s/files/img_%s_decon_t0%s.tif'%(f'{group}', f'{num_series}', f'{frame:02d}' )
+            pref = 'Ct'
+        else:
+            path = '/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s_decon_t0%s_ch00.tif'%(f'{group}', f'{group[0]}{num_series}', f'{frame:02d}')#, f'{channel}')
+            pref = group[0]
+        img = imageio.imread(path)
         img = (img - img.min()) / (img.max() - img.min())
 
 
         # ER Skel image
         # sk_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t0%s_ch00_skel.png'%f'{i:02d}'
-        sk_img = '/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/skel/Ct1/Ct1_decon_t0%s_ch00_skel.png'%f'{i:02d}'
+        sk_img = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/skel/%s/%s_decon_t0%s_ch00_skel.png'%(f'{group}', f'{pref}{num_series}', f'{pref}{num_series}', f'{frame:02d}')
 
         sk_newps = junction_flow(sk_img)
 
@@ -482,20 +485,12 @@ def junction_location_plotter():
         # x = nps[0, 0]
         # cv2.rectangle(img, (x-1, y-1), (x+1, y+1), (0, 0, 255), 2)
 
-            # plt.show()
-
-
-        # plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/A1_junc_viz/j%s_skel/ATL1_t%s'%(f'{j+1}', f'{i:02d}'), bbox_inches='tight', pad_inches=0)
-
-        # plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/A1_junc_viz/all_skel/er/ATL1_t%s'%(f'{i:02d}'), bbox_inches='tight', pad_inches=0)
-        plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/Ct1_junc_viz/all_skel/Ct1_t%s'%(f'{i:02d}'), bbox_inches='tight', pad_inches=0)
+        plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/%s_junc_viz/%s_t%s.png'%(f'{group}', f'{group.lower()}', f'{pref}{num_series}', f'{frame:02d}'), bbox_inches='tight', pad_inches=0)
 
         plt.close()
 
-# /localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/A1_junc1_skel/
 
-
-# junction_location_plotter()
+# junction_location_plotter('RTN', 1)
 # exit()
 
 
