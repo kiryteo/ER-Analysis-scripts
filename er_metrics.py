@@ -17,6 +17,7 @@ from skan import draw
 import copy
 import os
 import cv2
+from scipy.spatial import cKDTree
 
 #
 # img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/preproc/A1/A1_decon_t000_ch00_proc.png')
@@ -323,8 +324,100 @@ def junc_intensity_plot_creator(coord_dt):
         plt.close()
 
 
+# def nearest_neighbors_kd_tree(x, y, k) :
+#     tree =scipy.spatial.cKDTree(y)
+#     ordered_neighbors = tree.query(x, k)[1]
+#     nearest_neighbor = np.empty((len(x),), dtype=np.intp)
+#     nearest_neighbor.fill(-1)
+#     used_y = set()
+#     for j, neigh_j in enumerate(ordered_neighbors) :
+#         for k in neigh_j :
+#             if k not in used_y :
+#                 nearest_neighbor[j] = k
+#                 used_y.add(k)
+#                 break
+#     return nearest_neighbor
+
+
+
+
+def junc_area_locator():
+    # mean_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
+
+    mean_img = '/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/er_mean_proc/control1_er_mean_proc_enhance_skel.png'
+
+    newps = junction_flow(mean_img)
+
+    nps = []
+    for each in newps:
+        nps.append([each[0], each[1]])
+
+    nps = np.array(nps)
+    # print(nps.shape)
+
+    nps_sorted = sorted(nps, key=lambda t: t[0])
+    # print(nps_sorted)
+    # exit()
+    # nps_img = get_junction_image(nps)
+
+    dt = {}
+    for i in range(100):
+        # img = imageio.imread(
+        #     '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t0%s_ch00_skel.png' % f'{i:02d}')
+
+        # ER Input image
+        # img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif'%f'{i:02d}')
+        # img = (img - img.min()) / (img.max() - img.min())
+
+        # ER Skel image
+        # sk_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t0%s_ch00_skel.png'%f'{i:02d}'
+        sk_img = '/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/skel/Ct1/Ct1_decon_t0%s_ch00_skel.png'%f'{i:02d}'
+
+        sk_newps = junction_flow(sk_img)
+
+        sk_nps = []
+        for each in sk_newps:
+            sk_nps.append([each[0], each[1]])
+
+        # print(np.array(sk_nps).shape)
+        # exit()
+
+        sk_nps = np.array(sk_nps)
+
+        sk_nps_sorted = sorted(sk_nps, key=lambda t: t[0])
+        # print(sk_nps_sorted[0])
+        # exit()
+
+        for elem in nps_sorted:
+            for sk_elem in sk_nps_sorted:
+                dst = ((sk_elem[0] - elem[0])**2 + (sk_elem[1] - elem[1])**2)
+                if dst <= 9:
+                    if (elem[0], elem[1]) in dt.keys():
+                        dt[(elem[0], elem[1])].append((sk_elem, dst))
+                    else:
+                        dt[(elem[0], elem[1])] = []
+                        dt[(elem[0], elem[1])].append((sk_elem, dst))
+
+    l = []
+    dt_refined = {}
+    for k, v in dt.items():
+        if len(v) >= 50:
+            dt_refined[k] = v
+
+    return dt_refined
+
+
+# junc_to_analyze = junc_area_locator()
+# for k, v in junc_to_analyze.items():
+#     print(len(v))
+#
+# exit()
+
+
 def junction_location_plotter():
-    mean_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
+    # mean_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
+
+    mean_img = '/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/er_mean_proc/control1_er_mean_proc_enhance_skel.png'
 
     newps = junction_flow(mean_img)
 
@@ -337,7 +430,7 @@ def junction_location_plotter():
     # print(nps[46, 1], nps[46, 0])
     #
     # exit()
-    plt.imshow(mean_proj_img, cmap='gray')
+    # plt.imshow(mean_proj_img, cmap='gray')
 
     # for (s,e) in g.edges():
     #     ps = g[s][e]['pts']
@@ -348,30 +441,55 @@ def junction_location_plotter():
     for i in range(100):
         # img = imageio.imread(
         #     '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t0%s_ch00_skel.png' % f'{i:02d}')
-        img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif'%f'{i:02d}')
+
+        # ER Input image
+        # img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif'%f'{i:02d}')
+        img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Control/files/img_1_decon_t0%s.tif'%f'{i:02d}')
         img = (img - img.min()) / (img.max() - img.min())
+
+
+        # ER Skel image
+        # sk_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t0%s_ch00_skel.png'%f'{i:02d}'
+        sk_img = '/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/skel/Ct1/Ct1_decon_t0%s_ch00_skel.png'%f'{i:02d}'
+
+        sk_newps = junction_flow(sk_img)
+
+        sk_nps = []
+        for each in sk_newps:
+            sk_nps.append([each[0], each[1]])
+
+        sk_nps = np.array(sk_nps)
+
         # img = img * 255.
                 # # plt.plot(ps[:, 1], ps[:, 0], 'y.')
-        for j in range(46, 47):
+        # for j in range(47, 48):
             # plt.figure(figsize=(128/77, 128/77))
-            plt.imshow(img, cmap='gray')
-            plt.axis('off')
+        plt.imshow(img, cmap='gray')
+        # plt.imshow(imageio.imread(img), cmap='gray')
+        plt.axis('off')
             # plt.title('t=%s'%f'{i}')
-            plt.plot(nps[j, 1], nps[j, 0], 'r.')
+        plt.plot(nps[:, 1], nps[:, 0], 'r.')
+        plt.plot(sk_nps[:, 1], sk_nps[:, 0], 'b.')
         # y = nps[0, 1]
         # x = nps[0, 0]
         # cv2.rectangle(img, (x-1, y-1), (x+1, y+1), (0, 0, 255), 2)
 
+            # plt.show()
 
-            plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/A1_junc_viz/j%s/ATL1_t%s'%(f'{j+1}', f'{i:02d}'), bbox_inches='tight', pad_inches=0)
 
-            plt.close()
+        # plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/A1_junc_viz/j%s_skel/ATL1_t%s'%(f'{j+1}', f'{i:02d}'), bbox_inches='tight', pad_inches=0)
+
+        # plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/A1_junc_viz/all_skel/er/ATL1_t%s'%(f'{i:02d}'), bbox_inches='tight', pad_inches=0)
+        plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/Ct1_junc_viz/all_skel/Ct1_t%s'%(f'{i:02d}'), bbox_inches='tight', pad_inches=0)
+
+        plt.close()
 
 # /localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/A1_junc1_skel/
 
 
 junction_location_plotter()
 exit()
+
 
 def crop_img():
     mean_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
@@ -384,22 +502,28 @@ def crop_img():
 
     nps = np.array(nps)
     for i in range(100):
-        img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/A1_junc_viz/j47/ATL1_t%s.png'%f'{i:02d}')
+        img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/A1_junc_viz/j48_skel/ATL1_t%s.png'%f'{i:02d}')
 
         # plt.imshow(img)
         # plt.show()
+
         # y = nps[74,1]
         # x = nps[74,0]
         # #
         # # # print(y, x)
-        cimg = img[134-30:134+30, 175-30:175+30]
+        cimg = img[137-30:137+30, 143-30:143+30]
 
+        plt.axis('off')
+        plt.title('t=%s'%f'{i}')
+        plt.imshow(cimg, interpolation='nearest', aspect='auto')
+        plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/A1_junc_viz/j48_skel/crops/ATL1_t%s.png'%f'{i:02d}', bbox_inches='tight', pad_inches=0)
 
-        imageio.imsave('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/A1_junc_viz/j47/crops/ATL1_t%s.png'%f'{i:02d}', cimg)
+        # imageio.imsave('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/A1_junc_viz/j47_skel/crops/ATL1_t%s.png'%f'{i:02d}', cimg)
+        plt.close()
 
+crop_img()
+exit()
 
-# crop_img()
-# exit()
 
 def per_patch_pixel_fourier(group, channel):
     grp_dict = {}
