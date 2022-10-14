@@ -466,13 +466,6 @@ for k, v in dt.items():
         n2.append([each[0][0], each[0][1]])
         n4.append(each[2])
     n3.append([np.var(n4)] * len(v))
-    # print(n4)
-    # print(len(n4))
-    # break
-    # n3.append(np.var(n4))
-
-
-# plt.plot(ps[:, 1], ps[:, 0], 'y.')
 
 n1 = np.array(n1)
 n2 = np.array(n2)
@@ -483,38 +476,12 @@ import itertools
 n3val = list(itertools.chain.from_iterable(n3))
 
 
-# from skimage.transform import resize
-#
-# img = imageio.imread('/localhome/asa420/ER-Analysis-scripts/ATL1_er_mean_junction_spread.png')
-#
-# op = resize(img, (128, 128))
-# imageio.imsave('ATL1_er_junc_spr.png', op)
-# exit()
-
-
-
-# import matplotlib as mpl
-#
-# fig, ax = plt.subplots()
-# fig.subplots_adjust(bottom=0.5)
-#
-# cmap = mpl.cm.viridis
-# bounds = sorted(n3)
-# norm = mpl.colors.BoundaryNorm(bounds, cmap.N)#, extend='both')
-#
-# fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap),
-#              cax=ax, orientation='horizontal',
-#              label="Discrete intervals with extend='both' keyword")
-# plt.show()
-#
-# exit()
-
 
 def plot_junc_spread(group, n1, n2):
     fig = plt.gcf()
     ax = fig.gca()
-    gr = cm.Greens(np.linspace(n3arr.min()[0], n3arr.max()[0], num=len(n3)))
-    mcmap = mcolors.LinearSegmentedColormap.from_list('mcmap', gr)
+    # gr = cm.Greens(np.linspace(n3arr.min()[0], n3arr.max()[0], num=len(n3)))
+    # mcmap = mcolors.LinearSegmentedColormap.from_list('mcmap', gr)
     img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/er_mean/%s1_er_mean.png'%(f'{group}', f'{group.lower()}'))
     plt.imshow(img, cmap='gray', interpolation='none')
     # plt.plot(n2[:, 1], n2[:, 0], 'b.')
