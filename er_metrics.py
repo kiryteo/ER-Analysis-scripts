@@ -18,6 +18,10 @@ import copy
 import os
 import cv2
 from scipy.spatial import cKDTree
+# from matplotlib.patches import Circle
+from skimage import draw
+import matplotlib.colors as mcolors
+from matplotlib import cm
 
 max_val = 999
 
@@ -341,6 +345,39 @@ def junc_intensity_plot_creator(coord_dt):
 #     return nearest_neighbor
 
 
+def seq_fourier_analysis(group, num_series):
+    l = []
+    for i in range(100):
+        img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s_decon_t0%s_ch00.tif'%(f'{group}', f'{group[0]}{num_series}', f'{i:02d}'))
+        stimg = (img - img.min()) / (img.max() - img.min())
+        l.extend(stimg)
+
+    l = np.reshape(l, (100, 128, 128))
+
+    f = np.fft.fftn(l - np.mean(l))
+    fabs = np.abs(f)
+    fviz = np.fft.fftshift(fabs)
+
+    # print(fviz.shape)
+    # print(np.sum(fviz, axis=0).shape)
+    k = []
+    for each in fviz:
+        k.append(np.sum(each))
+
+    return k
+
+
+
+# atl = seq_fourier_analysis('ATL', 1)
+# climp = seq_fourier_analysis('Climp', 1)
+# rtn = seq_fourier_analysis('RTN', 1)
+#
+# plt.plot(atl, label='ATL')
+# plt.plot(climp, label='Climp')
+# plt.plot(rtn, label='RTN')
+# plt.legend()
+# plt.show()
+# exit()
 
 
 def junc_area_locator(group, num_series):
@@ -348,6 +385,7 @@ def junc_area_locator(group, num_series):
 
     mean_img = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png'%(f'{group}', f'{group.lower()}{num_series}')
 
+    # Get junction coordinates from projection frame
     newps = junction_flow(mean_img)
 
     nps = []
@@ -357,10 +395,8 @@ def junc_area_locator(group, num_series):
     nps = np.array(nps)
     # print(nps.shape)
 
+    # sort the array for nearest neighbour matching per frame
     nps_sorted = sorted(nps, key=lambda t: t[0])
-    # print(nps_sorted)
-    # exit()
-    # nps_img = get_junction_image(nps)
 
     dt = {}
     for frame in range(100):
@@ -387,24 +423,232 @@ def junc_area_locator(group, num_series):
         for elem in nps_sorted:
             for sk_elem in sk_nps_sorted:
                 dst = ((sk_elem[0] - elem[0])**2 + (sk_elem[1] - elem[1])**2)
-                if dst <= 9:
+                if dst < 9:
                     if (elem[0], elem[1]) in dt.keys():
                         dt[(elem[0], elem[1])].append([sk_elem, frame, dst])
                     else:
                         dt[(elem[0], elem[1])] = []
                         dt[(elem[0], elem[1])].append([sk_elem, frame, dst])
 
+    return dt
+
+
+def refine_junc_dt(dt, min_presence=50):
     dt_refined = {}
     for k, v in dt.items():
-        if len(v) > 50:
+        if len(v) > min_presence:
             dt_refined[k] = v
 
-    return dt_refined
+    return nps, dt_refined
 
 
-def get_mean_patch_intensity(er_input, b, a):
-    m_val = (er_input[b, a] + er_input[b-1, a-1] + er_input[b+1, a+1] + er_input[b, a+1] + er_input[b, a-1] + er_input[b+1, a-1] + er_input[b-1, a+1] + er_input[b+1, a] + er_input[b-1, a]) / 9
+dt = junc_area_locator('RTN', 1)
+
+# print(np.var(dt[(3, 79)][2]))
+# print(list(dt.keys()))
+# exit()
+# t = dt[(22, 124)]
+# ll = []
+# for each in t:
+#     ll.append(each[2])
+#
+# print(ll)
+# print(np.var(ll))
+# exit()
+
+n1 = []
+n2 = []
+n3 = []
+for k, v in dt.items():
+    n1.append([k[0], k[1]])
+    n4 = []
+    for each in v:
+        n2.append([each[0][0], each[0][1]])
+        n4.append(each[2])
+    n3.append([np.var(n4)] * len(v))
+    # print(n4)
+    # print(len(n4))
+    # break
+    # n3.append(np.var(n4))
+
+
+# plt.plot(ps[:, 1], ps[:, 0], 'y.')
+
+n1 = np.array(n1)
+n2 = np.array(n2)
+
+n3arr = np.array(n3)
+
+import itertools
+n3val = list(itertools.chain.from_iterable(n3))
+
+
+# from skimage.transform import resize
+#
+# img = imageio.imread('/localhome/asa420/ER-Analysis-scripts/ATL1_er_mean_junction_spread.png')
+#
+# op = resize(img, (128, 128))
+# imageio.imsave('ATL1_er_junc_spr.png', op)
+# exit()
+
+
+
+# import matplotlib as mpl
+#
+# fig, ax = plt.subplots()
+# fig.subplots_adjust(bottom=0.5)
+#
+# cmap = mpl.cm.viridis
+# bounds = sorted(n3)
+# norm = mpl.colors.BoundaryNorm(bounds, cmap.N)#, extend='both')
+#
+# fig.colorbar(mpl.cm.ScalarMappable(norm=norm, cmap=cmap),
+#              cax=ax, orientation='horizontal',
+#              label="Discrete intervals with extend='both' keyword")
+# plt.show()
+#
+# exit()
+
+
+def plot_junc_spread(group, n1, n2):
+    fig = plt.gcf()
+    ax = fig.gca()
+    gr = cm.Greens(np.linspace(n3arr.min()[0], n3arr.max()[0], num=len(n3)))
+    mcmap = mcolors.LinearSegmentedColormap.from_list('mcmap', gr)
+    img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/er_mean/%s1_er_mean.png'%(f'{group}', f'{group.lower()}'))
+    plt.imshow(img, cmap='gray', interpolation='none')
+    # plt.plot(n2[:, 1], n2[:, 0], 'b.')
+    plt.scatter(n2[:, 1], n2[:, 0], c=n3val, cmap='Blues', marker='o')
+    plt.colorbar()
+    plt.plot(n1[:, 1], n1[:, 0], 'o', markerfacecolor='None', markeredgecolor='red')
+    # plt.plot(n1[:, 1], n1[:, 0], 'r.')
+    # c = Circle((n1[0, 1], n1[0, 0]), radius=3, linewidth=2, facecolor='none', edgecolor='green', alpha=0.7)
+    # ax.add_patch(c)
+    # plt.plot(n2[:, 1], n2[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue')
+
+    for i, each in enumerate(n1):
+        c1 = plt.Circle((n1[i,1], n1[i,0]), 3, color='r', fill=False, linestyle='--')
+        ax.add_patch(c1)
+
+    plt.axis('off')
+    plt.title('RTN series 1 junctions variance')
+    # plt.savefig('ATL1_er_mean_junc_spread_overlay.png', bbox_inches='tight', pad_inches=0)
+    plt.show()
+
+
+plot_junc_spread('RTN', n1, n2)
+exit()
+
+
+# hlist = []
+# X = []
+# Y = []
+# for k, v in dt.items():
+#     l = []
+#     for each in v:
+#         l.append(each[2])
+#     va = np.var(l)
+#     # hlist.append(l)
+#     X.append(len(v))
+#     Y.append(va)
+#     # hlist.append([len(v), va])
+#     # plt.title('Climp Series 1, junction: %s matches: %s, variance: %s'%(f'{k}', f'{len(v)}', f'{va:.2f}'))
+#     # plt.hist(l)
+#     # plt.show()
+#
+# # print(hlist)
+#
+# plt.scatter(X, Y)
+# plt.title('Relation between variance of distance and number of matched junctions')
+# plt.xlabel('# Matched junctions')
+# plt.ylabel('Distance Variance values')
+# plt.show()
+
+# sns.distplot(hlist)
+# plt.show()
+# for each in hlist:
+#     plt.hist(each, alpha=0.4)
+#     plt.show()
+
+# plt.title('Combined plot with histograms for junction spread within threshold 9')
+# plt.show()
+
+exit()
+
+# nps, dt_refined = refine_junc_dt(dt)
+# print(nps)
+
+l = list(dt_refined.keys())[20]
+# print(l)
+
+import statsmodels.api as sm
+
+X = []
+Y = []
+for each in dt_refined[l]:
+    X.append(each[0][0])
+    Y.append(each[0][1])
+
+minx = min(X)
+maxx = max(X)
+
+x = np.arange(minx, maxx, 1)
+y = 0.0378 * x
+
+print(X)
+print(Y)
+
+plt.scatter(X, Y)
+# plt.plot(y, 'r')
+plt.show()
+
+# X = sm.add_constant(X)
+#
+# res = sm.OLS(X, Y).fit()
+# print(res.summary())
+
+exit()
+
+l = list(dt_refined.keys())
+ll = []
+for each in l:
+    ll.append([each[0], each[1]])
+ll = np.array(ll)
+
+# print(nps[:, 1])
+# print(ll[:, 1])
+
+# print(np.array(dt_refined.keys())[0])
+# print(np.array(dt_refined.keys())[:, 1])
+
+plt.imshow(imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean/atl1_er_mean.png'), cmap='gray')
+plt.plot(nps[:, 1], nps[:, 0], 'r.')
+plt.plot(ll[:, 1], ll[:, 0], 'b.')
+plt.savefig('refined_atl1_er_junctions_50.png', bbox_inches='tight', pad_inches=0)
+plt.close()
+# plt.show()
+
+# plt.plot(list(dt_refined.keys())[:, 1])
+exit()
+
+
+def get_mean_patch_intensity(er_input, a, b):
+    m_val = (er_input[a, b] + er_input[a-1, b-1] + er_input[a+1, b+1] + er_input[a, b+1] + er_input[a, b-1] + er_input[a+1, b-1] + er_input[a-1, b+1] + er_input[a+1, b] + er_input[a-1, b]) / 9
     return m_val
+
+
+def get_junc_patch(er_input, a, b):
+    patch = np.zeros((3,3))
+    pa = patch.flatten()
+    vals = [er_input[a-1, b-1], er_input[a, b-1], er_input[a+1, b-1], er_input[a-1, b], er_input[a, b], er_input[a+1, b], er_input[a-1, b+1], er_input[a, b+1], er_input[a+1, b+1]]
+    for i, each in enumerate(vals):
+        pa[i] = each
+    patch = np.resize(pa, (3,3))
+    return patch
+
+
+# ref_input = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t000_ch00.tif')
+# patch = get_junc_patch(ref_input, 3, 79)
 
 
 def get_junc_lists(group, num_series):
@@ -471,12 +715,24 @@ def junc_intensity_variation(group, num_series):
 
     return mean_val_dt
 
-mean_val_dt = junc_intensity_variation('RTN', 2)
-#
+
+mean_val_dt = junc_intensity_variation('RTN', 1)
+
+
 for k1, v1 in mean_val_dt.items():
-    plt.title('Junction ref location: %s'%f'{k1}')
-    plt.plot(v1, linestyle='--', marker='o')
+
+    # plt.title('Junction ref location: %s'%f'{k1}')
+    # plt.plot(v1, linestyle='--', marker='o')
+    # grd = np.gradient(v1)
+    # plt.plot(grd, linestyle='--', marker='o')
+    # plt.show()
+    f = np.abs(np.fft.fft(v1))
+    k = np.fft.fftfreq(len(v1))
+    plt.plot(k)
     plt.show()
+    break
+
+# plt.show()
 
 exit()
 # for i in range(100):
