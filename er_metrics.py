@@ -39,37 +39,8 @@ max_val = 999
 
 
 
-# def proc_thr():
-#     img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/preproc/A1/A1_decon_t000_ch00_proc.png')
-#
-#     fig, ax = plt.subplots()
-#     r, c = 1, 2
-#
-#     fig.add_subplot(r,c,1)
-#     plt.imshow(img)
-#
-#     # ot = threshold_otsu(img)
-#     # c = copy.deepcopy(img)
-#     #
-#     # print(ot)
-#     #
-#     # oval = np.where(c<ot)
-#     # print(oval)
-#     # c[oval] = 0
-#     # fig.add_subplot(r,c,2)
-#     # plt.imshow(img)
-#
-#     thr = threshold_local(img, 5, offset=0)
-#     lvals = np.where(img<thr)
-#     img[lvals] = 0
-#     fig.add_subplot(r,c,2)
-#     plt.imshow(img)
-#     plt.show()
-
-
-
-
 EPS = np.finfo(float).eps
+
 
 def mutual_information_2d(x, y, sigma=1, normalized=False):
     """
@@ -159,38 +130,6 @@ def junction_flow(mean_img):
     # dil_brpts = pcv.dilate(gray_img=brpts_img, ksize=3, i=1)
 
     return newps
-
-
-# newps = junction_flow('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png')
-# nps = []
-# for each in newps:
-#     nps.append([each[0], each[1]])
-#
-# nps = np.array(nps)
-
-# def proc_skel_overlay(nps):
-#     # fig, ax = plt.subplots()
-#     for i in range(100):
-#         img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif'%f'{i:02d}')
-#     # img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean/atl1_er_mean.png')
-#         img = (img - img.min()) / (img.max() - img.min())
-#         # proc = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc.png')
-#     # sk = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png')
-#
-#
-#         # op = draw.overlay_skeleton_2d(img, sk, dilate=0, axes=ax)
-#         plt.axis('off')
-#         plt.imshow(img, cmap='gray')
-#         plt.plot(nps[:,1], nps[:, 0], 'r.')
-#         # plt.show()
-#         plt.savefig('ATL_S1_t%s.png'%f'{i:02d}', bbox_inches='tight', pad_inches=0)
-#         plt.close()
-
-# proc_skel_overlay(nps)
-
-import cv2
-
-
 
 
 def get_junction_image(newps):
@@ -381,6 +320,12 @@ def seq_fourier_analysis(group, num_series):
 
 
 def junc_area_locator(group, num_series):
+    """
+
+    @param group: group to be analyzed
+    @param num_series: sequence number
+    @return: dt, dictionary with matched junctions per reference junction
+    """
     # mean_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
 
     mean_img = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png'%(f'{group}', f'{group.lower()}{num_series}')
@@ -396,12 +341,11 @@ def junc_area_locator(group, num_series):
     # print(nps.shape)
 
     # sort the array for nearest neighbour matching per frame
+    # nps_sorted is the mean projection (reference) junction list
     nps_sorted = sorted(nps, key=lambda t: t[0])
 
     dt = {}
     for frame in range(100):
-
-        # ER Skel image
 
         if group == 'Control':
             pref = 'Ct'
@@ -418,8 +362,10 @@ def junc_area_locator(group, num_series):
 
         sk_nps = np.array(sk_nps)
 
+        # sk_nps_sorted is the per frame junction list
         sk_nps_sorted = sorted(sk_nps, key=lambda t: t[0])
 
+        # matching of junction candidates
         for elem in nps_sorted:
             for sk_elem in sk_nps_sorted:
                 dst = ((sk_elem[0] - elem[0])**2 + (sk_elem[1] - elem[1])**2)
