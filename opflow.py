@@ -14,6 +14,41 @@ import matplotlib.pyplot as plt
 
 import glob
 
+import numpy as np
+import matplotlib.pyplot as plt
+
+import skimage.io as io
+from skimage import filters
+from skimage.color import rgb2gray
+from skimage.filters import window, difference_of_gaussians
+
+
+def get_phase_correlation():
+    im1 = rgb2gray(io.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t001_ch00.tif'))
+    im2 = rgb2gray(io.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t002_ch00.tif'))
+
+    im1w = im1*window('hann', im1.shape)
+    im2w = im2*window('hann', im2.shape)
+
+    f1 = np.fft.fft2(im1w)
+    f2 = np.fft.fft2(im2w)
+
+    cps = (f1*f2.conj()) / np.abs(f1*f2.conj())
+    r = np.abs(np.fft.ifft2(cps))
+    r = np.fft.fftshift(r)
+
+    plt.imshow(r)
+    plt.show()
+
+    # [py,px] = np.argwhere(r==r.max())[0]
+    #
+    # cx,cy = 64,64
+    # shift_x = cx - px
+    # shift_y = cy - py
+    #
+    # print(f'Shift measured X:{shift_x}, Y:{shift_y}')
+
+
 def get_curls(group):
     a = []
 
