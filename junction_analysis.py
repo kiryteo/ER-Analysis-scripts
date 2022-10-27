@@ -11,7 +11,7 @@ from skimage import metrics
 import scipy
 from scipy import spatial
 from scipy import ndimage
-from skimage.measure import label
+from skimage.measure import label, regionprops
 from mpl_toolkits import mplot3d
 from scipy.ndimage import uniform_filter1d
 from skan import draw
@@ -542,6 +542,12 @@ def refine_junc_dt(dt, min_presence=50):
 
 
 def get_junction_types(nps, lab):
+    """
+
+    @param nps: (ndarray) reference junctions
+    @param lab: (ndarray) connected components for junctions
+    @return: label_vals (dict) provides corresponding reference junctions per cc, assigned_components (list) provides cc with at least 1 reference junction
+    """
     label_vals = {}
 
     assigned_components = []
@@ -575,7 +581,7 @@ def get_uncertain_junctions(lab, skdata, num_components, assigned_components):
     return unassigned_cc_dict
 
 
-def fuz_isolated_junctions(group, series_num):
+def label_junctions(group, series_num):
 
     nps, skdata = get_all_junc(group, series_num)
 
@@ -586,23 +592,48 @@ def fuz_isolated_junctions(group, series_num):
     for each in skdata:
         spread_img[each[0], each[1]] = 255.
 
-    lab = label(spread_img)
+    labelled_img = label(spread_img)
 
-    num_components = np.unique(lab)
+    return nps, skdata, labelled_img
 
-    label_vals, assigned_components = get_junction_types(nps, lab)
 
-    unassigned_cc_dict = get_uncertain_junctions(lab, skdata, num_components, assigned_components)
+def separate_junc_cc(nps, skdata, labelled_img):
+    regions = regionprops(labelled_img)
 
+    # cc_list = []
+    # for idx in range(1, labelled_img.max()):
+    #     lab_i = props[idx].label
+
+    cc_area_dict = {}
+    for idx, props in enumerate(regions):
+        cc_area_dict[idx] = props.area
+
+    num_components = np.unique(labelled_img)
+
+    label_vals, assigned_components = get_junction_types(nps, labelled_img)
+
+    unassigned_cc_dict = get_uncertain_junctions(labelled_img, skdata, num_components, assigned_components)
+
+    return label_vals, cc_area_dict, unassigned_cc_dict
+
+
+def plot_junction_areas(label_vals, cc_area_dict, unassigned_cc_dict):
     isolated_junc = []
+    isolated_junc_area = []
     fuzzy_junc = []
+    fuzzy_junc_area = []
     unknown_junc = []
     for k, v in label_vals.items():
         if k != 0:
             if len(v) == 1:
                 isolated_junc.append(v[0])
+                isolated_junc_area.append(cc_area_dict[k])
             else:
                 fuzzy_junc.append(v)
+                fuzzy_junc_area.append(cc_area_dict[k])
+
+    # print(isolated_junc_area)
+    # print(fuzzy_junc_area)
 
     for k, v in unassigned_cc_dict.items():
         unknown_junc.append(v)
@@ -629,16 +660,106 @@ def fuz_isolated_junctions(group, series_num):
         plt.plot(iso[:, 1], iso[:, 0], 'o', markerfacecolor='None', markeredgecolor='red')
         if len(fuz) > 0:
             plt.plot(fuz[:, 1], fuz[:, 0], 'o', markerfacecolor='None', markeredgecolor='blue')
-        plt.plot(unk[:, 1], unk[:, 0], 'o', markerfacecolor='None', markeredgecolor='green')
-        if group == 'Control':
-            plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junc_types_movies/Ct%s_decon_t0%s_ch00.png'%(f'{group}', f'{series_num}', f'{i:02d}'), bbox_inches='tight', pad_inches=0)
-        else:
-            plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junc_types_movies/%s_decon_t0%s_ch00.png'%(f'{group}', f'{group[0]}{series_num}', f'{i:02d}'), bbox_inches='tight', pad_inches=0)
-        plt.close()
+        # plt.plot(unk[:, 1], unk[:, 0], 'o', markerfacecolor='None', markeredgecolor='green')
+        plt.show()
+        # if group == 'Control':
+        #     plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junc_types_movies/Ct%s_decon_t0%s_ch00.png'%(f'{group}', f'{series_num}', f'{i:02d}'), bbox_inches='tight', pad_inches=0)
+        # else:
+        #     plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junc_types_movies/%s_decon_t0%s_ch00.png'%(f'{group}', f'{group[0]}{series_num}', f'{i:02d}'), bbox_inches='tight', pad_inches=0)
+        # plt.close()
 
+
+def fuz_isolated_junctions(group, series_num):
+
+    nps, skdata = get_all_junc(group, series_num)
+
+    nps = np.array(nps)
+    skdata = np.array(skdata)
+
+    spread_img = np.zeros((128, 128))
+    for each in skdata:
+        spread_img[each[0], each[1]] = 255.
+
+    labelled_img = label(spread_img)
+    regions = regionprops(labelled_img)
+
+    # cc_list = []
+    # for idx in range(1, labelled_img.max()):
+    #     lab_i = props[idx].label
+
+    cc_area_dict = {}
+    for idx, props in enumerate(regions):
+        cc_area_dict[idx] = props.area
+
+    # print(cc_area_dict)
+
+    # exit()
+
+    num_components = np.unique(labelled_img)
+
+    label_vals, assigned_components = get_junction_types(nps, labelled_img)
+
+    unassigned_cc_dict = get_uncertain_junctions(labelled_img, skdata, num_components, assigned_components)
+
+    isolated_junc = []
+    isolated_junc_area = []
+    fuzzy_junc = []
+    fuzzy_junc_area = []
+    unknown_junc = []
+    for k, v in label_vals.items():
+        if k != 0:
+            if len(v) == 1:
+                isolated_junc.append(v[0])
+                isolated_junc_area.append(cc_area_dict[k])
+            else:
+                fuzzy_junc.append(v)
+                fuzzy_junc_area.append(cc_area_dict[k])
+
+    print(isolated_junc_area)
+    print(fuzzy_junc_area)
+
+    # exit()
+
+    for k, v in unassigned_cc_dict.items():
+        unknown_junc.append(v)
+
+    iso = np.array(isolated_junc)
+
+    fuz = list(itertools.chain.from_iterable(fuzzy_junc))
+    fuz = np.array(fuz)
+
+    unk = list(itertools.chain.from_iterable(unknown_junc))
+    unk = np.array(unk)
+
+    # img = imageio.imread(
+    #     '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc.png')
+
+    for i in range(100):
+        plt.axis('off')
+        if group == 'Control':
+            img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/files/img_%s_decon_t0%s.tif'%(f'{group}', f'{series_num}', f'{i:02d}'))
+        else:
+            img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s_decon_t0%s_ch00.tif'%(f'{group}', f'{group[0]}{series_num}', f'{i:02d}'))
+        img = (img - img.min()) / (img.max() - img.min())
+        plt.imshow(img, cmap='gray')
+        plt.plot(iso[:, 1], iso[:, 0], 'o', markerfacecolor='None', markeredgecolor='red')
+        if len(fuz) > 0:
+            plt.plot(fuz[:, 1], fuz[:, 0], 'o', markerfacecolor='None', markeredgecolor='blue')
+        # plt.plot(unk[:, 1], unk[:, 0], 'o', markerfacecolor='None', markeredgecolor='green')
+        plt.show()
+        # if group == 'Control':
+        #     plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junc_types_movies/Ct%s_decon_t0%s_ch00.png'%(f'{group}', f'{series_num}', f'{i:02d}'), bbox_inches='tight', pad_inches=0)
+        # else:
+        #     plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junc_types_movies/%s_decon_t0%s_ch00.png'%(f'{group}', f'{group[0]}{series_num}', f'{i:02d}'), bbox_inches='tight', pad_inches=0)
+        # plt.close()
+
+
+fuz_isolated_junctions('ATL', 1)
 
 # for i in range(1, 27):
 #     fuz_isolated_junctions('ATL', i)
+
+exit()
 
 # for i in range(6, 32):
 #     fuz_isolated_junctions('Control', i)
