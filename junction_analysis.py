@@ -18,14 +18,20 @@ from skan import draw
 import itertools
 import os
 import cv2
+from scipy.spatial import Voronoi, voronoi_plot_2d
 from scipy.spatial import cKDTree
-# from matplotlib.patches import Circle
+
 from skimage import draw
 import matplotlib.colors as mcolors
 from matplotlib import cm
 
 max_val = 999
 
+
+def get_std_img(path):
+    img = imageio.imread(path)
+    std_img = (img - img.min()) / (img.max() - img.min())
+    return std_img
 
 
 def junc_spread_comparison():
@@ -126,6 +132,19 @@ def skel_to_graph(skel):
     degree_list = G.degree
     return nodes, degree_list
 
+
+def get_junction_image(newps):
+    """
+
+    @param newps: List of nodes
+    @return: Image with nodes -> 1, else 0
+    """
+    brpts_img = np.zeros((128, 128))
+    for each in newps:
+        brpts_img[each[0], each[1]] = 255.
+    return brpts_img
+
+
 def junction_flow(mean_img):
     """
 
@@ -193,10 +212,7 @@ def init_proc_projection(group, num_series):
         if val[1] > 2:
             newps.append(ps[j])
 
-    brpts_img = np.zeros((128, 128))
-    # brpts_img[newps] = 1.
-    for each in newps:
-        brpts_img[each[0], each[1]] = 255.
+    brpts_img = get_junction_image(newps)
 
     cv2.imwrite('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junctions/%s_proc_junc_mean.png' % (
         f'{group}', f'{group[0]}{num_series}'), brpts_img)
@@ -224,29 +240,11 @@ def mean_frame_validation(group, total_series):
                 if val[1] > 2:
                     newps.append(ps[j])
 
-            brpts_img = np.zeros((128, 128))
-            for each in newps:
-                brpts_img[each[0], each[1]] = 255.
+            brpts_img = get_junction_image(newps)
 
             imageio.imsave(
                 '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junctions/%s/%s_decon_t0%s_ch00_junc.png' % (
                     f'{group}', f'{pref}{num_ser}', f'{pref}{num_ser}', f'{frame:02d}'), brpts_img)
-
-
-# mean_frame_validation('RTN', 29)
-# exit()
-
-
-def get_junction_image(newps):
-    """
-
-    @param newps: List of nodes
-    @return: Image with nodes -> 1, else 0
-    """
-    brpts_img = np.zeros((128, 128))
-    for each in newps:
-        brpts_img[each[0], each[1]] = 255.
-    return brpts_img
 
 
 # patch1_vals -> list of intensity values per patch
@@ -320,8 +318,8 @@ def per_patch_variation(group, channel):
             else:
                 path = '/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s_decon_t0%s_ch0%s.tif' % (
                     f'{group}', f'{group[0]}{num_series}', f'{frame:02d}', f'{channel}')
-            img = imageio.imread(path)
-            img = (img - img.min()) / (img.max() - img.min())
+
+            img = get_std_img(path)
 
             # im1_patch_vals = get_junc_patches(newps, img)
             im1_patch_vals = junc_patch_mean(newps, img)
@@ -347,8 +345,7 @@ def patch_variation_viz():
 
     for i in range(100):
         path = '/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif' % f'{i:02d}'
-        img = imageio.imread(path)
-        img = (img - img.min()) / (img.max() - img.min())
+        img = get_std_img(path)
 
         im1_patch_vals, dt = junc_patch_mean(newps, img)
         sl.append(im1_patch_vals)
@@ -399,10 +396,10 @@ def junc_intensity_plot_creator(coord_dt):
 def seq_fourier_analysis(group, num_series):
     l = []
     for i in range(100):
-        img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s_decon_t0%s_ch00.tif' % (
-            f'{group}', f'{group[0]}{num_series}', f'{i:02d}'))
-        stimg = (img - img.min()) / (img.max() - img.min())
-        l.extend(stimg)
+        path = '/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s_decon_t0%s_ch00.tif' % (
+            f'{group}', f'{group[0]}{num_series}', f'{i:02d}')
+        img = get_std_img(path)
+        l.extend(img)
 
     l = np.reshape(l, (100, 128, 128))
 
@@ -684,7 +681,7 @@ def gmovie_creator(group, num_series):
 #
 # exit()
 
-from scipy.spatial import Voronoi, voronoi_plot_2d
+
 from matplotlib.figure import figaspect
 
 # w, h = figaspect(1)
@@ -700,30 +697,30 @@ from matplotlib.figure import figaspect
 #     extent = im[0].get_extent()
 #     ax.set_aspect(abs((extent[1]-extent[0])/(extent[3]-extent[2]))/aspect)
 
+def get_voronoi(nps, skdata):
 
-vor = Voronoi(nps)
+    vor = Voronoi(nps)
 
-# fig, ax = plt.subplots()
-fig = voronoi_plot_2d(vor)
-# plt.figure(num=1, figsize=(8,8))
+    # fig, ax = plt.subplots()
+    fig = voronoi_plot_2d(vor)
+    # plt.figure(num=1, figsize=(8,8))
 
-# plt.title('Voronoi for ATL Series 10, Blue points: Reference junctions, Red points: per frame junctions')
-# img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/er_mean/%s_er_mean.png'%(f'{group}', f'{group.lower()}{num_series}'))
+    # plt.title('Voronoi for ATL Series 10, Blue points: Reference junctions, Red points: per frame junctions')
+    # img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/er_mean/%s_er_mean.png'%(f'{group}', f'{group.lower()}{num_series}'))
 
-plt.plot(nps[:, 0], nps[:, 1], 'o', markerfacecolor='None', markeredgecolor='blue', mew=3)
-plt.plot(skdata[:, 0], skdata[:, 1], 'o', markerfacecolor='None', markeredgecolor='red')
-# plt.imshow()
-# plt.gca().set_aspect(1)
-# plt.axis('scaled')
+    plt.plot(nps[:, 0], nps[:, 1], 'o', markerfacecolor='None', markeredgecolor='blue', mew=3)
+    plt.plot(skdata[:, 0], skdata[:, 1], 'o', markerfacecolor='None', markeredgecolor='red')
+    # plt.imshow()
+    # plt.gca().set_aspect(1)
+    # plt.axis('scaled')
 
-# plt.savefig('Voro_ATL_10_new.png', bbox_inches='tight')
+    # plt.savefig('Voro_ATL_10_new.png', bbox_inches='tight')
 
-f = plt.gcf()
-f.set_size_inches(8, 8)
+    f = plt.gcf()
+    f.set_size_inches(8, 8)
 
-plt.show()
+    plt.show()
 
-exit()
 
 # dt = junc_area_locator('Climp', 1)
 # dt = refine_junc_dt(dt_init, 10)
