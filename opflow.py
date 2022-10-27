@@ -13,15 +13,67 @@ import matplotlib.pyplot as plt
 # plt.show()
 
 import glob
-
+import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-
+import imageio
 import skimage.io as io
 from skimage import filters
 from skimage.color import rgb2gray
 from skimage.filters import window, difference_of_gaussians
 
+img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/er_mean_proc/rtn1_er_mean_proc.png')
+plt.imshow(img, cmap='gray')
+
+fl = imageio.imread('R1_opflow.png')
+im1 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/junctions/R1_junc_mean.png')
+im2 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/junctions/R1_proc_junc_mean.png')
+
+l1 = np.where(im1!=0)
+l2 = np.where(im2!=0)
+
+x1 = l1[0]
+y1 = l1[1]
+
+x2 = l2[0]
+y2 = l2[1]
+
+high_mag = np.where(fl==255)
+mid_mag = np.where(fl==np.unique(fl)[1])
+hflx = high_mag[0]
+hfly = high_mag[1]
+
+mflx = mid_mag[0]
+mfly = mid_mag[1]
+# print(img.max())
+# print(np.unique(img))
+# exit()
+
+plt.plot(y1, x1, 'o', markerfacecolor='None', markeredgecolor='blue')
+plt.plot(y2, x2, 'o', markerfacecolor='None', markeredgecolor='red')
+plt.plot(hfly, hflx, 'x', markerfacecolor='None', markeredgecolor='yellow')
+plt.plot(mfly, mflx, 'x', markerfacecolor='None', markeredgecolor='green')
+
+plt.show()
+
+exit()
+
+l = np.zeros((128, 128))
+for i in range(99):
+    f1 = scipy.io.loadmat('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/junc_opflow/R1_0_opfl.mat')
+    data = f1['m']
+    l = l + data
+
+# a = np.mean(l, axis=1)
+a = l/99
+
+# a = (a - a.min()) / (a.max() - a.min())
+# a = a * 255.
+# cv2.imwrite('R1_opflow.png', a)
+# imageio.imsave('R1_opfl.png', a)
+plt.imshow(a)
+plt.show()
+exit()
 
 def get_phase_correlation():
     im1 = rgb2gray(io.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t001_ch00.tif'))
@@ -97,6 +149,8 @@ def flow_mag_analysis():
     plt.imshow(dataY['Vy'])
     # plt.imshow(mag)
     plt.show()
+
+
 
 flow_mag_analysis()
 exit()
