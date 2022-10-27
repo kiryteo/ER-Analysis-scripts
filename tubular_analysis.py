@@ -21,41 +21,35 @@ from PIL import ImageChops
 from skimage.filters import threshold_local, threshold_otsu
 
 
-def mp_input():
-    er_mean = np.zeros((128,128))
-    for i in range(100):
-        img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif'%f'{i:02d}')
-        img = (img - img.min())/(img.max() - img.min())
-        er_mean += img
-    cv2.imwrite('atl1_er_mean.png', (er_mean/100)*255)
+def mean_proj_input():
+    """
 
-# mp_input()
-# exit()
+    @return: Mean projection output for sequence of inputs
+    """
+    for ser_num in range(1, 32):
+        er_mean = np.zeros((128,128))
+        for i in range(100):
+            img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/files/R%s_decon_t0%s_ch00.tif'%(f'{ser_num}', f'{i:02d}'))
+            img = (img - img.min())/(img.max() - img.min())
+            er_mean += img
+        cv2.imwrite('rtn%s_er_mean.png'%f'{ser_num}', (er_mean/100)*255)
+
 
 def preprocess_samples():
-    img = imageio.imread('atl1_er_mean.png')
-    aop = skimage.morphology.area_opening(img, area_threshold=2)
-    erod = skimage.morphology.erosion(aop)
-    aop = skimage.morphology.area_opening(erod, area_threshold=2)
-    cl = skimage.morphology.area_closing(aop, area_threshold=32)
-    aop = skimage.morphology.area_opening(cl, area_threshold=2)
-    loc = threshold_local(aop, 3)
-    loc = threshold_local(loc, 3)
-    cv2.imwrite('atl1_er_mean_proc.png', loc)
+    """
 
-# preprocess_samples()
-
-# img = imageio.imread('atl1_er_mean_proc_enhance.png')
-# sk = pcv.morphology.skeletonize(img)
-# cv2.imwrite('atl1_er_skel.png', sk)
-
-atl_mean = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_mean_proj/A1_mean.png')
-thr = threshold_otsu(atl_mean)
-op = atl_mean > thr
-sk = pcv.morphology.skeletonize(op)
-cv2.imwrite('atl1_sk.png', sk)
-
-exit()
+    @return: Preprocessing of the input to preserve the edges and different intensities
+    """
+    for i in range(27, 32):
+        img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/er_mean/control%s_er_mean.png'%f'{i}')
+        aop = skimage.morphology.area_opening(img, area_threshold=2)
+        erod = skimage.morphology.erosion(aop)
+        aop = skimage.morphology.area_opening(erod, area_threshold=2)
+        cl = skimage.morphology.area_closing(aop, area_threshold=32)
+        aop = skimage.morphology.area_opening(cl, area_threshold=2)
+        loc = threshold_local(aop, 3)
+        loc = threshold_local(loc, 3)
+        cv2.imwrite('/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/er_mean_proc/control%s_er_mean_proc.png'%f'{i}', loc)
 
 
 def simp_fourier():
@@ -146,6 +140,9 @@ def junction_location_plotter():
         plt.plot(nps[:, 1], nps[:, 0], 'r.')
 
         plt.show()
+
+# junction_location_plotter()
+# exit()
 
 
 def get_unique_components(path):
@@ -703,16 +700,6 @@ def plot_junc_analysis():
 #
 # exit()
 
-# for i in range(100):
-#     l = []
-#     path = '/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif'%f'{i:02d}'
-#     img = imageio.imread(path)
-#     l.extend(img.flatten())
-#
-#
-# plt.hist(l)
-# plt.show()
-# exit()
 
 def tub_analysis(mean_img):
     mean_proj_img = imageio.imread(mean_img)
@@ -744,6 +731,7 @@ def tub_analysis(mean_img):
 
     # Obtain the junctions
     brpts_img = np.zeros((128, 128))
+
     # brpts_img[newps] = 1.
     for each in newps:
         brpts_img[each[0], each[1]] = 255.

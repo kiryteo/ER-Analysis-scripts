@@ -1,15 +1,20 @@
 
-
-%fname = '/localhome/asa420/ER-Analysis-scripts/A18_aop6-op_loc.png'
-%Vessel2d(fname);
-
-for i=1:29
-dirname = ['/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/preproc/R' int2str(i) '/'];
-for j=10:99
-fname = [dirname 'R' int2str(i) '_decon_t0' int2str(j) '_ch00_proc.png'];
+fname = '/localhome/asa420/ER-Analysis-scripts/A1_t0_thrloc.png'
 Vessel2d(fname);
-end;
-end;
+
+%for i=27:29
+%dirname = ['/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/er_mean_proc/'];
+%fname = [dirname 'rtn' int2str(i) '_er_mean_proc.png'];
+%Vessel2d(fname);
+%end;
+
+%for i=1:26
+%dirname = ['/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/preproc_mcherry/A' int2str(i) '/'];
+%for j=10:99
+%fname = [dirname 'A' int2str(i) '_decon_t0' int2str(j) '_ch01_proc.png'];
+%Vessel2d(fname);
+%end;
+%end;
 
 
 %for i=16:16

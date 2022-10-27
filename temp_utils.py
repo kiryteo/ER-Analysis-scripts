@@ -7,6 +7,16 @@ import skimage.io as io
 
 home = os.path.expanduser('~')
 
+files = glob.glob('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/*')
+
+for each in files:
+    if 'A1_' in each and 'std_std_adj' in each:
+        shutil.move(each, '/localhome/asa420/MIAL/data/confocal_movies/ATL/std_adj/')
+
+
+exit()
+
+
 dname = '/localhome/asa420/MIAL/data/live-cell-movies/COSKDELRTN/Decon/Series015_decon_converted/matching/'
 
 files = glob.glob(dname + '*')

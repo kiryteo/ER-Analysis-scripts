@@ -10,6 +10,33 @@ import copy
 
 import matplotlib.pyplot as plt
 from skimage import draw
+from skimage.transform import resize
+
+
+
+a = imageio.imread('/localhome/asa420/grp.png')
+# b = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/skel/A1/A1_decon_t000_ch00_skel.png')
+
+b = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/std_adj/A1_decon_t000_ch01_std_std_adj.png')
+
+bst = np.stack((b,b,b), axis=2)
+
+c = resize(a, (128, 128))
+
+d = 0.5 * bst + 0.5 * c[:,:,:3]
+
+# print(a.max())
+
+plt.imshow(d)
+plt.show()
+
+exit()
+
+
+
+
+
+
 
 
 def create_circles(junctions, overlay_image, radius):
@@ -21,6 +48,62 @@ def create_circles(junctions, overlay_image, radius):
 
 
 prefix = '/localhome/asa420/Desktop/RTN/'
+
+
+adj_dir = '/localhome/asa420/MIAL/data/confocal_movies/ATL/std_adj/'
+
+gr_dir = '/localhome/asa420/MIAL/data/confocal_movies/ATL/skel/A1-graph/'
+
+
+# a = Image.open('/localhome/asa420/ER-Analysis-scripts/rerere.png')
+# b = Image.open('/localhome/asa420/MIAL/data/confocal_movies/ATL/skel/A1-graph/A1_decon_t000_ch00_graph.png')
+
+a = cv2.imread('/localhome/asa420/ER-Analysis-scripts/rerere.png')
+b = cv2.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/skel/A1-graph/A1_decon_t000_ch00_graph.png')
+
+
+
+# bdata = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/skel/A1-graph/A1_decon_t000_ch00_graph.png')
+
+# b = resize(bdata, (509, 389))
+
+# print(bdata.shape)
+
+# a = np.array(a).astype('uint8')
+# b = np.array(b).astype('uint8')
+
+# print(a.dtype)
+# print(a.dtype)
+
+# a = Image.fromarray(a)
+# b = Image.fromarray(b)
+
+# print(a.format)
+# print(b.format)
+
+# print(a.size)
+# print(b.size)
+
+# op = Image.blend(a, b, 0.5)
+# imageio.imwrite('gr_bl.png', op)
+
+
+dst = cv2.addWeighted(a, 1, b, 0.5, 0.0)
+# cv2.imshow('dst', dst)
+cv2.imwrite('dst.png', dst)
+
+exit()
+
+def graph_overlay():
+    for i in range(100):
+        adj = Image.open(adj_dir + 'A1_decon_t0%s_ch01_std_std_adj.png'%f'{i:02d}')
+        gr = Image.open(gr_dir + 'A1_decon_t0%s_ch00_graph.png'%f'{i:02d}')
+        op = Image.blend(adj, gr, 0.5)
+        imageio.imwrite('/localhome/asa420/MIAL/data/confocal_movies/ATL/skel/A1-graph-overlay/' + 'A1_decon_t0%s_ch00_graph_overlay.png'%f'{i:02d}', op)
+
+graph_overlay()
+exit()
+
 
 def create_overlay(total_series, num_frames):
     for series in range(1, total_series+1):

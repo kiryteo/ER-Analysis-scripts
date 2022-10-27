@@ -65,21 +65,20 @@ def graph_movie_creator():
 # graph_movie_creator()
 # exit()
 
-
 def graph_overlay_movie_creator():
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    prefix = '/localhome/asa420/MIAL/data/confocal_movies/ATL/graphs/'
-    video = cv2.VideoWriter('ATL_Confocal_graph_series1.mp4', fourcc, 1.5, (480, 480))
+    prefix = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/graphs/A4/'
+    video = cv2.VideoWriter('ATL_Confocal_graph_overlay_series4.mp4', fourcc, 1.5, (369, 369))
     for frame in range(100):
-        img = cv2.imread(prefix + 'A1_decon_t0%s_ch01_std_std_adj_adapthist.png'%f'{frame:02d}')
+        img = cv2.imread(prefix + 'A4_decon_t0%s_ch00_graph.png'%f'{frame:02d}')
         video.write(img)
 
     cv2.destroyAllWindows()
     video.release()
 
 
-# graph__overlay_movie_creator()
-
+# graph_overlay_movie_creator()
+# exit()
 
 def hist_movie_creator():
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -105,5 +104,46 @@ def conf_movies_new():
         cv2.destroyAllWindows()
         video.release()
 
+import imageio
 
-conf_movies_new()
+
+
+def std_input():
+    prefix = '/localhome/asa420/MIAL/data/confocal_movies/ATL/files/'
+    for frame in range(100):
+        img = imageio.imread(prefix + 'A1_decon_t0%s_ch00.tif' % f'{frame:02d}')
+        img = (img - img.min()) / (img.max() - img.min())
+        op = img * 255.
+        cv2.imwrite(prefix + 'A1_decon_t0%s_ch00.png' % f'{frame:02d}', op)
+
+# std_input()
+# exit()
+
+
+def file_movie_creator():
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    prefix = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/new_process_frames/'
+    video = cv2.VideoWriter('ATL_er_skel_frame_two.mp4', fourcc, 1.5, (330, 189))
+    for frame in range(100):
+        img = cv2.imread(prefix + 'A1_decon_t0%s_ch00_new_frame_two.png' % f'{frame:02d}')
+        video.write(img)
+
+    cv2.destroyAllWindows()
+    video.release()
+
+# file_movie_creator()
+# exit()
+
+
+def gmovie_creator(group, num_series):
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    video = cv2.VideoWriter('%s_s%s_junction_types.mp4'%(f'{group}', f'{num_series}'), fourcc, 1.5, (369, 369))
+    for frame in range(100):
+        img = cv2.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junc_types_movies/%s_decon_t0%s_ch00.png'%(f'{group}', f'{group[0]}{num_series}', f'{frame:02d}'))
+        video.write(img)
+
+    cv2.destroyAllWindows()
+    video.release()
+
+for i in range(2, 27):
+    gmovie_creator('ATL', i)

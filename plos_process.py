@@ -310,8 +310,8 @@ def get_flow_net_overlay():
         plt.colorbar()
         plt.show()
 
-get_flow_net_overlay()
-exit()
+# get_flow_net_overlay()
+# exit()
 
 def opt_flow_mag():
     norm_list = []
@@ -344,7 +344,7 @@ def opt_flow_mag():
 
     # --- Quiver plot arguments
 
-    nvec = 20  # Number of vectors to be displayed along each image dimension
+    nvec = 128*128  # Number of vectors to be displayed along each image dimension
     nl, nc = image0.shape
     step = max(nl//nvec, nc//nvec)
 

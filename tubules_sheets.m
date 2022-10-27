@@ -1,7 +1,7 @@
 %% load/crop the image
 %I=imread('/Users/hamarneh/Downloads/3_18_2021 Control COS7 Decon_Series002_decon_ch02.tif');
-I=imread('/localhome/asa420/MIAL/live-cell-movies/COSKDELRTN/COSKDELRTN/Decon/Series007_decon_converted/files/Series007_decon_converted_t02_ch00.tif');
-
+%I=imread('/localhome/asa420/MIAL/live-cell-movies/COSKDELRTN/COSKDELRTN/Decon/Series007_decon_converted/files/Series007_decon_converted_t02_ch00.tif');
+I = imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A24_decon_t000_ch00.tif');
 
 % crop a small part?
 % A=x3_18_2021ControlCOS7Decon_Series002_decon_ch02;
