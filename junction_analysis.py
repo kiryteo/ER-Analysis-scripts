@@ -12,6 +12,7 @@ import scipy
 from scipy import spatial
 from scipy import ndimage
 from skimage.measure import label, regionprops
+from skimage import measure
 from mpl_toolkits import mplot3d
 from scipy.ndimage import uniform_filter1d
 from skan import draw
@@ -24,6 +25,10 @@ from scipy.spatial import cKDTree
 from skimage import draw
 import matplotlib.colors as mcolors
 from matplotlib import cm
+
+import plotly
+import plotly.express as px
+import plotly.graph_objects as go
 
 max_val = 999
 
@@ -64,19 +69,16 @@ def junc_spread_comparison():
 
 
 def junc_spread_display(group, num_series):
-    im1 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junctions/%s_junc_mean.png' % (
+    init_mean_proj_img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junctions/%s_junc_mean.png' % (
         f'{group}', f'{group[0]}{num_series}'))
-    im2 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junctions/%s_proc_junc_mean.png' % (
+    junc_mean_proj_img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junctions/%s_proc_junc_mean.png' % (
         f'{group}', f'{group[0]}{num_series}'))
 
-    l1 = np.where(im1 != 0)
-    l2 = np.where(im2 != 0)
+    init_proj_img_coords = np.where(init_mean_proj_img != 0)
+    junc_proj_img_coords = np.where(junc_mean_proj_img != 0)
 
-    x1 = l1[0]
-    y1 = l1[1]
-
-    x2 = l2[0]
-    y2 = l2[1]
+    x1, y1 = init_proj_img_coords[0], init_proj_img_coords[1]
+    x2, y2 = junc_proj_img_coords[0], junc_proj_img_coords[1]
 
     fl = imageio.imread('R1_opflow.png')
     stable_pts = np.where(fl == 255)
@@ -546,7 +548,7 @@ def get_junction_types(nps, lab):
 
     @param nps: (ndarray) reference junctions
     @param lab: (ndarray) connected components for junctions
-    @return: label_vals (dict) provides corresponding reference junctions per cc, assigned_components (list) provides cc with at least 1 reference junction
+    @return: label_vals (dict) provides corresponding reference junctions per cc_id, assigned_components (list) provides cc with at least 1 reference junction
     """
     label_vals = {}
 
@@ -583,6 +585,7 @@ def get_uncertain_junctions(lab, skdata, num_components, assigned_components):
 
 def label_junctions(group, series_num):
 
+    fig, ax = plt.subplots()
     nps, skdata = get_all_junc(group, series_num)
 
     nps = np.array(nps)
@@ -592,9 +595,51 @@ def label_junctions(group, series_num):
     for each in skdata:
         spread_img[each[0], each[1]] = 255.
 
-    labelled_img = label(spread_img)
+
+    # fig.add_subplot(1,2,1)
+    # plt.imshow(spread_img)
+    #
+    labelled_img = label(spread_img, connectivity=2)
+    # fig.add_subplot(1,2,2)
+    # plt.imshow(labelled_img)
+    # plt.show()
+    # exit()
 
     return nps, skdata, labelled_img
+
+
+def viz_regionprops(labelled_img, spread_img):
+    fig = px.imshow(spread_img, binary_string=True)
+    fig.update_traces(hoverinfo='skip')
+
+    props = regionprops(labelled_img, spread_img)
+    properties = ['area', 'eccentricity', 'perimeter']
+
+    # For each label, add a filled scatter trace for its contour,
+    # and display the properties of the label in the hover of this trace.
+    for index in range(1, labelled_img.max()):
+        label_i = props[index].label
+        contour = measure.find_contours(labelled_img == label_i)[0]
+        y, x = contour.T
+        hoverinfo = ''
+        for prop_name in properties:
+            hoverinfo += f'<b>{prop_name}: {getattr(props[index], prop_name):.2f}</b><br>'
+        fig.add_trace(go.Scatter(
+            x=x, y=y, name=label_i,
+            mode='lines', fill='toself', showlegend=False,
+            hovertemplate=hoverinfo, hoveron='points+fills'))
+
+    plotly.io.show(fig)
+
+
+# for i in range(10):
+#     img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/junctions/A1/A1_decon_t0%s_ch00_junc.png'%f'{i:02d}')
+#     lab = label(img)
+#
+#     viz_regionprops(lab, img)
+
+# exit()
+
 
 
 def separate_junc_cc(nps, skdata, labelled_img):
@@ -607,6 +652,7 @@ def separate_junc_cc(nps, skdata, labelled_img):
     cc_area_dict = {}
     for idx, props in enumerate(regions):
         cc_area_dict[idx] = props.area
+        # cc_area_dict[idx] = [props.area, props.axis_major_length]
 
     num_components = np.unique(labelled_img)
 
@@ -617,7 +663,7 @@ def separate_junc_cc(nps, skdata, labelled_img):
     return label_vals, cc_area_dict, unassigned_cc_dict
 
 
-def plot_junction_areas(label_vals, cc_area_dict, unassigned_cc_dict):
+def get_junction_areas(label_vals, cc_area_dict, unassigned_cc_dict):
     isolated_junc = []
     isolated_junc_area = []
     fuzzy_junc = []
@@ -646,9 +692,11 @@ def plot_junction_areas(label_vals, cc_area_dict, unassigned_cc_dict):
     unk = list(itertools.chain.from_iterable(unknown_junc))
     unk = np.array(unk)
 
-    # img = imageio.imread(
-    #     '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc.png')
+    return iso, fuz, unk
 
+
+def plot_junc_areas(group, series_num, iso, fuz, unk, labelled_img):
+    regions = regionprops(labelled_img)
     for i in range(100):
         plt.axis('off')
         if group == 'Control':
@@ -660,13 +708,85 @@ def plot_junction_areas(label_vals, cc_area_dict, unassigned_cc_dict):
         plt.plot(iso[:, 1], iso[:, 0], 'o', markerfacecolor='None', markeredgecolor='red')
         if len(fuz) > 0:
             plt.plot(fuz[:, 1], fuz[:, 0], 'o', markerfacecolor='None', markeredgecolor='blue')
-        # plt.plot(unk[:, 1], unk[:, 0], 'o', markerfacecolor='None', markeredgecolor='green')
+        plt.plot(unk[:, 1], unk[:, 0], 'o', markerfacecolor='None', markeredgecolor='green')
+
+        for index in range(1, labelled_img.max()):
+            label_i = regions[index].label
+            contour = measure.find_contours(labelled_img == label_i, 0.8)[0]
+            y, x = contour.T
+            plt.plot(x, y)
         plt.show()
         # if group == 'Control':
         #     plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junc_types_movies/Ct%s_decon_t0%s_ch00.png'%(f'{group}', f'{series_num}', f'{i:02d}'), bbox_inches='tight', pad_inches=0)
         # else:
         #     plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junc_types_movies/%s_decon_t0%s_ch00.png'%(f'{group}', f'{group[0]}{series_num}', f'{i:02d}'), bbox_inches='tight', pad_inches=0)
         # plt.close()
+
+
+nps, skdata, labelled_img = label_junctions('ATL', 7)
+label_vals, cc_area_dict, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
+iso, fuz, unk = get_junction_areas(label_vals, cc_area_dict, unassigned_cc_dict)
+
+print(len(iso))
+print(len(fuz))
+
+exit()
+
+# plot_junc_areas('ATL', 2, iso, fuz, unk, labelled_img)
+
+# exit()
+
+# iso_junc = []
+# fuz_junc = []
+#
+# for each in iso:
+#     iso_junc.append([each[0], each[1]])
+# for each in fuz:
+#     fuz_junc.append([each[0], each[1]])
+#
+#
+# per_frame_iso_area_dist = []
+# per_frame_fuz_area_dist = []
+# for i in range(100):
+#     # l = []
+#     junc_frame = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/junctions/A2/A2_decon_t0%s_ch00_junc.png'%f'{i:02d}')
+#     junctions = np.where(junc_frame > 0)
+#     for x, y in zip(junctions[0], junctions[1]):
+#         if [x, y] in iso_junc:
+#             cc_id = labelled_img[x, y]
+#             per_frame_iso_area_dist.append(cc_area_dict[cc_id])
+#         elif [x, y] in fuz_junc:
+#             cc_id = labelled_img[x, y]
+#             per_frame_fuz_area_dist.append(cc_area_dict[cc_id])
+#
+# sns.distplot(per_frame_iso_area_dist, label='Iso')
+# sns.distplot(per_frame_fuz_area_dist, label='Fuz')
+# plt.legend()
+# plt.show()
+# exit()
+
+
+def per_cc_analysis():
+    nps, skdata, labelled_img = label_junctions('ATL', 1)
+
+    cc_dict = {}
+    print(np.unique(labelled_img))
+    for num in range(1, len(np.unique(labelled_img))):
+        cc_dict[num] = []
+    exit()
+    for i in range(100):
+        junc_frame = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/junctions/A1/A1_decon_t0%s_ch00_junc.png'%f'{i:02d}')
+        junctions = np.where(junc_frame > 0)
+        for x, y in zip(junctions[0], junctions[1]):
+            l = []
+            cc_id = labelled_img[x, y]
+            cc_dict[cc_id]
+
+        # exit()
+
+
+per_cc_analysis()
+exit()
 
 
 def fuz_isolated_junctions(group, series_num):
@@ -680,7 +800,18 @@ def fuz_isolated_junctions(group, series_num):
     for each in skdata:
         spread_img[each[0], each[1]] = 255.
 
-    labelled_img = label(spread_img)
+    # plt.imshow(spread_img)
+    # plt.show()
+    #
+    # exit()
+
+    labelled_img = label(spread_img, connectivity=2)
+
+    # plt.imshow(labelled_img)
+    # plt.show()
+    #
+    # exit()
+
     regions = regionprops(labelled_img)
 
     # cc_list = []
@@ -745,7 +876,8 @@ def fuz_isolated_junctions(group, series_num):
         plt.plot(iso[:, 1], iso[:, 0], 'o', markerfacecolor='None', markeredgecolor='red')
         if len(fuz) > 0:
             plt.plot(fuz[:, 1], fuz[:, 0], 'o', markerfacecolor='None', markeredgecolor='blue')
-        # plt.plot(unk[:, 1], unk[:, 0], 'o', markerfacecolor='None', markeredgecolor='green')
+        plt.plot(unk[:, 1], unk[:, 0], 'o', markerfacecolor='None', markeredgecolor='green')
+        plt.plot(skdata[:, 1], skdata[:, 0], 'x', markerfacecolor='None', markeredgecolor='yellow')
         plt.show()
         # if group == 'Control':
         #     plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junc_types_movies/Ct%s_decon_t0%s_ch00.png'%(f'{group}', f'{series_num}', f'{i:02d}'), bbox_inches='tight', pad_inches=0)
@@ -754,7 +886,7 @@ def fuz_isolated_junctions(group, series_num):
         # plt.close()
 
 
-fuz_isolated_junctions('ATL', 1)
+fuz_isolated_junctions('Control', 13)
 
 # for i in range(1, 27):
 #     fuz_isolated_junctions('ATL', i)
