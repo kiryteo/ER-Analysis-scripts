@@ -585,7 +585,7 @@ def get_uncertain_junctions(lab, skdata, num_components, assigned_components):
 
 def label_junctions(group, series_num):
 
-    fig, ax = plt.subplots()
+    # fig, ax = plt.subplots()
     nps, skdata = get_all_junc(group, series_num)
 
     nps = np.array(nps)
@@ -601,11 +601,16 @@ def label_junctions(group, series_num):
     #
     labelled_img = label(spread_img, connectivity=2)
     # fig.add_subplot(1,2,2)
+    # plt.axis('off')
     # plt.imshow(labelled_img)
+    # plt.savefig('ATL1_junc_labelled.png', bbox_inches='tight', pad_inches=0)
     # plt.show()
     # exit()
 
     return nps, skdata, labelled_img
+
+# label_junctions('ATL', 1)
+# exit()
 
 
 def viz_regionprops(labelled_img, spread_img):
@@ -655,8 +660,10 @@ def separate_junc_cc(nps, skdata, labelled_img):
         # cc_area_dict[idx] = [props.area, props.axis_major_length]
 
     num_components = np.unique(labelled_img)
+    # print(num_components)
 
     label_vals, assigned_components = get_junction_types(nps, labelled_img)
+    # print(label_vals)
 
     unassigned_cc_dict = get_uncertain_junctions(labelled_img, skdata, num_components, assigned_components)
 
@@ -723,18 +730,50 @@ def plot_junc_areas(group, series_num, iso, fuz, unk, labelled_img):
         # plt.close()
 
 
-nps, skdata, labelled_img = label_junctions('ATL', 7)
-label_vals, cc_area_dict, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
-iso, fuz, unk = get_junction_areas(label_vals, cc_area_dict, unassigned_cc_dict)
 
-print(len(iso))
-print(len(fuz))
 
-exit()
+# print(len(iso))
+# print(len(fuz))
 
-# plot_junc_areas('ATL', 2, iso, fuz, unk, labelled_img)
 
-# exit()
+def per_movie_num_junctions(group, num_series):
+    grp_iso = []
+    grp_fuz = []
+
+    for i in range(1, num_series+1):
+        nps, skdata, labelled_img = label_junctions(group, i)
+        label_vals, cc_area_dict, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
+        iso, fuz, unk = get_junction_areas(label_vals, cc_area_dict, unassigned_cc_dict)
+        grp_iso.append(len(iso))
+        grp_fuz.append(len(fuz))
+
+    return grp_iso, grp_fuz
+
+
+def plot_per_movie_junction_dist():
+    ATL_iso, ATL_fuz = per_movie_num_junctions('ATL', 26)
+    Climp_iso, Climp_fuz = per_movie_num_junctions('Climp', 31)
+    Ctrl_iso, Ctrl_fuz = per_movie_num_junctions('Control', 31)
+    RTN_iso, RTN_fuz = per_movie_num_junctions('RTN', 29)
+
+    # sns.distplot(ATL_iso, hist=False, label='atl_iso')
+    sns.distplot(ATL_fuz, hist=False, label='atl_fuz')
+    # sns.distplot(Climp_iso, hist=False, label='climp_iso')
+    sns.distplot(Climp_fuz, hist=False, label='climp_fuz')
+    # sns.distplot(Ctrl_iso, hist=False, label='control_iso')
+    sns.distplot(Ctrl_fuz, hist=False, label='control_fuz')
+    # sns.distplot(RTN_iso, hist=False, label='rtn_iso')
+    sns.distplot(RTN_fuz, hist=False, label='rtn_fuz')
+
+    # and fuzzy region
+    # (iso: isolated, fuz: fuzzy)
+    plt.title('Distribution of fuzzy region junctions across conditions ', fontsize=16)
+    plt.xlabel('Number of junctions (per movie)')
+    plt.legend()
+
+    plt.show()
+
+
 
 # iso_junc = []
 # fuz_junc = []
