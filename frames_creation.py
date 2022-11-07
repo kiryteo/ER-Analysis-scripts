@@ -1,3 +1,8 @@
+"""
+Frames to captures changes over time,
+later converted into a movie
+"""
+
 import os
 import matplotlib.pyplot as plt
 import cv2

@@ -1,3 +1,7 @@
+"""
+Simple routine to create figures
+"""
+
 import os
 import imageio
 from skimage.io import imread

@@ -1,3 +1,7 @@
+"""
+Dataloader for skeleton extraction unet experiments
+"""
+
 from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms as transforms
 from torch.autograd import Variable

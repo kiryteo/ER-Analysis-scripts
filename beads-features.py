@@ -1,4 +1,7 @@
-# get beads output
+"""
+Extract high-intensity bead-like structures
+from the ER networks.
+"""
 
 #start with matlab bwconncomp
 
@@ -18,7 +21,7 @@ home = os.path.expanduser('~')
 # path to data
 prefix = home + '/Documents/ER-Full-data/FixedCell_for_Ashwin/FixedCell_for_Ashwin/numpys/'
 
-prefix = home + '/MIAL/data-Feb4-Guang/RTN2'
+# prefix = home + '/MIAL/data-Feb4-Guang/RTN2'
 
 def get_beads(group, modality):
 

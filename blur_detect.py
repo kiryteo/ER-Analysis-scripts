@@ -1,3 +1,9 @@
+"""
+Detect blur regions from the input.
+The idea was to obtain fuzzy regions from the
+mean projection frame
+"""
+
 import cv2
 import numpy as np
 

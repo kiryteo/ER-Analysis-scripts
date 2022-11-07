@@ -1,3 +1,7 @@
+"""
+Get the mean, max projection of input sequences
+"""
+
 import os
 import glob
 import imageio
@@ -8,7 +12,7 @@ from plantcv import plantcv as pcv
 
 home = os.path.expanduser('~')
 # path = home + '/MIAL/live-cell-movies/COSKDELRTN/COSKDELRTN/Decon/'
-path = home + '/Desktop/Climp/brpts/'
+# path = home + '/Desktop/Climp/brpts/'
 
 
 

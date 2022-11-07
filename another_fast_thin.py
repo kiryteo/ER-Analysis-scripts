@@ -1,3 +1,7 @@
+"""
+Fast thinning algo from github
+"""
+
 ### Ref: https://github.com/Schukuratsu/Python-cv2-fast-thinning-algorithm
 
 import cv2
