@@ -135,15 +135,30 @@ def file_movie_creator():
 # exit()
 
 
+# def gmovie_creator(group, num_series):
+#     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+#     video = cv2.VideoWriter('%s_s%s_junction_types.mp4'%(f'{group}', f'{num_series}'), fourcc, 1.5, (369, 369))
+#     for frame in range(100):
+#         img = cv2.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junc_types_movies/%s_decon_t0%s_ch00.png'%(f'{group}', f'{group[0]}{num_series}', f'{frame:02d}'))
+#         video.write(img)
+#
+#     cv2.destroyAllWindows()
+#     video.release()
+
+# for i in range(2, 27):
+#     gmovie_creator('ATL', i)
+
+
 def gmovie_creator(group, num_series):
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     video = cv2.VideoWriter('%s_s%s_junction_types.mp4'%(f'{group}', f'{num_series}'), fourcc, 1.5, (369, 369))
+    if group == 'Control':
+        pref = 'Ct'
+    else:
+        pref = group[0]
     for frame in range(100):
-        img = cv2.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junc_types_movies/%s_decon_t0%s_ch00.png'%(f'{group}', f'{group[0]}{num_series}', f'{frame:02d}'))
+        img = cv2.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junc_types_movies/%s_decon_t0%s_ch00.png'%(f'{group}', f'{pref}{num_series}', f'{frame:02d}'))
         video.write(img)
 
     cv2.destroyAllWindows()
     video.release()
-
-for i in range(2, 27):
-    gmovie_creator('ATL', i)

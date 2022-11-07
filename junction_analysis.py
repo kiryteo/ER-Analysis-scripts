@@ -31,7 +31,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 max_val = 999
-
+confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 
 def get_std_img(path):
     img = imageio.imread(path)
@@ -45,10 +45,9 @@ def junc_spread_comparison():
     per frame junction projection
     @return:
     """
-    img = imageio.imread(
-        '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc.png')
-    im1 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/junctions/A1_junc_mean.png')
-    im2 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/junctions/A1_proc_junc_mean.png')
+    img = imageio.imread(confocal_data_path + 'ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc.png')
+    im1 = imageio.imread(confocal_data_path + 'ATL/new_op_jul/junctions/A1_junc_mean.png')
+    im2 = imageio.imread(confocal_data_path + 'ATL/new_op_jul/junctions/A1_proc_junc_mean.png')
 
     fig, ax = plt.subplots()
     r, c = 1, 2
@@ -68,10 +67,11 @@ def junc_spread_comparison():
     plt.show()
 
 
+
 def junc_spread_display(group, num_series):
-    init_mean_proj_img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junctions/%s_junc_mean.png' % (
+    init_mean_proj_img = imageio.imread(confocal_data_path + '%s/new_op_jul/junctions/%s_junc_mean.png' % (
         f'{group}', f'{group[0]}{num_series}'))
-    junc_mean_proj_img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junctions/%s_proc_junc_mean.png' % (
+    junc_mean_proj_img = imageio.imread(confocal_data_path+'%s/new_op_jul/junctions/%s_proc_junc_mean.png' % (
         f'{group}', f'{group[0]}{num_series}'))
 
     init_proj_img_coords = np.where(init_mean_proj_img != 0)
@@ -95,7 +95,7 @@ def junc_spread_display(group, num_series):
     # print(n1)
     # print(n2)
     img = imageio.imread(
-        '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/er_mean_proc/%s_er_mean_proc.png' % (
+        confocal_data_path + '%s/new_op_jul/er_mean_proc/%s_er_mean_proc.png' % (
             f'{group}', f'{group.lower()}{num_series}'))
     plt.imshow(img)
     # plt.scatter(y1, x1, color='red')
@@ -147,7 +147,7 @@ def get_junction_image(newps):
     return brpts_img
 
 
-def junction_flow(mean_img):
+def get_junctions(mean_img):
     """
 
     @param mean_img: Input mean projection skel image (ndarray, binary)
@@ -187,11 +187,11 @@ def per_frame_junc_projection(group, num_series):
     junc_mean = np.zeros((128, 128))
     for i in range(100):
         img = imageio.imread(
-            '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junctions/%s/%s_decon_t0%s_ch00_junc.png' % (
+            confocal_data_path+'%s/new_op_jul/junctions/%s/%s_decon_t0%s_ch00_junc.png' % (
                 f'{group}', f'{group[0]}{num_series}', f'{group[0]}{num_series}', f'{i:02d}'))
         junc_mean += img
 
-    cv2.imwrite('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junctions/%s_junc_mean.png' % (
+    cv2.imwrite(confocal_data_path + '%s/new_op_jul/junctions/%s_junc_mean.png' % (
         f'{group}', f'{group[0]}{num_series}'), junc_mean / 100)
 
 
@@ -202,7 +202,7 @@ def per_frame_junc_projection(group, num_series):
 
 def init_proc_projection(group, num_series):
     sk = imageio.imread(
-        '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png' % (
+        confocal_data_path + '%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png' % (
             f'{group}', f'{group.lower()}{num_series}'))
 
     nodes, degree_list = skel_to_graph(sk)
@@ -216,7 +216,7 @@ def init_proc_projection(group, num_series):
 
     brpts_img = get_junction_image(newps)
 
-    cv2.imwrite('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junctions/%s_proc_junc_mean.png' % (
+    cv2.imwrite(confocal_data_path + '%s/new_op_jul/junctions/%s_proc_junc_mean.png' % (
         f'{group}', f'{group[0]}{num_series}'), brpts_img)
 
 
@@ -227,10 +227,10 @@ def mean_frame_validation(group, total_series):
         pref = group[0]
     for num_ser in range(1, total_series + 1):
         os.makedirs(
-            '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junctions/%s' % (f'{group}', f'{pref}{num_ser}'))
+            confocal_data_path + '%s/new_op_jul/junctions/%s' % (f'{group}', f'{pref}{num_ser}'))
         for frame in range(100):
             sk = imageio.imread(
-                '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/skel/%s/%s_decon_t0%s_ch00_skel.png' % (
+                confocal_data_path + '%s/new_op_jul/skel/%s/%s_decon_t0%s_ch00_skel.png' % (
                     f'{group}', f'{pref}{num_ser}', f'{pref}{num_ser}', f'{frame:02d}'))
 
             nodes, degree_list = skel_to_graph(sk)
@@ -245,7 +245,7 @@ def mean_frame_validation(group, total_series):
             brpts_img = get_junction_image(newps)
 
             imageio.imsave(
-                '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junctions/%s/%s_decon_t0%s_ch00_junc.png' % (
+                confocal_data_path + '%s/new_op_jul/junctions/%s/%s_decon_t0%s_ch00_junc.png' % (
                     f'{group}', f'{pref}{num_ser}', f'{pref}{num_ser}', f'{frame:02d}'), brpts_img)
 
 
@@ -253,9 +253,8 @@ def mean_frame_validation(group, total_series):
 
 def dil_junctions():
     global newps
-    prefix = '/localhome/asa420/MIAL/data/confocal_movies/'
     for series_num in range(1, 2):
-        newps = junction_flow(prefix + 'ATL/new_op_jul/ATL_mean_proj/A%s_mean.png' % f'{series_num}')
+        newps = get_junctions(confocal_data_path + 'ATL/new_op_jul/ATL_mean_proj/A%s_mean.png' % f'{series_num}')
     return newps
 
 
@@ -307,18 +306,18 @@ def per_patch_variation(group, channel):
     @return: Metric output for variation over time
     """
     for num_series in range(1, 2):
-        mean_img = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png' % (
+        mean_img = confocal_data_path + '%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png' % (
             f'{group}', f'{group.lower()}{num_series}')
-        newps = junction_flow(mean_img)
+        newps = get_junctions(mean_img)
 
         sl = []
 
         for frame in range(100):
             if group == 'Control':
-                path = '/localhome/asa420/MIAL/data/confocal_movies/%s/files/img_%s_decon_t0%s.tif' % (
+                path = confocal_data_path + '%s/files/img_%s_decon_t0%s.tif' % (
                     f'{group}', f'{num_series}', f'{frame:02d}')
             else:
-                path = '/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s_decon_t0%s_ch0%s.tif' % (
+                path = confocal_data_path + '%s/files/%s_decon_t0%s_ch0%s.tif' % (
                     f'{group}', f'{group[0]}{num_series}', f'{frame:02d}', f'{channel}')
 
             img = get_std_img(path)
@@ -339,14 +338,14 @@ def per_patch_variation(group, channel):
 
 
 def patch_variation_viz():
-    mean_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
+    mean_img = confocal_data_path + 'ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
 
-    newps = junction_flow(mean_img)
+    newps = get_junctions(mean_img)
     sl = []
     dtl = []
 
     for i in range(100):
-        path = '/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t0%s_ch00.tif' % f'{i:02d}'
+        path = confocal_data_path + 'ATL/files/A1_decon_t0%s_ch00.tif' % f'{i:02d}'
         img = get_std_img(path)
 
         im1_patch_vals, dt = junc_patch_mean(newps, img)
@@ -398,7 +397,7 @@ def junc_intensity_plot_creator(coord_dt):
 def seq_fourier_analysis(group, num_series):
     l = []
     for i in range(100):
-        path = '/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s_decon_t0%s_ch00.tif' % (
+        path = confocal_data_path + '%s/files/%s_decon_t0%s_ch00.tif' % (
             f'{group}', f'{group[0]}{num_series}', f'{i:02d}')
         img = get_std_img(path)
         l.extend(img)
@@ -439,11 +438,11 @@ def junc_area_locator(group, num_series):
     """
     # mean_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
 
-    mean_img = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png' % (
+    mean_img = confocal_data_path + '%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png' % (
         f'{group}', f'{group.lower()}{num_series}')
 
     # Get junction coordinates from projection frame
-    newps = junction_flow(mean_img)
+    newps = get_junctions(mean_img)
 
     nps = []
     for each in newps:
@@ -464,10 +463,10 @@ def junc_area_locator(group, num_series):
         else:
             pref = group[0]
 
-        sk_img = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/skel/%s/%s_decon_t0%s_ch00_skel.png' % (
+        sk_img = confocal_data_path + '%s/new_op_jul/skel/%s/%s_decon_t0%s_ch00_skel.png' % (
             f'{group}', f'{pref}{num_series}', f'{pref}{num_series}', f'{frame:02d}')
 
-        sk_newps = junction_flow(sk_img)
+        sk_newps = get_junctions(sk_img)
 
         sk_nps = []
         for each in sk_newps:
@@ -499,13 +498,13 @@ def get_all_junc(group, num_series):
     @param num_series: sequence number
     @return: dt, dictionary with matched junctions per reference junction
     """
-    # mean_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
+    # mean_img = 'confocal_data_pathATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
 
-    mean_img = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png' % (
+    mean_img = confocal_data_path + '%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png' % (
         f'{group}', f'{group.lower()}{num_series}')
 
     # Get junction coordinates from projection frame
-    newps = junction_flow(mean_img)
+    newps = get_junctions(mean_img)
 
     nps = []
     for each in newps:
@@ -519,10 +518,10 @@ def get_all_junc(group, num_series):
         else:
             pref = group[0]
 
-        sk_img = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/skel/%s/%s_decon_t0%s_ch00_skel.png' % (
+        sk_img = confocal_data_path + '%s/new_op_jul/skel/%s/%s_decon_t0%s_ch00_skel.png' % (
             f'{group}', f'{pref}{num_series}', f'{pref}{num_series}', f'{frame:02d}')
 
-        sk_newps = junction_flow(sk_img)
+        sk_newps = get_junctions(sk_img)
 
         sk_nps = []
         for each in sk_newps:
@@ -707,9 +706,9 @@ def plot_junc_areas(group, series_num, iso, fuz, unk, labelled_img):
     for i in range(100):
         plt.axis('off')
         if group == 'Control':
-            img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/files/img_%s_decon_t0%s.tif'%(f'{group}', f'{series_num}', f'{i:02d}'))
+            img = imageio.imread(confocal_data_path + '%s/files/img_%s_decon_t0%s.tif'%(f'{group}', f'{series_num}', f'{i:02d}'))
         else:
-            img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s_decon_t0%s_ch00.tif'%(f'{group}', f'{group[0]}{series_num}', f'{i:02d}'))
+            img = imageio.imread(confocal_data_path + '%s/files/%s_decon_t0%s_ch00.tif'%(f'{group}', f'{group[0]}{series_num}', f'{i:02d}'))
         img = (img - img.min()) / (img.max() - img.min())
         plt.imshow(img, cmap='gray')
         plt.plot(iso[:, 1], iso[:, 0], 'o', markerfacecolor='None', markeredgecolor='red')
@@ -734,6 +733,75 @@ def plot_junc_areas(group, series_num, iso, fuz, unk, labelled_img):
 
 # print(len(iso))
 # print(len(fuz))
+
+nps, skdata, labelled_img = label_junctions('ATL', 1)
+label_vals, cc_area_dict, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
+iso, fuz, unk = get_junction_areas(label_vals, cc_area_dict, unassigned_cc_dict)
+
+
+def get_iso_cc(labelled_img):
+    num_cc = np.unique(labelled_img)
+    # dict to store per component data
+    dt = {}
+    for each in num_cc:
+        dt[each] = []
+
+    for loc in iso:
+        locx, locy = loc[0], loc[1]
+        cc_id = labelled_img[locx, locy]
+        dt[cc_id] = loc
+
+    dt_vals = dt.values()
+
+    iso_cc = []
+    for i, num in enumerate(dt_vals):
+        if i > 0:
+            if len(num) != 0:
+                iso_cc.append(i)
+
+    return iso_cc
+
+
+def per_frame_num_junctions(labelled_img):
+
+    iso_cc = get_iso_cc(labelled_img)
+
+    # get lists to store the count of junctions within CC per frame
+    iso_junc_num = []
+    fuz_junc_num = []
+
+    for i in range(100):
+        temp_iso = []
+        temp_fuz = []
+        junc_frame = imageio.imread(confocal_data_path + 'ATL/new_op_jul/junctions/A1/A1_decon_t0%s_ch00_junc.png'%f'{i:02d}')
+
+        # get the junc locations
+        locations = np.where(junc_frame > 0)
+
+        for locx, locy in zip(locations[0], locations[1]):
+            cc_id = labelled_img[locx, locy]
+            if cc_id in iso_cc:
+                temp_iso.append(cc_id)
+            else:
+                temp_fuz.append(cc_id)
+        iso_junc_num.append(temp_iso)
+        fuz_junc_num.append(temp_fuz)
+
+    return iso_junc_num, fuz_junc_num
+
+
+iso_junc_num, fuz_junc_num = per_frame_num_junctions(labelled_img)
+
+# print(iso_junc_num)
+l = []
+for each in iso_junc_num:
+    l.append(len(each))
+
+# sns.distplot(l)
+plt.plot(l)
+plt.show()
+exit()
+
 
 
 def per_movie_num_junctions(group, num_series):
@@ -814,12 +882,12 @@ def per_cc_analysis():
         cc_dict[num] = []
     exit()
     for i in range(100):
-        junc_frame = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/junctions/A1/A1_decon_t0%s_ch00_junc.png'%f'{i:02d}')
+        junc_frame = imageio.imread(confocal_data_path + 'ATL/new_op_jul/junctions/A1/A1_decon_t0%s_ch00_junc.png'%f'{i:02d}')
         junctions = np.where(junc_frame > 0)
         for x, y in zip(junctions[0], junctions[1]):
             l = []
             cc_id = labelled_img[x, y]
-            cc_dict[cc_id]
+            cc_dict[cc_id] = ...
 
         # exit()
 
@@ -907,9 +975,9 @@ def fuz_isolated_junctions(group, series_num):
     for i in range(100):
         plt.axis('off')
         if group == 'Control':
-            img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/files/img_%s_decon_t0%s.tif'%(f'{group}', f'{series_num}', f'{i:02d}'))
+            img = imageio.imread(confocal_data_path + '%s/files/img_%s_decon_t0%s.tif'%(f'{group}', f'{series_num}', f'{i:02d}'))
         else:
-            img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s_decon_t0%s_ch00.tif'%(f'{group}', f'{group[0]}{series_num}', f'{i:02d}'))
+            img = imageio.imread(confocal_data_path + '%s/files/%s_decon_t0%s_ch00.tif'%(f'{group}', f'{group[0]}{series_num}', f'{i:02d}'))
         img = (img - img.min()) / (img.max() - img.min())
         plt.imshow(img, cmap='gray')
         plt.plot(iso[:, 1], iso[:, 0], 'o', markerfacecolor='None', markeredgecolor='red')
@@ -944,35 +1012,6 @@ exit()
 # exit()
 
 
-def gmovie_creator(group, num_series):
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    video = cv2.VideoWriter('%s_s%s_junction_types.mp4'%(f'{group}', f'{num_series}'), fourcc, 1.5, (369, 369))
-    if group == 'Control':
-        pref = 'Ct'
-    else:
-        pref = group[0]
-    for frame in range(100):
-        img = cv2.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junc_types_movies/%s_decon_t0%s_ch00.png'%(f'{group}', f'{pref}{num_series}', f'{frame:02d}'))
-        video.write(img)
-
-    cv2.destroyAllWindows()
-    video.release()
-
-#
-# for i in range(1, 27):
-#     gmovie_creator('ATL', i)
-#
-# for i in range(1, 32):
-#     gmovie_creator('Climp', i)
-
-# for i in range(23, 30):
-#     gmovie_creator('RTN', i)
-
-# for i in range(1, 32):
-#     gmovie_creator('Control', i)
-#
-# exit()
-
 
 from matplotlib.figure import figaspect
 
@@ -989,29 +1028,6 @@ from matplotlib.figure import figaspect
 #     extent = im[0].get_extent()
 #     ax.set_aspect(abs((extent[1]-extent[0])/(extent[3]-extent[2]))/aspect)
 
-def get_voronoi(nps, skdata):
-
-    vor = Voronoi(nps)
-
-    # fig, ax = plt.subplots()
-    fig = voronoi_plot_2d(vor)
-    # plt.figure(num=1, figsize=(8,8))
-
-    # plt.title('Voronoi for ATL Series 10, Blue points: Reference junctions, Red points: per frame junctions')
-    # img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/er_mean/%s_er_mean.png'%(f'{group}', f'{group.lower()}{num_series}'))
-
-    plt.plot(nps[:, 0], nps[:, 1], 'o', markerfacecolor='None', markeredgecolor='blue', mew=3)
-    plt.plot(skdata[:, 0], skdata[:, 1], 'o', markerfacecolor='None', markeredgecolor='red')
-    # plt.imshow()
-    # plt.gca().set_aspect(1)
-    # plt.axis('scaled')
-
-    # plt.savefig('Voro_ATL_10_new.png', bbox_inches='tight')
-
-    f = plt.gcf()
-    f.set_size_inches(8, 8)
-
-    plt.show()
 
 
 # dt = junc_area_locator('Climp', 1)
@@ -1144,7 +1160,7 @@ def plot_junc_spread(group, n1, n2, num_series):
     ax = fig.gca()
     # gr = cm.Greens(np.linspace(n3arr.min()[0], n3arr.max()[0], num=len(n3)))
     # mcmap = mcolors.LinearSegmentedColormap.from_list('mcmap', gr)
-    img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/er_mean/%s_er_mean.png' % (
+    img = imageio.imread(confocal_data_path + '%s/new_op_jul/er_mean/%s_er_mean.png' % (
         f'{group}', f'{group.lower()}{num_series}'))
     plt.imshow(img, cmap='gray', interpolation='none')
     # plt.plot(n2[:, 1], n2[:, 0], 'b.')
@@ -1270,7 +1286,7 @@ ll = np.array(ll)
 # print(np.array(dt_refined.keys())[0])
 # print(np.array(dt_refined.keys())[:, 1])
 
-plt.imshow(imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean/atl1_er_mean.png'),
+plt.imshow(imageio.imread(confocal_data_path + 'ATL/new_op_jul/er_mean/atl1_er_mean.png'),
            cmap='gray')
 plt.plot(nps[:, 1], nps[:, 0], 'r.')
 plt.plot(ll[:, 1], ll[:, 0], 'b.')
@@ -1330,9 +1346,9 @@ def junc_intensity_variation(group, num_series):
 
     if group == 'Control':
         ref_input = imageio.imread(
-            '/localhome/asa420/MIAL/data/confocal_movies/Control/files/img_%s_decon_t000.tif' % f'{num_series}')
+            confocal_data_path + 'Control/files/img_%s_decon_t000.tif' % f'{num_series}')
     else:
-        ref_input = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s_decon_t000_ch00.tif' % (
+        ref_input = imageio.imread(confocal_data_path + '%s/files/%s_decon_t000_ch00.tif' % (
             f'{group}', f'{group[0]}{num_series}'))
 
     ref_input = (ref_input - ref_input.min()) / (ref_input.max() - ref_input.min())
@@ -1353,11 +1369,11 @@ def junc_intensity_variation(group, num_series):
         for i in range(1, 100):
             if group == 'Control':
                 er_input = imageio.imread(
-                    '/localhome/asa420/MIAL/data/confocal_movies/Control/files/img_%s_decon_t0%s.tif' % (
+                    confocal_data_path + 'Control/files/img_%s_decon_t0%s.tif' % (
                         f'{num_series}', f'{i:02d}'))
             else:
                 er_input = imageio.imread(
-                    '/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s_decon_t0%s_ch00.tif' % (
+                    confocal_data_path + '%s/files/%s_decon_t0%s_ch00.tif' % (
                         f'{group}', f'{group[0]}{num_series}', f'{i:02d}'))
 
             er_input = (er_input - er_input.min()) / (er_input.max() - er_input.min())
@@ -1405,10 +1421,10 @@ exit()
 def junction_location_plotter(group, num_series):
     # mean_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
 
-    mean_img = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png' % (
+    mean_img = confocal_data_path + '%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png' % (
         f'{group}', f'{group.lower()}{num_series}')
 
-    newps = junction_flow(mean_img)
+    newps = get_junctions(mean_img)
 
     nps = []
     for each in newps:
@@ -1431,11 +1447,11 @@ def junction_location_plotter(group, num_series):
 
         # ER Input image
         if group == 'Control':
-            path = '/localhome/asa420/MIAL/data/confocal_movies/%s/files/img_%s_decon_t0%s.tif' % (
+            path = confocal_data_path + '%s/files/img_%s_decon_t0%s.tif' % (
                 f'{group}', f'{num_series}', f'{frame:02d}')
             pref = 'Ct'
         else:
-            path = '/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s_decon_t0%s_ch00.tif' % (
+            path = confocal_data_path + '%s/files/%s_decon_t0%s_ch00.tif' % (
                 f'{group}', f'{group[0]}{num_series}', f'{frame:02d}')  # , f'{channel}')
             pref = group[0]
         img = imageio.imread(path)
@@ -1443,10 +1459,10 @@ def junction_location_plotter(group, num_series):
 
         # ER Skel image
         # sk_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t0%s_ch00_skel.png'%f'{i:02d}'
-        sk_img = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/skel/%s/%s_decon_t0%s_ch00_skel.png' % (
+        sk_img = confocal_data_path + '%s/new_op_jul/skel/%s/%s_decon_t0%s_ch00_skel.png' % (
             f'{group}', f'{pref}{num_series}', f'{pref}{num_series}', f'{frame:02d}')
 
-        sk_newps = junction_flow(sk_img)
+        sk_newps = get_junctions(sk_img)
 
         sk_nps = []
         for each in sk_newps:
@@ -1468,7 +1484,7 @@ def junction_location_plotter(group, num_series):
         # x = nps[0, 0]
         # cv2.rectangle(img, (x-1, y-1), (x+1, y+1), (0, 0, 255), 2)
 
-        plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/%s_junc_viz/%s_t%s.png' % (
+        plt.savefig(confocal_data_path + '%s/new_op_jul/%s_junc_viz/%s_t%s.png' % (
             f'{group}', f'{group.lower()}', f'{pref}{num_series}', f'{frame:02d}'), bbox_inches='tight', pad_inches=0)
 
         plt.close()
@@ -1479,9 +1495,9 @@ def junction_location_plotter(group, num_series):
 
 
 def crop_img():
-    mean_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
+    mean_img = confocal_data_path + 'ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
 
-    newps = junction_flow(mean_img)
+    newps = get_junctions(mean_img)
 
     nps = []
     for each in newps:
@@ -1490,7 +1506,7 @@ def crop_img():
     nps = np.array(nps)
     for i in range(100):
         img = imageio.imread(
-            '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/A1_junc_viz/j48_skel/ATL1_t%s.png' % f'{i:02d}')
+            confocal_data_path + 'ATL/new_op_jul/A1_junc_viz/j48_skel/ATL1_t%s.png' % f'{i:02d}')
 
         # plt.imshow(img)
         # plt.show()
@@ -1505,7 +1521,7 @@ def crop_img():
         plt.title('t=%s' % f'{i}')
         plt.imshow(cimg, interpolation='nearest', aspect='auto')
         plt.savefig(
-            '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/A1_junc_viz/j48_skel/crops/ATL1_t%s.png' % f'{i:02d}',
+            confocal_data_path + 'ATL/new_op_jul/A1_junc_viz/j48_skel/crops/ATL1_t%s.png' % f'{i:02d}',
             bbox_inches='tight', pad_inches=0)
 
         # imageio.imsave('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/A1_junc_viz/j47_skel/crops/ATL1_t%s.png'%f'{i:02d}', cimg)
@@ -1520,19 +1536,19 @@ def per_patch_pixel_fourier(group, channel):
     grp_dict = {}
     nd = {}
     for num_series in range(1, 2):
-        mean_img = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png' % (
+        mean_img = confocal_data_path + '%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png' % (
             f'{group}', f'{group.lower()}{num_series}')
-        newps = junction_flow(mean_img)
+        newps = get_junctions(mean_img)
 
         sl = []
         sldt = []
 
         for frame in range(100):
             if group == 'Control':
-                path = '/localhome/asa420/MIAL/data/confocal_movies/%s/files/img_%s_decon_t0%s.tif' % (
+                path = confocal_data_path + '%s/files/img_%s_decon_t0%s.tif' % (
                     f'{group}', f'{num_series}', f'{frame:02d}')
             else:
-                path = '/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s_decon_t0%s_ch0%s.tif' % (
+                path = confocal_data_path + '%s/files/%s_decon_t0%s_ch0%s.tif' % (
                     f'{group}', f'{group[0]}{num_series}', f'{frame:02d}', f'{channel}')
             img = imageio.imread(path)
             img = (img - img.min()) / (img.max() - img.min())
@@ -1726,18 +1742,17 @@ exit()
 def per_patch_pixel_variance(group):
     grp_list = []
     for num_series in range(1, 25):
-        mean_img = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png' % (
+        mean_img = confocal_data_path + '%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png' % (
             f'{group}', f'{group.lower()}{num_series}')
-        newps = junction_flow(mean_img)
+        newps = get_junctions(mean_img)
 
         sl = []
 
         for frame in range(100):
             if group == 'Control':
-                path = '/localhome/asa420/MIAL/data/confocal_movies/%s/files/img_%s_decon_t0%s.tif' % (
-                    f'{group}', f'{num_series}', f'{frame:02d}')
+                path = confocal_data_path + '%s/files/img_%s_decon_t0%s.tif' % (f'{group}', f'{num_series}', f'{frame:02d}')
             else:
-                path = '/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s_decon_t0%s_ch00.tif' % (
+                path = confocal_data_path + '%s/files/%s_decon_t0%s_ch00.tif' % (
                     f'{group}', f'{group[0]}{num_series}', f'{frame:02d}')
             img = imageio.imread(path)
             img = (img - img.min()) / (img.max() - img.min())
@@ -1785,18 +1800,18 @@ exit()
 def per_patch_if_corr():
     grp_list = []
     for num_series in range(1, 25):
-        mean_img = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png' % (
+        mean_img = confocal_data_path + '%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png' % (
             f'{group}', f'{group.lower()}{num_series}')
-        newps = junction_flow(mean_img)
+        newps = get_junctions(mean_img)
 
         sl = []
 
         for frame in range(100):
             if group == 'Control':
-                path = '/localhome/asa420/MIAL/data/confocal_movies/%s/files/img_%s_decon_t0%s.tif' % (
+                path = confocal_data_path + '%s/files/img_%s_decon_t0%s.tif' % (
                     f'{group}', f'{num_series}', f'{frame:02d}')
             else:
-                path = '/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s_decon_t0%s_ch00.tif' % (
+                path = confocal_data_path + '%s/files/%s_decon_t0%s_ch00.tif' % (
                     f'{group}', f'{group[0]}{num_series}', f'{frame:02d}')
             img = imageio.imread(path)
             img = (img - img.min()) / (img.max() - img.min())
@@ -1849,10 +1864,9 @@ exit()
 def get_group_dif(group, metric):
     grp_list = []
     global met_val
-    prefix = '/localhome/asa420/MIAL/data/confocal_movies/'
     if group == 'Control':
         for series_num in range(1, 25):
-            newps = junction_flow(prefix + 'Control/new_op_jul/Ctrl_mean_proj/Ct%s_mean.png' % f'{series_num}')
+            newps = get_junctions(confocal_data_path + 'Control/new_op_jul/Ctrl_mean_proj/Ct%s_mean.png' % f'{series_num}')
             ser_list = []
             for i in range(99):
                 i1 = imageio.imread(
@@ -1891,8 +1905,8 @@ def get_group_dif(group, metric):
         return grp_list
     else:
         for series_num in range(1, 25):
-            newps = junction_flow(
-                prefix + '%s/new_op_jul/%s_mean_proj/%s_mean.png' % (f'{group}', f'{group}', f'{group[0]}{series_num}'))
+            newps = get_junctions(
+                confocal_data_path + '%s/new_op_jul/%s_mean_proj/%s_mean.png' % (f'{group}', f'{group}', f'{group[0]}{series_num}'))
             ser_list = []
             for i in range(98):
                 i1 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/files/%s_decon_t0%s_ch00.tif' % (
