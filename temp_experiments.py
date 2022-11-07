@@ -122,3 +122,34 @@ def skimg_filters():
 
     plt.imshow(op)
     plt.show()
+
+
+"""
+Hausdorff distance calculation
+"""
+
+import medpy
+import numpy as np
+import imageio
+import medpy.metric
+
+
+def get_hausdorff_dist(grp, num, frame):
+    pref = '/localhome/asa420/MIAL/data/live-cell-movies/annotations/'
+    if grp == 'climp':
+        gt = imageio.imread(pref + 'Climp/Climp_Series%s/Series0%s_t%s.png'%(f'{num}', f'{num}', f'{frame:02d}'))
+        pred = imageio.imread(pref + 'Climp/Climp_Series%s/Series0%s_decon_converted_t%s_ch00_std_enhance_skel.png'%(f'{num}', f'{num}', f'{frame:02d}'))
+    elif grp == 'ctrl':
+        gt = imageio.imread(pref + 'Control/Ctrl_Series%s/Series0%s_t%s.png'%(f'{num}', f'{num}', f'{frame:02d}'))
+        pred = imageio.imread(pref + 'Control/Ctrl_Series%s/Series0%s_decon_converted_t%s_ch00_std_enhance_skel.png'%(f'{num}', f'{num}', f'{frame:02d}'))
+    else:
+        gt = imageio.imread(pref + 'RTN/RTN_Series%s/Series00%s_t%s.png'%(f'{num}', f'{num}', f'{frame:02d}'))
+        pred = imageio.imread(pref + 'RTN/RTN_Series%s/Series00%s_decon_converted_t%s_ch00_std_enhance_skel.png'%(f'{num}', f'{num}', f'{frame:02d}'))
+
+    hdd = medpy.metric.binary.hd(pred, gt)
+    print(grp, num)
+    print(str(frame))
+    print(hdd)
+
+
+# get_hausdorff_dist('rtn', 9, 35)
