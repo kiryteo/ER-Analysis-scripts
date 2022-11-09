@@ -17,6 +17,7 @@ from mpl_toolkits import mplot3d
 from scipy.ndimage import uniform_filter1d
 from skan import draw
 import itertools
+import pandas as pd
 import os
 import cv2
 from scipy.spatial import Voronoi, voronoi_plot_2d
@@ -30,8 +31,11 @@ import plotly
 import plotly.express as px
 import plotly.graph_objects as go
 
+from sklearn.decomposition import PCA
+
 max_val = 999
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
+
 
 def get_std_img(path):
     img = imageio.imread(path)
@@ -65,7 +69,6 @@ def junc_spread_comparison():
 
     # plt.title('Junction detection methods comparison (based on input)', fontsize=12)
     plt.show()
-
 
 
 def junc_spread_display(group, num_series):
@@ -653,9 +656,9 @@ def separate_junc_cc(nps, skdata, labelled_img):
     # for idx in range(1, labelled_img.max()):
     #     lab_i = props[idx].label
 
-    cc_area_dict = {}
-    for idx, props in enumerate(regions):
-        cc_area_dict[idx] = props.area
+    # cc_area_dict = {}
+    # for idx, props in enumerate(regions):
+    #     cc_area_dict[idx] = props.area
         # cc_area_dict[idx] = [props.area, props.axis_major_length]
 
     num_components = np.unique(labelled_img)
@@ -666,10 +669,11 @@ def separate_junc_cc(nps, skdata, labelled_img):
 
     unassigned_cc_dict = get_uncertain_junctions(labelled_img, skdata, num_components, assigned_components)
 
-    return label_vals, cc_area_dict, unassigned_cc_dict
+    # return label_vals, cc_area_dict, unassigned_cc_dict
+    return label_vals, unassigned_cc_dict
 
 
-def get_junction_areas(label_vals, cc_area_dict, unassigned_cc_dict):
+def get_junction_areas(label_vals, unassigned_cc_dict):
     isolated_junc = []
     isolated_junc_area = []
     fuzzy_junc = []
@@ -679,10 +683,16 @@ def get_junction_areas(label_vals, cc_area_dict, unassigned_cc_dict):
         if k != 0:
             if len(v) == 1:
                 isolated_junc.append(v[0])
-                isolated_junc_area.append(cc_area_dict[k])
+                # try:
+                #     isolated_junc_area.append(cc_area_dict[k])
+                # except:
+                #     pass
             else:
                 fuzzy_junc.append(v)
-                fuzzy_junc_area.append(cc_area_dict[k])
+                # try:
+                #     fuzzy_junc_area.append(cc_area_dict[k])
+                # except:
+                #     pass
 
     # print(isolated_junc_area)
     # print(fuzzy_junc_area)
@@ -698,7 +708,14 @@ def get_junction_areas(label_vals, cc_area_dict, unassigned_cc_dict):
     unk = list(itertools.chain.from_iterable(unknown_junc))
     unk = np.array(unk)
 
-    return iso, fuz, unk
+    # iso_area = list(itertools.chain.from_iterable(isolated_junc_area))
+    # iso_area = np.array(isolated_junc_area)
+
+    # fuz_area = list(itertools.chain.from_iterable(fuzzy_junc_area))
+    # fuz_area = np.array(fuzzy_junc_area)
+
+
+    return iso, fuz, unk#, iso_area, fuz_area
 
 
 def plot_junc_areas(group, series_num, iso, fuz, unk, labelled_img):
@@ -734,37 +751,54 @@ def plot_junc_areas(group, series_num, iso, fuz, unk, labelled_img):
 # print(len(iso))
 # print(len(fuz))
 
-nps, skdata, labelled_img = label_junctions('ATL', 1)
-label_vals, cc_area_dict, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
-iso, fuz, unk = get_junction_areas(label_vals, cc_area_dict, unassigned_cc_dict)
+# nps, skdata, labelled_img = label_junctions('ATL', 1)
+# label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
+# iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
+#
+# print(iso)
+#
+# exit()
+
+# print(iso_area.shape)
+# print(iso_area)
+#
 
 
-def get_iso_cc(labelled_img):
+
+
+def get_cc_ids(labelled_img, region):
+    """
+
+    @param labelled_img: Input with all CC areas
+    @param region: (list) iso or fuz
+    @return: isolated or fuzzy region CC ids list
+    """
+
     num_cc = np.unique(labelled_img)
     # dict to store per component data
     dt = {}
     for each in num_cc:
         dt[each] = []
 
-    for loc in iso:
+    for loc in region:
         locx, locy = loc[0], loc[1]
         cc_id = labelled_img[locx, locy]
         dt[cc_id] = loc
 
     dt_vals = dt.values()
 
-    iso_cc = []
+    region_cc = []
     for i, num in enumerate(dt_vals):
         if i > 0:
             if len(num) != 0:
-                iso_cc.append(i)
+                region_cc.append(i)
 
-    return iso_cc
+    return region_cc
 
 
-def per_frame_num_junctions(labelled_img):
+def per_frame_num_junctions(labelled_img, iso):
 
-    iso_cc = get_iso_cc(labelled_img)
+    iso_cc = get_cc_ids(labelled_img, iso)
 
     # get lists to store the count of junctions within CC per frame
     iso_junc_num = []
@@ -789,18 +823,135 @@ def per_frame_num_junctions(labelled_img):
 
     return iso_junc_num, fuz_junc_num
 
+# iso_junc_num, fuz_junc_num = per_frame_num_junctions(labelled_img)
+#
+# # print(iso_junc_num)
+#
+# l = []
+# for each in fuz_junc_num:
+#     l.append(len(each))
+#
+# plt.plot(l)
+# plt.show()
 
-iso_junc_num, fuz_junc_num = per_frame_num_junctions(labelled_img)
+# def calc_egfp_junction_intensity():
 
-# print(iso_junc_num)
-l = []
-for each in iso_junc_num:
-    l.append(len(each))
 
-# sns.distplot(l)
-plt.plot(l)
-plt.show()
+
+
+def calc_egfp_deposit(group, channel, series_num, region):
+
+    if channel=='mCherry':
+        ch = 1
+    else:
+        ch = 0
+    sl = []
+    for series_num in range(1, series_num+1):
+
+        nps, skdata, labelled_img = label_junctions(group, series_num)
+        label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
+        iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
+        # iso_cc = get_cc_ids(labelled_img, iso)
+        if region == 'iso':
+            region_cc = get_cc_ids(labelled_img, iso)
+        else:
+            region_cc = get_cc_ids(labelled_img, fuz)
+
+        # dict to store the coords for each cc id
+        # iso_cc_coords = {}
+        # for each in iso_cc:
+        #     iso_cc_coords[each] = np.where(labelled_img==each)
+
+        region_cc_coords = {}
+        for each in region_cc:
+            region_cc_coords[each] = np.where(labelled_img==each)
+
+        # for each cc, we obtain the index of dispersion per frame
+
+        ln = []
+        for i in range(100):
+            frame_data = []
+            if group == 'Control':
+                path = confocal_data_path + 'Control/files/img_%s_decon_t0%s.tif'%(f'{series_num}', f'{i:02d}')
+            else:
+                path = confocal_data_path + '%s/files/%s_decon_t0%s_ch0%s.tif'%(f'{group}', f'{group[0]}{series_num}', f'{i:02d}', f'{ch}')
+            # path = confocal_data_path + '%s/files/%s_decon_t0%s_ch0%s.tif'%(f'{group}', f'{group[0]}{series_num}', f'{i:02d}', f'{ch}')
+            img = get_std_img(path)
+            for k, v in region_cc_coords.items():
+                frame_data.append(np.mean(img[v]))
+            # ln.append(np.std(frame_data) / np.mean(frame_data))
+            # ln.append(frame_data)
+            ln.extend(frame_data)
+        ln = np.array(ln)
+        # m = np.std(ln, axis=0)
+
+        # sl.extend(m)
+        sl.extend(ln)
+        # print(len(sl))
+        # print(len(sl[0]))
+        # print(sl[0])
+        # exit()
+    return sl
+
+
+atl = calc_egfp_deposit('ATL', 'EGFP', 26, 'iso')
+
+climp = calc_egfp_deposit('Climp', 'EGFP', 31, 'iso')
+ctrl = calc_egfp_deposit('Control', 'EGFP', 31, 'iso')
+rtn = calc_egfp_deposit('RTN', 'EGFP', 29, 'iso')
+
+print(len(atl))
+print(len(climp))
+print(len(ctrl))
+print(len(rtn))
+
 exit()
+
+# sns.distplot(atl, label='ATL', hist=False)
+# sns.distplot(climp, label='Climp', hist=False)
+# sns.distplot(ctrl, label='Control', hist=False)
+# sns.distplot(rtn, label='RTN', hist=False)
+
+# sns.boxplot(atl, label='ATL')
+# sns.boxplot(climp, label='Climp')
+# sns.boxplot(ctrl, label='Control')
+# sns.boxplot(rtn, label='RTN')
+
+
+df = pd.DataFrame()
+df['Values'] = pd.Series(np.concatenate((atl, climp, ctrl, rtn)))
+df['ids'] = pd.Series(np.concatenate((np.arange(1, len(atl)+1), np.arange(1, len(climp)+1), np.arange(1, len(ctrl)+1), np.arange(1, len(rtn)+1))))
+df['Group'] = pd.Series(np.concatenate((['ATL'] * len(atl), ['Climp'] * len(climp), ['Control'] * len(ctrl), ['RTN'] * len(rtn))))
+#
+# sns.boxplot(data=df, y='Group', x='Values')
+sns.scatterplot(data=df, x='ids', y='Values', hue='Group', style='Group')
+
+plt.suptitle('EGFP deposit in isolated region junction CCs across conditions', fontsize=16)
+# plt.title('Variance of junction CC mean per patch over 100 frames', fontsize=14)
+plt.title('Mean Intensity per junction CC patch', fontsize=14)
+# plt.xlabel('EGFP intensity mean values', fontsize=12)
+plt.legend()
+plt.show()
+# sl = np.array(sl)
+
+# print(len(sl))
+exit()
+# print(sl.shape)
+# print(sl[0].shape)
+# print(sl[0])
+# print(len(sl[0][0]))
+# print(len(sl[0][1]))
+# exit()
+
+# pca = PCA(1)
+# pca.fit(sl)
+# evr = pca.explained_variance_ratio_
+# print(len(evr))
+# print(ln.shape)
+# plt.plot(ln)
+# plt.show()
+
+# exit()
 
 
 
@@ -810,10 +961,12 @@ def per_movie_num_junctions(group, num_series):
 
     for i in range(1, num_series+1):
         nps, skdata, labelled_img = label_junctions(group, i)
-        label_vals, cc_area_dict, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
-        iso, fuz, unk = get_junction_areas(label_vals, cc_area_dict, unassigned_cc_dict)
-        grp_iso.append(len(iso))
-        grp_fuz.append(len(fuz))
+        label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
+        iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
+        # grp_iso.append(len(iso))
+        # grp_fuz.append(len(fuz))
+        # grp_iso.append(len(iso_area))
+        # grp_fuz.append(len(fuz_area))
 
     return grp_iso, grp_fuz
 
@@ -841,6 +994,50 @@ def plot_per_movie_junction_dist():
 
     plt.show()
 
+
+def per_movie_junctions_area(group, num_series):
+    grp_iso = []
+    grp_fuz = []
+
+    for i in range(1, num_series+1):
+        nps, skdata, labelled_img = label_junctions(group, i)
+        label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
+        iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
+        # grp_iso.append(len(iso))
+        # grp_fuz.append(len(fuz))
+        # grp_iso.extend(iso_area)
+        # grp_fuz.extend(fuz_area)
+
+    return grp_iso, grp_fuz
+
+
+def plot_per_movie_junction_area_dist():
+    ATL_iso, ATL_fuz = per_movie_junctions_area('ATL', 26)
+    Climp_iso, Climp_fuz = per_movie_junctions_area('Climp', 31)
+    Ctrl_iso, Ctrl_fuz = per_movie_junctions_area('Control', 31)
+    RTN_iso, RTN_fuz = per_movie_junctions_area('RTN', 29)
+
+    sns.distplot(ATL_iso, hist=False, label='atl_iso_area')
+    # sns.distplot(ATL_fuz, hist=False, label='atl_fuz_area')
+    sns.distplot(Climp_iso, hist=False, label='climp_iso_area')
+    # sns.distplot(Climp_fuz, hist=False, label='climp_fuz_area')
+    sns.distplot(Ctrl_iso, hist=False, label='control_iso_area')
+    # sns.distplot(Ctrl_fuz, hist=False, label='control_fuz_area')
+    sns.distplot(RTN_iso, hist=False, label='rtn_iso_area')
+    # sns.distplot(RTN_fuz, hist=False, label='rtn_fuz_area')
+
+    # and fuzzy region
+    # (iso: isolated, fuz: fuzzy)
+    # plt.title('Distribution of fuzzy region junctions across conditions ', fontsize=16)
+    plt.title('Distribution of isolated region area across conditions ', fontsize=16)
+    plt.xlabel('Region area values (per movie)')
+    plt.legend()
+
+    plt.show()
+#
+#
+# plot_per_movie_junction_area_dist()
+# exit()
 
 
 # iso_junc = []
