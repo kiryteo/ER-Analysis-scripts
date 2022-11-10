@@ -718,8 +718,9 @@ def get_junction_areas(label_vals, unassigned_cc_dict):
     return iso, fuz, unk#, iso_area, fuz_area
 
 
-def plot_junc_areas(group, series_num, iso, fuz, unk, labelled_img):
-    regions = regionprops(labelled_img)
+# def plot_junc_areas(group, series_num, iso, fuz, unk, labelled_img):
+def plot_junc_areas(group, series_num, iso, fuz):
+    # regions = regionprops(labelled_img)
     for i in range(100):
         plt.axis('off')
         if group == 'Control':
@@ -730,15 +731,18 @@ def plot_junc_areas(group, series_num, iso, fuz, unk, labelled_img):
         plt.imshow(img, cmap='gray')
         plt.plot(iso[:, 1], iso[:, 0], 'o', markerfacecolor='None', markeredgecolor='red')
         if len(fuz) > 0:
-            plt.plot(fuz[:, 1], fuz[:, 0], 'o', markerfacecolor='None', markeredgecolor='blue')
-        plt.plot(unk[:, 1], unk[:, 0], 'o', markerfacecolor='None', markeredgecolor='green')
+            plt.plot(fuz[:, 1], fuz[:, 0], 's', markerfacecolor='None', markeredgecolor='blue')
+        # plt.plot(unk[:, 1], unk[:, 0], 'o', markerfacecolor='None', markeredgecolor='green')
 
-        for index in range(1, labelled_img.max()):
-            label_i = regions[index].label
-            contour = measure.find_contours(labelled_img == label_i, 0.8)[0]
-            y, x = contour.T
-            plt.plot(x, y)
+        # plots contours
+        # for index in range(1, labelled_img.max()):
+        #     label_i = regions[index].label
+        #     contour = measure.find_contours(labelled_img == label_i, 0.8)[0]
+        #     y, x = contour.T
+        #     plt.plot(x, y)
         plt.show()
+
+
         # if group == 'Control':
         #     plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junc_types_movies/Ct%s_decon_t0%s_ch00.png'%(f'{group}', f'{series_num}', f'{i:02d}'), bbox_inches='tight', pad_inches=0)
         # else:
@@ -834,9 +838,65 @@ def per_frame_num_junctions(labelled_img, iso):
 # plt.plot(l)
 # plt.show()
 
-# def calc_egfp_junction_intensity():
+
+def calc_egfp_junction_intensity_nbrhood(group, series_num, channel):
+
+    if channel=='mCherry':
+        ch = 1
+    else:
+        ch = 0
+    sl = []
+    for series_num in range(1, series_num+1):
+        nps, skdata, labelled_img = label_junctions(group, series_num)
+        label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
+        iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
+
+        ln = []
+        for i in range(100):
+            frame_data = []
+            if group == 'Control':
+                path = confocal_data_path + 'Control/files/img_%s_decon_t0%s.tif'%(f'{series_num}', f'{i:02d}')
+            else:
+                path = confocal_data_path + '%s/files/%s_decon_t0%s_ch0%s.tif'%(f'{group}', f'{group[0]}{series_num}', f'{i:02d}', f'{ch}')
+            img = get_std_img(path)
+            for each in iso:
+                x, y = each[0], each[1]
+                mean_val = (img[x-1, y-1] + img[x-1, y] + img[x-1, y+1] + img[x, y-1] + img[x, y] + img[x, y+1] + img[x+1, y-1] + img[x+1, y] + img[x+1, y+1]) / 9
+                frame_data.append(mean_val)
+            ln.extend(frame_data)
+        ln = np.array(ln)
+
+        sl.extend(ln)
+
+    return sl
 
 
+atl = calc_egfp_junction_intensity_nbrhood('ATL', 26, 'mCherry')
+climp = calc_egfp_junction_intensity_nbrhood('Climp', 31, 'mCherry')
+# # ctrl = calc_egfp_junction_intensity_nbrhood('Control', 31, 'EGFP')
+rtn = calc_egfp_junction_intensity_nbrhood('RTN', 29, 'mCherry')
+#
+# sns.distplot(atl, label='ATL', hist=False)
+# sns.distplot(climp, label='Climp', hist=False)
+# # sns.distplot(ctrl, label='Control', hist=False)
+# sns.distplot(rtn, label='RTN', hist=False)
+#
+
+df = pd.DataFrame()
+df['Values'] = pd.Series(np.concatenate((atl, climp, rtn)))
+# df['ids'] = pd.Series(np.concatenate((np.arange(1, len(atl)+1), np.arange(1, len(climp)+1), np.arange(1, len(ctrl)+1), np.arange(1, len(rtn)+1))))
+df['Group'] = pd.Series(np.concatenate((['ATL'] * len(atl), ['Climp'] * len(climp), ['RTN'] * len(rtn))))
+#
+sns.swarmplot(data=df, y='Group', x='Values')
+
+plt.suptitle('mCherry deposit in isolated reference junction 3x3 neighbourhood across conditions', fontsize=16)
+# # plt.title('Variance of junction CC mean per patch over 100 frames', fontsize=14)
+plt.title('Mean Intensity per junction neighbourhood', fontsize=14)
+# plt.xlabel('mCherry intensity mean values (3x3)', fontsize=12)
+# plt.legend()
+plt.show()
+
+exit()
 
 
 def calc_egfp_deposit(group, channel, series_num, region):
@@ -894,23 +954,23 @@ def calc_egfp_deposit(group, channel, series_num, region):
     return sl
 
 
-atl = calc_egfp_deposit('ATL', 'EGFP', 26, 'iso')
+atl = calc_egfp_deposit('ATL', 'mCherry', 26, 'iso')
 
-climp = calc_egfp_deposit('Climp', 'EGFP', 31, 'iso')
-ctrl = calc_egfp_deposit('Control', 'EGFP', 31, 'iso')
-rtn = calc_egfp_deposit('RTN', 'EGFP', 29, 'iso')
+climp = calc_egfp_deposit('Climp', 'mCherry', 31, 'iso')
+# ctrl = calc_egfp_deposit('Control', 'EGFP', 31, 'iso')
+rtn = calc_egfp_deposit('RTN', 'mCherry', 29, 'iso')
 
-print(len(atl))
-print(len(climp))
-print(len(ctrl))
-print(len(rtn))
+# print(len(atl))
+# print(len(climp))
+# # print(len(ctrl))
+# print(len(rtn))
+#
+# exit()
 
-exit()
-
-# sns.distplot(atl, label='ATL', hist=False)
-# sns.distplot(climp, label='Climp', hist=False)
+sns.distplot(atl, label='ATL', hist=False)
+sns.distplot(climp, label='Climp', hist=False)
 # sns.distplot(ctrl, label='Control', hist=False)
-# sns.distplot(rtn, label='RTN', hist=False)
+sns.distplot(rtn, label='RTN', hist=False)
 
 # sns.boxplot(atl, label='ATL')
 # sns.boxplot(climp, label='Climp')
@@ -918,15 +978,15 @@ exit()
 # sns.boxplot(rtn, label='RTN')
 
 
-df = pd.DataFrame()
-df['Values'] = pd.Series(np.concatenate((atl, climp, ctrl, rtn)))
-df['ids'] = pd.Series(np.concatenate((np.arange(1, len(atl)+1), np.arange(1, len(climp)+1), np.arange(1, len(ctrl)+1), np.arange(1, len(rtn)+1))))
-df['Group'] = pd.Series(np.concatenate((['ATL'] * len(atl), ['Climp'] * len(climp), ['Control'] * len(ctrl), ['RTN'] * len(rtn))))
-#
-# sns.boxplot(data=df, y='Group', x='Values')
-sns.scatterplot(data=df, x='ids', y='Values', hue='Group', style='Group')
+# df = pd.DataFrame()
+# df['Values'] = pd.Series(np.concatenate((atl, climp, ctrl, rtn)))
+# df['ids'] = pd.Series(np.concatenate((np.arange(1, len(atl)+1), np.arange(1, len(climp)+1), np.arange(1, len(ctrl)+1), np.arange(1, len(rtn)+1))))
+# df['Group'] = pd.Series(np.concatenate((['ATL'] * len(atl), ['Climp'] * len(climp), ['Control'] * len(ctrl), ['RTN'] * len(rtn))))
+# #
+# # sns.boxplot(data=df, y='Group', x='Values')
+# sns.scatterplot(data=df, x='ids', y='Values', hue='Group', style='Group')
 
-plt.suptitle('EGFP deposit in isolated region junction CCs across conditions', fontsize=16)
+plt.suptitle('mCherry deposit in isolated region junction CCs across conditions', fontsize=16)
 # plt.title('Variance of junction CC mean per patch over 100 frames', fontsize=14)
 plt.title('Mean Intensity per junction CC patch', fontsize=14)
 # plt.xlabel('EGFP intensity mean values', fontsize=12)
