@@ -437,7 +437,7 @@ def junc_area_locator(group, num_series):
 
     @param group: group to be analyzed
     @param num_series: sequence number
-    @return: dt, dictionary with matched junctions per reference junction
+    @return: dt, dictionary with matched junctions per reference junction - nearest neighbour approach
     """
     # mean_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
 
@@ -499,7 +499,7 @@ def get_all_junc(group, num_series):
 
     @param group: group to be analyzed
     @param num_series: sequence number
-    @return: dt, dictionary with matched junctions per reference junction
+    @return: nps (list) - provides all junctions with degree > 2 from the mean projection proc skeleton, skdata (list) - provides all junctions per skel frame
     """
     # mean_img = 'confocal_data_pathATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
 
@@ -535,6 +535,15 @@ def get_all_junc(group, num_series):
 
     return nps, skdata
 
+
+# nps, skdata = get_all_junc('ATL', 2)
+# print(len(skdata))
+# print(len(skdata[0]))
+# # print(skdata[0])
+# # print(skdata[1])
+# # print(skdata[100])
+# # print(skdata[101])
+# exit()
 
 def refine_junc_dt(dt, min_presence=50):
     dt_refined = {}
@@ -718,10 +727,31 @@ def get_junction_areas(label_vals, unassigned_cc_dict):
     return iso, fuz, unk#, iso_area, fuz_area
 
 
+# nps, skdata, labelled_img = label_junctions('Climp', 1)
+#
+# label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
+# iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
+#
+
+
+# print(iso_list)
+# exit()
+
+
+# def label_skdata_type(skdata, lab):
+#     for each in skdata:
+#         if each in iso_list:
+#
+#
+#
+# print(iso[:, 1])
+#
+# exit()
+
 # def plot_junc_areas(group, series_num, iso, fuz, unk, labelled_img):
-def plot_junc_areas(group, series_num, iso, fuz):
+def plot_junc_areas(group, series_num, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords, unk_cc_coords):
     # regions = regionprops(labelled_img)
-    for i in range(100):
+    for i in range(1):
         plt.axis('off')
         if group == 'Control':
             img = imageio.imread(confocal_data_path + '%s/files/img_%s_decon_t0%s.tif'%(f'{group}', f'{series_num}', f'{i:02d}'))
@@ -729,10 +759,25 @@ def plot_junc_areas(group, series_num, iso, fuz):
             img = imageio.imread(confocal_data_path + '%s/files/%s_decon_t0%s_ch00.tif'%(f'{group}', f'{group[0]}{series_num}', f'{i:02d}'))
         img = (img - img.min()) / (img.max() - img.min())
         plt.imshow(img, cmap='gray')
-        plt.plot(iso[:, 1], iso[:, 0], 'o', markerfacecolor='None', markeredgecolor='red')
+        # plt.plot(iso[:, 1], iso[:, 0], 's', markerfacecolor='None', markeredgecolor='red')
+
+        # plt.plot(skdata[:, 1], skdata[:, 0], '.', markerfacecolor='None', markeredgecolor='green', mew=0.4)
+        for k, v in iso_cc_coords.items():
+            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='green', mew=0.4)
+
+        for k, v in fuz_cc_coords.items():
+            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='yellow', mew=0.4)
+
+        for k, v in unk_cc_coords.items():
+            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='pink', mew=0.4)
+
         if len(fuz) > 0:
-            plt.plot(fuz[:, 1], fuz[:, 0], 's', markerfacecolor='None', markeredgecolor='blue')
+            plt.plot(fuz[:, 1], fuz[:, 0], 'o', markerfacecolor='None', markeredgecolor='blue', mew=0.6)
+
         # plt.plot(unk[:, 1], unk[:, 0], 'o', markerfacecolor='None', markeredgecolor='green')
+        plt.plot(iso[:, 1], iso[:, 0], 'o', markerfacecolor='None', markeredgecolor='red', mew=0.6)
+
+
 
         # plots contours
         # for index in range(1, labelled_img.max()):
@@ -740,7 +785,11 @@ def plot_junc_areas(group, series_num, iso, fuz):
         #     contour = measure.find_contours(labelled_img == label_i, 0.8)[0]
         #     y, x = contour.T
         #     plt.plot(x, y)
-        plt.show()
+        plt.axis('off')
+        plt.savefig('Climp_series12_junc_representation_iso_fuz_unk', bbox_inches='tight', pad_inches=0, dpi=700)
+        plt.close()
+        # plt.show()
+
 
 
         # if group == 'Control':
@@ -799,6 +848,39 @@ def get_cc_ids(labelled_img, region):
 
     return region_cc
 
+
+nps, skdata, labelled_img = label_junctions('Climp', 12)
+
+label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
+iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
+
+iso_cc = get_cc_ids(labelled_img, iso)
+fuz_cc = get_cc_ids(labelled_img, fuz)
+unk_cc = get_cc_ids(labelled_img, unk)
+
+iso_cc_coords = {}
+for each in iso_cc:
+    iso_cc_coords[each] = np.where(labelled_img==each)
+
+fuz_cc_coords = {}
+for each in fuz_cc:
+    fuz_cc_coords[each] = np.where(labelled_img==each)
+
+unk_cc_coords = {}
+for each in unk_cc:
+    unk_cc_coords[each] = np.where(labelled_img==each)
+
+
+#
+#
+# iso_list = []
+# for each in iso:
+#     iso_list.append([each[0], each[1]])
+
+plot_junc_areas('Climp', 12, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords, unk_cc_coords)
+
+
+exit()
 
 def per_frame_num_junctions(labelled_img, iso):
 
