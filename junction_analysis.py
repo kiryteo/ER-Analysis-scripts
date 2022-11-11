@@ -400,7 +400,11 @@ def junc_intensity_plot_creator(coord_dt):
 def seq_fourier_analysis(group, num_series):
     l = []
     for i in range(100):
-        path = confocal_data_path + '%s/files/%s_decon_t0%s_ch00.tif' % (
+        if group == 'Control':
+            path = confocal_data_path + '%s/files/img_%s_decon_t0%s.tif' % (
+                f'{group}', f'{num_series}', f'{i:02d}')
+        else:
+            path = confocal_data_path + '%s/files/%s_decon_t0%s_ch00.tif' % (
             f'{group}', f'{group[0]}{num_series}', f'{i:02d}')
         img = get_std_img(path)
         l.extend(img)
@@ -419,17 +423,53 @@ def seq_fourier_analysis(group, num_series):
 
     return k
 
+atl = []
+climp = []
+control = []
+rtn = []
 
-# atl = seq_fourier_analysis('ATL', 1)
-# climp = seq_fourier_analysis('Climp', 1)
-# rtn = seq_fourier_analysis('RTN', 1)
-#
-# plt.plot(atl, label='ATL')
-# plt.plot(climp, label='Climp')
-# plt.plot(rtn, label='RTN')
-# plt.legend()
-# plt.show()
+# for i in range(1, 27):
+#     atl_k = seq_fourier_analysis('ATL', i)
+#     atl.extend(atl_k)
+
+# print(len(atl))
+# print(atl[0])
 # exit()
+
+
+# atl = list(itertools.chain.from_iterable(atl))
+
+for i in range(1, 32):
+    climp_k = seq_fourier_analysis('Climp', i)
+    climp.extend(climp_k)
+
+# climp = list(itertools.chain.from_iterable(climp))
+
+for i in range(1, 32):
+    ctrl_k = seq_fourier_analysis('Control', i)
+    control.extend(ctrl_k)
+
+# control = list(itertools.chain.from_iterable(control))
+
+for i in range(1, 30):
+    rtn_k = seq_fourier_analysis('RTN', i)
+    rtn.extend(rtn_k)
+
+# rtn = list(itertools.chain.from_iterable(rtn))
+
+atl = sorted(atl)
+climp = sorted(climp)
+control = sorted(control)
+rtn = sorted(rtn)
+
+plt.plot(atl, label='ATL')
+plt.plot(climp, label='Climp')
+plt.plot(control, label='Control')
+plt.plot(rtn, label='RTN')
+plt.legend()
+plt.title('EGFP frequency analysis across conditions')
+plt.show()
+exit()
 
 
 def junc_area_locator(group, num_series):
@@ -762,20 +802,35 @@ def plot_junc_areas(group, series_num, iso, fuz, skdata, iso_cc_coords, fuz_cc_c
         # plt.plot(iso[:, 1], iso[:, 0], 's', markerfacecolor='None', markeredgecolor='red')
 
         # plt.plot(skdata[:, 1], skdata[:, 0], '.', markerfacecolor='None', markeredgecolor='green', mew=0.4)
+        # for k, v in iso_cc_coords.items():
+        #     plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='green', mew=0.4)
+        #
+        # for k, v in fuz_cc_coords.items():
+        #     plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='yellow', mew=0.4)
+        #
+        # for k, v in unk_cc_coords.items():
+        #     plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='pink', mew=0.4)
+        #
+        # if len(fuz) > 0:
+        #     plt.plot(fuz[:, 1], fuz[:, 0], 'o', markerfacecolor='None', markeredgecolor='blue', mew=0.6)
+        #
+        # # plt.plot(unk[:, 1], unk[:, 0], 'o', markerfacecolor='None', markeredgecolor='green')
+        # plt.plot(iso[:, 1], iso[:, 0], 'o', markerfacecolor='None', markeredgecolor='red', mew=0.6)
+
         for k, v in iso_cc_coords.items():
-            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='green', mew=0.4)
+            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='red', mew=0.35)
 
         for k, v in fuz_cc_coords.items():
-            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='yellow', mew=0.4)
+            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='blue', mew=0.35)
 
         for k, v in unk_cc_coords.items():
-            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='pink', mew=0.4)
+            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='green', mew=0.5)
 
         if len(fuz) > 0:
-            plt.plot(fuz[:, 1], fuz[:, 0], 'o', markerfacecolor='None', markeredgecolor='blue', mew=0.6)
+            plt.plot(fuz[:, 1], fuz[:, 0], '.', markerfacecolor='None', markeredgecolor='white', mew=0.6)
 
         # plt.plot(unk[:, 1], unk[:, 0], 'o', markerfacecolor='None', markeredgecolor='green')
-        plt.plot(iso[:, 1], iso[:, 0], 'o', markerfacecolor='None', markeredgecolor='red', mew=0.6)
+        plt.plot(iso[:, 1], iso[:, 0], '.', markerfacecolor='None', markeredgecolor='yellow', mew=0.6)
 
 
 
@@ -785,9 +840,11 @@ def plot_junc_areas(group, series_num, iso, fuz, skdata, iso_cc_coords, fuz_cc_c
         #     contour = measure.find_contours(labelled_img == label_i, 0.8)[0]
         #     y, x = contour.T
         #     plt.plot(x, y)
+
         plt.axis('off')
-        plt.savefig('Climp_series12_junc_representation_iso_fuz_unk', bbox_inches='tight', pad_inches=0, dpi=700)
+        plt.savefig('Climp_series12_junc_representation_iso_fuz_unk_2', bbox_inches='tight', pad_inches=0, dpi=700)
         plt.close()
+
         # plt.show()
 
 
