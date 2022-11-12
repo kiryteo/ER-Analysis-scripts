@@ -72,6 +72,12 @@ def junc_spread_comparison():
 
 
 def junc_spread_display(group, num_series):
+    """
+
+    @param group:
+    @param num_series:
+    @return: display mean proj frame junctions (red spots) + per frame skel junctions (blue spots)
+    """
     init_mean_proj_img = imageio.imread(confocal_data_path + '%s/new_op_jul/junctions/%s_junc_mean.png' % (
         f'{group}', f'{group[0]}{num_series}'))
     junc_mean_proj_img = imageio.imread(confocal_data_path+'%s/new_op_jul/junctions/%s_proc_junc_mean.png' % (
@@ -423,53 +429,109 @@ def seq_fourier_analysis(group, num_series):
 
     return k
 
-atl = []
-climp = []
-control = []
-rtn = []
 
-# for i in range(1, 27):
-#     atl_k = seq_fourier_analysis('ATL', i)
-#     atl.extend(atl_k)
+def seq_movie_fourier_analysis(group, num_series):
+    l = []
+    for num in range(1, num_series+1):
+        for i in range(100):
+            if group == 'Control':
+                path = confocal_data_path + '%s/files/img_%s_decon_t0%s.tif' % (
+                f'{group}', f'{num}', f'{i:02d}')
+            else:
+                path = confocal_data_path + '%s/files/%s_decon_t0%s_ch00.tif' % (
+                f'{group}', f'{group[0]}{num}', f'{i:02d}')
+            img = get_std_img(path)
+            l.extend(img)
 
-# print(len(atl))
-# print(atl[0])
-# exit()
+    # if group == 'ATL':
+    #     l = np.reshape(l, (2600, 128, 128))
+    # elif group == 'Climp' or group == 'Control':
+    #     l = np.reshape(l, (3100, 128, 128))
+    # else:
+    #     l = np.reshape(l, (2900, 128, 128))
+    l = np.reshape(l, (2600, 128, 128))
+
+    f = np.fft.fftn(l - np.mean(l))
+    fabs = np.abs(f)
+    fviz = np.fft.fftshift(fabs)
+
+    # print(fviz.shape)
+    # print(np.sum(fviz, axis=0).shape)
+    k = []
+    for each in fviz:
+        k.append(np.sum(each))
+
+    return k
+
+def seq_movie_fourier_analysis_runner():
+    atl = seq_movie_fourier_analysis('ATL', 26)
+    climp = seq_movie_fourier_analysis('Climp', 26)
+    control = seq_movie_fourier_analysis('Control', 26)
+    rtn = seq_movie_fourier_analysis('RTN', 26)
+
+    # import scipy.io
+    # from scipy.io import savemat
+    #
+    # atldt = {}
+    # atldt['atl'] = atl
+    # cldt = {}
+    # cldt['climp'] = climp
+    # ctdt = {}
+    # ctdt['control'] = control
+    # rtndt = {}
+    # rtndt['rtn'] = rtn
+    #
+    # savemat('atl.mat', atldt)
+    # savemat('climp.mat', cldt)
+    # savemat('control.mat', ctdt)
+    # savemat('rtn.mat', rtndt)
 
 
-# atl = list(itertools.chain.from_iterable(atl))
+    # climp = []
+    # control = []
+    # rtn = []
 
-for i in range(1, 32):
-    climp_k = seq_fourier_analysis('Climp', i)
-    climp.extend(climp_k)
+    # for i in range(1, 27):
+    #     atl_k = seq_fourier_analysis('ATL', i)
+    #     atl.extend(atl_k)
 
-# climp = list(itertools.chain.from_iterable(climp))
+    # print(len(atl))
+    # print(atl[0])
+    # exit()
 
-for i in range(1, 32):
-    ctrl_k = seq_fourier_analysis('Control', i)
-    control.extend(ctrl_k)
 
-# control = list(itertools.chain.from_iterable(control))
+    # atl = list(itertools.chain.from_iterable(atl))
 
-for i in range(1, 30):
-    rtn_k = seq_fourier_analysis('RTN', i)
-    rtn.extend(rtn_k)
+    # for i in range(1, 32):
+    #     climp_k = seq_fourier_analysis('Climp', i)
+    #     climp.extend(climp_k)
+    #
+    # # climp = list(itertools.chain.from_iterable(climp))
+    #
+    # for i in range(1, 32):
+    #     ctrl_k = seq_fourier_analysis('Control', i)
+    #     control.extend(ctrl_k)
+    #
+    # # control = list(itertools.chain.from_iterable(control))
+    #
+    # for i in range(1, 30):
+    #     rtn_k = seq_fourier_analysis('RTN', i)
+    #     rtn.extend(rtn_k)
 
-# rtn = list(itertools.chain.from_iterable(rtn))
+    # rtn = list(itertools.chain.from_iterable(rtn))
 
-atl = sorted(atl)
-climp = sorted(climp)
-control = sorted(control)
-rtn = sorted(rtn)
+    # atl = sorted(atl)
+    # climp = sorted(climp)
+    # control = sorted(control)
+    # rtn = sorted(rtn)
 
-plt.plot(atl, label='ATL')
-plt.plot(climp, label='Climp')
-plt.plot(control, label='Control')
-plt.plot(rtn, label='RTN')
-plt.legend()
-plt.title('EGFP frequency analysis across conditions')
-plt.show()
-exit()
+    plt.plot(atl, label='ATL')
+    plt.plot(climp, label='Climp')
+    plt.plot(control, label='Control')
+    plt.plot(rtn, label='RTN')
+    plt.legend()
+    plt.title('EGFP frequency analysis across conditions')
+    plt.show()
 
 
 def junc_area_locator(group, num_series):
@@ -873,7 +935,70 @@ def plot_junc_areas(group, series_num, iso, fuz, skdata, iso_cc_coords, fuz_cc_c
 # print(iso_area)
 #
 
+# skel_to_graph(skel):
 
+
+
+nps, skdata, labelled_img = label_junctions('ATL', 1)
+
+label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
+iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
+
+mp_frame = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png')
+
+plt.imshow(mp_frame, cmap='gray')
+plt.plot(iso[:, 1], iso[:, 0], 'x', markerfacecolor='None', markeredgecolor='red', mew=0.6)
+
+# exit()
+
+g = sknw.build_sknw(mp_frame, iso=False)
+G = nx.Graph()
+
+G.add_nodes_from(g.nodes)
+G.add_edges_from(g.edges)
+
+ps = np.array([g.nodes[i]['o'] for i in g.nodes])
+# print(ps)
+
+# plt.plot(ps[:, 1], ps[:, 0], 'o', markerfacecolor='None', markeredgecolor='blue', mew=0.6)
+#
+# plt.show()
+# exit()
+
+
+iso_ps_ids = []
+
+for i, val in enumerate(G.degree):
+    if val[1] > 2:
+        iso_ps_ids.append(i)
+
+# print(iso_ps_ids)
+# exit()
+
+# print(fuz)
+print(len(G.nodes))
+for each in iso_ps_ids:
+    if g.nodes[each]['o'] in fuz:
+        G.remove_node(each)
+    # print(g.nodes[each]['o'])
+
+
+gl = G.nodes
+print(len(gl))
+
+exit()
+
+iso_ps = np.array([g.nodes[i]['o'] for i in gl])
+# print(G.edges)
+# G.remove_node()
+# print(iso_ps)
+
+plt.plot(iso_ps[:, 1], iso_ps[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue', mew=0.6)
+plt.show()
+exit()
+
+nodes = g.nodes()
+degree_list = G.degree
 
 
 def get_cc_ids(labelled_img, region):
