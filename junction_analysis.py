@@ -230,17 +230,14 @@ def init_proc_projection(group, num_series):
 
 
 def mean_frame_validation(group, total_series):
-    if group == 'Control':
-        pref = 'Ct'
-    else:
-        pref = group[0]
+    group_pref = {'ATL':'A', 'Climp':'C', 'Control':'Ct', 'RTN':'R'}
     for num_ser in range(1, total_series + 1):
         os.makedirs(
-            confocal_data_path + '%s/new_op_jul/junctions/%s' % (f'{group}', f'{pref}{num_ser}'))
+            confocal_data_path + '%s/new_op_jul/junctions/%s' % (f'{group}', f'{group_pref[group]}{num_ser}'))
         for frame in range(100):
             sk = imageio.imread(
                 confocal_data_path + '%s/new_op_jul/skel/%s/%s_decon_t0%s_ch00_skel.png' % (
-                    f'{group}', f'{pref}{num_ser}', f'{pref}{num_ser}', f'{frame:02d}'))
+                    f'{group}', f'{group_pref[group]}{num_ser}', f'{group_pref[group]}{num_ser}', f'{frame:02d}'))
 
             nodes, degree_list = skel_to_graph(sk)
             ps = np.array([nodes[i]['o'] for i in nodes])
@@ -542,6 +539,7 @@ def junc_area_locator(group, num_series):
     @return: dt, dictionary with matched junctions per reference junction - nearest neighbour approach
     """
     # mean_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
+    group_pref = {'ATL':'A', 'Climp':'C', 'Control':'Ct', 'RTN':'R'}
 
     mean_img = confocal_data_path + '%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png' % (
         f'{group}', f'{group.lower()}{num_series}')
@@ -563,13 +561,8 @@ def junc_area_locator(group, num_series):
     dt = {}
     for frame in range(100):
 
-        if group == 'Control':
-            pref = 'Ct'
-        else:
-            pref = group[0]
-
         sk_img = confocal_data_path + '%s/new_op_jul/skel/%s/%s_decon_t0%s_ch00_skel.png' % (
-            f'{group}', f'{pref}{num_series}', f'{pref}{num_series}', f'{frame:02d}')
+            f'{group}', f'{group_pref[group]}{num_series}', f'{group_pref[group]}{num_series}', f'{frame:02d}')
 
         sk_newps = get_junctions(sk_img)
 
@@ -605,6 +598,8 @@ def get_all_junc(group, num_series):
     """
     # mean_img = 'confocal_data_pathATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
 
+    group_pref = {'ATL':'A', 'Climp':'C', 'Control':'Ct', 'RTN':'R'}
+
     mean_img = confocal_data_path + '%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png' % (
         f'{group}', f'{group.lower()}{num_series}')
 
@@ -618,13 +613,8 @@ def get_all_junc(group, num_series):
     skdata = []
     for frame in range(100):
 
-        if group == 'Control':
-            pref = 'Ct'
-        else:
-            pref = group[0]
-
         sk_img = confocal_data_path + '%s/new_op_jul/skel/%s/%s_decon_t0%s_ch00_skel.png' % (
-            f'{group}', f'{pref}{num_series}', f'{pref}{num_series}', f'{frame:02d}')
+            f'{group}', f'{group_pref[group]}{num_series}', f'{group_pref[group]}{num_series}', f'{frame:02d}')
 
         sk_newps = get_junctions(sk_img)
 
@@ -1942,6 +1932,7 @@ exit()
 def junction_location_plotter(group, num_series):
     # mean_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
 
+    group_pref = {'ATL':'A', 'Climp':'C', 'Control':'Ct', 'RTN':'R'}
     mean_img = confocal_data_path + '%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png' % (
         f'{group}', f'{group.lower()}{num_series}')
 
@@ -1970,18 +1961,16 @@ def junction_location_plotter(group, num_series):
         if group == 'Control':
             path = confocal_data_path + '%s/files/img_%s_decon_t0%s.tif' % (
                 f'{group}', f'{num_series}', f'{frame:02d}')
-            pref = 'Ct'
         else:
             path = confocal_data_path + '%s/files/%s_decon_t0%s_ch00.tif' % (
                 f'{group}', f'{group[0]}{num_series}', f'{frame:02d}')  # , f'{channel}')
-            pref = group[0]
         img = imageio.imread(path)
         img = (img - img.min()) / (img.max() - img.min())
 
         # ER Skel image
         # sk_img = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t0%s_ch00_skel.png'%f'{i:02d}'
         sk_img = confocal_data_path + '%s/new_op_jul/skel/%s/%s_decon_t0%s_ch00_skel.png' % (
-            f'{group}', f'{pref}{num_series}', f'{pref}{num_series}', f'{frame:02d}')
+            f'{group}', f'{group_pref[group]}{num_series}', f'{group_pref[group]}{num_series}', f'{frame:02d}')
 
         sk_newps = get_junctions(sk_img)
 
@@ -2006,7 +1995,7 @@ def junction_location_plotter(group, num_series):
         # cv2.rectangle(img, (x-1, y-1), (x+1, y+1), (0, 0, 255), 2)
 
         plt.savefig(confocal_data_path + '%s/new_op_jul/%s_junc_viz/%s_t%s.png' % (
-            f'{group}', f'{group.lower()}', f'{pref}{num_series}', f'{frame:02d}'), bbox_inches='tight', pad_inches=0)
+            f'{group}', f'{group.lower()}', f'{group_pref[group]}{num_series}', f'{frame:02d}'), bbox_inches='tight', pad_inches=0)
 
         plt.close()
 
