@@ -16,64 +16,68 @@ import glob
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 import imageio
 import skimage.io as io
 from skimage import filters
 from skimage.color import rgb2gray
 from skimage.filters import window, difference_of_gaussians
 
-img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/er_mean_proc/rtn1_er_mean_proc.png')
-plt.imshow(img, cmap='gray')
+def junc_mag_disp():
+    img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/er_mean_proc/rtn1_er_mean_proc.png')
+    plt.imshow(img, cmap='gray')
 
-fl = imageio.imread('R1_opflow.png')
-im1 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/junctions/R1_junc_mean.png')
-im2 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/junctions/R1_proc_junc_mean.png')
+    # fl = imageio.imread('R1_opflow.png')
+    fl = imageio.imread('/localhome/asa420/ER-Analysis-data/R1_opflow.png')
 
-l1 = np.where(im1!=0)
-l2 = np.where(im2!=0)
+    im1 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/junctions/R1_junc_mean.png')
+    im2 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/junctions/R1_proc_junc_mean.png')
 
-x1 = l1[0]
-y1 = l1[1]
+    l1 = np.where(im1!=0)
+    l2 = np.where(im2!=0)
 
-x2 = l2[0]
-y2 = l2[1]
+    x1 = l1[0]
+    y1 = l1[1]
 
-high_mag = np.where(fl==255)
-mid_mag = np.where(fl==np.unique(fl)[1])
-hflx = high_mag[0]
-hfly = high_mag[1]
+    x2 = l2[0]
+    y2 = l2[1]
 
-mflx = mid_mag[0]
-mfly = mid_mag[1]
-# print(img.max())
-# print(np.unique(img))
-# exit()
+    high_mag = np.where(fl==255)
+    mid_mag = np.where(fl==np.unique(fl)[1])
+    hflx = high_mag[0]
+    hfly = high_mag[1]
 
-plt.plot(y1, x1, 'o', markerfacecolor='None', markeredgecolor='blue')
-plt.plot(y2, x2, 'o', markerfacecolor='None', markeredgecolor='red')
-plt.plot(hfly, hflx, 'x', markerfacecolor='None', markeredgecolor='yellow')
-plt.plot(mfly, mflx, 'x', markerfacecolor='None', markeredgecolor='green')
+    mflx = mid_mag[0]
+    mfly = mid_mag[1]
+    # print(img.max())
+    # print(np.unique(img))
+    # exit()
 
-plt.show()
+    plt.plot(y1, x1, 'o', markerfacecolor='None', markeredgecolor='blue')
+    plt.plot(y2, x2, 'o', markerfacecolor='None', markeredgecolor='red')
+    plt.plot(hfly, hflx, 'x', markerfacecolor='None', markeredgecolor='yellow')
+    plt.plot(mfly, mflx, 'x', markerfacecolor='None', markeredgecolor='green')
 
-exit()
+    plt.show()
 
-l = np.zeros((128, 128))
-for i in range(99):
-    f1 = scipy.io.loadmat('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/junc_opflow/R1_0_opfl.mat')
-    data = f1['m']
-    l = l + data
 
-# a = np.mean(l, axis=1)
-a = l/99
+def plot_junc_opflow():
+    l = np.zeros((128, 128))
+    for i in range(99):
+        f1 = scipy.io.loadmat('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/junc_opflow/R1_0_opfl.mat')
+        data = f1['m']
+        l = l + data
 
-# a = (a - a.min()) / (a.max() - a.min())
-# a = a * 255.
-# cv2.imwrite('R1_opflow.png', a)
-# imageio.imsave('R1_opfl.png', a)
-plt.imshow(a)
-plt.show()
-exit()
+    # a = np.mean(l, axis=1)
+    a = l/99
+
+    # a = (a - a.min()) / (a.max() - a.min())
+    # a = a * 255.
+    # cv2.imwrite('R1_opflow.png', a)
+    # imageio.imsave('R1_opfl.png', a)
+    plt.imshow(a)
+    plt.show()
+
 
 def get_phase_correlation():
     im1 = rgb2gray(io.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t001_ch00.tif'))
@@ -106,12 +110,74 @@ def get_curls(group):
 
     files = glob.glob('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/opflow_files/*'%f'{group}')
     # print(files[0])
-    for each in files:
+    for each in files[:100]:
         data = scipy.io.loadmat(each)
         curl = data['c'].flatten()
         a.extend(curl)
 
     return a
+
+
+def curl_analysis(group):
+    pref = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/opflow_files/'%(f'{group}')
+
+    l = []
+    grp_num = {'ATL':27, 'Climp':32, 'Control':30, 'RTN':30}
+    grp_pref = {'ATL':'A', 'Climp':'C', 'Control':'Ct', 'RTN':'R'}
+    for series in range(1, grp_num[group]):
+        for frame in range(99):
+            curl_data = scipy.io.loadmat(pref + '%s_%s_flow.mat'%(f'{grp_pref[group]}{series}', f'{frame}'))['c']
+            img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junctions/%s/%s_decon_t0%s_ch00_junc.png'%(f'{group}', f'{grp_pref[group]}{series}', f'{grp_pref[group]}{series}', f'{frame:02d}'))
+            n = np.where(img!=0)
+            dt = curl_data[n]
+            # print(dt.flatten().shape)
+            # print(dt.flatten())
+            # exit()
+            l.extend(np.abs(dt.flatten()))
+
+    # plt.hist(l)
+    # sns.histplot(l)
+    # plt.show()
+    return l
+
+rtn = curl_analysis('RTN')
+atl = curl_analysis('ATL')
+climp = curl_analysis('Climp')
+ctrl = curl_analysis('Control')
+
+sns.histplot(atl, label='ATL')
+sns.histplot(climp, label='Climp')
+sns.histplot(ctrl, label='Control')
+sns.histplot(rtn, label='RTN')
+
+plt.legend()
+plt.show()
+exit()
+
+file = scipy.io.loadmat('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/junc_opflow/R1_0_opfl.mat')
+img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/junctions/R1/R1_decon_t000_ch00_junc.png')
+n = np.where(img!=0)
+dt = file['m']
+dtt = dt[n]
+plt.hist(np.abs(dtt))
+plt.show()
+exit()
+
+group = 'RTN'
+files = glob.glob('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/opflow_files/*'%f'{group}')
+
+print(files[0])
+data = scipy.io.loadmat(files[0])
+print(data['c'].shape)
+
+img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/junctions/R8/R8_decon_t095_ch00_junc.png')
+n = np.where(img!=0)
+dt = data['c']
+dtt = dt[n]
+# print(dtt)
+plt.hist(np.abs(dtt))
+plt.show()
+exit()
 
 def get_div(group):
     a = []
