@@ -1,6 +1,7 @@
 import numpy as np
 import scipy
 import scipy.io
+import pandas as pd
 
 # f1 = scipy.io.loadmat('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/opflow_files/0_flow.mat')
 #
@@ -118,7 +119,167 @@ def get_curls(group):
     return a
 
 
+def get_nbrhood_mean(input, x, y):
+    return (input[x-1, y-1] + input[x-1, y] + input[x-1, y+1] + input[x, y-1] + input[x, y] + input[x, y+1] + input[x+1, y-1] + input[x+1, y] + input[x+1, y+1]) / 9
+
+
+
+def flow_analysis_er(group, prop):
+    """
+
+    @param group: group data to analyze
+    @param prop: curl or diveregence
+    @return: ER images flow outputs
+    """
+
+    pref = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/intensity_based_flow_%s/'%(f'{group}', f'{prop}')
+
+    l = []
+    grp_num = {'ATL':27, 'Climp':32, 'Control':32, 'RTN':30}
+    grp_pref = {'ATL':'A', 'Climp':'C', 'Control':'Ct', 'RTN':'R'}
+    for series in range(1, grp_num[group]):
+        for frame in range(99):
+            prop_data = scipy.io.loadmat(pref + '%s_%s_opfl_%s.mat'%(f'{grp_pref[group]}{series}', f'{frame}', f'{prop}'))['c']
+            img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junctions/%s/%s_decon_t0%s_ch00_junc.png'%(f'{group}', f'{grp_pref[group]}{series}', f'{grp_pref[group]}{series}', f'{frame:02d}'))
+            n = np.where(img!=0)
+##################################
+            temp = []
+            for x, y in zip(n[0], n[1]):
+                if x < 127 and x > 0 and y < 127 and y > 0:
+                    nbr_mean = get_nbrhood_mean(prop_data, x, y)
+                    temp.append(nbr_mean)
+                else:
+                    continue
+                # print(nbr_mean)
+                # exit()
+                # l.extend(nbr_mean)
+            l.extend(temp)
+#####################################
+            # dt = np.abs(curl_data[n])
+            # # print(dt.flatten().shape)
+            # # print(dt.flatten())
+            # # exit()
+            # l.extend(dt.flatten())
+    #####################################
+    # plt.hist(l)
+    # sns.histplot(l)
+    # plt.show()
+    return l
+
+
+atl = np.abs(flow_analysis_er('ATL', 'curl'))
+climp = np.abs(flow_analysis_er('Climp', 'curl'))
+ctrl = np.abs(flow_analysis_er('Control', 'curl'))
+rtn = np.abs(flow_analysis_er('RTN', 'curl'))
+
+df = pd.DataFrame()
+df['Values'] = pd.Series(np.concatenate((atl, climp, ctrl, rtn)))
+# df['ids'] = pd.Series(np.concatenate((np.arange(1, len(atl)+1), np.arange(1, len(climp)+1), np.arange(1, len(ctrl)+1), np.arange(1, len(rtn)+1))))
+df['Group'] = pd.Series(np.concatenate((['ATL'] * len(atl), ['Climp'] * len(climp), ['Control'] * len(ctrl), ['RTN'] * len(rtn))))
+# #
+sns.violinplot(data=df, y='Group', x='Values')
+# sns.scatterplot(data=df, x='ids', y='Values', hue='Group', style='Group')
+
+# sns.distplot(atl, label='ATL', hist=False)
+# sns.distplot(climp, label='Climp', hist=False)
+# sns.distplot(ctrl, label='Control', hist=False)
+# sns.distplot(rtn, label='RTN', hist=False)
+
+# plt.hist(atl, label='ATL')
+# plt.hist(climp, label='Climp')
+# plt.hist(ctrl, label='Control')
+# plt.hist(rtn, label='RTN')
+plt.title('Vector field curl based on optical flow between subsequent frames at junction locations (3x3 neighbourhood mean) in a movie across conditions', fontsize=16)
+# plt.title('Vector field divergence based on optical flow between subsequent frames at junction locations (single pixel) in a movie across different conditions', fontsize=16)
+
+plt.xlabel('Curl values', fontsize=14)
+# plt.legend()
+plt.show()
+exit()
+
+
+def flow_magnitude_analysis_er(group):
+    """
+
+    @param group: group data to analyze
+    @return: ER images flow outputs
+    """
+
+    pref = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/intensity_based_flow/'%(f'{group}')
+
+    l = []
+    grp_num = {'ATL':27, 'Climp':32, 'Control':32, 'RTN':30}
+    grp_pref = {'ATL':'A', 'Climp':'C', 'Control':'Ct', 'RTN':'R'}
+    for series in range(1, grp_num[group]):
+        for frame in range(99):
+            curl_data = scipy.io.loadmat(pref + '%s_%s_opfl.mat'%(f'{grp_pref[group]}{series}', f'{frame}'))['m']
+            img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junctions/%s/%s_decon_t0%s_ch00_junc.png'%(f'{group}', f'{grp_pref[group]}{series}', f'{grp_pref[group]}{series}', f'{frame:02d}'))
+            n = np.where(img!=0)
+            temp = []
+            for x, y in zip(n[0], n[1]):
+                if x < 127 and x > 0 and y < 127 and y > 0:
+                    nbr_mean = get_nbrhood_mean(curl_data, x, y)
+                    temp.append(nbr_mean)
+                else:
+                    continue
+                # print(nbr_mean)
+                # exit()
+                # l.extend(nbr_mean)
+            l.extend(temp)
+            # dt = curl_data[n]
+            # print(dt.flatten().shape)
+            # print(dt.flatten())
+            # exit()
+            # l.extend(dt.flatten())
+
+    # plt.hist(l)
+    # sns.histplot(l)
+    # plt.show()
+    return l
+
+
+atl = flow_magnitude_analysis_er('ATL')
+# print(len(atl))
+# print(len(atl[0]))
+# exit()
+
+climp = flow_magnitude_analysis_er('Climp')
+ctrl = flow_magnitude_analysis_er('Control')
+rtn = flow_magnitude_analysis_er('RTN')
+
+
+
+df = pd.DataFrame()
+df['Values'] = pd.Series(np.concatenate((atl, climp, ctrl, rtn)))
+# df['ids'] = pd.Series(np.concatenate((np.arange(1, len(atl)+1), np.arange(1, len(climp)+1), np.arange(1, len(ctrl)+1), np.arange(1, len(rtn)+1))))
+df['Group'] = pd.Series(np.concatenate((['ATL'] * len(atl), ['Climp'] * len(climp), ['Control'] * len(ctrl), ['RTN'] * len(rtn))))
+# #
+sns.boxplot(data=df, y='Group', x='Values')
+# sns.scatterplot(data=df, x='ids', y='Values', hue='Group', style='Group')
+
+# sns.distplot(atl, label='ATL', hist=False)
+# sns.distplot(climp, label='Climp', hist=False)
+# sns.distplot(ctrl, label='Control', hist=False)
+# sns.distplot(rtn, label='RTN', hist=False)
+
+# plt.hist(atl, label='ATL')
+# plt.hist(climp, label='Climp')
+# plt.hist(ctrl, label='Control')
+# plt.hist(rtn, label='RTN')
+plt.title('Optical Flow magnitude between consecutive frames at junction locations (3x3 neighbourhood mean)', fontsize=16)
+plt.xlabel('Flow magnitude values', fontsize=14)
+# plt.legend()
+plt.show()
+exit()
+
+
+
 def curl_analysis(group):
+    """
+
+    @param group: group data to analyze
+    @return: Binary junction images flow outputs
+    """
     pref = '/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/opflow_files/'%(f'{group}')
 
     l = []
@@ -133,7 +294,7 @@ def curl_analysis(group):
             # print(dt.flatten().shape)
             # print(dt.flatten())
             # exit()
-            l.extend(np.abs(dt.flatten()))
+            l.extend(dt.flatten())
 
     # plt.hist(l)
     # sns.histplot(l)
@@ -145,10 +306,10 @@ atl = curl_analysis('ATL')
 climp = curl_analysis('Climp')
 ctrl = curl_analysis('Control')
 
-sns.histplot(atl, label='ATL')
-sns.histplot(climp, label='Climp')
-sns.histplot(ctrl, label='Control')
-sns.histplot(rtn, label='RTN')
+plt.hist(atl, label='ATL')
+plt.hist(climp, label='Climp')
+plt.hist(ctrl, label='Control')
+plt.hist(rtn, label='RTN')
 
 plt.legend()
 plt.show()
