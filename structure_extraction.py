@@ -180,4 +180,21 @@ def plot_original_graph(skel_img_path):
     plt.show()
 
 
-def plot_relevant_
+def plot_relevant_graph(skel_img_path, relevant_nodes, relevant_edge_list):
+    """
+
+    @param relevant_nodes:
+    @param relevant_edge_list:
+    @return:
+    """
+    skel_img = imageio.imread(skel_img_path)
+
+    plt.axis('off')
+    plt.imshow(skel_img)
+
+    plt.plot(relevant_nodes[:,1], relevant_nodes[:,0], 'b.')
+
+    for edge in relevant_edge_list:
+        plt.plot(edge[:,1], edge[:,0], 'green')
+
+    plt.show()
