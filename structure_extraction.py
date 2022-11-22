@@ -61,6 +61,8 @@ def preproc_groups(path, group, num_series):
             cv2.imwrite(new_pref + 'Series%s_decon_converted/new_op_sept/preproc/C%s/C%s_decon_t0%s_ch00_proc.png' % (f'{i:03d}', f'{i}', f'{i}', f'{j:02d}'), processed_sample)
 
 
+# run Vessel2d.m to get the vessel enhancement output
+
 def get_skeleton(img_path):
     """
 
@@ -170,12 +172,12 @@ def plot_original_graph(skel_img_path):
     # draw node by o
     nodes = graph.nodes()
     ps = np.array([nodes[i]['o'] for i in nodes])
-    plt.plot(ps[:,1], ps[:,0], 'r.')
+    plt.plot(ps[:, 1], ps[:, 0], 'r.')
 
     # draw edges by pts
     for (start_node, end_node) in graph.edges():
         ps = graph[start_node][end_node]['pts']
-        plt.plot(ps[:,1], ps[:,0], 'green')
+        plt.plot(ps[:, 1], ps[:, 0], 'green')
 
     plt.show()
 
@@ -190,11 +192,44 @@ def plot_relevant_graph(skel_img_path, relevant_nodes, relevant_edge_list):
     skel_img = imageio.imread(skel_img_path)
 
     plt.axis('off')
-    plt.imshow(skel_img)
+    plt.imshow(skel_img, cmap='gray')
 
-    plt.plot(relevant_nodes[:,1], relevant_nodes[:,0], 'b.')
+    plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'b.')
 
     for edge in relevant_edge_list:
-        plt.plot(edge[:,1], edge[:,0], 'green')
+        plt.plot(edge[:, 1], edge[:, 0], 'green')
+
+    plt.show()
+
+
+def plot_total_graph(graph, relevant_nodes, relevant_edge_list):
+    """
+
+    @param graph: ER graph (obtained from skeleton)
+    @param relevant_nodes: degree 3 and more nodes
+    @param relevant_edge_list: edges specific to relevant nodes
+    @return:
+    """
+
+    img = imageio.imread('')
+    plt.axis('off')
+    plt.imshow(img, cmap='gray')
+
+    # draw node by o
+    nodes = graph.nodes()
+    ps = np.array([nodes[i]['o'] for i in nodes])
+    # plt.plot(ps[:, 1], ps[:, 0], 'r.')
+    plt.plot(ps[:, 1], ps[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow', mew=0.5, markersize=3)
+
+    # draw edges by pts
+    for (start_node, end_node) in graph.edges():
+        ps = graph[start_node][end_node]['pts']
+        plt.plot(ps[:, 1], ps[:, 0], 'green')
+
+    # plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'b.')
+    plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue', markersize=4)
+
+    for each in relevant_edge_list:
+        plt.plot(each[:, 1], each[:, 0], 'red', mew=2.8)
 
     plt.show()
