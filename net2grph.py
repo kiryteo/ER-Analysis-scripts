@@ -8,6 +8,7 @@ from skimage.transform import resize
 import cv2
 from skimage import draw
 import sknw
+import networkx as nx
 
 # img = np.ones((4,4))
 # bf = np.pad(img, (1,1), mode='constant').astype(np.uint16)
@@ -16,6 +17,71 @@ import sknw
 # plt.show()
 
 # ske = skeletonize(~img).astype(np.uint16)
+
+
+def get_edges():
+    for i in range(1):
+        # pre = '/localhome/asa420/MIAL/data/confocal_movies/ATL/skel/A1-graph/'
+
+        # open and skeletonize
+        ske = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t0%s_ch00_skel.png'%f'{i:02d}')
+
+        # ske = np.flipud(ske)
+        ske = ske[::-1]
+
+        # build graph from skeleton
+        # graph = skelnw.build_sknw(ske)
+        # nodes, edges = skelnw.build_sknw(ske)
+        graph = sknw.build_sknw(ske, iso=False)
+        G = nx.Graph()
+
+        node_set = graph.nodes()
+        edge_set = graph.edges()
+
+        G.add_nodes_from(node_set)
+        G.add_edges_from(edge_set)
+        # for i, node in enumerate(nodes):
+        #     if i == 6:
+        #         break
+        #     print(node)
+        # print(edges[0])
+
+        #for node in nodes:
+
+        # draw image
+        plt.axis('off')
+        plt.imshow(ske, cmap='gray')
+
+        # draw edges by pts
+        for (s,e) in graph.edges():
+            ps = graph[s][e]['pts']
+            plt.plot(ps[:,1], ps[:,0], 'green')
+        #
+        # # draw node by o
+        nodes = graph.nodes()
+        ps = np.array([nodes[i]['o'] for i in nodes])
+        plt.plot(ps[:,1], ps[:,0], 'r.')
+
+        d = G.degree
+        newps = []
+        for j, val in enumerate(d):
+            if val[1] > 2:
+                newps.append(ps[j])
+        nps = []
+        for each in newps:
+            nps.append([each[0], each[1]])
+
+        nps = np.array(nps)
+        plt.plot(nps[:, 1], nps[:, 0], 'b.')
+        #
+        # # title and show
+        # # plt.title('Build Graph')
+        # # plt.savefig(pre + 'A1_decon_t0%s_ch00_graph.png'%f'{i:02d}', bbox_inches='tight')
+        plt.show()
+        # plt.close()
+
+get_edges()
+exit()
 
 lt = []
 for i in range(100):
@@ -82,6 +148,10 @@ for i in range(100):
     plt.close()
 
 exit()
+
+
+
+
 
 for i in range(1):
     ske = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Climp/skel/C29/C29_decon_t0%s_ch00_skel.png'%f'{i:02d}')
@@ -152,7 +222,6 @@ for i in range(1):
     # plt.close()
 # plt.plot(ps[:,1], ps[:,0], 'r.')
 
-
 # title and show
 # plt.title('Build Graph')
 # plt.show()
@@ -166,50 +235,6 @@ for i in range(1):
 
 exit()
 
-
-
-
-def get_edges():
-    for i in range(1):
-        pre = '/localhome/asa420/MIAL/data/confocal_movies/ATL/skel/A1-graph/'
-
-        # open and skeletonize
-        ske = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/skel/A1/A1_decon_t0%s_ch00_skel.png'%f'{i:02d}')
-
-        # ske = np.flipud(ske)
-        ske = ske[::-1]
-
-        # build graph from skeleton
-        # graph = skelnw.build_sknw(ske)
-        nodes, edges = skelnw.build_sknw(ske)
-
-        for i, node in enumerate(nodes):
-            if i == 6:
-                break
-            print(node)
-        # print(edges[0])
-
-        #for node in nodes:
-
-        # draw image
-        plt.axis('off')
-        # plt.imshow(ske, cmap='gray')
-
-        # draw edges by pts
-        # for (s,e) in graph.edges():
-        #     ps = graph[s][e]['pts']
-        #     plt.plot(ps[:,1], ps[:,0], 'green')
-        #
-        # # draw node by o
-        # nodes = graph.nodes()
-        # ps = np.array([nodes[i]['o'] for i in nodes])
-        # plt.plot(ps[:,1], ps[:,0], 'r.')
-        #
-        # # title and show
-        # # plt.title('Build Graph')
-        # # plt.savefig(pre + 'A1_decon_t0%s_ch00_graph.png'%f'{i:02d}', bbox_inches='tight')
-        # plt.show()
-        # plt.close()
 
 
 def res_change():
