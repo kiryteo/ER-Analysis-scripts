@@ -136,13 +136,22 @@ def skel_to_graph(skel):
     g = sknw.build_sknw(skel, iso=False)
     G = nx.Graph()
 
-    G.add_nodes_from(g.nodes)
+    node_set = g.nodes()
+
+    G.add_nodes_from(node_set)
     G.add_edges_from(g.edges)
 
-    nodes = g.nodes()
     degree_list = G.degree
-    return nodes, degree_list
+    return node_set, degree_list
 
+
+# sk = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/skel/A1/A1_decon_t000_ch00_skel.png')
+# node_set, degree_list = skel_to_graph(sk)
+# print(node_set[0])
+#
+# # ps = np.array([node_set[node]['o'] for node in node_set])
+# # print(node_set)
+# exit()
 
 def get_junction_image(newps):
     """
@@ -177,14 +186,14 @@ def get_junctions(mean_img):
     skel = imageio.imread(mean_img)
 
     # Build graph from the skeleton
-    nodes, degree_list = skel_to_graph(skel)
-    ps = np.array([nodes[i]['o'] for i in nodes])
+    node_set, degree_list = skel_to_graph(skel)
+    node_coords = np.array([node_set[node]['o'] for node in node_set])
 
     # get all the nodes with degree greater than 2
     newps = []
     for i, val in enumerate(degree_list):
         if val[1] > 2:
-            newps.append(ps[i])
+            newps.append(node_coords[i])
 
     # Dilate junctions and remove them to get individual tubules
     # dil_brpts = pcv.dilate(gray_img=brpts_img, ksize=3, i=1)
@@ -204,24 +213,19 @@ def per_frame_junc_projection(group, num_series):
         f'{group}', f'{group[0]}{num_series}'), junc_mean / 100)
 
 
-# for i in range(1, 30):
-#     per_frame_junc_projection('RTN', i)
-#
-# exit()
-
 def init_proc_projection(group, num_series):
     sk = imageio.imread(
         confocal_data_path + '%s/new_op_jul/er_mean_proc/%s_er_mean_proc_enhance_skel.png' % (
             f'{group}', f'{group.lower()}{num_series}'))
 
-    nodes, degree_list = skel_to_graph(sk)
-    ps = np.array([nodes[i]['o'] for i in nodes])
+    node_set, degree_list = skel_to_graph(sk)
+    node_coords = np.array([node_set[node]['o'] for node in node_set])
 
     # get all the nodes with degree greater than 2
     newps = []
     for j, val in enumerate(degree_list):
         if val[1] > 2:
-            newps.append(ps[j])
+            newps.append(node_coords[j])
 
     brpts_img = get_junction_image(newps)
 
@@ -239,14 +243,14 @@ def mean_frame_validation(group, total_series):
                 confocal_data_path + '%s/new_op_jul/skel/%s/%s_decon_t0%s_ch00_skel.png' % (
                     f'{group}', f'{group_pref[group]}{num_ser}', f'{group_pref[group]}{num_ser}', f'{frame:02d}'))
 
-            nodes, degree_list = skel_to_graph(sk)
-            ps = np.array([nodes[i]['o'] for i in nodes])
+            node_set, degree_list = skel_to_graph(sk)
+            node_coords = np.array([node_set[node]['o'] for node in node_set])
 
             # get all the nodes with degree greater than 2
             newps = []
             for j, val in enumerate(degree_list):
                 if val[1] > 2:
-                    newps.append(ps[j])
+                    newps.append(node_coords[j])
 
             brpts_img = get_junction_image(newps)
 
@@ -570,7 +574,7 @@ def junc_area_locator(group, num_series):
         for each in sk_newps:
             sk_nps.append([each[0], each[1]])
 
-        sk_nps = np.array(sk_nps)
+        sk_nnode_coords = np.array(sk_nps)
 
         # sk_nps_sorted is the per frame junction list
         sk_nps_sorted = sorted(sk_nps, key=lambda t: t[0])
@@ -1231,6 +1235,7 @@ def junction_cc_mean_plot():
 
 # sl = calc_egfp_deposit()
 def get_junc_data_pca():
+    pass
     # sl = np.array(sl)
 
     # print(len(sl))
@@ -1500,44 +1505,6 @@ exit()
 # exit()
 
 
-
-from matplotlib.figure import figaspect
-
-# w, h = figaspect(1)
-#
-# fig, ax = plt.subplots(figsize=(8,8))
-#
-# plt.show()
-#
-# exit()
-
-# def forceAspect(ax,aspect=1):
-#     im = ax.get_images()
-#     extent = im[0].get_extent()
-#     ax.set_aspect(abs((extent[1]-extent[0])/(extent[3]-extent[2]))/aspect)
-
-
-
-# dt = junc_area_locator('Climp', 1)
-# dt = refine_junc_dt(dt_init, 10)
-
-# print(dt.keys())
-
-# print(dt[(31, 12)])
-# print(len(dt[(31, 12)]))
-
-# exit()
-# print(dt[(59, 53)])
-# print(len(dt[(59, 53)]))
-#
-# print(dt[(76, 102)])
-# print(len(dt[(76, 102)]))
-#
-# print(dt[(78, 125)])
-# print(len(dt[(78, 125)]))
-#
-# exit()
-#
 # l1 = []
 # l2 = []
 
@@ -1726,8 +1693,6 @@ def junction_var_median():
 # plt.title('Combined plot with histograms for junction spread within threshold 9')
 # plt.show()
 
-exit()
-
 # nps, dt_refined = refine_junc_dt(dt)
 # print(nps)
 
@@ -1803,10 +1768,6 @@ def get_junc_patch(er_input, a, b):
     return patch
 
 
-# ref_input = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A1_decon_t000_ch00.tif')
-# patch = get_junc_patch(ref_input, 3, 79)
-
-
 def get_junc_lists(group, num_series):
     junc_to_analyze = junc_area_locator(group, num_series)
     newdt = {}
@@ -1878,23 +1839,21 @@ def junc_intensity_variation(group, num_series):
     return mean_val_dt
 
 
-mean_val_dt = junc_intensity_variation('RTN', 1)
+def junc_intensity_variation_runner():
+    mean_val_dt = junc_intensity_variation('RTN', 1)
 
-for k1, v1 in mean_val_dt.items():
-    # plt.title('Junction ref location: %s'%f'{k1}')
-    # plt.plot(v1, linestyle='--', marker='o')
-    # grd = np.gradient(v1)
-    # plt.plot(grd, linestyle='--', marker='o')
-    # plt.show()
-    f = np.abs(np.fft.fft(v1))
-    k = np.fft.fftfreq(len(v1))
-    plt.plot(k)
-    plt.show()
-    break
+    for k1, v1 in mean_val_dt.items():
+        # plt.title('Junction ref location: %s'%f'{k1}')
+        # plt.plot(v1, linestyle='--', marker='o')
+        # grd = np.gradient(v1)
+        # plt.plot(grd, linestyle='--', marker='o')
+        # plt.show()
+        f = np.abs(np.fft.fft(v1))
+        k = np.fft.fftfreq(len(v1))
+        plt.plot(k)
+        plt.show()
+        break
 
-# plt.show()
-
-exit()
 
 
 # for i in range(100):
@@ -2015,10 +1974,6 @@ def crop_img():
         plt.close()
 
 
-crop_img()
-exit()
-
-
 def per_patch_pixel_fourier(group, channel):
     grp_dict = {}
     nd = {}
@@ -2109,19 +2064,19 @@ def inter_channel_correlation(c1, c2):
     return data
 
 
-atl_data = inter_channel_correlation(atl_egfp, atl_mc)
-climp_data = inter_channel_correlation(climp_egfp, climp_mc)
-rtn_data = inter_channel_correlation(rtn_egfp, rtn_mc)
+def inter_channel_correlation_runner():
+    atl_data = inter_channel_correlation(atl_egfp, atl_mc)
+    climp_data = inter_channel_correlation(climp_egfp, climp_mc)
+    rtn_data = inter_channel_correlation(rtn_egfp, rtn_mc)
 
-sns.distplot(atl_data, label='ATL')
-sns.distplot(climp_data, label='Climp')
-sns.distplot(rtn_data, label='RTN')
-plt.legend()
-plt.title('Per patch correlation coefficient between EGFP and mCherry channels', fontsize=16)
-plt.xlabel('Correlation coefficient', fontsize=12)
-plt.show()
+    sns.distplot(atl_data, label='ATL')
+    sns.distplot(climp_data, label='Climp')
+    sns.distplot(rtn_data, label='RTN')
+    plt.legend()
+    plt.title('Per patch correlation coefficient between EGFP and mCherry channels', fontsize=16)
+    plt.xlabel('Correlation coefficient', fontsize=12)
+    plt.show()
 
-exit()
 
 # for p in range(5):
 #     grp_list.extend(uniform_filter1d(slt[p], 5))
@@ -2281,8 +2236,6 @@ def per_patch_pixel_variance(group):
 # sns.boxplot(rtn_list)
 # plt.show()
 
-exit()
-
 
 def per_patch_if_corr():
     grp_list = []
@@ -2344,8 +2297,6 @@ def per_patch_if_corr():
 # # plt.imshow(op)
 # plt.plot(op)
 # plt.show()
-
-exit()
 
 
 def get_group_dif(group, metric):
