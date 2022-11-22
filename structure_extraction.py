@@ -12,6 +12,7 @@ from plantcv import plantcv as pcv
 import sknw
 import networkx as nx
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def get_std_img(path):
@@ -116,6 +117,7 @@ def get_tubules(graph):
     # graph.edges provides list of tuples with start and end node of the edge
     edges_list = graph.edges()
 
+    # get the list of edge coordinates list
     for (start_node, end_node) in edges_list:
         tubule_coords = graph[start_node][end_node]['pts']
         tubule_coords_list.append(tubule_coords)
@@ -123,3 +125,59 @@ def get_tubules(graph):
     return tubule_coords_list
 
 
+def get_relevant_tubules(graph, relevant_nodes):
+    """
+
+    @param graph:
+    @param relevant_nodes:
+    @return:
+    """
+
+    node_set = graph.nodes()
+    edge_set = graph.edges()
+
+    # get the relevant nodes which provide start and end points
+    # for corresponding edge
+    relevant_node_list = []
+    for r_node in relevant_nodes:
+        for each in node_set:
+            node_val = node_set[each]['o']
+            # print(node_set[each]['o'])
+            if r_node[0] == node_val[0] and r_node[1] == node_val[1]:
+                relevant_node_list.append(each)
+
+    # Check if both start and end node of the edge exists
+    # in the relevant node list. Include edges accordingly
+    relevant_edge_list = []
+    for (start_node, end_node) in edge_set:
+        if start_node in relevant_node_list and end_node in relevant_node_list:
+            tubule_coords = graph[start_node][end_node]['pts']
+            relevant_edge_list.append(tubule_coords)
+
+    return relevant_edge_list
+
+
+def plot_original_graph(skel_img_path):
+    """
+
+    @param skel_img_path: path the input skeleton
+    """
+    graph = skel_to_graph(skel_img_path)
+
+    plt.axis('off')
+    plt.imshow(imageio.imread(skel_img_path), cmap='gray')
+
+    # draw node by o
+    nodes = graph.nodes()
+    ps = np.array([nodes[i]['o'] for i in nodes])
+    plt.plot(ps[:,1], ps[:,0], 'r.')
+
+    # draw edges by pts
+    for (start_node, end_node) in graph.edges():
+        ps = graph[start_node][end_node]['pts']
+        plt.plot(ps[:,1], ps[:,0], 'green')
+
+    plt.show()
+
+
+def plot_relevant_
