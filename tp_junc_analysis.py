@@ -715,7 +715,7 @@ def separate_junc_cc(nps, skdata, labelled_img):
     # cc_area_dict = {}
     # for idx, props in enumerate(regions):
     #     cc_area_dict[idx] = props.area
-        # cc_area_dict[idx] = [props.area, props.axis_major_length]
+    # cc_area_dict[idx] = [props.area, props.axis_major_length]
 
     num_components = np.unique(labelled_img)
     # print(num_components)
@@ -1107,10 +1107,10 @@ def calc_egfp_deposit(group, channel, series_num, region):
 
         # sl.extend(m)
         sl.extend(ln)
-            # print(len(sl))
-            # print(len(sl[0]))
-            # print(sl[0])
-            # exit()
+        # print(len(sl))
+        # print(len(sl[0]))
+        # print(sl[0])
+        # exit()
     return sl
 
 
@@ -1893,7 +1893,7 @@ def per_patch_pixel_fourier(group, channel):
             # print(max(im1_patch_vals))
             # print(min(im1_patch_vals))
             sl.append(im1_patch_vals)
-                    # sldt.append(dt)
+            # sldt.append(dt)
 
         # for each in sl:
         #     print(len(each))

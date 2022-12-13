@@ -6,12 +6,18 @@ import numpy as np
 import itertools
 from skimage import draw
 
+# skel = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/skel/C12/C12_decon_t000_ch00_skel.png')
 
-img = imageio.imread('/localhome/asa420/ER-Analysis-scripts/Figure2/A1_t0.png')
+# skel = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/er_mean_proc/climp12_er_mean_proc_enhance_skel.png')
 
-skel = imageio.imread('/localhome/asa420/ER-Analysis-scripts/Figure2/A1_decon_t000_ch00_skel.png')
 
-skimg = np.stack((skel, skel, skel), axis=2)
+skel = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png')
+
+# img = imageio.imread('/localhome/asa420/ER-Analysis-scripts/Figure2/A1_t0.png')
+#
+# skel = imageio.imread('/localhome/asa420/ER-Analysis-scripts/Figure2/A1_decon_t000_ch00_skel.png')
+#
+# skimg = np.stack((skel, skel, skel), axis=2)
 
 # print(skimg.shape)
 # exit()
@@ -55,20 +61,13 @@ graph, node_set, edge_set, d = skel_to_graph(skel)
 # exit()
 
 node_coords = np.array([node_set[node]['o'] for node in node_set])
-newps = []
-for j, val in enumerate(d):
-    if val[1] > 2:
-        newps.append(node_coords[j])
-
+newps = [node_coords[j] for j, val in enumerate(d) if val[1] > 2]
 # ed_coords = np.array([node_set[node]['pts'] for node in node_set])
 # print(node_coords[2])
 # print(ed_coords[2])
 # exit()
 
-nps = []
-for each in newps:
-    nps.append([each[0], each[1]])
-
+nps = [[each[0], each[1]] for each in newps]
 nps = np.array(nps)
 
 # def get_junction_image(nps):
@@ -87,14 +86,36 @@ nps = np.array(nps)
 #
 # exit()
 
+# s = np.where(skel>0)
+# skel[s] = 0
 plt.imshow(skel, cmap='gray')
+# plt.imshow(imageio.imread('/localhome/asa420/ER-Analysis-scripts/Figure3-FuzIso/C12_junc_projection.png'), cmap='gray')
 # plt.imshow(img, cmap='gray')
 # plt.imshow(skimg)
 # plt.plot(edg[:, 1], edg[:, 0], '.', markerfacecolor='red', markeredgecolor='red', mew=0.2)
-plt.plot(node_coords[:, 1], node_coords[:, 0], 's', markerfacecolor='blue', markeredgecolor='blue', mew=0.1, markersize=3)
-plt.plot(nps[:, 1], nps[:, 0], 'o', markerfacecolor='None', markeredgecolor='red', mew=0.75, markersize=4)
+# plt.plot(node_coords[:, 1], node_coords[:, 0], 's', markerfacecolor='blue', markeredgecolor='blue', mew=0.1, markersize=3)
+plt.plot(nps[:, 1], nps[:, 0], 'o', markerfacecolor='magenta', markeredgecolor='magenta', mew=0.75, markersize=4)
 plt.axis('off')
-plt.savefig('ATL_1_t0_junctions', bbox_inches='tight', pad_inches=0, dpi=700)
-plt.close()
+# plt.savefig('Climp_12_CC_and_proj_junctions', bbox_inches='tight', pad_inches=0, dpi=700)
+# plt.close()
 
-# plt.show()
+plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

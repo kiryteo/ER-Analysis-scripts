@@ -81,7 +81,7 @@ def skel_to_graph(skel_img_path):
     @return:
     """
     skeleton_input = imageio.imread(skel_img_path)
-    graph = sknw.build_sknw(skeleton_input, iso=False)
+    graph = sknw.build_sknw(skeleton_input, multi=True, iso=False)
     return graph
 
 
@@ -121,7 +121,7 @@ def get_tubules(graph):
 
     # get the list of edge coordinates list
     for (start_node, end_node) in edges_list:
-        tubule_coords = graph[start_node][end_node]['pts']
+        tubule_coords = graph[start_node][end_node][0]['pts']
         tubule_coords_list.append(tubule_coords)
 
     return tubule_coords_list
@@ -153,7 +153,7 @@ def get_relevant_tubules(graph, relevant_nodes):
     relevant_edge_list = []
     for (start_node, end_node) in edge_set:
         if start_node in relevant_node_list and end_node in relevant_node_list:
-            tubule_coords = graph[start_node][end_node]['pts']
+            tubule_coords = graph[start_node][end_node][0]['pts']
             relevant_edge_list.append(tubule_coords)
 
     return relevant_edge_list
@@ -176,8 +176,10 @@ def plot_original_graph(skel_img_path):
 
     # draw edges by pts
     for (start_node, end_node) in graph.edges():
-        ps = graph[start_node][end_node]['pts']
+        ps = graph[start_node][end_node][0]['pts']
         plt.plot(ps[:, 1], ps[:, 0], 'green')
+        ps_multi = graph[start_node][end_node][1]['pts']
+        plt.plot(ps_multi[:, 1], ps_multi[:, 0], 'cyan')
 
     plt.show()
 
