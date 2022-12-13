@@ -23,7 +23,8 @@ def sk_mov_creator():
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
     video = cv2.VideoWriter('A2_skel.mp4', fourcc, 1.5, (128, 128))
     for i in range(100):
-        im = cv2.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t0%s_ch00_skel.png'%f'{i:02d}')
+        im = cv2.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t0{i:02d}_ch00_skel.png')
+
         video.write(im)
 
     cv2.destroyAllWindows()
@@ -37,7 +38,8 @@ def fuz_movie_creator():
     video = cv2.VideoWriter('RTN_Series4_fuzzy_area.mp4', fourcc, 1.5, (790, 290))
 
     for i in range(100):
-        im = cv2.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/fuzz_frames/R4_decon_t0%s_frame.png'%f'{i:02d}')
+        im = cv2.imread(f'/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/fuzz_frames/R4_decon_t0{i:02d}_frame.png')
+
         video.write(im)
 
     cv2.destroyAllWindows()
@@ -49,10 +51,12 @@ def fuz_frame_creator():
     for i in range(100):
         # im1 = cv2.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel_fuz/A2_decon_t0%s_skel_fuz.png'%f'{i:02d}')
         # video.write(im1)
-        er = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/files/R4_decon_t0%s_ch00.tif'%f'{i:02d}')
+        er = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/RTN/files/R4_decon_t0{i:02d}_ch00.tif')
+
         er = (er - er.min()) / (er.max() - er.min())
 
-        im1 = Image.open('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/skel/R4/R4_decon_t0%s_ch00_skel.png'%f'{i:02d}')
+        im1 = Image.open(f'/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/skel/R4/R4_decon_t0{i:02d}_ch00_skel.png')
+
         o1 = np.array(Image.blend(im1, mask, 0.5))
 
         o1 = cv2.cvtColor(o1, cv2.COLOR_BGR2RGB)
@@ -83,7 +87,8 @@ def fuz_frame_creator():
         plt.title('Overlay')
 
         fig.tight_layout()
-        plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/fuzz_frames/R4_decon_t0%s_frame.png'%f'{i:02d}', bbox_inches='tight')
+        plt.savefig(f'/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/fuzz_frames/R4_decon_t0{i:02d}_frame.png', bbox_inches='tight')
+
 
         plt.close()
 
@@ -189,8 +194,10 @@ def get_flow_mag():
         # norm_mn = np.zeros((128, 128))
 
         for i in range(4):
-            image0 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/skel/R%s/R%s_decon_t0%s_ch00_skel.png'%(f'{num}',f'{num}',f'{i:02d}'))
-            image1 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/skel/R%s/R%s_decon_t0%s_ch00_skel.png'%(f'{num}',f'{num}',f'{i+1:02d}'))
+            image0 = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/skel/R{num}/R{num}_decon_t0{i:02d}_ch00_skel.png')
+
+            image1 = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/skel/R{num}/R{num}_decon_t0{i + 1:02d}_ch00_skel.png')
+
 
             image0 = rgb2gray(image0)
             image1 = rgb2gray(image1)
@@ -217,7 +224,7 @@ def get_flow_mag():
 
             overlay = 0.5 * imst + 0.5 * opst
 
-            plt.title('Flow magnitude overlay on ER sample at t=0 (RTN Series %s)'%f'{num}')
+            plt.title(f'Flow magnitude overlay on ER sample at t=0 (RTN Series {num})')
             plt.imshow(overlay)
             plt.show()
 
@@ -256,8 +263,10 @@ def get_flow_net_overlay():
         norm_mn = np.zeros((128, 128))
 
         for i in range(99):
-            image0 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A%s/A%s_decon_t0%s_ch00_skel.png'%(f'{num}',f'{num}',f'{i:02d}'))
-            image1 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A%s/A%s_decon_t0%s_ch00_skel.png'%(f'{num}',f'{num}',f'{i+1:02d}'))
+            image0 = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A{num}/A{num}_decon_t0{i:02d}_ch00_skel.png')
+
+            image1 = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A{num}/A{num}_decon_t0{i + 1:02d}_ch00_skel.png')
+
 
             image0 = rgb2gray(image0)
             image1 = rgb2gray(image1)
@@ -295,7 +304,8 @@ def get_flow_net_overlay():
         # plt.show()
         # exit()
 
-        im0 = rgb2gray(imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A%s/A%s_decon_t000_ch00_skel.png'%(f'{num}',f'{num}')))
+        im0 = rgb2gray(imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A{num}/A{num}_decon_t000_ch00_skel.png'))
+
         lt = np.where(im0==255)
         imst = np.stack((im0,im0,im0), axis=2)
         imst[lt] = [255, 0, 255]
@@ -304,7 +314,7 @@ def get_flow_net_overlay():
 
         # plt.savefig('opt_flow_magnitude', bbox_inches='tight')
         # plt.close()
-        plt.title('Flow magnitude overlay on ER sample at t=0 (ATL Series %s)'%f'{num}')
+        plt.title(f'Flow magnitude overlay on ER sample at t=0 (ATL Series {num})')
         plt.imshow(overlay, cmap='gray')
         # plt.imshow(op)
         plt.colorbar()
@@ -318,8 +328,10 @@ def opt_flow_mag():
     global image0
     global image1
     for i in range(95):
-        image0 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t0%s_ch00_skel.png'%f'{i:02d}')
-        image1 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t0%s_ch00_skel.png'%f'{i+1:02d}')
+        image0 = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t0{i:02d}_ch00_skel.png')
+
+        image1 = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t0{i + 1:02d}_ch00_skel.png')
+
 
         image0 = rgb2gray(image0)
         image1 = rgb2gray(image1)
@@ -327,7 +339,7 @@ def opt_flow_mag():
 
     # --- Compute flow magnitude
         norm = np.sqrt(u ** 2 + v ** 2)
-        # norm_list.append(norm)
+            # norm_list.append(norm)
 
     mn = np.mean(norm_list)
 
@@ -367,9 +379,14 @@ def opt_flow_mag():
 
 def opt_flow_lk():
 
+    # --- Quiver plot arguments
+
+    nvec = 30  # Number of vectors to be displayed along each image dimension
     for i in range(99):
-        image0 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t0%s_ch00_skel.png'%f'{i:02d}')
-        image1 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t0%s_ch00_skel.png'%f'{i+1:02d}')
+        image0 = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t0{i:02d}_ch00_skel.png')
+
+        image1 = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t0{i + 1:02d}_ch00_skel.png')
+
 
         # image0 = rgb2gray(image0)
         # image1 = rgb2gray(image1)
@@ -384,16 +401,13 @@ def opt_flow_lk():
         # --- Sequence image sample
 
         ax0.imshow(image0, cmap='gray')
-        ax0.set_title("Frame %s"%f'{i}')
+        ax0.set_title(f"Frame {i}")
         ax0.set_axis_off()
 
         ax1.imshow(image1, cmap='gray')
-        ax1.set_title("Frame %s"%f'{i+1}')
+        ax1.set_title(f"Frame {i + 1}")
         ax1.set_axis_off()
 
-        # --- Quiver plot arguments
-
-        nvec = 30  # Number of vectors to be displayed along each image dimension
         nl, nc = image0.shape
         step = max(nl//nvec, nc//nvec)
 
@@ -424,12 +438,10 @@ def get_of_mag_hist():
     norm_list = []
     num = 2
     for i in range(95):
-        image0 = imageio.imread(
-            '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A%s/A%s_decon_t0%s_ch00_skel.png' % (
-            f'{num}', f'{num}', f'{i:02d}'))
-        image1 = imageio.imread(
-        '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A%s/A%s_decon_t0%s_ch00_skel.png' % (
-        f'{num}', f'{num}', f'{i + 1:02d}'))
+        image0 = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A{num}/A{num}_decon_t0{i:02d}_ch00_skel.png')
+
+        image1 = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A{num}/A{num}_decon_t0{i + 1:02d}_ch00_skel.png')
+
 
         # image0 = rgb2gray(image0)
         # image1 = rgb2gray(image1)
@@ -451,13 +463,13 @@ def get_of_mag_hist():
 
         norm_list.extend(l)
 
-        # print(l.shape)
-        # print(l.max())
-        # print(norm.shape)
-        # norm_list.append(norm)
+            # print(l.shape)
+            # print(l.max())
+            # print(norm.shape)
+            # norm_list.append(norm)
 
 
-        # norm_mn += norm
+            # norm_mn += norm
 
     # print(np.mean(norm_list))
     # print(np.median(norm_list))
@@ -501,35 +513,29 @@ def get_of_mag_hist():
 def get_fuzzy_correlation(group):
     if group == 'ATL':
         img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_fuzzy/A1_mean_fuzz.png')
-    elif group == 'Climp':
-        img = imageio.imread('')
-    elif group == 'Control':
-        img = imageio.imread('')
     else:
         img = imageio.imread('')
-
     op = ndimage.median_filter(img, size=3)
     op = skimage.morphology.area_opening(op, area_threshold=9)
     flop = op.flatten()
     q = np.quantile(flop, 0.95)
-    qt_list = np.where(op > q)
-    # nqt = np.where(op <= q)
-    # op[qt_list] = 255.
-    # op[nqt] = 0.
-    return qt_list
+    return np.where(op > q)
 
 
 corr_vals_atl = []
 for j in range(1, 27):
-    mean_frame = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_fuzzy/A%s_mean_fuzz.png'%f'{j}')
+    mean_frame = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_fuzzy/A{j}_mean_fuzz.png')
+
     op = ndimage.median_filter(mean_frame, size=3)
     op = skimage.morphology.area_opening(op, area_threshold=9)
     flop = op.flatten()
     q = np.quantile(flop, 0.95)
     qt_list = np.where(op > q)
     for i in range(99):
-        er_input = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A%s_decon_t0%s_ch00.tif'%(f'{j}', f'{i:02d}'))
-        er_next = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A%s_decon_t0%s_ch00.tif'%(f'{j}',f'{i+1:02d}'))
+        er_input = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A{j}_decon_t0{i:02d}_ch00.tif')
+
+        er_next = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/files/A{j}_decon_t0{i + 1:02d}_ch00.tif')
+
 
         std_er = (er_input - er_input.min()) / (er_input.max() - er_input.min())
         std_er_next = (er_next - er_next.min()) / (er_next.max() - er_next.min())
@@ -542,15 +548,18 @@ for j in range(1, 27):
 
 corr_vals_climp = []
 for j in range(1, 32):
-    mean_frame = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/Climp_fuzzy/C%s_mean_fuzz.png'%f'{j}')
+    mean_frame = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/Climp_fuzzy/C{j}_mean_fuzz.png')
+
     op = ndimage.median_filter(mean_frame, size=3)
     op = skimage.morphology.area_opening(op, area_threshold=9)
     flop = op.flatten()
     q = np.quantile(flop, 0.95)
     qt_list = np.where(op > q)
     for i in range(99):
-        er_input = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Climp/files/C%s_decon_t0%s_ch00.tif'%(f'{j}', f'{i:02d}'))
-        er_next = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Climp/files/C%s_decon_t0%s_ch00.tif'%(f'{j}',f'{i+1:02d}'))
+        er_input = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/Climp/files/C{j}_decon_t0{i:02d}_ch00.tif')
+
+        er_next = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/Climp/files/C{j}_decon_t0{i + 1:02d}_ch00.tif')
+
 
         std_er = (er_input - er_input.min()) / (er_input.max() - er_input.min())
         std_er_next = (er_next - er_next.min()) / (er_next.max() - er_next.min())
@@ -563,15 +572,18 @@ for j in range(1, 32):
 
 corr_vals_ctrl = []
 for j in range(1, 32):
-    mean_frame = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/ctrl_fuzzy/Ct%s_mean_fuzz.png'%f'{j}')
+    mean_frame = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/ctrl_fuzzy/Ct{j}_mean_fuzz.png')
+
     op = ndimage.median_filter(mean_frame, size=3)
     op = skimage.morphology.area_opening(op, area_threshold=9)
     flop = op.flatten()
     q = np.quantile(flop, 0.95)
     qt_list = np.where(op > q)
     for i in range(99):
-        er_input = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Control/files/img_%s_decon_t0%s.tif'%(f'{j}', f'{i:02d}'))
-        er_next = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Control/files/img_%s_decon_t0%s.tif'%(f'{j}',f'{i+1:02d}'))
+        er_input = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/Control/files/img_{j}_decon_t0{i:02d}.tif')
+
+        er_next = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/Control/files/img_{j}_decon_t0{i + 1:02d}.tif')
+
 
         std_er = (er_input - er_input.min()) / (er_input.max() - er_input.min())
         std_er_next = (er_next - er_next.min()) / (er_next.max() - er_next.min())
@@ -584,15 +596,18 @@ for j in range(1, 32):
 
 corr_vals_rtn = []
 for j in range(1, 30):
-    mean_frame = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/RTN_fuzzy/R%s_mean_fuzz.png'%f'{j}')
+    mean_frame = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/RTN_fuzzy/R{j}_mean_fuzz.png')
+
     op = ndimage.median_filter(mean_frame, size=3)
     op = skimage.morphology.area_opening(op, area_threshold=9)
     flop = op.flatten()
     q = np.quantile(flop, 0.95)
     qt_list = np.where(op > q)
     for i in range(99):
-        er_input = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/files/R%s_decon_t0%s_ch00.tif'%(f'{j}', f'{i:02d}'))
-        er_next = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/files/R%s_decon_t0%s_ch00.tif'%(f'{j}',f'{i+1:02d}'))
+        er_input = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/RTN/files/R{j}_decon_t0{i:02d}_ch00.tif')
+
+        er_next = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/RTN/files/R{j}_decon_t0{i + 1:02d}_ch00.tif')
+
 
         std_er = (er_input - er_input.min()) / (er_input.max() - er_input.min())
         std_er_next = (er_next - er_next.min()) / (er_next.max() - er_next.min())
@@ -659,7 +674,8 @@ def frame_creator():
 
 def get_fuzzy_binary():
     for i in range(1, 2):
-        img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/ctrl_fuzzy/Ct%s_mean_fuzz.png'%f'{i}')
+        img = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/ctrl_fuzzy/Ct{i}_mean_fuzz.png')
+
         op = ndimage.median_filter(img, size=3)
         op = skimage.morphology.area_opening(op, area_threshold=9)
         flop = op.flatten()
@@ -668,7 +684,7 @@ def get_fuzzy_binary():
         nqt = np.where(op <= q)
         op[qt_list] = 255.
         op[nqt] = 0.
-        cv2.imwrite('/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/fuzzy_bin/Ct%s_fuzz_bin.png'%f'{i}', op)
+        cv2.imwrite(f'/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/fuzzy_bin/Ct{i}_fuzz_bin.png', op)
         # plt.imshow(op)
         # plt.show()
 
@@ -677,8 +693,10 @@ def get_fuzzy_binary():
 
 
 def remove_small_components(series_num):
-    mean_proj = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/RTN_mean_proj/R%s_mean.png'%f'{series_num}')
-    img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/RTN_fuzzy/R%s_mean_fuzz.png'%f'{series_num}')
+    mean_proj = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/RTN_mean_proj/R{series_num}_mean.png')
+
+    img = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/RTN_fuzzy/R{series_num}_mean_fuzz.png')
+
     # aop = skimage.morphology.area_opening(img, area_threshold=5)
     op = ndimage.median_filter(img, size=3)
     op = skimage.morphology.area_opening(op, area_threshold=9)
@@ -696,7 +714,7 @@ def remove_small_components(series_num):
     fig = plt.figure(figsize=(6, 4))
     plt.axis('off')
     plt.title('Final fuzzy : small elements removal + binarization')
-    plt.suptitle('RTN Series %s'%f'{series_num}')
+    plt.suptitle(f'RTN Series {series_num}')
     r, c = 1, 3
 
     fig.add_subplot(r, c, 1)
@@ -722,7 +740,7 @@ def remove_small_components(series_num):
 # exit()
 
 def interframe_corr(group, num_series):
-    pref = '/localhome/asa420/MIAL/data/confocal_movies/' + group + '/new_op_jul/skel/'
+    pref = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/'
     corr_vals = []
     if group == 'ATL':
         ser_name = 'A'
@@ -735,8 +753,10 @@ def interframe_corr(group, num_series):
 
     for i in range(1, num_series + 1):
         for j in range(99):
-            im1 = imageio.imread(pref + '%s/%s_decon_t0%s_ch00_skel.png' % (f'{ser_name}{i}', f'{ser_name}{i}', f'{j:02d}')).flatten()
-            im2 = imageio.imread(pref + '%s/%s_decon_t0%s_ch00_skel.png' % (f'{ser_name}{i}', f'{ser_name}{i}', f'{j + 1:02d}')).flatten()
+            im1 = imageio.imread(f'{pref}{ser_name}{i}/{ser_name}{i}_decon_t0{j:02d}_ch00_skel.png').flatten()
+
+            im2 = imageio.imread(f'{pref}{ser_name}{i}/{ser_name}{i}_decon_t0{j + 1:02d}_ch00_skel.png').flatten()
+
             valnum = np.corrcoef(im1, im2)
             corr_vals.append(valnum[0, 1])
 
@@ -837,19 +857,16 @@ def blur_detect_fft():
 
 
 def mean_proj_interval(group, num_series, interval):
-    path = '/localhome/asa420/MIAL/data/confocal_movies/' + group + '/new_op_jul/'
+    path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/'
 
     for series in range(1, num_series):
-        cnt = 0
-        for frame in range(0, 100, interval):
-            cnt += 1
+        for cnt, frame in enumerate(range(0, 100, interval), start=1):
             img_mean = np.zeros((128, 128))
             for fr_stack in range(frame, frame + interval):
-                each = path + 'skel/C%s/C%s_decon_t0%s_ch00_skel.png' % (f'{series}', f'{series}', f'{fr_stack:02d}')
+                each = f'{path}skel/C{series}/C{series}_decon_t0{fr_stack:02d}_ch00_skel.png'
                 img = imageio.imread(each)
                 img_mean += img
-            cv2.imwrite(path + 'window-%s/C%s_decon_ch00_skel_mean_%s_win%s.png' % (
-                f'{interval}', f'{series}', f'{cnt}', f'{interval}'), img_mean / interval)
+            cv2.imwrite(f'{path}window-{interval}/C{series}_decon_ch00_skel_mean_{cnt}_win{interval}.png', img_mean / interval)
 
 
 mean_proj_interval('Climp', 20)
@@ -909,12 +926,12 @@ def fuzzy_analysis_freq():
     # fuz = restoration.rolling_ball(img, kernel=kernel)
 
     diff_list = []
-    for i in range(0, 100):
-        img = imageio.imread(
-            '/localhome/asa420/MIAL/data/confocal_movies/Climp/files/C1_decon_t0%s_ch00.tif' % f'{i:02d}')
+    for i in range(100):
+        img = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/Climp/files/C1_decon_t0{i:02d}_ch00.tif')
+
         std_img = ((img) / (img.max() - img.min())) * 255
-        im2 = imageio.imread(
-            '/localhome/asa420/MIAL/data/confocal_movies/Climp/files/C1_decon_t0%s_ch00.tif' % f'{i + 1:02d}')
+        im2 = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/Climp/files/C1_decon_t0{i + 1:02d}_ch00.tif')
+
         std_im2 = ((im2) / (im2.max() - im2.min())) * 255
 
         nz_img = np.where(std_img != 0)
@@ -930,7 +947,7 @@ def fuzzy_analysis_freq():
         diff_inv = scipy.fftpack.idctn(diff_m)
 
         diff_list.append(diff_inv)
-        # print(diff_inv)
+            # print(diff_inv)
 
     plt.plot(diff_list)
     plt.xlabel('Difference values over sequence')
@@ -957,14 +974,13 @@ def fuzzy_analysis_freq():
 def extract_fuzzy_ten():
     atl_ten = []
     for i in range(1):
-        img = imageio.imread(
-            '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_mean_proj/A%s_mean.png' % f'{i}')
+        img = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_mean_proj/A{i}_mean.png')
 
 
 def cut_fuzzy_region():
     for i in range(1, 27):
-        img = imageio.imread(
-            '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_mean_proj/A%s_mean.png' % f'{i}')
+        img = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_mean_proj/A{i}_mean.png')
+
 
         # kernel = restoration.ellipsoid_kernel((2, 2), 2)
         # fuz = restoration.rolling_ball(img, kernel=kernel)
@@ -1009,7 +1025,7 @@ def cut_fuzzy_region():
         # plt.show()
 
         fig = plt.figure(figsize=(8, 4))
-        plt.title('A%s_decon_mean_frame' % f'{i:02d}')
+        plt.title(f'A{i:02d}_decon_mean_frame')
         plt.axis('off')
         r, c = 1, 3
         #
@@ -1045,8 +1061,8 @@ def cut_fuzzy_region():
         # plt.axis('off')
 
         # plt.show()
-        plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/fuzzy_sep/ATL_fuzzy_frame_%s' % f'{i}',
-                    bbox_inches='tight')
+        plt.savefig(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/fuzzy_sep/ATL_fuzzy_frame_{i}', bbox_inches='tight')
+
         plt.close()
 
         # op = skimage.morphology.erosion(op)
@@ -1066,8 +1082,8 @@ exit()
 def extract_fuzzy_region():
     atl = []
     for i in range(1, 27):
-        img = imageio.imread(
-            '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_mean_proj/A%s_mean.png' % f'{i}')
+        img = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_mean_proj/A{i}_mean.png')
+
         # kernel = restoration.ellipsoid_kernel((2, 2), 2)
         # fuz = restoration.rolling_ball(img, kernel=kernel)
         fuz = restoration.rolling_ball(img, radius=1)
@@ -1088,8 +1104,8 @@ def extract_fuzzy_region():
 
     climp = []
     for i in range(1, 32):
-        img = imageio.imread(
-            '/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/Climp_mean_proj/C%s_mean.png' % f'{i}')
+        img = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/Climp_mean_proj/C{i}_mean.png')
+
         fuz = restoration.rolling_ball(img, radius=1)
         op = skimage.morphology.erosion(fuz)
         # op = skimage.morphology.erosion(op)
@@ -1101,8 +1117,8 @@ def extract_fuzzy_region():
 
     ctrl = []
     for i in range(1, 32):
-        img = imageio.imread(
-            '/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/Ctrl_mean_proj/Ct%s_mean.png' % f'{i}')
+        img = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/Ctrl_mean_proj/Ct{i}_mean.png')
+
         fuz = restoration.rolling_ball(img, radius=1)
         op = skimage.morphology.erosion(fuz)
         # op = skimage.morphology.erosion(op)
@@ -1114,8 +1130,8 @@ def extract_fuzzy_region():
 
     rtn = []
     for i in range(1, 30):
-        img = imageio.imread(
-            '/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/RTN_mean_proj/R%s_mean.png' % f'{i}')
+        img = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/RTN_mean_proj/R{i}_mean.png')
+
         fuz = restoration.rolling_ball(img, radius=1)
         op = skimage.morphology.erosion(fuz)
         # op = skimage.morphology.erosion(op)
@@ -1180,11 +1196,13 @@ exit()
 
 def fuzzy_frames():
     for i in range(1, 30):
-        img_path = '/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/RTN_mean_proj/R%s_mean.png' % f'{i}'
-        fuzzy_path = '/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/fuzzy/R%s_mean_fuzz.png' % f'{i}'
+        img_path = f'/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/RTN_mean_proj/R{i}_mean.png'
+
+        fuzzy_path = f'/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/fuzzy/R{i}_mean_fuzz.png'
+
 
         fig = plt.figure(figsize=(8, 4))
-        plt.title('R%s_fuzzy' % f'{i}')
+        plt.title(f'R{i}_fuzzy')
         plt.axis('off')
         r, c = 1, 2
 
@@ -1196,7 +1214,7 @@ def fuzzy_frames():
         plt.imshow(cv2.imread(fuzzy_path))
         plt.axis('off')
 
-        plt.savefig('R%s_fuzzy_frame_cv.png' % f'{i}', bbox_inches='tight')
+        plt.savefig(f'R{i}_fuzzy_frame_cv.png', bbox_inches='tight')
         plt.close()
 
 
@@ -1205,13 +1223,14 @@ exit()
 
 
 def preprocess_samples(group):
-    path_pref = '/localhome/asa420/MIAL/data/confocal_movies/' + group + '/files/'
-    new_pref = '/localhome/asa420/MIAL/data/confocal_movies/' + group + '/new_op_jul/preproc/'
+    path_pref = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/'
+    new_pref = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/preproc/'
+
 
     for i in range(27, 32):
-        os.makedirs(new_pref + 'C%s' % f'{i}')
+        os.makedirs(f'{new_pref}C{i}')
         for j in range(100):
-            img = imageio.imread(path_pref + 'C%s_decon_t0%s_ch00.tif' % (f'{i}', f'{j:02d}'))
+            img = imageio.imread(f'{path_pref}C{i}_decon_t0{j:02d}_ch00.tif')
             std_img = ((img) / (img.max() - img.min())) * 255
             aop = skimage.morphology.area_opening(std_img, area_threshold=2)
             erod = skimage.morphology.erosion(aop)
@@ -1220,7 +1239,7 @@ def preprocess_samples(group):
             aop = skimage.morphology.area_opening(cl, area_threshold=2)
             loc = threshold_local(aop, 3)
             loc = threshold_local(loc, 3)
-            cv2.imwrite(new_pref + 'C%s/C%s_decon_t0%s_ch00_proc.png' % (f'{i}', f'{i}', f'{j:02d}'), loc)
+            cv2.imwrite(f'{new_pref}C{i}/C{i}_decon_t0{j:02d}_ch00_proc.png', loc)
 
 
 # preprocess_samples('Climp')
@@ -1230,12 +1249,12 @@ def preprocess_samples(group):
 def get_skel():
     pref = '/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/'
     for i in range(1, 30):
-        os.makedirs(pref + 'skel/R%s' % f'{i}')
+        os.makedirs(f'{pref}skel/R{i}')
         for j in range(100):
-            img = imageio.imread(
-                pref + 'preproc/R%s/R%s_decon_t0%s_ch00_proc_enhance.png' % (f'{i}', f'{i}', f'{j:02d}'))
+            img = imageio.imread(f'{pref}preproc/R{i}/R{i}_decon_t0{j:02d}_ch00_proc_enhance.png')
+
             sk = pcv.morphology.skeletonize(img)
-            cv2.imwrite(pref + 'skel/R%s/R%s_decon_t0%s_ch00_skel.png' % (f'{i}', f'{i}', f'{j:02d}'), sk)
+            cv2.imwrite(f'{pref}skel/R{i}/R{i}_decon_t0{j:02d}_ch00_skel.png', sk)
 
 
 # get_skel()
@@ -1244,15 +1263,14 @@ def get_skel():
 
 def Agg(path):
     for i in range(1, 32):
-        files = glob.glob(path + 'C%s/*' % (f'{i}'))
+        files = glob.glob(f'{path}C{i}/*')
         imgstack = []
         img_mean = np.zeros((128, 128))
         for each in files:
             img = imageio.imread(each)
             img_mean += img
             imgstack.append(img)
-        cv2.imwrite('/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/C%s_mean.png' % f'{i}',
-                    img_mean / len(files))
+        cv2.imwrite(f'/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/C{i}_mean.png', img_mean / len(files))
         # pcv.print_image(img=img_mean/len(files), filename=home + '/Desktop/Climp/' + 'C%s-mean-brpts.png'%(f'{i}'))
         # # imageio.imwrite(home + '/Desktop/ATL/' + 'A%s-mean.png'%(f'{i}'), img_mean/len(files))
         # new = np.stack(imgstack, axis=2)

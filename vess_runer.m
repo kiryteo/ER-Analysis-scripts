@@ -1,6 +1,8 @@
 
 %fname = '/localhome/asa420/ER-Analysis-scripts/A1_t0_thrloc.png'
-fname = '/localhome/asa420/Downloads/Oligos_preproc.png';
+
+fname = '/localhome/asa420/ER-Analysis-scripts/mv50_gray.png';
+
 Vessel2d(fname);
 
 %for i=27:29

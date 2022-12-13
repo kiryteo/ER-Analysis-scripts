@@ -3,7 +3,30 @@ from skimage.filters import threshold_local
 import os
 import imageio
 import cv2
+from plantcv import plantcv as pcv
+import matplotlib.pyplot as plt
 
+# img = imageio.imread('/localhome/asa420/ER-Analysis-scripts/Figure3-FuzIso/C12_t0_ch0.png')
+# aop = skimage.morphology.area_opening(img, area_threshold=2)
+# erod = skimage.morphology.erosion(aop)
+# aop = skimage.morphology.area_opening(erod, area_threshold=2)
+# # cl = skimage.morphology.area_closing(aop, area_threshold=32)
+# # aop = skimage.morphology.area_opening(cl, area_threshold=2)
+# loc = threshold_local(aop, 3)
+# loc = threshold_local(loc, 3)
+# cv2.imwrite('/localhome/asa420/ER-Analysis-scripts/Figure3-FuzIso/C12_t0_ch0_loc2_noclaop.png', loc)
+
+# img = imageio.imread('/localhome/asa420/ER-Analysis-scripts/Figure3-FuzIso/C12_t0_ch0_loc2_enhance.png')
+# sk = pcv.morphology.skeletonize(mask=img)
+# cv2.imwrite('/localhome/asa420/ER-Analysis-scripts/Figure3-FuzIso/C12_t0_ch0_loc2_enhance_skel.png', sk)
+
+img = imageio.imread('/localhome/asa420/ER-Analysis-scripts/Figure3-FuzIso/C12_t0_ch0_loc2_enhance_skel.png')
+# aop = skimage.morphology.area_opening(img, area_threshold=2)
+aop = skimage.morphology.remove_small_objects(img, 32)
+plt.imshow(aop)
+plt.show()
+
+exit()
 
 def preprocess_samples(group):
     path_pref = '/localhome/asa420/MIAL/data/live-cell-movies/' + group + '/Decon/'
@@ -26,3 +49,5 @@ def preprocess_samples(group):
 
 
 preprocess_samples('COSKDEL')
+
+
