@@ -797,8 +797,8 @@ def get_junction_areas(label_vals, unassigned_cc_dict):
 # exit()
 
 # def plot_junc_areas(group, series_num, iso, fuz, unk, labelled_img):
-def plot_junc_areas(group, series_num, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords, unk_cc_coords):
-    # regions = regionprops(labelled_img)
+def plot_junc_areas(group, series_num, labelled_img, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords, unk_cc_coords):
+    regions = regionprops(labelled_img)
     for i in range(1):
         plt.axis('off')
         if group == 'Control':
@@ -846,19 +846,17 @@ def plot_junc_areas(group, series_num, iso, fuz, skdata, iso_cc_coords, fuz_cc_c
 
 
         # plots contours
-        # for index in range(1, labelled_img.max()):
-        #     label_i = regions[index].label
-        #     contour = measure.find_contours(labelled_img == label_i, 0.8)[0]
-        #     y, x = contour.T
-        #     plt.plot(x, y)
+        for index in range(1, labelled_img.max()):
+            label_i = regions[index].label
+            contour = measure.find_contours(labelled_img == label_i, 0.8)[0]
+            y, x = contour.T
+            plt.plot(x, y, color='cyan')
 
         # plt.axis('off')
         # plt.savefig('Climp_series12_junc_representation_iso_fuz_unk_2_new_colors', bbox_inches='tight', pad_inches=0, dpi=700)
         # plt.close()
 
         plt.show()
-
-# plot_junc_areas('ATL', 1, iso, )
 
 
 def get_cc_ids(labelled_img, region):
@@ -882,23 +880,94 @@ def get_cc_ids(labelled_img, region):
     return [i for i, num in enumerate(dt_vals) if i > 0 and len(num) != 0]
 
 
-def junction_crops_creator(group, ser_num, junc_id):
-    nps, skdata, labelled_img = label_junctions('ATL', 8)
+# nps, skdata, labelled_img = label_junctions('Climp', 1)
+#
+# label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
+# iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
+#
+# iso_cc = get_cc_ids(labelled_img, iso)
+# fuz_cc = get_cc_ids(labelled_img, fuz)
+# unk_cc = get_cc_ids(labelled_img, unk)
+#
+# iso_cc_coords = {each: np.where(labelled_img==each) for each in iso_cc}
+# fuz_cc_coords = {each: np.where(labelled_img==each) for each in fuz_cc}
+# unk_cc_coords = {each: np.where(labelled_img==each) for each in unk_cc}
+#
+# plot_junc_areas('ATL', 1, labelled_img, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords, unk_cc_coords)
+#
+# exit()
+
+def get_label_id(regions, iso, junc_id):
+    for j in range(len(regions)):
+        region_coords = regions[j].coords
+        for each in region_coords:
+            a, b = each[0], each[1]
+            if a == iso[junc_id][0] and b == iso[junc_id][1]:
+                return j
+
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib.figure import Figure
+
+def junction_crops_creator(group, ser_num, junc_id, channel):
+    nps, skdata, labelled_img = label_junctions(group, ser_num)
 
     label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
     iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
+
+    iso_cc = get_cc_ids(labelled_img, iso)
+    iso_cc_coords = {each: np.where(labelled_img==each) for each in iso_cc}
+
+
+    if channel == 'egfp':
+        ch = 0
+    else:
+        ch = 1
     for i in range(100):
-        egfp = get_std_img(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/{group[0]}{ser_num}_decon_t0{i:02d}_ch00.tif')
-        mch = get_std_img(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/{group[0]}{ser_num}_decon_t0{i:02d}_ch01.tif')
+        file = get_std_img(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/{group[0]}{ser_num}_decon_t0{i:02d}_ch0{ch}.tif')
+
+        # file = get_std_img(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/junction_crops/S1_j15_29_74_CC/A{ser_num}_decon_t0{i:02d}_ch00.png')
+
+
+        regions = regionprops(labelled_img)
+        # print(regions[junc_id].label)
+        #
+        # exit()
+
         x, y = iso[junc_id][0], iso[junc_id][1]
-        crp_egfp = egfp[x-5:x+5, y-5:y+5]
-        crp_mch = mch[x-5:x+5, y-5:y+5]
-        imageio.imsave(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/junction_crops/S{ser_num}_junc{junc_id}_{x}_{y}/{group[0]}{ser_num}_decon_t0{i:02d}_ch00.png', crp_egfp)
-        imageio.imsave(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/junction_crops/S{ser_num}_junc{junc_id}_{x}_{y}/{group[0]}{ser_num}_decon_t0{i:02d}_ch01.png', crp_mch)
+
+        # fig = Figure()
+        # canvas = FigureCanvas(fig)
+        # ax = fig.gca()
+
+        # contour code
+        j = get_label_id(regions, iso, junc_id)
+        label_i = regions[j].label
+        contour = measure.find_contours(labelled_img == label_i, 0.8)[0]
+        cntrY, cntrX = contour.T
 
 
-# junction_crops_creator('RTN', 5, 34)
-# exit()
+        crp_file = file[x-5:x+5, y-5:y+5]
+        # crp_mch = mch[x-5:x+5, y-5:y+5]
+        plt.axis('off')
+        # plt.imshow(crp_file, cmap='gray')
+        # plt.imshow(file, cmap='gray')
+        plt.plot(cntrX, cntrY, color='cyan')
+        # fig = plt.gca()
+        # crp = fig[x-5:x+5, y-5:y+5]
+        plt.imshow(crp_file)
+        # plt.title(f't={i}')
+        # fig = plt.gca(figsize=(8,10))
+
+        # plt.savefig(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/junction_crops/S{ser_num}_j{junc_id}_{x}_{y}_CC_crops/{group[0]}{ser_num}_decon_t0{i:02d}_ch0{ch}.png', bbox_inches='tight', pad_inches=0)
+        # plt.close()
+        plt.show()
+
+        # imageio.imsave(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/junction_crops/S{ser_num}_junc{junc_id}_{x}_{y}/{group[0]}{ser_num}_decon_t0{i:02d}_ch00.png', crp_egfp)
+        # imageio.imsave(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/junction_crops/S{ser_num}_junc{junc_id}_{x}_{y}/{group[0]}{ser_num}_decon_t0{i:02d}_ch01.png', crp_mch)
+
+
+junction_crops_creator('ATL', 1, 15, 'egfp')
+exit()
 
 nps, skdata, labelled_img = label_junctions('ATL', 8)
 

@@ -122,17 +122,17 @@ def std_input():
 
 def file_movie_creator():
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    prefix = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/new_process_frames/'
-    video = cv2.VideoWriter('ATL_er_skel_frame_two.mp4', fourcc, 1.5, (330, 189))
+    prefix = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/junction_crops/S1_j15_29_74/'
+    video = cv2.VideoWriter('ATL_S1_iso_j15_mCherry.mp4', fourcc, 1.5, (369, 391))
     for frame in range(100):
-        img = cv2.imread(f'{prefix}A1_decon_t0{frame:02d}_ch00_new_frame_two.png')
+        img = cv2.imread(f'{prefix}A1_decon_t0{frame:02d}_ch01.png')
         video.write(img)
 
     cv2.destroyAllWindows()
     video.release()
 
-# file_movie_creator()
-# exit()
+file_movie_creator()
+exit()
 
 
 # def gmovie_creator(group, num_series):

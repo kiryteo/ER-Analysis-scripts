@@ -484,98 +484,60 @@ def get_above_mean_across_groups():
     plt.show()
 
 
-def junc_line_charts():
+def junc_line_charts(ser_num, group, junc_num):
 
-    ln_egfp, ln_mch, region_cc_coords = calc_deposit(1, group, 'iso')
+    ln_egfp, ln_mch, region_cc_coords = calc_deposit(ser_num, group, 'iso')
 
-    ln_egfp[junc_num]
+    # cumsum_vec_mch = np.cumsum(np.insert(ln_mch[junc_num], 0, 0))
+    # w = mva
+    # ma_vec_mch = (cumsum_vec_mch[w:] - cumsum_vec_mch[:-w]) / w
 
+    # cumsum_vec_eg = np.cumsum(np.insert(ln_egfp[junc_num], 0, 0))
+    # w = mva
+    # ma_vec_eg = (cumsum_vec_eg[w:] - cumsum_vec_eg[:-w]) / w
 
-    for each in ma_vec_eg:
-        if each > eg_mean:
-            bin_ma_egfp.append(1)
-        else:
-            bin_ma_egfp.append(0)
+    ma_egfp_3 = np.convolve(ln_egfp[junc_num], np.ones(3), 'valid') / 3
 
-    for each in ma_vec_mch:
-        if each > mch_mean:
-            bin_ma_mch.append(1)
-        else:
-            bin_ma_mch.append(0)
+    ma_mch_3 = np.convolve(ln_mch[junc_num], np.ones(3), 'valid') / 3
 
+    ma_egfp_5 = np.convolve(ln_egfp[junc_num], np.ones(5), 'valid') / 5
 
-    for t in ln_egfp[junc_num]:
-        if t > eg_mean:
-            bin_list_eg.append(1)
-        else:
-            bin_list_eg.append(0)
+    ma_mch_5 = np.convolve(ln_mch[junc_num], np.ones(5), 'valid') / 5
 
+    ma_egfp_7 = np.convolve(ln_egfp[junc_num], np.ones(7), 'valid') / 7
 
-    for t in scaled_ln_mch:
-        if t > mch_mean:
-            bin_list_mch.append(1)
-        else:
-            bin_list_mch.append(0)
+    ma_mch_7 = np.convolve(ln_mch[junc_num], np.ones(7), 'valid') / 7
 
-    egfp_mean_lt = [eg_mean] * 100
+    ma_egfp_9 = np.convolve(ln_egfp[junc_num], np.ones(9), 'valid') / 9
 
-    # import scipy.signal
-    #
-    # corr = scipy.signal.correlate(ma_vec_eg, ma_vec_mch)
-    #
-    # lags = scipy.signal.correlation_lags(len(ma_vec_mch), len(ma_vec_eg))
-    #
-    # corr /= np.max(corr)
-    #
-    # plt.plot(lags, corr)
-    # plt.show()
-    # corr = (len(ma_vec_eg) - len(ma_vec_mch) + 1) * [0]
+    ma_mch_9 = np.convolve(ln_mch[junc_num], np.ones(9), 'valid') / 9
 
-    # Go through lag components one-by-one
-    # for l in range(len(corr)):
-    #     corr[l] = sum([ma_vec_eg[i+l] * ma_vec_mch[i] for i in range(len(ma_vec_mch))])
+    # plt.plot(ln_egfp[junc_num], label='CC mean intensity (EGFP)')
+    # plt.plot(ln_mch[junc_num], label='CC mean intensity (mCherry)')
 
-    # print(corr)
-
-    # # Remove padded correlations
-    #     print(ma_vec_eg)
-    #     cr_corr = corr[(len(ma_vec_eg)-len(ma_vec_mch)-1):len(corr)-((len(ma_vec_eg)-len(ma_vec_mch)-1))]
-
-    # print(cr_corr)
-    # plt.plot(cr_corr)
-
-    # plt.plot(bin_list_eg, label='EGFP_bin')
-    # plt.plot(bin_list_mch, label='mCherry_bin')
-    # plt.plot(egfp_mean_lt, label='Mean value')
-
-    plt.plot(ln_egfp[junc_num], label='CC mean intensity (EGFP)')
-    plt.plot(scaled_ln_mch, label='CC mean intensity (mCherry)')
-    # plt.plot(ma_vec_mch, label='mov_avg_mCherry')
-    # plt.plot(ma_vec_eg, label='mov_avg_egfp')
-    plt.plot(bin_ma_mch, label='binarized mov_avg mCherry')
-    plt.plot(bin_ma_egfp, label='binarized mov_avg EGFP')
-    plt.plot(egfp_mean_lt, label='Mean value')
+    # plt.plot(ma_egfp_3, label='EGFP')
+    # plt.plot(ma_mch_3, label='mCherry')
+    plt.plot(ma_egfp_9, label='EGFP')
+    plt.plot(ma_mch_9, label='mCherry')
+    # plt.plot(ma_egfp_5, label='EGFP, mva=5')
+    # plt.plot(ma_mch_5, label='mCherry, mva=5')
+    # plt.plot(ma_egfp_7, label='EGFP, mva=7')
+    # plt.plot(ma_mch_7, label='mCherry, mva=7')
+    # plt.plot(ma_egfp_9, label='EGFP, mva=9')
+    # plt.plot(ma_mch_9, label='mCherry, mva=9')
 
     plt.ylabel('Mean intensity value', fontsize=14)
     plt.xlabel('Timeframe', fontsize=14)
-    plt.title(f'{group} series 1, isolated CC {junc_num+1} mean intensity variation for both channels', fontsize=18)
+    # plt.title(f'{group} series 1, isolated CC {junc_num+1} mean intensity variation for both channels', fontsize=18)
+    plt.title('ATL Series1 isolated junc15 - CC mean intensity variation (mov. avg 9)', fontsize=18)
+
     plt.legend()
+    # plt.savefig('ATL1_S1_junc15', bbox_inches='tight', pad_inches=0)
+    # plt.close()
     plt.show()
-    exit()
-    #
-    #     # print(eg_mean)
-    #     # cnt_eg = sum(t > eg_mean for t in each_eg)
-    #     # print(cnt_eg)
-    #     # cnt_eg_list.append(cnt_eg / 100)
-    #
-    #
-    plt.plot(ln_egfp[5], label='CC mean intensity (EGFP)')
-    plt.plot(scaled_ln_mch, label='CC mean intensity (mCherry)')
-    plt.plot(ma_vec_mch, label='mov_avg_mCherry')
-    plt.plot(ma_vec_eg, label='mov_avg_egfp')
-    plt.xlabel()
-    plt.legend()
-    plt.show()
+
+junc_line_charts(1, 'ATL', 15)
+exit()
 
 
 def get_lincharts(group, junc_num):
