@@ -347,7 +347,7 @@ def calc_deposit(num_series, group, region):
     global ln_egfp, region_cc_coords
     global ln_mch
     # sl = []
-    for num in range(1, num_series + 1):
+    for num in range(num_series, num_series + 1):
 
         nps, skdata, labelled_img = label_junctions(group, num)
         label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
@@ -496,29 +496,29 @@ def junc_line_charts(ser_num, group, junc_num):
     # w = mva
     # ma_vec_eg = (cumsum_vec_eg[w:] - cumsum_vec_eg[:-w]) / w
 
-    ma_egfp_3 = np.convolve(ln_egfp[junc_num], np.ones(3), 'valid') / 3
+    # ma_egfp_3 = np.convolve(ln_egfp[junc_num], np.ones(3), 'valid') / 3
 
-    ma_mch_3 = np.convolve(ln_mch[junc_num], np.ones(3), 'valid') / 3
+    # ma_mch_3 = np.convolve(ln_mch[junc_num], np.ones(3), 'valid') / 3
 
     ma_egfp_5 = np.convolve(ln_egfp[junc_num], np.ones(5), 'valid') / 5
 
-    ma_mch_5 = np.convolve(ln_mch[junc_num], np.ones(5), 'valid') / 5
+    # ma_mch_5 = np.convolve(ln_mch[junc_num], np.ones(5), 'valid') / 5
 
-    ma_egfp_7 = np.convolve(ln_egfp[junc_num], np.ones(7), 'valid') / 7
+    # ma_egfp_7 = np.convolve(ln_egfp[junc_num], np.ones(7), 'valid') / 7
 
-    ma_mch_7 = np.convolve(ln_mch[junc_num], np.ones(7), 'valid') / 7
+    # ma_mch_7 = np.convolve(ln_mch[junc_num], np.ones(7), 'valid') / 7
 
-    ma_egfp_9 = np.convolve(ln_egfp[junc_num], np.ones(9), 'valid') / 9
+    # ma_egfp_9 = np.convolve(ln_egfp[junc_num], np.ones(9), 'valid') / 9
 
-    ma_mch_9 = np.convolve(ln_mch[junc_num], np.ones(9), 'valid') / 9
+    # ma_mch_9 = np.convolve(ln_mch[junc_num], np.ones(9), 'valid') / 9
 
     # plt.plot(ln_egfp[junc_num], label='CC mean intensity (EGFP)')
     # plt.plot(ln_mch[junc_num], label='CC mean intensity (mCherry)')
 
-    # plt.plot(ma_egfp_3, label='EGFP')
-    # plt.plot(ma_mch_3, label='mCherry')
-    plt.plot(ma_egfp_9, label='EGFP')
-    plt.plot(ma_mch_9, label='mCherry')
+    plt.plot(ma_egfp_5, label='EGFP')
+    # plt.plot(ma_mch_9, label='mCherry')
+    # plt.plot(ma_egfp_9, label='EGFP')
+    # plt.plot(ma_mch_9, label='mCherry')
     # plt.plot(ma_egfp_5, label='EGFP, mva=5')
     # plt.plot(ma_mch_5, label='mCherry, mva=5')
     # plt.plot(ma_egfp_7, label='EGFP, mva=7')
@@ -529,14 +529,14 @@ def junc_line_charts(ser_num, group, junc_num):
     plt.ylabel('Mean intensity value', fontsize=14)
     plt.xlabel('Timeframe', fontsize=14)
     # plt.title(f'{group} series 1, isolated CC {junc_num+1} mean intensity variation for both channels', fontsize=18)
-    plt.title('ATL Series1 isolated junc15 - CC mean intensity variation (mov. avg 9)', fontsize=18)
+    plt.title(f'{group} Series{ser_num} isolated junc{junc_num} - CC mean intensity variation (mov. avg 5)', fontsize=18)
 
     plt.legend()
     # plt.savefig('ATL1_S1_junc15', bbox_inches='tight', pad_inches=0)
     # plt.close()
     plt.show()
 
-junc_line_charts(1, 'ATL', 15)
+junc_line_charts(24, 'ATL', 5)
 exit()
 
 
