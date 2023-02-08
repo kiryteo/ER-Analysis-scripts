@@ -1,7 +1,9 @@
 import numpy as np
 from skimage.measure import label, regionprops
 import imageio
-import sknw
+#import sknw
+import skelnw
+from skelnw import *
 import networkx as nx
 import itertools
 import seaborn as sns
@@ -16,9 +18,13 @@ def get_std_img(path):
     img = imageio.imread(path)
     return (img - img.min()) / (img.max() - img.min())
 
+#def get_std_img(path):
+#    img = imageio.imread(path)
+#    return ((img - img.mean()) / (img.std()))
+
 
 def skel_to_graph(skel):
-    g = sknw.build_sknw(skel, iso=False)
+    g = skelnw.build_sknw(skel, iso=False)
     G = nx.Graph()
 
     node_set = g.nodes()
@@ -126,7 +132,7 @@ def get_all_junc(group, num_series):
 
     group_pref = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
 
-    mean_img = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
+    mean_img = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
 
     # Get junction coordinates from projection frame
     newps = get_junctions(mean_img)
@@ -134,7 +140,7 @@ def get_all_junc(group, num_series):
     nps = [[each[0], each[1]] for each in newps]
     skdata = []
     for frame in range(100):
-        sk_img = f'{confocal_data_path}{group}/new_op_jul/skel/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
+        sk_img = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
 
         sk_newps = get_junctions(sk_img)
 
@@ -341,6 +347,66 @@ def junction_cc_mean_boxplot(channel, region):
 import cv2
 
 
+# def calc_deposit(num_series, group, region):
+#     # ch = 1 if channel=='mCherry' else 0
+#     # global ln
+#     global ln_egfp, region_cc_coords
+#     global ln_mch
+#     # sl = []
+#     for num in range(num_series, num_series + 1):
+
+#         nps, skdata, labelled_img = label_junctions(group, num)
+#         label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
+#         iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
+#         # iso_cc = get_cc_ids(labelled_img, iso)
+#         if region == 'iso':
+#             region_cc = get_cc_ids(labelled_img, iso)
+#         else:
+#             region_cc = get_cc_ids(labelled_img, fuz)
+
+# #        print(region_cc)
+# #        exit()
+
+#         # dict to store the coords for each cc id
+#         # iso_cc_coords = {}
+#         # for each in iso_cc:
+#         #     iso_cc_coords[each] = np.where(labelled_img==each)
+
+#         region_cc_coords = {each: np.where(labelled_img == each) for each in region_cc}
+
+#         # for each cc, we obtain the index of dispersion per frame
+
+#         ln_egfp = []
+#         ln_mch = []
+#         for i in range(10):
+#             if group == 'Control':
+# #                path_EGFP = f'{confocal_data_path}Control/files/img_{num}_decon_t0{i:02d}.tif'
+#                 path_EGFP = f'/Users/ashwins/Documents/Ct3_files/Ct3_files/img_3_decon_t0{i:02d}.tif'
+#                 path_mch = None
+
+
+#             else:
+#                 path_EGFP = f'/Users/ashwins/Documents/{group[0]}{num}_files/{group[0]}{num}_files/{group[0]}{num}_decon_t0{i:02d}_ch00.tif'
+#                 path_mch = f'/Users/ashwins/Documents/{group[0]}{num}_files/{group[0]}{num}_files/{group[0]}{num}_decon_t0{i:02d}_ch01.tif'
+
+#             # path = confocal_data_path + '%s/files/%s_decon_t0%s_ch0%s.tif'%(f'{group}', f'{group[0]}{series_num}', f'{i:02d}', f'{ch}')
+#             img_egfp = get_std_img(path_EGFP)
+# #            print(region_cc_coords.keys())
+#             frame_data_egfp = [np.mean(img_egfp[v]) for v in region_cc_coords.values()]
+#             ln_egfp.append(frame_data_egfp)
+
+#             if path_mch is not None:
+#                 img_mch = get_std_img(path_mch)
+#                 frame_data_mch = [np.mean(img_mch[v]) for v in region_cc_coords.values()]
+#                 ln_mch.append(frame_data_mch)
+
+#         ln_egfp = np.array(ln_egfp)
+
+#         ln_mch = np.array(ln_mch)
+
+#     return ln_egfp.T, ln_mch.T, region_cc_coords
+
+
 def calc_deposit(num_series, group, region):
     # ch = 1 if channel=='mCherry' else 0
     # global ln
@@ -350,13 +416,23 @@ def calc_deposit(num_series, group, region):
     for num in range(num_series, num_series + 1):
 
         nps, skdata, labelled_img = label_junctions(group, num)
+
+        # label_vals: dict with ids as key and (x, y) as value
         label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
+
+
+        # iso, fuz, unk: list of lists with x, y 
         iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
+
         # iso_cc = get_cc_ids(labelled_img, iso)
+        # region_cc: 
         if region == 'iso':
             region_cc = get_cc_ids(labelled_img, iso)
         else:
             region_cc = get_cc_ids(labelled_img, fuz)
+
+        # print(region_cc)
+        # exit()
 
         # dict to store the coords for each cc id
         # iso_cc_coords = {}
@@ -364,33 +440,42 @@ def calc_deposit(num_series, group, region):
         #     iso_cc_coords[each] = np.where(labelled_img==each)
 
         region_cc_coords = {each: np.where(labelled_img == each) for each in region_cc}
+
         # for each cc, we obtain the index of dispersion per frame
 
         ln_egfp = []
         ln_mch = []
-        for i in range(100):
+
+        # j57_data = []
+
+        for i in range(0, 1):
             if group == 'Control':
-                path_EGFP = f'{confocal_data_path}Control/files/img_{num}_decon_t0{i:02d}.tif'
+#                path_EGFP = f'{confocal_data_path}Control/files/img_{num}_decon_t0{i:02d}.tif'
+                path_EGFP = f'/Users/ashwins/Documents/Ct3_files/Ct3_files/img_3_decon_t0{i:02d}.tif'
                 path_mch = None
 
 
             else:
-                path_EGFP = f'{confocal_data_path}{group}/files/{group[0]}{num}_decon_t0{i:02d}_ch00.tif'
-                path_mch = f'{confocal_data_path}{group}/files/{group[0]}{num}_decon_t0{i:02d}_ch01.tif'
+                path_EGFP = f'/Users/ashwins/Documents/{group[0]}{num}_files/{group[0]}{num}_files/{group[0]}{num}_decon_t0{i:02d}_ch00.tif'
+                path_mch = f'/Users/ashwins/Documents/{group[0]}{num}_files/{group[0]}{num}_files/{group[0]}{num}_decon_t0{i:02d}_ch01.tif'
 
             # path = confocal_data_path + '%s/files/%s_decon_t0%s_ch0%s.tif'%(f'{group}', f'{group[0]}{series_num}', f'{i:02d}', f'{ch}')
             img_egfp = get_std_img(path_EGFP)
             frame_data_egfp = [np.mean(img_egfp[v]) for v in region_cc_coords.values()]
+
             ln_egfp.append(frame_data_egfp)
 
             if path_mch is not None:
                 img_mch = get_std_img(path_mch)
                 frame_data_mch = [np.mean(img_mch[v]) for v in region_cc_coords.values()]
+                # j57_data.append([img_mch[v] for v in region_cc_coords.values()])
                 ln_mch.append(frame_data_mch)
 
         ln_egfp = np.array(ln_egfp)
 
         ln_mch = np.array(ln_mch)
+        # print(j57_data[:5])
+        # exit()
 
     return ln_egfp.T, ln_mch.T, region_cc_coords
 
@@ -484,9 +569,49 @@ def get_above_mean_across_groups():
     plt.show()
 
 
+def junc_bar_plots(ser_num, group, junc_num):
+    ln_egfp, ln_mch, region_cc_coords = calc_deposit(ser_num, group, 'iso')
+
+    df = pd.DataFrame({'ERmoxGFP': ln_egfp[junc_num], 'mCherry': ln_mch[junc_num]}, index = np.arange(0, 10))
+
+    df.plot.bar(rot=45)
+    
+    plt.ylabel('Mean intensity value', fontsize=14)
+    plt.xlabel('Timeframe', fontsize=14)
+#    xr = np.arange(0, len(ma_egfp_5))
+#    plt.xticks(xr, rotation=45)
+    # plt.title(f'{group} series 1, isolated CC {junc_num+1} mean intensity variation for both channels', fontsize=18)
+#    plt.title(f'{group} Series{ser_num} isolated junc{junc_num} - CC mean intensity variation (mov. avg 3)', fontsize=18)
+    plt.title(f'{group} Series{ser_num} isolated junc{junc_num} - CC mean intensity variation', fontsize=18)
+    plt.legend()
+#    plt.legend(loc='upper right')
+    #plt.savefig(f'ATL1_j{ser_num}_ma5', bbox_inches='tight', pad_inches=1)
+    #plt.close()
+    plt.show()
+
+
+
+
 def junc_line_charts(ser_num, group, junc_num):
 
     ln_egfp, ln_mch, region_cc_coords = calc_deposit(ser_num, group, 'iso')
+
+    # print(ln_egfp[1])
+
+    # exit()
+
+    #df = pd.DataFrame({'Timeframe': np.arange(0, 100), 'Mean Intensity value': ln_egfp[junc_num]})
+
+    #df.plot.bar(x='Timeframe', y='Mean Intensity value', rot=45)
+
+##################
+#    df = pd.DataFrame({'ERmoxGFP': ln_egfp[junc_num], 'mCherry': ln_mch[junc_num]}, index = np.arange(0, 10))
+
+#    df.plot.bar(rot=45)
+##################
+
+
+#    plt.show()
 
     # cumsum_vec_mch = np.cumsum(np.insert(ln_mch[junc_num], 0, 0))
     # w = mva
@@ -496,13 +621,15 @@ def junc_line_charts(ser_num, group, junc_num):
     # w = mva
     # ma_vec_eg = (cumsum_vec_eg[w:] - cumsum_vec_eg[:-w]) / w
 
-    # ma_egfp_3 = np.convolve(ln_egfp[junc_num], np.ones(3), 'valid') / 3
+#    ma_egfp_3 = np.convolve(ln_egfp[junc_num], np.ones(3), 'valid') / 3
 
     # ma_mch_3 = np.convolve(ln_mch[junc_num], np.ones(3), 'valid') / 3
 
-    ma_egfp_5 = np.convolve(ln_egfp[junc_num], np.ones(5), 'valid') / 5
+    # ma_egfp_5 = np.convolve(ln_egfp[junc_num], np.ones(5), 'valid') / 5
 
-    # ma_mch_5 = np.convolve(ln_mch[junc_num], np.ones(5), 'valid') / 5
+#    ma_mch_3 = np.convolve(ln_mch[junc_num], np.ones(3), 'valid') / 3
+
+#    ma_mch_5 = np.convolve(ln_mch[junc_num], np.ones(5), 'valid') / 5
 
     # ma_egfp_7 = np.convolve(ln_egfp[junc_num], np.ones(7), 'valid') / 7
 
@@ -512,15 +639,60 @@ def junc_line_charts(ser_num, group, junc_num):
 
     # ma_mch_9 = np.convolve(ln_mch[junc_num], np.ones(9), 'valid') / 9
 
-    # plt.plot(ln_egfp[junc_num], label='CC mean intensity (EGFP)')
-    # plt.plot(ln_mch[junc_num], label='CC mean intensity (mCherry)')
+#    print(ln_egfp[:5])
 
-    plt.plot(ma_egfp_5, label='EGFP')
+#    exit()
+
+    #print(ln_egfp[junc_num])
+    #print(ln_mch[junc_num])
+
+#############################################
+
+    ids = list(region_cc_coords.keys())
+
+    for i, val in enumerate(ids):
+        if junc_num == val:
+            junc_id = i
+            break
+
+#############################################
+
+    # idx = label_vals[junc_num]
+    # print(idx)
+
+    # for i, val in enumerate(iso):
+    #     if idx[0][0] == val[0] and idx[0][1] == val[1]:
+    #         junc_id = i
+    #         break
+
+
+    # print(junc_id)
+    # print(iso)
+    # print(region_cc_coords)
+    # exit()
+
+#############################################
+
+    print(ln_mch[junc_id+1])
+
+    plt.plot(ln_egfp[junc_id+1], label='CC mean intensity (EGFP)')
+    plt.plot(ln_mch[junc_id+1], label='CC mean intensity (mCherry)')
+
+#    plt.plot(ln_egfp[junc_num], label='EGFP')
+#    plt.bar(ln_egfp[junc_num], label='EGFP')
+
+
+#    plt.plot(ma_egfp_3, label='EGFP')
+    # plt.plot(ma_egfp_5, label='EGFP')
     # plt.plot(ma_mch_9, label='mCherry')
     # plt.plot(ma_egfp_9, label='EGFP')
     # plt.plot(ma_mch_9, label='mCherry')
     # plt.plot(ma_egfp_5, label='EGFP, mva=5')
-    # plt.plot(ma_mch_5, label='mCherry, mva=5')
+#    plt.plot(ln_mch[junc_num], label='mCherry')
+#    plt.bar(ln_mch[junc_num], label='mCherry')
+
+#    plt.plot(ma_mch_3, label='mCherry')
+#    plt.plot(ma_mch_5, label='mCherry')
     # plt.plot(ma_egfp_7, label='EGFP, mva=7')
     # plt.plot(ma_mch_7, label='mCherry, mva=7')
     # plt.plot(ma_egfp_9, label='EGFP, mva=9')
@@ -528,15 +700,19 @@ def junc_line_charts(ser_num, group, junc_num):
 
     plt.ylabel('Mean intensity value', fontsize=14)
     plt.xlabel('Timeframe', fontsize=14)
+#    xr = np.arange(0, len(ma_egfp_5))
+#    plt.xticks(xr, rotation=45)
     # plt.title(f'{group} series 1, isolated CC {junc_num+1} mean intensity variation for both channels', fontsize=18)
-    plt.title(f'{group} Series{ser_num} isolated junc{junc_num} - CC mean intensity variation (mov. avg 5)', fontsize=18)
-
+#    plt.title(f'{group} Series{ser_num} isolated junc{junc_num} - CC mean intensity variation (mov. avg 3)', fontsize=18)
+    plt.title(f'{group} Series{ser_num} isolated junc{junc_num} - CC mean intensity variation', fontsize=18)
     plt.legend()
-    # plt.savefig('ATL1_S1_junc15', bbox_inches='tight', pad_inches=0)
-    # plt.close()
+#    plt.legend(loc='upper right')
+    #plt.savefig(f'ATL1_j{ser_num}_ma5', bbox_inches='tight', pad_inches=1)
+    #plt.close()
     plt.show()
 
-junc_line_charts(24, 'ATL', 5)
+junc_line_charts(1, 'ATL', 57)
+# junc_line_charts(1, 'Climp', 36)
 exit()
 
 
