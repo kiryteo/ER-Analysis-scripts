@@ -1001,7 +1001,7 @@ def junc_line_charts(ser_num, group, junc_num):
 
 
 # def junc_line_mean_std(group, num_movies, region):
-def junc_line_mean_std(group, repl_start, repl_end, region):
+def junc_line_mean_std(group, repl_start, repl_end, region, measure):
     egfp_list = []
     mch_list = []
 
@@ -1024,14 +1024,19 @@ def junc_line_mean_std(group, repl_start, repl_end, region):
             mx_egfp = max(ln_egfp[idx])
             mn_egfp = min(ln_egfp[idx])
             std_egfp = (ln_egfp[idx] - mn_egfp)/(mx_egfp - mn_egfp)
-            l_eg.append(np.std(std_egfp))
+            if measure == 'mean':
+                l_eg.append(np.mean(std_egfp))
+            else:
+                l_eg.append(np.std(std_egfp))
             egfp_list.extend(l_eg)
-
             if group!='Control':
                 mx_mch = max(ln_mch[idx])
                 mn_mch = min(ln_mch[idx])
                 std_mch = (ln_mch[idx] - mn_mch)/(mx_mch - mn_mch)
-                l_mc.append(np.std(std_mch))
+                if measure == 'mean':
+                    l_mc.append(np.mean(std_mch))
+                else:
+                    l_mc.append(np.std(std_mch))
                 mch_list.extend(l_mc)
             else:
                 mch_list = None
@@ -1070,43 +1075,82 @@ def correlation_analysis(group, repl_start, repl_end, region):
     return corr_list
 
 
-def corr_plots():
-    atl = correlation_analysis('ATL', 1, 10, 'fuz')
-    climp = correlation_analysis('Climp', 1, 10, 'fuz')
-    rtn = correlation_analysis('RTN', 1, 10, 'fuz')
-    sns.distplot(atl, hist=False, label='ATL')
-    sns.distplot(climp, hist=False, label='Climp')
-    sns.distplot(rtn, hist=False, label='RTN')
-    plt.title('Cross correlation between EGFP and mCherry fuzzy junction CC mean intensity sequences - Replicate 1', fontsize=18)
+def corr_plots(group, region):
+
+    if group == 'ATL':
+        r3end = 26
+    elif group == 'Climp':
+        r3end = 31
+    else:
+        r3end = 29
+
+    atl1 = correlation_analysis(group, 1, 10, region)
+    atl2 = correlation_analysis(group, 11, 20, region)
+    atl3 = correlation_analysis(group, 21, r3end, region)
+    # climp = correlation_analysis('Climp', 1, 10, 'fuz')
+    # rtn = correlation_analysis('RTN', 1, 10, 'fuz')
+    sns.distplot(atl1, hist=False, label=f'{group}_r1')
+    sns.distplot(atl2, hist=False, label=f'{group}_r2')
+    sns.distplot(atl3, hist=False, label=f'{group}_r3')
+
+    reg = 'fuzzy' if region == 'fuz' else 'isolated'
+    # sns.distplot(climp, hist=False, label='Climp')
+    # sns.distplot(rtn, hist=False, label='RTN')
+    # plt.title('Cross correlation between EGFP and mCherry fuzzy junction CC mean intensity sequences - Replicate 1', fontsize=18)
+    plt.title(f'{group} cross correlation between EGFP annd mCherry {reg} CC mean intensity sequences across replicates', fontsize=18)
     plt.xlabel('Pearson correlation coefficient value')
     plt.legend()
     plt.show()
 
 
-corr_plots()
-exit()
+# corr_plots('RTN', 'fuz')
+# exit()
 
 
-def total_data_variation_plots():
-    atl_egfp, atl_mch = junc_line_mean_std('ATL', 1, 10, 'fuz')
-    climp_egfp, climp_mch = junc_line_mean_std('Climp', 1, 10, 'fuz')
-    rtn_egfp, rtn_mch = junc_line_mean_std('RTN', 1, 10, 'fuz')
-    # ctrl_egfp, ctrl_mch = junc_line_mean_std('Control', 1, 10, 'iso')
+def total_data_variation_plots(group, region, measure):
+    # atl_egfp, atl_mch = junc_line_mean_std('ATL', 1, 10, 'fuz')
+    # climp_egfp, climp_mch = junc_line_mean_std('Climp', 1, 10, 'fuz')
+    # rtn_egfp, rtn_mch = junc_line_mean_std('RTN', 1, 10, 'fuz')
+    # # ctrl_egfp, ctrl_mch = junc_line_mean_std('Control', 1, 10, 'iso')
+    #
+    # # sns.distplot(atl_egfp, hist=False, label='ATL_egfp')
+    # sns.distplot(atl_mch, hist=False, label='ATL_mch')
+    # # sns.distplot(climp_egfp, hist=False, label='Climp_egfp')
+    # sns.distplot(climp_mch, hist=False, label='Climp_mch')
+    # # sns.distplot(rtn_egfp, hist=False, label='RTN_egfp')
+    # sns.distplot(rtn_mch, hist=False, label='RTN_mch')
+    # # sns.distplot(ctrl_egfp, hist=False, label='Control_egfp')
+    # plt.title('Standard deviation of Junction CC mean intensity for fuzzy junction CCs (mCherry) - Replicate 1')
+    # plt.xlabel('Standard deviation over 100 frames per CC intensity mean value')
+    # plt.legend()
+    # plt.show()
 
-    # sns.distplot(atl_egfp, hist=False, label='ATL_egfp')
-    sns.distplot(atl_mch, hist=False, label='ATL_mch')
-    # sns.distplot(climp_egfp, hist=False, label='Climp_egfp')
-    sns.distplot(climp_mch, hist=False, label='Climp_mch')
-    # sns.distplot(rtn_egfp, hist=False, label='RTN_egfp')
-    sns.distplot(rtn_mch, hist=False, label='RTN_mch')
-    # sns.distplot(ctrl_egfp, hist=False, label='Control_egfp')
-    plt.title('Standard deviation of Junction CC mean intensity for fuzzy junction CCs (mCherry) - Replicate 1')
+
+    if group == 'ATL':
+        r3end = 26
+    elif group == 'Climp' or group == 'Control':
+        r3end = 31
+    else:
+        r3end = 29
+
+    egfp_r1, mch_r1 = junc_line_mean_std(group, 1, 10, region, measure)
+    egfp_r2, mch_r2 = junc_line_mean_std(group, 11, 20, region, measure)
+    egfp_r3, mch_r3 = junc_line_mean_std(group, 21, r3end, region, measure)
+
+    reg = 'fuzzy' if region == 'fuz' else 'isolated'
+
+    sns.distplot(egfp_r1, hist=False, label=f'{group}_r1')
+    sns.distplot(egfp_r2, hist=False, label=f'{group}_r2')
+    sns.distplot(egfp_r3, hist=False, label=f'{group}_r3')
+    plt.title(f'{group} - Standard deviation of Junction CC mean intensity for {reg} junction CCs (egfp) across replicates', fontsize=16)
     plt.xlabel('Standard deviation over 100 frames per CC intensity mean value')
     plt.legend()
     plt.show()
+    # climp_egfp, climp_mch = junc_line_mean_std('Climp', 1, 10, 'fuz')
+    # rtn_egfp, rtn_mch = junc_line_mean_std('RTN', 1, 10, 'fuz')
 
 
-total_data_variation_plots()
+total_data_variation_plots('Control', 'iso', 'std')
 exit()
 
 def junc_line_charts_norm(ser_num, group, junc_num):
