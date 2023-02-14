@@ -7,14 +7,39 @@ from skimage.transform import resize
 
 # pref = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/junc_types_movies/'
 
-pref = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/junction_crops/S1_j15_29_74/'
+# pref = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/junction_crops/S1_j15_29_74/'
+
 
 # with imageio.get_writer('A1_junc_iso_fuz.gif', mode='I', duration=0.5) as writer:
-with imageio.get_writer('A1_iso_j15_egfp.gif', mode='I', duration=0.5) as writer:
-# with imageio.get_writer('A1_junc.mp4', fps=2) as writer:
+# with imageio.get_writer('A1_iso_j15_egfp.gif', mode='I', duration=0.5) as writer:
+#     # with imageio.get_writer('A1_junc.mp4', fps=2) as writer:
+#     for frame in range(100):
+#         filename = f'{pref}A1_decon_t0{frame:02d}_ch00.png'
+#         image = imageio.imread(filename)
+#         image = (image - image.min()) / (image.max() - image.min())
+#         # image = resize(image, (64, 68))
+#         writer.append_data(image)
+
+
+def runner(writer, group, ser_num, junc_id, channel):
+    pref = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/{group[0]}{ser_num}_j{junc_id}_t/'
+    ch = 0 if channel=='egfp' else 1
     for frame in range(100):
-        filename = f'{pref}A1_decon_t0{frame:02d}_ch00.png'
+        filename = f'{pref}{group[0]}{ser_num}_j{junc_id}_t0{frame:02d}_ch0{ch}.tif'
         image = imageio.imread(filename)
         image = (image - image.min()) / (image.max() - image.min())
         # image = resize(image, (64, 68))
         writer.append_data(image)
+
+
+def create_sequence(type, group, ser_num, junc_id, channel):
+    if type == 'gif':
+        with imageio.get_writer('A1_iso_j15_egfp.gif', mode='I', duration=0.5) as writer:
+            runner(writer, group, ser_num, junc_id, channel)
+    else:
+        with imageio.get_writer(f'{group[0]}{ser_num}_j{junc_id}_{channel}.mp4', fps=2) as writer:
+            runner(writer, group, ser_num, junc_id, channel)
+
+
+create_sequence('mp4', 'RTN', 13, 82, 'egfp')
+create_sequence('mp4', 'RTN', 13, 82, 'mch')
