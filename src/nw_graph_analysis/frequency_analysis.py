@@ -128,3 +128,80 @@ def seq_movie_fourier_analysis_runner():
     plt.legend()
     plt.title('EGFP frequency analysis across conditions')
     plt.show()
+
+
+
+
+
+
+
+
+def seq_movie_fourier_analysis_runner():
+    atl = seq_movie_fourier_analysis('ATL', 26)
+    climp = seq_movie_fourier_analysis('Climp', 26)
+    control = seq_movie_fourier_analysis('Control', 26)
+    rtn = seq_movie_fourier_analysis('RTN', 26)
+
+    # import scipy.io
+    # from scipy.io import savemat
+    #
+    # atldt = {}
+    # atldt['atl'] = atl
+    # cldt = {}
+    # cldt['climp'] = climp
+    # ctdt = {}
+    # ctdt['control'] = control
+    # rtndt = {}
+    # rtndt['rtn'] = rtn
+    #
+    # savemat('atl.mat', atldt)
+    # savemat('climp.mat', cldt)
+    # savemat('control.mat', ctdt)
+    # savemat('rtn.mat', rtndt)
+
+
+    # climp = []
+    # control = []
+    # rtn = []
+
+    # for i in range(1, 27):
+    #     atl_k = seq_fourier_analysis('ATL', i)
+    #     atl.extend(atl_k)
+
+    # print(len(atl))
+    # print(atl[0])
+    # exit()
+
+
+    # atl = list(itertools.chain.from_iterable(atl))
+
+    # for i in range(1, 32):
+    #     climp_k = seq_fourier_analysis('Climp', i)
+    #     climp.extend(climp_k)
+    #
+    # # climp = list(itertools.chain.from_iterable(climp))
+    #
+    # for i in range(1, 32):
+    #     ctrl_k = seq_fourier_analysis('Control', i)
+    #     control.extend(ctrl_k)
+    #
+    # # control = list(itertools.chain.from_iterable(control))
+    #
+    # for i in range(1, 30):
+    #     rtn_k = seq_fourier_analysis('RTN', i)
+    #     rtn.extend(rtn_k)
+
+    # rtn = list(itertools.chain.from_iterable(rtn))
+
+    # atl = sorted(atl)
+    # climp = sorted(climp)
+    # control = sorted(control)
+    # rtn = sorted(rtn)
+
+    plt.plot(atl, label='ATL')
+    plt.plot(climp, label='Climp')
+    plt.plot(control, label='Control')
+    plt.plot(rtn, label='RTN')
+    plt.legend()
+    plt.title('EGFP frequency analysis across conditions')
+    plt.show()

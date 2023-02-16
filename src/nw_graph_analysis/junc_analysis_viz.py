@@ -151,3 +151,51 @@ def mean_frame_validation(group, total_series):
             imageio.imsave((confocal_data_path + f'{group}/new_op_jul/junctions/{pref}{num_ser}/{pref}{num_ser}_decon_t0{frame:02d}_ch00_junc.png'), brpts_img)
 
 
+def junc_intensity_plot_creator(coord_dt):
+    for k, v in coord_dt.items():
+        plt.plot(v)
+        plt.xlabel('Timeframe')
+        plt.ylabel('Intensity values')
+        plt.title(f"ATL 1, Junction coordinates: {k[1]['<unknown expression ERROR>', 0]} intensity variation")
+
+        plt.savefig(f"ATL_1_Junction_{k[1]['<unknown expression ERROR>', 0]}.png", bbox_inches='tight', pad_inches=0.2)
+
+        plt.close()
+
+
+def viz_regionprops(labelled_img, spread_img):
+    fig = px.imshow(spread_img, binary_string=True)
+    fig.update_traces(hoverinfo='skip')
+
+    props = regionprops(labelled_img, spread_img)
+    properties = ['area', 'eccentricity', 'perimeter']
+
+    # For each label, add a filled scatter trace for its contour,
+    # and display the properties of the label in the hover of this trace.
+    for index in range(1, labelled_img.max()):
+        label_i = props[index].label
+        contour = measure.find_contours(labelled_img == label_i)[0]
+        y, x = contour.T
+        hoverinfo = ''.join(f'<b>{prop_name}: {getattr(props[index], prop_name):.2f}</b><br>' for prop_name in properties)
+
+        fig.add_trace(go.Scatter(
+            x=x, y=y, name=label_i,
+            mode='lines', fill='toself', showlegend=False,
+            hovertemplate=hoverinfo, hoveron='points+fills'))
+
+    plotly.io.show(fig)
+
+def runner_viz_regionprops():
+    img = imageio.imread('/localhome/asa420/ER-Analysis-scripts/Figure3-FuzIso/C12_junc_projection.png')
+    # lab = label(img)
+    lab = imageio.imread('/localhome/asa420/ER-Analysis-scripts/Figure3-FuzIso/Climp12_junc_labelled_cc.png')
+
+    img = np.stack((img, img, img, img), axis=2)
+
+    print(img.shape)
+    print(lab.shape)
+
+    viz_regionprops(lab, img)
+
+# runner_viz_regionprops()
+# exit()
