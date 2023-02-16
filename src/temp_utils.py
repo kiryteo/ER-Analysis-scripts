@@ -1,6 +1,7 @@
 import glob
 import os
 import shutil
+from skan import draw
 import numpy
 import skimage.io as io
 import skimage
@@ -8,6 +9,25 @@ from skimage import exposure
 import imageio
 import matplotlib.pyplot as plt
 
+
+def sharpen_filter():
+    img = imageio.imread('')
+
+    low_vals = np.where(img < 10)
+    img[low_vals] = 0
+
+    kernel = np.array([[-1,-1,-1],[-1,9,-1],[-1,-1,-1]])
+    op = cv2.filter2D(img, -1, kernel)
+
+    cv2.imwrite('', op)
+
+    img_and = cv2.bitwise_and(img, op)
+
+
+def skel_over_input(img, skel):
+    fig, ax = plt.subplots()
+    op = draw.overlay_skeleton_2d(img, skel, dilate=0, axes=ax)
+    plt.imshow(op)
 
 
 home = os.path.expanduser('~')
@@ -172,3 +192,59 @@ def apply_adapthist_movie():
         img = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/std_adj/A1_decon_t0{i:02d}_ch01_std_std_adj.png')
         op = exposure.equalize_adapthist(img, clip_limit=0.05)
         imageio.imwrite(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/adapthist/A1_decon_t0{i:02d}_ch01_std_std_adj_adapthist.png', op)
+
+
+def temp_fig():
+    std_pref = '/localhome/asa420/MIAL/data/live-cell-movies/COSKDELRTN/Decon/Series005_decon_converted/std/'
+    hist_pref = '/localhome/asa420/MIAL/data/live-cell-movies/COSKDELRTN/Decon/Series005_decon_converted/hist/'
+
+    for i in range(100):
+        fig = plt.figure(figsize=(12, 6))
+        #plt.title('Confocal-RTN-Series%s-frame%s' % (f'{series}', f'{frame:02d}'), size=18)
+        plt.axis('off')
+        r, c = 1, 2
+
+        # std = '/localhome/asa420/MIAL/data/live-cell-movies/COSKDELRTN/Decon/Series005_decon_converted/std/Series005_decon_converted_t00_ch00_std.png'
+        # hist= '/localhome/asa420/MIAL/data/live-cell-movies/COSKDELRTN/Decon/Series005_decon_converted/hist/Series005_decon_converted_t00_hist.png'
+
+        fig.add_subplot(r, c, 1)
+        plt.imshow(cv2.imread(std))
+        plt.axis('off')
+        plt.title('Input')
+
+        fig.add_subplot(r, c, 2)
+        plt.imshow(cv2.imread(hist))
+        plt.axis('off')
+        plt.title('Histogram')
+
+        #plt.show()
+        plt.savefig('/localhome/asa420/MIAL/data/live-cell-movies/COSKDELRTN/Decon/Series005_decon_converted/img_hist' + , bbox_inches='tight')
+
+
+exit()
+img = imageio.imread('/localhome/asa420/ER-Analysis-scripts/Figure3-FuzIso/C12_t0_ch0_loc2_enhance_skel.png')
+# aop = skimage.morphology.area_opening(img, area_threshold=2)
+aop = skimage.morphology.remove_small_objects(img, 32)
+plt.imshow(aop)
+plt.show()
+
+
+def preprocess_samples(group):
+    path_pref = f'/localhome/asa420/MIAL/data/live-cell-movies/{group}/Decon/'
+    # new_pref = '/localhome/asa420/MIAL/data/confocal_movies/' + group + '/new_op_jul/preproc/'
+    new_pref = f'/localhome/asa420/MIAL/data/live-cell-movies/{group}/Decon/'
+
+    for i in range(2, 3):
+        os.makedirs(f'{new_pref}C{i}')
+        for j in range(100):
+            img = imageio.imread(f'{path_pref}Series{i:03d}_decon_converted/files/Series{i:03d}_decon_converted_t{j:02d}_ch00.tif')
+
+            std_img = ((img) / (img.max() - img.min())) * 255
+            aop = skimage.morphology.area_opening(std_img, area_threshold=2)
+            erod = skimage.morphology.erosion(aop)
+            aop = skimage.morphology.area_opening(erod, area_threshold=2)
+            cl = skimage.morphology.area_closing(aop, area_threshold=32)
+            aop = skimage.morphology.area_opening(cl, area_threshold=2)
+            loc = threshold_local(aop, 3)
+            loc = threshold_local(loc, 3)
+            cv2.imwrite(f'{new_pref}Series{i:03d}_decon_converted/new_op_sept/preproc/C{i}/C{i}_decon_t0{j:02d}_ch00_proc.png', loc)

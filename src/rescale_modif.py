@@ -1,3 +1,6 @@
+
+
+
 def plot_junc_areas(group, series_num, labelled_img, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords, unk_cc_coords):
 
 
@@ -27,10 +30,12 @@ def plot_junc_areas(group, series_num, labelled_img, iso, fuz, skdata, iso_cc_co
     for i in range(1):
         plt.axis('off')
         if group == 'Control':
-            img = imageio.imread(confocal_data_path + f'{group}/files/img_{series_num}_decon_t0{i:02d}.tif')
+            img = imageio.imread(f'{confocal_data_path}{group}/files/img_{series_num}_decon_t0{i:02d}.tif')
+
 
         else:
-            img = imageio.imread(confocal_data_path + f'{group}/files/{group[0]}{series_num}_decon_t0{i:02d}_ch00.tif')
+            img = imageio.imread(f'{confocal_data_path}{group}/files/{group[0]}{series_num}_decon_t0{i:02d}_ch00.tif')
+
 
         img = (img - img.min()) / (img.max() - img.min())
 

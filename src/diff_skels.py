@@ -24,6 +24,7 @@ def get_image(img):
 def vigra_skel(img):
     cc = vigra.analysis.labelImageWithBackground(img.astype('uint32'))
     skel = vigra.filters.skeletonizeImage(cc, 'PruneLength', 0.5)
+    # skel = vigra.filters.skeletonizeImage(cc, 'DontPrune')
     featdict = vigra.analysis.extractSkeletonFeatures(cc)
     return skel
 

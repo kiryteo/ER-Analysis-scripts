@@ -6,14 +6,23 @@ import skimage
 import ks_multithresh
 import skimage.io as io
 
+
+"""
+Blob extraction data and files for Kathleen
+"""
+
+
 def standardize_image(img):
     return img - np.min(img) / (np.max(img) - np.min(img))
+
 
 def skimage_erode_img(img):
     return skimage.morphology.erosion(img)
 
+
 def rtog(img):
     return pcv.rgb2gray(rgb_img=img)
+
 
 def thresh_image(img, threshold=12, max_value=255):
     return pcv.threshold.binary(gray_img=img, threshold=threshold, max_value=max_value)
