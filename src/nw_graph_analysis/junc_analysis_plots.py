@@ -8,6 +8,7 @@ import networkx as nx
 import itertools
 import seaborn as sns
 import matplotlib.pyplot as plt
+from scipy.stats import f_oneway
 from numpy.polynomial.polynomial import polyfit
 import pandas as pd
 import scipy
@@ -349,19 +350,118 @@ def junction_cc_mean_boxplot(channel, region):
 import cv2
 
 
+
+
+
+
+def cc_area_measure(group, region):
+    cc_area_list = []
+    if group == 'ATL':
+        end = 26
+    elif group in ['Climp', 'Control']:
+        end = 31
+    else:
+        end = 29
+
+    for i in range(1, 11):
+        nps, skdata, labelled_img = label_junctions(group, i)
+        regions = regionprops(labelled_img)
+        # print(len(regions))
+        # print(regions[2]['Area'])
+        # exit()
+
+        label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
+        iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
+        if region == 'iso':
+            region_cc = get_cc_ids(labelled_img, iso)
+        else:
+            region_cc = get_cc_ids(labelled_img, fuz)
+
+        # print(region_cc)
+
+        l = [regions[each-1]['Area'] for each in region_cc]
+        cc_area_list.extend(l)
+
+    return cc_area_list
+
+
+cc_area_atl = pd.Series(cc_area_measure('ATL', 'fuz'))
+cc_area_climp = pd.Series(cc_area_measure('Climp', 'fuz'))
+cc_area_rtn = pd.Series(cc_area_measure('RTN', 'fuz'))
+cc_area_ctrl = pd.Series(cc_area_measure('Control', 'fuz'))
+
+# f_stat, p_val = f_oneway(cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl)
+#
+# print(f_stat, p_val)
+#
+#
+# from statsmodels.stats.multicomp import MultiComparison
+from scipy.stats import kruskal, mannwhitneyu
+#
+# mc = MultiComparison(pd.concat([cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl]),
+#                      pd.Series(["ATL"] * len(cc_area_atl) + ["Climp"] * len(cc_area_climp) + ["RTN"] * len(cc_area_rtn) + ["Control"] * len(cc_area_ctrl)))
+# result = mc.tukeyhsd()
+#
+# print(result)
+
+# stat, p_val = kruskal(cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl)
+series_pairs = [(cc_area_atl, cc_area_climp), (cc_area_atl, cc_area_rtn), (cc_area_atl, cc_area_ctrl), (cc_area_climp, cc_area_rtn), (cc_area_climp, cc_area_ctrl), (cc_area_rtn, cc_area_ctrl)]
+
+for pair in series_pairs:
+    u_stat, p_val = mannwhitneyu(pair[0], pair[1], alternative='two-sided')
+    print("Mann-Whitney U test between", pair[0].name, "and", pair[1].name)
+    print("U-statistic:", u_stat)
+    print("p-value:", p_val)
+
+
+# print(stat, p_val)
+
+exit()
+
+def plot_cc_area():
+    df = pd.DataFrame()
+    df['CC_area'] = pd.Series(np.concatenate((cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl)))
+    df['Group'] = pd.Series(np.concatenate((['ATL'] * len(cc_area_atl), ['Climp']*len(cc_area_climp), ['RTN']*len(cc_area_rtn), ['Control']*len(cc_area_ctrl))))
+
+    sns.swarmplot(data=df, x='Group', y='CC_area')
+
+    plt.suptitle('Fuzzy CC area across conditions (replicate 1)', fontsize=16)
+    plt.title('CC area denotes the total movement of each junction', fontsize=14)
+    plt.xlabel('Group', fontsize=14)
+    plt.ylabel('CC_area', fontsize=14)
+    plt.show()
+
+
+
 def calc_deposit(num_series, group, region):
     # ch = 1 if channel=='mCherry' else 0
     # global ln
     global ln_egfp, region_cc_coords
     global ln_mch
     # sl = []
+
+    cc_area_list = []
+
     for num in range(num_series, num_series + 1):
 
         nps, skdata, labelled_img = label_junctions(group, num)
+        regions = regionprops(labelled_img)
+
+        for num, reg in enumerate(regions):
+            cc_area_list.append(regions[num]['Area'])
+
+        # print(len(regions))
+        print(regions[0]['Area'])
+        # print(regions[3])
+        for prop in regions[0]:
+            print(prop, regions[0][prop])
+        # print(labelled_img)
+        exit()
 
         # label_vals: dict with ids as key and (x, y) as value
         label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
         print(label_vals)
+        exit()
 
         # iso, fuz, unk: list of lists with x, y
         iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
@@ -424,6 +524,10 @@ def calc_deposit(num_series, group, region):
         # exit()
 
     return ln_egfp.T, ln_mch.T, region_cc_coords
+
+
+ln_egfp, ln_mch, region_cc_coords = calc_deposit(1, 'ATL', 'iso')
+exit()
 
 
 def calc_deposit_net_norm(num_series, group, region):
