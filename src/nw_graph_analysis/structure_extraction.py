@@ -3,6 +3,7 @@
 # Std ER samples
 
 
+import contextlib
 import skimage
 from skimage.filters import threshold_local
 import os
@@ -97,6 +98,12 @@ def get_junctions(graph):
     return [node_coords[node_num] for node_num, degree_val in enumerate(degree_list) if degree_val[1] > 2]
 
 
+def get_relevant_nodes(junctions):
+    nps = [[junction[0], junction[1]] for junction in junctions]
+    nps = np.array(nps)
+    return nps
+
+
 def get_tubules(graph):
     """
 
@@ -118,9 +125,9 @@ def get_tubules(graph):
 def get_relevant_tubules(graph, relevant_nodes):
     """
 
-    @param graph:
-    @param relevant_nodes:
-    @return:
+    @param graph: Input graph from skeleton
+    @param relevant_nodes: nodes in the graph with degree > 2
+    @return: tubules corresponding to nodes with degree > 2
     """
 
     node_set = graph.nodes()
@@ -158,10 +165,15 @@ def plot_original_graph(skel_img_path):
     for (start_node, end_node) in graph.edges():
         ps = graph[start_node][end_node][0]['pts']
         plt.plot(ps[:, 1], ps[:, 0], 'green')
-        ps_multi = graph[start_node][end_node][1]['pts']
-        plt.plot(ps_multi[:, 1], ps_multi[:, 0], 'cyan')
-
+        with contextlib.suppress(Exception):
+            ps_multi = graph[start_node][end_node][1]['pts']
+            plt.plot(ps_multi[:, 1], ps_multi[:, 0], 'cyan')
     plt.show()
+
+
+# path = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t000_ch00_skel.png'
+# plot_original_graph(path)
+# exit()
 
 
 def plot_relevant_graph(skel_img_path, relevant_nodes, relevant_edge_list):
@@ -184,7 +196,7 @@ def plot_relevant_graph(skel_img_path, relevant_nodes, relevant_edge_list):
     plt.show()
 
 
-def plot_total_graph(graph, relevant_nodes, relevant_edge_list):
+def plot_total_graph(skel_path, graph, relevant_nodes, relevant_edge_list):
     """
 
     @param graph: ER graph (obtained from skeleton)
@@ -193,9 +205,21 @@ def plot_total_graph(graph, relevant_nodes, relevant_edge_list):
     @return:
     """
 
-    img = imageio.imread('')
-    plt.axis('off')
-    plt.imshow(img, cmap='gray')
+    input = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Climp/files/C1_decon_t000_ch00.tif')
+    ip = (input - input.min())/(input.max() - input.min())
+    plt.imshow(ip, cmap='gray')
+
+    # img = imageio.imread(skel_path)
+    # plt.axis('off')
+    # plt.imshow(img, cmap='gray')
+
+    # draw edges by pts
+    for (start_node, end_node) in graph.edges():
+        ps = graph[start_node][end_node][0]['pts']
+        plt.plot(ps[:, 1], ps[:, 0], 'green')
+
+    for each in relevant_edge_list:
+        plt.plot(each[:, 1], each[:, 0], 'red', mew=2.8)
 
     # draw node by o
     nodes = graph.nodes()
@@ -203,15 +227,18 @@ def plot_total_graph(graph, relevant_nodes, relevant_edge_list):
     # plt.plot(ps[:, 1], ps[:, 0], 'r.')
     plt.plot(ps[:, 1], ps[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow', mew=0.5, markersize=3)
 
-    # draw edges by pts
-    for (start_node, end_node) in graph.edges():
-        ps = graph[start_node][end_node]['pts']
-        plt.plot(ps[:, 1], ps[:, 0], 'green')
-
     # plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'b.')
     plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue', markersize=4)
 
-    for each in relevant_edge_list:
-        plt.plot(each[:, 1], each[:, 0], 'red', mew=2.8)
-
     plt.show()
+
+
+def runner():
+    path = '/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/skel/C1/C1_decon_t030_ch00_skel.png'
+    graph = skel_to_graph(path)
+    junctions = get_junctions(graph)
+    relevant_nodes = get_relevant_nodes(junctions)
+    relevant_edges = get_relevant_tubules(graph, relevant_nodes)
+    plot_total_graph(path, graph, relevant_nodes, relevant_edges)
+
+runner()

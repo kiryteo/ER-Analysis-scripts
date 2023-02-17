@@ -611,15 +611,6 @@ def get_all_junc(group, num_series):
     return nps, skdata
 
 
-# nps, skdata = get_all_junc('ATL', 2)
-# print(len(skdata))
-# print(len(skdata[0]))
-# # print(skdata[0])
-# # print(skdata[1])
-# # print(skdata[100])
-# # print(skdata[101])
-# exit()
-
 def refine_junc_dt(dt, min_presence=50):
     return {k: v for k, v in dt.items() if len(v) > min_presence}
 
