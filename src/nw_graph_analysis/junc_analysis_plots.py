@@ -13,6 +13,9 @@ from numpy.polynomial.polynomial import polyfit
 import pandas as pd
 import scipy
 from scipy.stats import pearsonr
+from statsmodels.stats.multicomp import MultiComparison
+from scipy.stats import kruskal, mannwhitneyu
+
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 
@@ -21,7 +24,8 @@ def get_std_img(path):
     img = imageio.imread(path)
     return (img - img.min()) / (img.max() - img.min())
 
-#def get_std_img(path):
+
+# def get_std_img(path):
 #    img = imageio.imread(path)
 #    return ((img - img.mean()) / (img.std()))
 
@@ -180,9 +184,8 @@ def label_junctions(group, series_num):
 
     return nps, skdata, labelled_img
 
+
 # nps, skdata, labelled_img = label_junctions('ATL', 3)
-
-
 
 
 def get_junction_areas(label_vals, unassigned_cc_dict):
@@ -350,10 +353,6 @@ def junction_cc_mean_boxplot(channel, region):
 import cv2
 
 
-
-
-
-
 def cc_area_measure(group, region):
     cc_area_list = []
     if group == 'ATL':
@@ -363,7 +362,7 @@ def cc_area_measure(group, region):
     else:
         end = 29
 
-    for i in range(1, 11):
+    for i in range(11, 21):
         nps, skdata, labelled_img = label_junctions(group, i)
         regions = regionprops(labelled_img)
         # print(len(regions))
@@ -379,7 +378,7 @@ def cc_area_measure(group, region):
 
         # print(region_cc)
 
-        l = [regions[each-1]['Area'] for each in region_cc]
+        l = [regions[each - 1]['Area'] for each in region_cc]
         cc_area_list.extend(l)
 
     return cc_area_list
@@ -390,47 +389,48 @@ cc_area_climp = pd.Series(cc_area_measure('Climp', 'fuz'))
 cc_area_rtn = pd.Series(cc_area_measure('RTN', 'fuz'))
 cc_area_ctrl = pd.Series(cc_area_measure('Control', 'fuz'))
 
-# f_stat, p_val = f_oneway(cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl)
-#
-# print(f_stat, p_val)
-#
-#
-# from statsmodels.stats.multicomp import MultiComparison
-from scipy.stats import kruskal, mannwhitneyu
-#
-# mc = MultiComparison(pd.concat([cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl]),
-#                      pd.Series(["ATL"] * len(cc_area_atl) + ["Climp"] * len(cc_area_climp) + ["RTN"] * len(cc_area_rtn) + ["Control"] * len(cc_area_ctrl)))
-# result = mc.tukeyhsd()
-#
-# print(result)
-
-# stat, p_val = kruskal(cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl)
-series_pairs = [(cc_area_atl, cc_area_climp), (cc_area_atl, cc_area_rtn), (cc_area_atl, cc_area_ctrl), (cc_area_climp, cc_area_rtn), (cc_area_climp, cc_area_ctrl), (cc_area_rtn, cc_area_ctrl)]
-
-for pair in series_pairs:
-    u_stat, p_val = mannwhitneyu(pair[0], pair[1], alternative='two-sided')
-    print("Mann-Whitney U test between", pair[0].name, "and", pair[1].name)
-    print("U-statistic:", u_stat)
-    print("p-value:", p_val)
 
 
-# print(stat, p_val)
+def stat_analysis(cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl):
+    f_stat, p_val = f_oneway(cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl)
 
-exit()
+    mc = MultiComparison(pd.concat([cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl]), pd.Series(
+        ["ATL"] * len(cc_area_atl) + ["Climp"] * len(cc_area_climp) + ["RTN"] * len(cc_area_rtn) + ["Control"] * len(
+            cc_area_ctrl)))
+    result = mc.tukeyhsd()
 
-def plot_cc_area():
+    stat, p_val = kruskal(cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl)
+
+    series_pairs = [(cc_area_atl, cc_area_climp), (cc_area_atl, cc_area_rtn), (cc_area_atl, cc_area_ctrl),
+                    (cc_area_climp, cc_area_rtn), (cc_area_climp, cc_area_ctrl), (cc_area_rtn, cc_area_ctrl)]
+
+    for pair in series_pairs:
+        u_stat, p_val = mannwhitneyu(pair[0], pair[1], alternative='two-sided')
+        print("Mann-Whitney U test between", pair[0].name, "and", pair[1].name)
+        print("U-statistic:", u_stat)
+        print("p-value:", p_val)
+
+
+def plot_cc_area(cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl):
     df = pd.DataFrame()
     df['CC_area'] = pd.Series(np.concatenate((cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl)))
-    df['Group'] = pd.Series(np.concatenate((['ATL'] * len(cc_area_atl), ['Climp']*len(cc_area_climp), ['RTN']*len(cc_area_rtn), ['Control']*len(cc_area_ctrl))))
+    df['Group'] = pd.Series(np.concatenate((['ATL'] * len(cc_area_atl), ['Climp'] * len(cc_area_climp),
+                                            ['RTN'] * len(cc_area_rtn), ['Control'] * len(cc_area_ctrl))))
 
-    sns.swarmplot(data=df, x='Group', y='CC_area')
+    ax = sns.swarmplot(data=df, x='Group', y='CC_area')
+    # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
 
-    plt.suptitle('Fuzzy CC area across conditions (replicate 1)', fontsize=16)
-    plt.title('CC area denotes the total movement of each junction', fontsize=14)
-    plt.xlabel('Group', fontsize=14)
-    plt.ylabel('CC_area', fontsize=14)
+    plt.suptitle('Fuzzy CC area across conditions (replicate 2)', fontsize=20)
+    plt.title('CC area denotes the total movement of each junction', fontsize=18)
+    plt.grid(True)
+    plt.xlabel('Group', fontsize=18)
+    plt.ylabel('CC_area', fontsize=18)
     plt.show()
 
+
+plot_cc_area(cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl)
+exit()
 
 
 def calc_deposit(num_series, group, region):
@@ -485,7 +485,6 @@ def calc_deposit(num_series, group, region):
         # print(region_cc_coords[15])
         # exit()
         # print(region_cc_coords[57])
-
 
         # for each cc, we obtain the index of dispersion per frame
 
@@ -586,8 +585,6 @@ def calc_deposit_net_norm(num_series, group, region):
             # dd = np.where(img_egfp) - np.where(skel)
             # print(dd)
             # exit()
-
-
 
             # print(img_egfp[np.where(skel)])
             # exit()
@@ -697,7 +694,6 @@ def calc_deposit_cc_norm(num_series, group, region):
         # exit()
         # print(region_cc_coords[57])
 
-
         # for each cc, we obtain the index of dispersion per frame
 
         ln_egfp = []
@@ -773,11 +769,11 @@ def calc_deposit_cc_norm(num_series, group, region):
         op_mch = []
 
         for each in ln_egfp.T:
-            each = (each - each.min())/(each.max() - each.min())
+            each = (each - each.min()) / (each.max() - each.min())
             op_egfp.append(each)
 
         for each in ln_mch.T:
-            each = (each - each.min())/(each.max() - each.min())
+            each = (each - each.min()) / (each.max() - each.min())
             op_mch.append(each)
 
         op_egfp = np.array(op_egfp)
@@ -882,7 +878,7 @@ def get_above_mean_across_groups():
 def junc_bar_plots(ser_num, group, junc_num):
     ln_egfp, ln_mch, region_cc_coords = calc_deposit(ser_num, group, 'iso')
 
-    df = pd.DataFrame({'ERmoxGFP': ln_egfp[junc_num], 'mCherry': ln_mch[junc_num]}, index = np.arange(0, 10))
+    df = pd.DataFrame({'ERmoxGFP': ln_egfp[junc_num], 'mCherry': ln_mch[junc_num]}, index=np.arange(0, 10))
 
     df.plot.bar(rot=45)
 
@@ -895,8 +891,8 @@ def junc_bar_plots(ser_num, group, junc_num):
     plt.title(f'{group} Series{ser_num} isolated junc{junc_num} - CC mean intensity variation', fontsize=18)
     plt.legend()
     #    plt.legend(loc='upper right')
-    #plt.savefig(f'ATL1_j{ser_num}_ma5', bbox_inches='tight', pad_inches=1)
-    #plt.close()
+    # plt.savefig(f'ATL1_j{ser_num}_ma5', bbox_inches='tight', pad_inches=1)
+    # plt.close()
     plt.show()
 
 
@@ -926,7 +922,6 @@ def junc_line_charts_init(ser_num, group, junc_num):
 
 
 def junc_line_charts(ser_num, group, junc_num):
-
     global junc_id
     ln_egfp, ln_mch, region_cc_coords = calc_deposit(ser_num, group, 'iso')
 
@@ -970,17 +965,15 @@ def junc_line_charts(ser_num, group, junc_num):
     # print(ln_egfp[0].T)
     # exit()
 
+    # df = pd.DataFrame({'Timeframe': np.arange(0, 100), 'Mean Intensity value': ln_egfp[junc_num]})
 
-    #df = pd.DataFrame({'Timeframe': np.arange(0, 100), 'Mean Intensity value': ln_egfp[junc_num]})
-
-    #df.plot.bar(x='Timeframe', y='Mean Intensity value', rot=45)
+    # df.plot.bar(x='Timeframe', y='Mean Intensity value', rot=45)
 
     ##################
     #    df = pd.DataFrame({'ERmoxGFP': ln_egfp[junc_num], 'mCherry': ln_mch[junc_num]}, index = np.arange(0, 10))
 
     #    df.plot.bar(rot=45)
     ##################
-
 
     #    plt.show()
 
@@ -1014,8 +1007,8 @@ def junc_line_charts(ser_num, group, junc_num):
 
     #    exit()
 
-    #print(ln_egfp[junc_num])
-    #print(ln_mch[junc_num])
+    # print(ln_egfp[junc_num])
+    # print(ln_mch[junc_num])
 
     #############################################
 
@@ -1038,7 +1031,6 @@ def junc_line_charts(ser_num, group, junc_num):
     #     if idx[0][0] == val[0] and idx[0][1] == val[1]:
     #         junc_id = i
     #         break
-
 
     # print(junc_id)
     # print(iso)
@@ -1064,7 +1056,6 @@ def junc_line_charts(ser_num, group, junc_num):
 
     #    plt.plot(ln_egfp[junc_num], label='EGFP')
     #    plt.bar(ln_egfp[junc_num], label='EGFP')
-
 
     #    plt.plot(ma_egfp_3, label='EGFP')
     # plt.plot(ma_egfp_5, label='EGFP')
@@ -1099,8 +1090,8 @@ def junc_line_charts(ser_num, group, junc_num):
     plt.title(f'{group} Series{ser_num} isolated junc{junc_num} - CC mean intensity variation', fontsize=18)
     plt.legend()
     #    plt.legend(loc='upper right')
-    #plt.savefig(f'ATL1_j{ser_num}_ma5', bbox_inches='tight', pad_inches=1)
-    #plt.close()
+    # plt.savefig(f'ATL1_j{ser_num}_ma5', bbox_inches='tight', pad_inches=1)
+    # plt.close()
     plt.show()
 
 
@@ -1109,11 +1100,10 @@ def junc_line_mean_std(group, repl_start, repl_end, region, measure):
     egfp_list = []
     mch_list = []
 
-    for ser_num in range(repl_start, repl_end+1):
+    for ser_num in range(repl_start, repl_end + 1):
         global junc_id
 
         ln_egfp, ln_mch, region_cc_coords = calc_deposit_net_norm(ser_num, group, region)
-
 
         ids = list(region_cc_coords.keys())
 
@@ -1127,16 +1117,16 @@ def junc_line_mean_std(group, repl_start, repl_end, region, measure):
         for idx, val in enumerate(ids):
             mx_egfp = max(ln_egfp[idx])
             mn_egfp = min(ln_egfp[idx])
-            std_egfp = (ln_egfp[idx] - mn_egfp)/(mx_egfp - mn_egfp)
+            std_egfp = (ln_egfp[idx] - mn_egfp) / (mx_egfp - mn_egfp)
             if measure == 'mean':
                 l_eg.append(np.mean(std_egfp))
             else:
                 l_eg.append(np.std(std_egfp))
             egfp_list.extend(l_eg)
-            if group!='Control':
+            if group != 'Control':
                 mx_mch = max(ln_mch[idx])
                 mn_mch = min(ln_mch[idx])
-                std_mch = (ln_mch[idx] - mn_mch)/(mx_mch - mn_mch)
+                std_mch = (ln_mch[idx] - mn_mch) / (mx_mch - mn_mch)
                 if measure == 'mean':
                     l_mc.append(np.mean(std_mch))
                 else:
@@ -1151,7 +1141,7 @@ def junc_line_mean_std(group, repl_start, repl_end, region, measure):
 def correlation_analysis(group, repl_start, repl_end, region):
     corr_list = []
 
-    for ser_num in range(repl_start, repl_end+1):
+    for ser_num in range(repl_start, repl_end + 1):
         global junc_id
         # ln_egfp, ln_mch, region_cc_coords = calc_deposit_cc_norm(ser_num, group, 'iso')
 
@@ -1169,8 +1159,8 @@ def correlation_analysis(group, repl_start, repl_end, region):
             mx_mch = max(ln_mch[idx])
             mn_mch = min(ln_mch[idx])
 
-            std_egfp = (ln_egfp[idx] - mn_egfp)/(mx_egfp - mn_egfp)
-            std_mch = (ln_mch[idx] - mn_mch)/(mx_mch - mn_mch)
+            std_egfp = (ln_egfp[idx] - mn_egfp) / (mx_egfp - mn_egfp)
+            std_mch = (ln_mch[idx] - mn_mch) / (mx_mch - mn_mch)
 
             p = pearsonr(std_egfp, std_mch)
             l.append(p)
@@ -1180,7 +1170,6 @@ def correlation_analysis(group, repl_start, repl_end, region):
 
 
 def corr_plots(group, region):
-
     if group == 'ATL':
         r3end = 26
     elif group == 'Climp':
@@ -1201,7 +1190,9 @@ def corr_plots(group, region):
     # sns.distplot(climp, hist=False, label='Climp')
     # sns.distplot(rtn, hist=False, label='RTN')
     # plt.title('Cross correlation between EGFP and mCherry fuzzy junction CC mean intensity sequences - Replicate 1', fontsize=18)
-    plt.title(f'{group} cross correlation between EGFP annd mCherry {reg} CC mean intensity sequences across replicates', fontsize=18)
+    plt.title(
+        f'{group} cross correlation between EGFP annd mCherry {reg} CC mean intensity sequences across replicates',
+        fontsize=18)
     plt.xlabel('Pearson correlation coefficient value')
     plt.legend()
     plt.show()
@@ -1229,7 +1220,6 @@ def total_data_variation_plots(group, region, measure):
     # plt.legend()
     # plt.show()
 
-
     if group == 'ATL':
         r3end = 26
     elif group == 'Climp' or group == 'Control':
@@ -1246,7 +1236,9 @@ def total_data_variation_plots(group, region, measure):
     sns.distplot(egfp_r1, hist=False, label=f'{group}_r1')
     sns.distplot(egfp_r2, hist=False, label=f'{group}_r2')
     sns.distplot(egfp_r3, hist=False, label=f'{group}_r3')
-    plt.title(f'{group} - Standard deviation of Junction CC mean intensity for {reg} junction CCs (egfp) across replicates', fontsize=16)
+    plt.title(
+        f'{group} - Standard deviation of Junction CC mean intensity for {reg} junction CCs (egfp) across replicates',
+        fontsize=16)
     plt.xlabel('Standard deviation over 100 frames per CC intensity mean value')
     plt.legend()
     plt.show()
@@ -1256,6 +1248,7 @@ def total_data_variation_plots(group, region, measure):
 
 total_data_variation_plots('Control', 'iso', 'std')
 exit()
+
 
 def junc_line_charts_norm(ser_num, group, junc_num):
     egfp_list = []
@@ -1270,7 +1263,6 @@ def junc_line_charts_norm(ser_num, group, junc_num):
     # print(ln_egfp)
     # print(ln_mch)
     # exit()
-
 
     ids = list(region_cc_coords.keys())
     # print(ids)
@@ -1287,8 +1279,8 @@ def junc_line_charts_norm(ser_num, group, junc_num):
     mx_mch = max(ln_mch[junc_id])
     mn_mch = min(ln_mch[junc_id])
 
-    std_egfp = (ln_egfp[junc_id] - mn_egfp)/(mx_egfp - mn_egfp)
-    std_mch = (ln_mch[junc_id] - mn_mch)/(mx_mch - mn_mch)
+    std_egfp = (ln_egfp[junc_id] - mn_egfp) / (mx_egfp - mn_egfp)
+    std_mch = (ln_mch[junc_id] - mn_mch) / (mx_mch - mn_mch)
 
     print(pearsonr(std_egfp, std_mch))
     exit()
@@ -1296,14 +1288,8 @@ def junc_line_charts_norm(ser_num, group, junc_num):
     # plt.plot(ln_egfp[junc_id], label='EGFP')
     # plt.plot(ln_mch[junc_id], label='mCherry')
 
-
-
-
-
     # plt.plot(std_egfp, label='EGFP')
     # plt.plot(std_mch, label='mCherry')
-
-
 
     plt.ylabel('Mean intensity value', fontsize=14)
     plt.xlabel('Timeframe', fontsize=14)
@@ -1327,8 +1313,8 @@ def junc_line_charts_norm(ser_num, group, junc_num):
     plt.legend()
 
     #    plt.legend(loc='upper right')
-    #plt.savefig(f'ATL1_j{ser_num}_ma5', bbox_inches='tight', pad_inches=1)
-    #plt.close()
+    # plt.savefig(f'ATL1_j{ser_num}_ma5', bbox_inches='tight', pad_inches=1)
+    # plt.close()
     plt.show()
 
 
@@ -1338,7 +1324,6 @@ exit()
 
 
 def get_lincharts(group, junc_num):
-
     ln_egfp, ln_mch, region_cc_coords = calc_deposit(1, group, 'iso')
 
     # print(list(region_cc_coords.values())[junc_num])
@@ -1377,13 +1362,11 @@ def get_lincharts(group, junc_num):
         else:
             bin_ma_mch.append(0)
 
-
     for t in ln_egfp[junc_num]:
         if t > eg_mean:
             bin_list_eg.append(1)
         else:
             bin_list_eg.append(0)
-
 
     for t in scaled_ln_mch:
         if t > mch_mean:
@@ -1432,7 +1415,7 @@ def get_lincharts(group, junc_num):
 
     plt.ylabel('Mean intensity value', fontsize=14)
     plt.xlabel('Timeframe', fontsize=14)
-    plt.title(f'{group} series 1, isolated CC {junc_num+1} mean intensity variation for both channels', fontsize=18)
+    plt.title(f'{group} series 1, isolated CC {junc_num + 1} mean intensity variation for both channels', fontsize=18)
     plt.legend()
     plt.show()
     exit()
