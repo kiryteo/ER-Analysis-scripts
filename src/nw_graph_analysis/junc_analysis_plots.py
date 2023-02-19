@@ -362,7 +362,7 @@ def cc_area_measure(group, region):
     else:
         end = 29
 
-    for i in range(11, 21):
+    for i in range(1, 11):
         nps, skdata, labelled_img = label_junctions(group, i)
         regions = regionprops(labelled_img)
         # print(len(regions))
@@ -384,10 +384,10 @@ def cc_area_measure(group, region):
     return cc_area_list
 
 
-cc_area_atl = pd.Series(cc_area_measure('ATL', 'fuz'))
-cc_area_climp = pd.Series(cc_area_measure('Climp', 'fuz'))
-cc_area_rtn = pd.Series(cc_area_measure('RTN', 'fuz'))
-cc_area_ctrl = pd.Series(cc_area_measure('Control', 'fuz'))
+cc_area_atl = pd.Series(cc_area_measure('ATL', 'iso'))
+cc_area_climp = pd.Series(cc_area_measure('Climp', 'iso'))
+cc_area_rtn = pd.Series(cc_area_measure('RTN', 'iso'))
+cc_area_ctrl = pd.Series(cc_area_measure('Control', 'iso'))
 
 
 
@@ -421,7 +421,7 @@ def plot_cc_area(cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl):
     # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
 
-    plt.suptitle('Fuzzy CC area across conditions (replicate 2)', fontsize=20)
+    plt.suptitle('Isolated CC area across conditions (replicate 1)', fontsize=20)
     plt.title('CC area denotes the total movement of each junction', fontsize=18)
     plt.grid(True)
     plt.xlabel('Group', fontsize=18)
@@ -429,8 +429,8 @@ def plot_cc_area(cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl):
     plt.show()
 
 
-plot_cc_area(cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl)
-exit()
+# plot_cc_area(cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl)
+# exit()
 
 
 def calc_deposit(num_series, group, region):
