@@ -9,11 +9,14 @@ from skimage.filters import threshold_local
 import os
 import imageio
 import cv2
+import itertools
 from plantcv import plantcv as pcv
 import sknw
 import networkx as nx
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 def get_std_img(path):
@@ -205,7 +208,7 @@ def plot_total_graph(skel_path, graph, relevant_nodes, relevant_edge_list):
     @return:
     """
 
-    input = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Climp/files/C1_decon_t000_ch00.tif')
+    input = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Climp/files/C1_decon_t050_ch00.tif')
     ip = (input - input.min())/(input.max() - input.min())
     plt.imshow(ip, cmap='gray')
 
@@ -233,12 +236,37 @@ def plot_total_graph(skel_path, graph, relevant_nodes, relevant_edge_list):
     plt.show()
 
 
-def runner():
-    path = '/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/skel/C1/C1_decon_t030_ch00_skel.png'
-    graph = skel_to_graph(path)
-    junctions = get_junctions(graph)
-    relevant_nodes = get_relevant_nodes(junctions)
-    relevant_edges = get_relevant_tubules(graph, relevant_nodes)
-    plot_total_graph(path, graph, relevant_nodes, relevant_edges)
+def runner(group, r_start, r_end):
 
-runner()
+    l = []
+    for i, frame in itertools.product(range(r_start, r_end+1), range(100)):
+        # input = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/{group[0]}{i}_decon_t0{frame:02d}_ch00.tif')
+        # ip = (input - input.min())/(input.max() - input.min())
+
+        path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{group[0]}{i}/{group[0]}{i}_decon_t0{frame:02d}_ch00_skel.png'
+        graph = skel_to_graph(path)
+        junctions = get_junctions(graph)
+        relevant_nodes = get_relevant_nodes(junctions)
+        relevant_edges = get_relevant_tubules(graph, relevant_nodes)
+        l.append(len(relevant_edges))
+
+    # plot_total_graph(path, graph, relevant_nodes, relevant_edges)
+    return l
+
+
+atl = runner('ATL', 21, 26)
+climp = runner('Climp', 21, 31)
+rtn = runner('RTN', 21, 29)
+
+df = pd.DataFrame()
+
+# print(atl)
+# print(climp)
+# print(rtn)
+# exit()
+
+sns.distplot(atl, hist=False, label='ATL')
+sns.distplot(climp, hist=False, label='Climp')
+sns.distplot(rtn, hist=False, label='RTN')
+plt.legend()
+plt.show()
