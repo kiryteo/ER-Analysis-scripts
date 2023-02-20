@@ -239,11 +239,13 @@ def plot_total_graph(skel_path, graph, relevant_nodes, relevant_edge_list):
 def runner(group, r_start, r_end):
 
     l = []
+
+    pref = 'Ct' if group == 'Control' else group[0]
     for i, frame in itertools.product(range(r_start, r_end+1), range(100)):
         # input = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/{group[0]}{i}_decon_t0{frame:02d}_ch00.tif')
         # ip = (input - input.min())/(input.max() - input.min())
 
-        path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{group[0]}{i}/{group[0]}{i}_decon_t0{frame:02d}_ch00_skel.png'
+        path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{pref}{i}/{pref}{i}_decon_t0{frame:02d}_ch00_skel.png'
         graph = skel_to_graph(path)
         junctions = get_junctions(graph)
         relevant_nodes = get_relevant_nodes(junctions)
@@ -254,19 +256,96 @@ def runner(group, r_start, r_end):
     return l
 
 
-atl = runner('ATL', 21, 26)
-climp = runner('Climp', 21, 31)
-rtn = runner('RTN', 21, 29)
+def rel_edges_length(group, r_start, r_end):
+    l = []
+    for i, frame in itertools.product(range(r_start, r_end+1), range(100)):
+        # input = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/{group[0]}{i}_decon_t0{frame:02d}_ch00.tif')
+        # ip = (input - input.min())/(input.max() - input.min())
+
+        path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{group[0]}{i}/{group[0]}{i}_decon_t0{frame:02d}_ch00_skel.png'
+        graph = skel_to_graph(path)
+        junctions = get_junctions(graph)
+        relevant_nodes = get_relevant_nodes(junctions)
+        relevant_edges = get_relevant_tubules(graph, relevant_nodes)
+        l.extend(len(each) for each in relevant_edges)
+
+    return l
+
+
+def rel_edge_intensity(group, r_start, r_end):
+    l_mean = []
+    l_std = []
+    pref = 'Ct' if group == 'Control' else group[0]
+
+    for i, frame in itertools.product(range(r_start, r_end+1), range(100)):
+        if group == 'Control':
+            fname = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/img_{i}_decon_t0{frame:02d}.tif'
+        else:
+            fname = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/{group[0]}{i}_decon_t0{frame:02d}_ch00.tif'
+
+        img = imageio.imread(fname)
+        ip = (img - img.min())/(img.max() - img.min())
+        path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{pref}{i}/{pref}{i}_decon_t0{frame:02d}_ch00_skel.png'
+        graph = skel_to_graph(path)
+        junctions = get_junctions(graph)
+        relevant_nodes = get_relevant_nodes(junctions)
+        relevant_edges = get_relevant_tubules(graph, relevant_nodes)
+        for edge in relevant_edges:
+            edge_intensity_data = [ip[coords[0], coords[1]] for coords in edge]
+            # l_mean.append(np.mean(edge_intensity_data))
+            l_std.append(np.std(edge_intensity_data))
+
+    return l_std
+
+
+atl_std = rel_edge_intensity('ATL', 1, 26)
+cl_std = rel_edge_intensity('Climp', 1, 31)
+rt_std = rel_edge_intensity('RTN', 1, 29)
+ct_std = rel_edge_intensity('Control', 1, 31)
 
 df = pd.DataFrame()
+
+df['Tubule_intensity_std'] = pd.Series(np.concatenate((atl_std, cl_std, rt_std, ct_std)))
+df['Group'] = pd.Series(np.concatenate((['ATL']*len(atl_std), ['Climp']*len(cl_std), ['RTN']*len(rt_std), ['Control']*len(ct_std))))
+
+# sns.distplot(atl_mean, hist=False, label='atl')
+# sns.distplot(cl_mean, hist=False, label='cl')
+# sns.distplot(rt_mean, hist=False, label='rtn')
+# sns.distplot(ct_mean, hist=False, label='ctrl')
+sns.violinplot(data=df, y='Group', x='Tubule_intensity_std')
+plt.title('Standard deviation per tubule intensity for tubules (edges) corresponding to nodes with degree greater '
+          'than two', fontsize=20)
+plt.xlabel('Intensity standard deviation', fontsize=18)
+plt.ylabel('Group', fontsize=18)
+# plt.legend()
+plt.show()
+
+
+exit()
+
+atl = runner('ATL', 1, 26)
+climp = runner('Climp', 1, 31)
+rtn = runner('RTN', 1, 29)
+ctrl = runner('Control', 1, 31)
+
+df = pd.DataFrame()
+
+df['Length'] = pd.Series(np.concatenate((atl, climp, rtn, ctrl)))
+df['Group'] = pd.Series(np.concatenate((['ATL']*len(atl), ['Climp']*len(climp), ['RTN']*len(rtn), ['Control']*len(ctrl))))
 
 # print(atl)
 # print(climp)
 # print(rtn)
 # exit()
 
-sns.distplot(atl, hist=False, label='ATL')
-sns.distplot(climp, hist=False, label='Climp')
-sns.distplot(rtn, hist=False, label='RTN')
-plt.legend()
+ax = sns.violinplot(data=df, y='Group', x='Length')
+ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
+# plt.title('Length of edges corresponding to nodes with degree greater than two (replicate 2)', fontsize=20)
+plt.title('Count of edges corresponding to nodes with degree greater than two', fontsize=20)
+plt.xlabel('Number of edges', fontsize=18)
+plt.ylabel('Group', fontsize=18)
+# sns.distplot(atl, hist=False, label='ATL')
+# sns.distplot(climp, hist=False, label='Climp')
+# sns.distplot(rtn, hist=False, label='RTN')
+# plt.legend()
 plt.show()
