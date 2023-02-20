@@ -706,18 +706,18 @@ def viz_regionprops(labelled_img, spread_img):
 
 # for i in range(10):
 
-img = imageio.imread('/localhome/asa420/ER-Analysis-scripts/Figure3-FuzIso/C12_junc_projection.png')
-# lab = label(img)
-lab = imageio.imread('/localhome/asa420/ER-Analysis-scripts/Figure3-FuzIso/Climp12_junc_labelled_cc.png')
+# img = imageio.imread('/localhome/asa420/ER-Analysis-scripts/Figure3-FuzIso/C12_junc_projection.png')
+####### lab = label(img)
+# lab = imageio.imread('/localhome/asa420/ER-Analysis-scripts/Figure3-FuzIso/Climp12_junc_labelled_cc.png')
 
-img = np.stack((img, img, img, img), axis=2)
+# img = np.stack((img, img, img, img), axis=2)
 
-print(img.shape)
-print(lab.shape)
+# print(img.shape)
+# print(lab.shape)
 
-viz_regionprops(lab, img)
+# viz_regionprops(lab, img)
 
-exit()
+# exit()
 
 
 
@@ -804,10 +804,27 @@ def get_junction_areas(label_vals, unassigned_cc_dict):
 # print(iso[:, 1])
 #
 # exit()
+import mahotas
+
 
 # def plot_junc_areas(group, series_num, iso, fuz, unk, labelled_img):
-def plot_junc_areas(group, series_num, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords, unk_cc_coords):
-    # regions = regionprops(labelled_img)
+def plot_junc_areas(group, series_num, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords, unk_cc_coords, labelled_img):
+    regions = regionprops(labelled_img)
+
+    bin_reg = (labelled_img > 0)
+    contours = measure.find_contours(bin_reg)
+
+
+    for contour in contours:
+        plt.plot(contour[:, 1], contour[:, 0], linewidth=0.8, color='cyan')
+
+    # plt.show()
+
+    # plt.imshow(labelled_img)
+    # plt.show()
+
+    # exit()
+
     for i in range(1):
         plt.axis('off')
         if group == 'Control':
@@ -837,7 +854,8 @@ def plot_junc_areas(group, series_num, iso, fuz, skdata, iso_cc_coords, fuz_cc_c
         # plt.plot(iso[:, 1], iso[:, 0], 'o', markerfacecolor='None', markeredgecolor='red', mew=0.6)
 
         for k, v in iso_cc_coords.items():
-            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='magenta', mew=0.35)
+            # plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='magenta', mew=0.35)
+            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='red', mew=0.35)
 
         for k, v in fuz_cc_coords.items():
             plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='blue', mew=0.35)
@@ -856,14 +874,14 @@ def plot_junc_areas(group, series_num, iso, fuz, skdata, iso_cc_coords, fuz_cc_c
         # plots contours
         # for index in range(1, labelled_img.max()):
         #     label_i = regions[index].label
-        #     contour = measure.find_contours(labelled_img == label_i, 0.8)[0]
-        #     y, x = contour.T
-        #     plt.plot(x, y)
+            # contour = measure.find_contours(labelled_img == label_i, 0.8)[0]
+            # y, x = contour.T
+            # plt.plot(x, y, color='cyan')
 
         plt.axis('off')
-        plt.savefig('Climp_series12_junc_representation_iso_fuz_unk_2_new_colors', bbox_inches='tight', pad_inches=0, dpi=700)
+        plt.savefig(f'{group}_series{series_num}_junc_representation_iso_fuz_unk_2_new_colors', bbox_inches='tight', pad_inches=0, dpi=700)
         plt.close()
-
+        #
         # plt.show()
 
 
@@ -888,26 +906,30 @@ def get_cc_ids(labelled_img, region):
     return [i for i, num in enumerate(dt_vals) if i > 0 and len(num) != 0]
 
 
-nps, skdata, labelled_img = label_junctions('Climp', 12)
+def draw_network_areas(group, ser_num):
+    nps, skdata, labelled_img = label_junctions(group, ser_num)
 
-label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
-iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
+    label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
+    iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
 
-iso_cc = get_cc_ids(labelled_img, iso)
-fuz_cc = get_cc_ids(labelled_img, fuz)
-unk_cc = get_cc_ids(labelled_img, unk)
+    iso_cc = get_cc_ids(labelled_img, iso)
+    fuz_cc = get_cc_ids(labelled_img, fuz)
+    unk_cc = get_cc_ids(labelled_img, unk)
 
-iso_cc_coords = {each: np.where(labelled_img==each) for each in iso_cc}
-fuz_cc_coords = {each: np.where(labelled_img==each) for each in fuz_cc}
-unk_cc_coords = {each: np.where(labelled_img==each) for each in unk_cc}
-#
-#
-# iso_list = []
-# for each in iso:
-#     iso_list.append([each[0], each[1]])
+    iso_cc_coords = {each: np.where(labelled_img==each) for each in iso_cc}
+    fuz_cc_coords = {each: np.where(labelled_img==each) for each in fuz_cc}
+    unk_cc_coords = {each: np.where(labelled_img==each) for each in unk_cc}
+    #
+    #
+    # iso_list = []
+    # for each in iso:
+    #     iso_list.append([each[0], each[1]])
 
-plot_junc_areas('Climp', 12, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords, unk_cc_coords)
+    plot_junc_areas(group, ser_num, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords, unk_cc_coords, labelled_img)
 
+
+for i in range(1, 27):
+    draw_network_areas('ATL', i)
 
 exit()
 
