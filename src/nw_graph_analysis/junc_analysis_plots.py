@@ -1188,46 +1188,52 @@ def correlation_analysis(group, repl_start, repl_end, region):
     return corr_list
 
 
-def corr_plots(group, region):
-    if group == 'ATL':
-        r3end = 26
-    elif group == 'Climp':
-        r3end = 31
-    else:
-        r3end = 29
+def corr_plots(region):
 
     a1 = correlation_analysis('ATL', 1, 10, region)
     a2 = correlation_analysis('ATL', 11, 20, region)
-    a3 = correlation_analysis('ATL', 21, r3end, region)
+    a3 = correlation_analysis('ATL', 21, 26, region)
     c1 = correlation_analysis('Climp', 1, 10, region)
     c2 = correlation_analysis('Climp', 11, 20, region)
-    c3 = correlation_analysis('Climp', 21, r3end, region)
+    c3 = correlation_analysis('Climp', 21, 31, region)
     r1 = correlation_analysis('RTN', 1, 10, region)
     r2 = correlation_analysis('RTN', 11, 20, region)
-    r3 = correlation_analysis('RTN', 21, r3end, region)
+    r3 = correlation_analysis('RTN', 21, 29, region)
 
     df = pd.DataFrame()
 
+    df['Channel correlation'] = pd.Series(np.concatenate((a1, a2, a3, c1, c2, c3, r1, r2, r3)))
 
-    # sns.distplot(a1, hist=False, label=f'{group}_r1')
-    # sns.distplot(a2, hist=False, label=f'{group}_r2')
-    # sns.distplot(a3, hist=False, label=f'{group}_r3')
+    df['Group'] = pd.Series(np.concatenate((['ATL']*len(a1), ['ATL']*len(a2), ['ATL']*len(a3), ['Climp']*len(c1), ['Climp']*len(c2), ['Climp']*len(c3), ['RTN']*len(r1), ['RTN']*len(r2), ['RTN']*len(r3))))
+    df['Replicate'] = pd.Series(np.concatenate((['R1']*len(a1), ['R2']*len(a2), ['R3']*len(a3), ['R1']*len(c1),['R2']*len(c2),['R3']*len(c3),['R1']*len(r1),['R2']*len(r2),['R3']*len(r3))))
 
-    reg = 'fuzzy' if region == 'fuz' else 'isolated'
-    # sns.distplot(climp, hist=False, label='Climp')
-    # sns.distplot(rtn, hist=False, label='RTN')
-    # plt.title('Cross correlation between EGFP and mCherry fuzzy junction CC mean intensity sequences - Replicate 1', fontsize=18)
+    ax = sns.boxplot(data=df, x='Replicate', y='data_junc_CC_mean', hue='Group', dodge=True)#, yscale='log')
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
 
-    plt.title(
-        f'{group} cross correlation between EGFP annd mCherry {reg} CC mean intensity sequences across replicates',
-        fontsize=18)
-    plt.xlabel('Pearson correlation coefficient value')
-    plt.legend()
+    box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'RTN')), (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'RTN')), (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'RTN'))]
+    statannot.add_stat_annotation(ax, x='Replicate', y='Channel correlation', hue='Group', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+
+
+    # plt.suptitle('Isolated CC area across conditions', fontsize=20)
+    # plt.title('Standard Deviation per sequence for junction CC mean intensity (isolated junctions)', fontsize=18)
+    # measure_name = 'Standard deviation' if measure == 'std' else 'Mean'
+    region_name = 'isolated' if region == 'iso' else 'fuzzy'
+    plt.title(f'Cross correlation between EGFP and mCherry channels in {region_name} CC mean intensity sequences', fontsize=18)
+    plt.grid(True)
+    plt.xlabel('Replicate', fontsize=18)
+    plt.ylabel('Pearson correlation coefficient value', fontsize=18)
     plt.show()
 
+    # plt.title(
+    #     f'{group} cross correlation between EGFP annd mCherry {reg} CC mean intensity sequences across replicates',
+    #     fontsize=18)
+    # plt.xlabel('Pearson correlation coefficient value')
+    # plt.legend()
+    # plt.show()
 
-# corr_plots('RTN', 'fuz')
-# exit()
+
+corr_plots('iso')
+exit()
 
 
 def total_data_variation_plots(group, region, measure):
