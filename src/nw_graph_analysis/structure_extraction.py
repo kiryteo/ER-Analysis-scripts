@@ -2,6 +2,7 @@
 # Load the ER samples
 # Std ER samples
 
+from junction_analysis import *
 
 import contextlib
 import skimage
@@ -270,6 +271,11 @@ def rel_edges_length(group, r_start, r_end):
         l.extend(len(each) for each in relevant_edges)
 
     return l
+
+
+nps, skdata, labelled_img = label_junctions(group, ser_num)
+label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
+iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
 
 
 def rel_edge_intensity(group, r_start, r_end):
