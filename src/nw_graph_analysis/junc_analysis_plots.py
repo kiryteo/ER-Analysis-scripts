@@ -186,9 +186,6 @@ def label_junctions(group, series_num):
     return nps, skdata, labelled_img
 
 
-# nps, skdata, labelled_img = label_junctions('ATL', 3)
-
-
 def get_junction_areas(label_vals, unassigned_cc_dict):
     isolated_junc = []
     isolated_junc_area = []
@@ -405,7 +402,7 @@ def stat_analysis(cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl):
         print("p-value:", p_val)
 
 
-def plot_cc_area(a1, a2, a3, c1, c2, c3, r1, r2, r3, ct1, ct2, ct3):
+def plot_cc_area(a1, a2, a3, c1, c2, c3, r1, r2, r3, ct1, ct2, ct3, region):
     df = pd.DataFrame()
     # df['CC_area'] = pd.Series(np.concatenate((cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl)))
     # df['Group'] = pd.Series(np.concatenate((['ATL'] * len(cc_area_atl), ['Climp'] * len(cc_area_climp),
@@ -418,37 +415,46 @@ def plot_cc_area(a1, a2, a3, c1, c2, c3, r1, r2, r3, ct1, ct2, ct3):
 
     # ax = sns.swarmplot(data=df, x='Group', y='CC_area', hue='Replicate', dodge=True)
     # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
-    ax = sns.boxplot(data=df, x='Replicate', y='CC_area', hue='Group', dodge=True, y_scale='log')
+    ax = sns.boxplot(data=df, x='Replicate', y='CC_area', hue='Group', dodge=True)
     # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
     # sns.boxplot(data=df, x='Group', y='CC_area', hue='replicate', color='white', dodge=True)
 
-    plt.suptitle('Isolated CC area across conditions', fontsize=20)
+    plt.yscale('log')
+
+    box_pairs = box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'ATL'), ('R1', 'Control')), (('R1', 'Climp'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'Control')), (('R1', 'RTN'), ('R1', 'Control')), (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'ATL'), ('R2', 'Control')), (('R2', 'Climp'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'Control')), (('R2', 'RTN'), ('R2', 'Control')), (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'ATL'), ('R3', 'Control')), (('R3', 'Climp'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'Control')), (('R3', 'RTN'), ('R3', 'Control'))]
+
+    statannot.add_stat_annotation(ax, x='Replicate', y='CC_area', hue='Group', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+
+    region_name = 'Isolated' if region == 'iso' else 'Fuzzy'
+
+    plt.suptitle(f'{region_name} CC area across conditions', fontsize=20)
     plt.title('CC area denotes the total movement of each junction', fontsize=18)
     plt.grid(True)
     plt.xlabel('Replicate', fontsize=18)
-    plt.ylabel('CC_area', fontsize=18)
+    plt.ylabel('CC_area (movement of junctions), log scale', fontsize=18)
     plt.show()
 
 
-def get_data_cc_area():
-    at1 = (pd.Series(cc_area_measure('ATL', 'iso', 1, 10)))
-    cl1 = (pd.Series(cc_area_measure('Climp', 'iso', 1, 10)))
-    rt1 = (pd.Series(cc_area_measure('RTN', 'iso', 1, 10)))
-    ctrl1 = (pd.Series(cc_area_measure('Control', 'iso', 1, 10)))
-    at2 = (pd.Series(cc_area_measure('ATL', 'iso', 11, 20)))
-    cl2 = (pd.Series(cc_area_measure('Climp', 'iso', 11, 20)))
-    rt2 = (pd.Series(cc_area_measure('RTN', 'iso', 11, 20)))
-    ctrl2 = (pd.Series(cc_area_measure('Control', 'iso', 11, 20)))
-    at3 = (pd.Series(cc_area_measure('ATL', 'iso', 21, 26)))
-    cl3 = (pd.Series(cc_area_measure('Climp', 'iso', 21, 31)))
-    rt3 = (pd.Series(cc_area_measure('RTN', 'iso', 21, 29)))
-    ctrl3 = (pd.Series(cc_area_measure('Control', 'iso', 21, 31)))
+def get_data_cc_area(region):
+    at1 = (pd.Series(cc_area_measure('ATL', region, 1, 10)))
+    cl1 = (pd.Series(cc_area_measure('Climp', region, 1, 10)))
+    rt1 = (pd.Series(cc_area_measure('RTN', region, 1, 10)))
+    ctrl1 = (pd.Series(cc_area_measure('Control', region, 1, 10)))
+    at2 = (pd.Series(cc_area_measure('ATL', region, 11, 20)))
+    cl2 = (pd.Series(cc_area_measure('Climp', region, 11, 20)))
+    rt2 = (pd.Series(cc_area_measure('RTN', region, 11, 20)))
+    ctrl2 = (pd.Series(cc_area_measure('Control', region, 11, 20)))
+    at3 = (pd.Series(cc_area_measure('ATL', region, 21, 26)))
+    cl3 = (pd.Series(cc_area_measure('Climp', region, 21, 31)))
+    rt3 = (pd.Series(cc_area_measure('RTN', region, 21, 29)))
+    ctrl3 = (pd.Series(cc_area_measure('Control', region, 21, 31)))
 
-    plot_cc_area(at1, at2, at3, cl1, cl2, cl3, rt1, rt2, rt3, ctrl1, ctrl2, ctrl3)
+    plot_cc_area(at1, at2, at3, cl1, cl2, cl3, rt1, rt2, rt3, ctrl1, ctrl2, ctrl3, region)
 
-# get_data_cc_area()
-# exit()
+
+get_data_cc_area('iso')
+exit()
 
 
 def calc_deposit(num_series, group, region):
@@ -1182,7 +1188,7 @@ def correlation_analysis(group, repl_start, repl_end, region):
             std_mch = (ln_mch[idx] - mn_mch) / (mx_mch - mn_mch)
 
             p = pearsonr(std_egfp, std_mch)
-            l.append(p)
+            l.append(p[0])
             corr_list.extend(l)
 
     return corr_list
@@ -1207,7 +1213,7 @@ def corr_plots(region):
     df['Group'] = pd.Series(np.concatenate((['ATL']*len(a1), ['ATL']*len(a2), ['ATL']*len(a3), ['Climp']*len(c1), ['Climp']*len(c2), ['Climp']*len(c3), ['RTN']*len(r1), ['RTN']*len(r2), ['RTN']*len(r3))))
     df['Replicate'] = pd.Series(np.concatenate((['R1']*len(a1), ['R2']*len(a2), ['R3']*len(a3), ['R1']*len(c1),['R2']*len(c2),['R3']*len(c3),['R1']*len(r1),['R2']*len(r2),['R3']*len(r3))))
 
-    ax = sns.boxplot(data=df, x='Replicate', y='data_junc_CC_mean', hue='Group', dodge=True)#, yscale='log')
+    ax = sns.boxplot(data=df, x='Replicate', y='Channel correlation', hue='Group', dodge=True)#, yscale='log')
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
 
     box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'RTN')), (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'RTN')), (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'RTN'))]
@@ -1232,8 +1238,8 @@ def corr_plots(region):
     # plt.show()
 
 
-corr_plots('iso')
-exit()
+# corr_plots('fuz')
+# exit()
 
 
 def total_data_variation_plots(group, region, measure):
