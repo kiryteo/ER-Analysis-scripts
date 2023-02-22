@@ -353,7 +353,7 @@ def junction_cc_mean_boxplot(channel, region):
 import cv2
 
 
-def cc_area_measure(group, region):
+def cc_area_measure(group, region, rstart, rend):
     cc_area_list = []
     if group == 'ATL':
         end = 26
@@ -362,7 +362,7 @@ def cc_area_measure(group, region):
     else:
         end = 29
 
-    for i in range(1, 11):
+    for i in range(rstart, rend+1):
         nps, skdata, labelled_img = label_junctions(group, i)
         regions = regionprops(labelled_img)
         # print(len(regions))
@@ -384,10 +384,18 @@ def cc_area_measure(group, region):
     return cc_area_list
 
 
-cc_area_atl = pd.Series(cc_area_measure('ATL', 'iso'))
-cc_area_climp = pd.Series(cc_area_measure('Climp', 'iso'))
-cc_area_rtn = pd.Series(cc_area_measure('RTN', 'iso'))
-cc_area_ctrl = pd.Series(cc_area_measure('Control', 'iso'))
+at1 = (pd.Series(cc_area_measure('ATL', 'iso', 1, 10)))
+cl1 = (pd.Series(cc_area_measure('Climp', 'iso', 1, 10)))
+rt1 = (pd.Series(cc_area_measure('RTN', 'iso', 1, 10)))
+ctrl1 = (pd.Series(cc_area_measure('Control', 'iso', 1, 10)))
+at2 = (pd.Series(cc_area_measure('ATL', 'iso', 11, 20)))
+cl2 = (pd.Series(cc_area_measure('Climp', 'iso', 11, 20)))
+rt2 = (pd.Series(cc_area_measure('RTN', 'iso', 11, 20)))
+ctrl2 = (pd.Series(cc_area_measure('Control', 'iso', 11, 20)))
+at3 = (pd.Series(cc_area_measure('ATL', 'iso', 21, 26)))
+cl3 = (pd.Series(cc_area_measure('Climp', 'iso', 21, 31)))
+rt3 = (pd.Series(cc_area_measure('RTN', 'iso', 21, 29)))
+ctrl3 = (pd.Series(cc_area_measure('Control', 'iso', 21, 31)))
 
 
 
@@ -411,26 +419,34 @@ def stat_analysis(cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl):
         print("p-value:", p_val)
 
 
-def plot_cc_area(cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl):
+def plot_cc_area(a1, a2, a3, c1, c2, c3, r1, r2, r3, ct1, ct2, ct3):
     df = pd.DataFrame()
-    df['CC_area'] = pd.Series(np.concatenate((cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl)))
-    df['Group'] = pd.Series(np.concatenate((['ATL'] * len(cc_area_atl), ['Climp'] * len(cc_area_climp),
-                                            ['RTN'] * len(cc_area_rtn), ['Control'] * len(cc_area_ctrl))))
+    # df['CC_area'] = pd.Series(np.concatenate((cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl)))
+    # df['Group'] = pd.Series(np.concatenate((['ATL'] * len(cc_area_atl), ['Climp'] * len(cc_area_climp),
+    #                                         ['RTN'] * len(cc_area_rtn), ['Control'] * len(cc_area_ctrl))))
 
-    ax = sns.swarmplot(data=df, x='Group', y='CC_area')
+    df['CC_area'] = pd.Series(np.concatenate((a1, a2, a3, c1, c2, c3, r1, r2, r3, ct1, ct2, ct3)))
+    df['Group'] = pd.Series(np.concatenate((['ATL']*len(a1), ['ATL']*len(a2), ['ATL']*len(a3), ['Climp']*len(c1), ['Climp']*len(c2), ['Climp']*len(c3), ['RTN']*len(r1), ['RTN']*len(r2), ['RTN']*len(r3), ['Control']*len(r3), ['Control']*len(r3), ['Control']*len(r3))))
+
+    df['Replicate'] = pd.Series(np.concatenate((['R1']*len(a1), ['R2']*len(a2), ['R3']*len(a3), ['R1']*len(c1),['R2']*len(c2),['R3']*len(c3),['R1']*len(r1),['R2']*len(r2),['R3']*len(r3),['R1']*len(ct1),['R2']*len(ct2),['R3']*len(ct3))))
+
+    # ax = sns.swarmplot(data=df, x='Group', y='CC_area', hue='Replicate', dodge=True)
+    # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
+    ax = sns.boxplot(data=df, x='Replicate', y='CC_area', hue='Group', dodge=True, y_scale='log')
     # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
+    # sns.boxplot(data=df, x='Group', y='CC_area', hue='replicate', color='white', dodge=True)
 
-    plt.suptitle('Isolated CC area across conditions (replicate 1)', fontsize=20)
+    plt.suptitle('Isolated CC area across conditions', fontsize=20)
     plt.title('CC area denotes the total movement of each junction', fontsize=18)
     plt.grid(True)
-    plt.xlabel('Group', fontsize=18)
+    plt.xlabel('Replicate', fontsize=18)
     plt.ylabel('CC_area', fontsize=18)
     plt.show()
 
 
-# plot_cc_area(cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl)
-# exit()
+plot_cc_area(at1, at2, at3, cl1, cl2, cl3, rt1, rt2, rt3, ctrl1, ctrl2, ctrl3)
+exit()
 
 
 def calc_deposit(num_series, group, region):
@@ -1246,7 +1262,50 @@ def total_data_variation_plots(group, region, measure):
     # rtn_egfp, rtn_mch = junc_line_mean_std('RTN', 1, 10, 'fuz')
 
 
-total_data_variation_plots('Control', 'iso', 'std')
+# total_data_variation_plots('Control', 'iso', 'std')
+# exit()
+
+def full_data_variation_plots(region, measure, channel):
+    a_r1_egfp = junc_line_mean_std('ATL', 1, 10, region, measure)
+    a_r2_egfp = junc_line_mean_std('ATL', 11, 20, region, measure)
+    a_r3_egfp = junc_line_mean_std('ATL', 21, 26, region, measure)
+    c_r1_egfp = junc_line_mean_std('Climp', 1, 10, region, measure)
+    c_r2_egfp = junc_line_mean_std('Climp', 11, 20, region, measure)
+    c_r3_egfp = junc_line_mean_std('Climp', 21, 31, region, measure)
+    r_r1_egfp = junc_line_mean_std('RTN', 1, 10, region, measure)
+    r_r2_egfp = junc_line_mean_std('RTN', 11, 20, region, measure)
+    r_r3_egfp = junc_line_mean_std('RTN', 21, 29, region, measure)
+    # ct_r1_egfp = junc_line_mean_std('Control', 1, 10, region, measure)
+    # ct_r2_egfp = junc_line_mean_std('Control', 11, 20, region, measure)
+    # ct_r3_egfp = junc_line_mean_std('Control', 21, 31, region, measure)
+
+    df = pd.DataFrame()
+    df['data_junc_CC_mean'] = pd.Series(np.concatenate((a_r1_egfp, a_r2_egfp, a_r3_egfp, c_r1_egfp, c_r2_egfp, c_r3_egfp, r_r1_egfp, r_r2_egfp, r_r3_egfp)))#, ct_r1_egfp, ct_r2_egfp, ct_r3_egfp)))
+    df['Group'] = pd.Series(np.concatenate((['ATL']*len(a_r1_egfp), ['ATL']*len(a_r2_egfp), ['ATL']*len(a_r3_egfp), ['Climp']*len(c_r1_egfp), ['Climp']*len(c_r2_egfp), ['Climp']*len(c_r3_egfp), ['RTN']*len(r_r1_egfp), ['RTN']*len(r_r2_egfp), ['RTN']*len(r_r3_egfp))))#, ['Control']*len(ct_r1_egfp), ['Control']*len(ct_r2_egfp), ['Control']*len(ct_r3_egfp))))
+    df['Replicate'] = pd.Series(np.concatenate((['R1']*len(a_r1_egfp), ['R2']*len(a_r2_egfp), ['R3']*len(a_r3_egfp), ['R1']*len(c_r1_egfp),['R2']*len(c_r2_egfp),['R3']*len(c_r3_egfp),['R1']*len(r_r1_egfp),['R2']*len(r_r2_egfp),['R3']*len(r_r3_egfp))))#,['R1']*len(ct_r1_egfp),['R2']*len(ct_r2_egfp),['R3']*len(ct_r3_egfp))))
+    ax = sns.boxplot(data=df, x='Replicate', y='data_junc_CC_mean', hue='Group', dodge=True)#, yscale='log')
+    # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
+    # sns.boxplot(data=df, x='Group', y='CC_area', hue='replicate', color='white', dodge=True)
+    # hue_order = ['ATL', 'Climp', 'RTN', 'Control']
+    # box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'ATL'), ('R1', 'Control')), (('R1', 'Climp'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'Control')), (('R1', 'RTN'), ('R1', 'Control')), (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'ATL'), ('R2', 'Control')), (('R2', 'Climp'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'Control')), (('R2', 'RTN'), ('R2', 'Control')), (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'ATL'), ('R3', 'Control')), (('R3', 'Climp'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'Control')), (('R3', 'RTN'), ('R3', 'Control'))]
+    box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'RTN')), (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'RTN')), (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'RTN'))]
+    statannot.add_stat_annotation(ax, x='Replicate', y='data_junc_CC_mean', hue='Group', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+
+
+    # plt.suptitle('Isolated CC area across conditions', fontsize=20)
+    # plt.title('Standard Deviation per sequence for junction CC mean intensity (isolated junctions)', fontsize=18)
+    measure_name = 'Standard deviation' if measure == 'std' else 'Mean'
+    region_name = 'isolated' if region == 'iso' else 'fuzzy'
+    plt.title(f'{measure_name} per sequence for junction CC mean intensity ({region_name} junctions) - {channel} channel', fontsize=18)
+    plt.grid(True)
+    plt.xlabel('Replicate', fontsize=18)
+    plt.ylabel(f'{measure_name} value per sequence', fontsize=18)
+    plt.show()
+
+
+full_data_variation_plots('fuz', 'std', 'mCherry')
+# total_data_variation_plots('Control', 'iso', 'std')
 exit()
 
 
