@@ -13,6 +13,7 @@ from numpy.polynomial.polynomial import polyfit
 import pandas as pd
 import scipy
 from scipy.stats import pearsonr
+import statannot
 from statsmodels.stats.multicomp import MultiComparison
 from scipy.stats import kruskal, mannwhitneyu
 
@@ -384,21 +385,6 @@ def cc_area_measure(group, region, rstart, rend):
     return cc_area_list
 
 
-at1 = (pd.Series(cc_area_measure('ATL', 'iso', 1, 10)))
-cl1 = (pd.Series(cc_area_measure('Climp', 'iso', 1, 10)))
-rt1 = (pd.Series(cc_area_measure('RTN', 'iso', 1, 10)))
-ctrl1 = (pd.Series(cc_area_measure('Control', 'iso', 1, 10)))
-at2 = (pd.Series(cc_area_measure('ATL', 'iso', 11, 20)))
-cl2 = (pd.Series(cc_area_measure('Climp', 'iso', 11, 20)))
-rt2 = (pd.Series(cc_area_measure('RTN', 'iso', 11, 20)))
-ctrl2 = (pd.Series(cc_area_measure('Control', 'iso', 11, 20)))
-at3 = (pd.Series(cc_area_measure('ATL', 'iso', 21, 26)))
-cl3 = (pd.Series(cc_area_measure('Climp', 'iso', 21, 31)))
-rt3 = (pd.Series(cc_area_measure('RTN', 'iso', 21, 29)))
-ctrl3 = (pd.Series(cc_area_measure('Control', 'iso', 21, 31)))
-
-
-
 def stat_analysis(cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl):
     f_stat, p_val = f_oneway(cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl)
 
@@ -445,8 +431,24 @@ def plot_cc_area(a1, a2, a3, c1, c2, c3, r1, r2, r3, ct1, ct2, ct3):
     plt.show()
 
 
-plot_cc_area(at1, at2, at3, cl1, cl2, cl3, rt1, rt2, rt3, ctrl1, ctrl2, ctrl3)
-exit()
+def get_data_cc_area():
+    at1 = (pd.Series(cc_area_measure('ATL', 'iso', 1, 10)))
+    cl1 = (pd.Series(cc_area_measure('Climp', 'iso', 1, 10)))
+    rt1 = (pd.Series(cc_area_measure('RTN', 'iso', 1, 10)))
+    ctrl1 = (pd.Series(cc_area_measure('Control', 'iso', 1, 10)))
+    at2 = (pd.Series(cc_area_measure('ATL', 'iso', 11, 20)))
+    cl2 = (pd.Series(cc_area_measure('Climp', 'iso', 11, 20)))
+    rt2 = (pd.Series(cc_area_measure('RTN', 'iso', 11, 20)))
+    ctrl2 = (pd.Series(cc_area_measure('Control', 'iso', 11, 20)))
+    at3 = (pd.Series(cc_area_measure('ATL', 'iso', 21, 26)))
+    cl3 = (pd.Series(cc_area_measure('Climp', 'iso', 21, 31)))
+    rt3 = (pd.Series(cc_area_measure('RTN', 'iso', 21, 29)))
+    ctrl3 = (pd.Series(cc_area_measure('Control', 'iso', 21, 31)))
+
+    plot_cc_area(at1, at2, at3, cl1, cl2, cl3, rt1, rt2, rt3, ctrl1, ctrl2, ctrl3)
+
+# get_data_cc_area()
+# exit()
 
 
 def calc_deposit(num_series, group, region):
@@ -541,8 +543,8 @@ def calc_deposit(num_series, group, region):
     return ln_egfp.T, ln_mch.T, region_cc_coords
 
 
-ln_egfp, ln_mch, region_cc_coords = calc_deposit(1, 'ATL', 'iso')
-exit()
+# ln_egfp, ln_mch, region_cc_coords = calc_deposit(1, 'ATL', 'iso')
+# exit()
 
 
 def calc_deposit_net_norm(num_series, group, region):
@@ -1151,7 +1153,8 @@ def junc_line_mean_std(group, repl_start, repl_end, region, measure):
             else:
                 mch_list = None
 
-    return egfp_list, mch_list
+    # return egfp_list, mch_list
+    return mch_list
 
 
 def correlation_analysis(group, repl_start, repl_end, region):
@@ -1193,19 +1196,28 @@ def corr_plots(group, region):
     else:
         r3end = 29
 
-    atl1 = correlation_analysis(group, 1, 10, region)
-    atl2 = correlation_analysis(group, 11, 20, region)
-    atl3 = correlation_analysis(group, 21, r3end, region)
-    # climp = correlation_analysis('Climp', 1, 10, 'fuz')
-    # rtn = correlation_analysis('RTN', 1, 10, 'fuz')
-    sns.distplot(atl1, hist=False, label=f'{group}_r1')
-    sns.distplot(atl2, hist=False, label=f'{group}_r2')
-    sns.distplot(atl3, hist=False, label=f'{group}_r3')
+    a1 = correlation_analysis('ATL', 1, 10, region)
+    a2 = correlation_analysis('ATL', 11, 20, region)
+    a3 = correlation_analysis('ATL', 21, r3end, region)
+    c1 = correlation_analysis('Climp', 1, 10, region)
+    c2 = correlation_analysis('Climp', 11, 20, region)
+    c3 = correlation_analysis('Climp', 21, r3end, region)
+    r1 = correlation_analysis('RTN', 1, 10, region)
+    r2 = correlation_analysis('RTN', 11, 20, region)
+    r3 = correlation_analysis('RTN', 21, r3end, region)
+
+    df = pd.DataFrame()
+
+
+    # sns.distplot(a1, hist=False, label=f'{group}_r1')
+    # sns.distplot(a2, hist=False, label=f'{group}_r2')
+    # sns.distplot(a3, hist=False, label=f'{group}_r3')
 
     reg = 'fuzzy' if region == 'fuz' else 'isolated'
     # sns.distplot(climp, hist=False, label='Climp')
     # sns.distplot(rtn, hist=False, label='RTN')
     # plt.title('Cross correlation between EGFP and mCherry fuzzy junction CC mean intensity sequences - Replicate 1', fontsize=18)
+
     plt.title(
         f'{group} cross correlation between EGFP annd mCherry {reg} CC mean intensity sequences across replicates',
         fontsize=18)
@@ -1280,6 +1292,7 @@ def full_data_variation_plots(region, measure, channel):
     # ct_r3_egfp = junc_line_mean_std('Control', 21, 31, region, measure)
 
     df = pd.DataFrame()
+
     df['data_junc_CC_mean'] = pd.Series(np.concatenate((a_r1_egfp, a_r2_egfp, a_r3_egfp, c_r1_egfp, c_r2_egfp, c_r3_egfp, r_r1_egfp, r_r2_egfp, r_r3_egfp)))#, ct_r1_egfp, ct_r2_egfp, ct_r3_egfp)))
     df['Group'] = pd.Series(np.concatenate((['ATL']*len(a_r1_egfp), ['ATL']*len(a_r2_egfp), ['ATL']*len(a_r3_egfp), ['Climp']*len(c_r1_egfp), ['Climp']*len(c_r2_egfp), ['Climp']*len(c_r3_egfp), ['RTN']*len(r_r1_egfp), ['RTN']*len(r_r2_egfp), ['RTN']*len(r_r3_egfp))))#, ['Control']*len(ct_r1_egfp), ['Control']*len(ct_r2_egfp), ['Control']*len(ct_r3_egfp))))
     df['Replicate'] = pd.Series(np.concatenate((['R1']*len(a_r1_egfp), ['R2']*len(a_r2_egfp), ['R3']*len(a_r3_egfp), ['R1']*len(c_r1_egfp),['R2']*len(c_r2_egfp),['R3']*len(c_r3_egfp),['R1']*len(r_r1_egfp),['R2']*len(r_r2_egfp),['R3']*len(r_r3_egfp))))#,['R1']*len(ct_r1_egfp),['R2']*len(ct_r2_egfp),['R3']*len(ct_r3_egfp))))
