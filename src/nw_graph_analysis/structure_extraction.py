@@ -329,6 +329,9 @@ def plot_total_graph(group, num_series, graph, relevant_nodes, relevant_edge_lis
     for (start_node, end_node) in graph.edges():
         ps = graph[start_node][end_node][0]['pts']
         plt.plot(ps[:, 1], ps[:, 0], 'green')
+        with contextlib.suppress(Exception):
+            ps_multi = graph[start_node][end_node][1]['pts']
+            plt.plot(ps_multi[:, 1], ps_multi[:, 0], 'green')
 
     for each in relevant_edge_list:
         plt.plot(each[:, 1], each[:, 0], 'red', mew=2.8)
@@ -343,9 +346,9 @@ def plot_total_graph(group, num_series, graph, relevant_nodes, relevant_edge_lis
     plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue',
              markersize=4)
     plt.axis('off')
-    plt.savefig(f'graphs/{group}_{num_series}_edge_graph_projection', bbox_inches='tight', pad_inches=0)
-    plt.close()
-    # plt.show()
+    # plt.savefig(f'graphs/{group}_{num_series}_edge_graph_projection', bbox_inches='tight', pad_inches=0)
+    # plt.close()
+    plt.show()
 
 
 def get_nbrs(a):
@@ -360,12 +363,10 @@ def get_nbrs(a):
 
     # Print the indices of the nearest neighbors for each element
     # print(indices[:,1])
-    return indices[:, 1]
+    return distances[:, 1], indices[:, 1]
 
 
 def check_path():
-    import networkx as nx
-
     # create a sample graph
     # G = nx.Graph()
     # G.add_edges_from([(1,2),(2,3),(3,4),(4,5),(2,5)])
@@ -379,10 +380,9 @@ def check_path():
 
     # print the result
     if has_path:
-        print("There exists a node between nodes {} and {}.".format(source, target))
+        print(f"There exists a node between nodes {source} and {target}.")
     else:
         print("There is no node between nodes {} and {}.".format(source, target))
-
 
 
 def graph_plotter(group, series):
@@ -395,18 +395,137 @@ def graph_plotter(group, series):
     path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance_skel.png'
 
     graph = skel_to_graph(path)
+
+    for (start, end) in graph.edges():
+        # print(start, end)
+        print(list(graph[start][end].keys()))
+        # edlen = len(graph[start][end][0]['pts'])
+        # print(edlen)
+    # print(graph[5])
+    exit()
+
     junctions = get_junctions(graph)
+    # print(junctions)
+    # exit()
     relevant_nodes = get_relevant_nodes(junctions)
 
-    junc_data = [x.tolist() for x in junctions]
-    nbrs = get_nbrs(junc_data)
+    ps = np.array([graph.nodes[i]['o'] for i in graph.nodes])
+    # print(ps)
+    # print(junctions)
+    # print(relevant_nodes)
+    # print(ps - relevant_nodes)
+    # print(len(ps))
+    # print(len(relevant_nodes))
+    # yellow_nodes = [x for x in ps if x not in relevant_nodes]
+    # print(len(yellow_nodes))
+
+    # print(ps)
+    # print(relevant_nodes)
+
+    pspp = []
+    rel = []
+
+    # get ps and relevant_nodes in correct format
+    for each in ps:
+        pspp.append([each[0], each[1]])
+    for each in relevant_nodes:
+        rel.append([each[0], each[1]])
+
+    # get only 1, 2 degree nodes (yellow spots)
+    low_deg_nodes = [x for x in pspp if x not in rel]
+
+    # junc_data = [x.tolist() for x in junctions]
+    # nbrs = get_nbrs(junc_data)
+
+    # get nearest neighbours for the 1, 2 degree nodes
+    distances, nbrs = get_nbrs(low_deg_nodes)
+
+    # print(distances)
+    # exit()
+
+    ds = {}
+    tree = nx.minimum_spanning_tree(graph)
+    for each in low_deg_nodes:
+        nei = list(tree.neighbors(pspp.index(each)))
+        for n in nei:
+            dt = nx.shortest_path_length(tree, pspp.index(each), n)
+            ds[n] = dt
+        nnn = min(ds, key=ds.get)
+        print(nnn)
+        # print(nei[0])
+
+    exit()
+
+    for each in low_deg_nodes:
+        # print(each)
+        # print(pspp.index(each))
+        nei = graph.neighbors(pspp.index(each))
+        # print(graph.adj[pspp.index(each)])
+        nbr_list = [n for n in nei]
+        # if len(nbr_list) > 1:
+            # for nbr in nbr_list:
+                # print(nbr)
+                # print(graph[nbr], graph[pspp.index(each)])
+                # print(graph.get_edge_data(pspp.index(each), nbr))
+
+
     # print(nbrs)
+    exit()
 
-    l = []
+
     for i, each in enumerate(nbrs):
-        l.append((junc_data[i], junc_data[each]))
+        a, b = pspp.index(low_deg_nodes[i]), pspp.index(low_deg_nodes[each])
+        # print(a, b)
+        # if nx.is_simple_path(graph, [a, b]):
+        #     pass
+        if graph.has_edge(a, b):
+            print(low_deg_nodes[i], low_deg_nodes[each])
+        else:
+            pass
 
-    print(l)
+    # print(l)
+    exit()
+    # print(l)
+    l0 = [x[0] for x in low_deg_nodes]
+    l1 = [x[1] for x in low_deg_nodes]
+
+    # print(nx.is_simple_path(graph, [l.index([86, 55]), l.index([87, 53])]))
+    # print(list(nx.all_simple_paths(graph, l.index([86, 55]), l.index([87, 53]))))
+    exit()
+
+    plt.imshow(imageio.imread(path), cmap='gray')
+    plt.plot(l1, l0, 'o', markerfacecolor='blue')
+
+    plt.show()
+
+    exit()
+
+    # print(nbrs)
+    print(low_deg_nodes[0], low_deg_nodes[3])
+    print(nx.has_path(graph, ))
+    exit()
+    # for i, each in enumerate(nbrs):
+
+    # print(nbrs)
+    # print(nx.has_path(graph, 0, 1))
+
+    for i, each in enumerate(nbrs):
+        if nx.has_path(graph, i, each):
+            pass
+        else:
+            print(junctions[i], junctions[each])
+    exit()
+    for i, each in enumerate(nbrs):
+        hs_path = any(nx.has_path(graph, i, each) for each in nbrs)
+        if not hs_path:
+            print(f"no path between {i} and {each}")
+
+    exit()
+    # l = []
+    # for i, each in enumerate(nbrs):
+    #     l.append((junc_data[i], junc_data[each]))
+
+    print(low_deg_nodes)
 
     exit()
 
@@ -415,7 +534,7 @@ def graph_plotter(group, series):
     plot_total_graph(group, series, graph, relevant_nodes, relevant_edges)
 
 
-graph_plotter('ATL', 5)
+graph_plotter('ATL', 1)
 # for i in range(1, 30):
 #     graph_plotter('RTN', i)
 exit()
