@@ -22,9 +22,7 @@ from junction_analysis_modules import *
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 
-
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
-
 
 
 def get_std_img(path):
@@ -68,7 +66,9 @@ def preproc_groups(path, group, num_series):
             # img = imageio.imread(path_pref + 'Series%s_decon_converted/files/Series%s_decon_converted_t%s_ch00.tif' % (f'{i:03d}', f'{i:03d}', f'{j:02d}'))
             processed_sample = preproc_individual_sample(img_path)
 
-            cv2.imwrite(f'{new_pref}Series{i:03d}_decon_converted/new_op_sept/preproc/C{i}/C{i}_decon_t0{j:02d}_ch00_proc.png', processed_sample)
+            cv2.imwrite(
+                f'{new_pref}Series{i:03d}_decon_converted/new_op_sept/preproc/C{i}/C{i}_decon_t0{j:02d}_ch00_proc.png',
+                processed_sample)
 
 
 # run Vessel2d.m to get the vessel enhancement output
@@ -154,15 +154,15 @@ def get_relevant_tubules(graph, relevant_nodes):
             if r_node[0] == node_val[0] and r_node[1] == node_val[1]:
                 relevant_node_list.append(each)
 
-    return [graph[start_node][end_node][0]['pts'] for start_node, end_node in edge_set if start_node in relevant_node_list and end_node in relevant_node_list]
+    return [graph[start_node][end_node][0]['pts'] for start_node, end_node in edge_set if
+            start_node in relevant_node_list and end_node in relevant_node_list]
 
 
 def runner(group, r_start, r_end):
-
     l = []
 
     pref = 'Ct' if group == 'Control' else group[0]
-    for i, frame in itertools.product(range(r_start, r_end+1), range(100)):
+    for i, frame in itertools.product(range(r_start, r_end + 1), range(100)):
         # input = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/{group[0]}{i}_decon_t0{frame:02d}_ch00.tif')
         # ip = (input - input.min())/(input.max() - input.min())
 
@@ -179,6 +179,7 @@ def runner(group, r_start, r_end):
 
 import statannot
 from statannotations.Annotator import Annotator
+
 
 # atl = runner('ATL', 1, 2)
 # climp = runner('Climp', 1, 2)
@@ -208,7 +209,6 @@ from statannotations.Annotator import Annotator
 # plt.ylabel('Group', fontsize=18)
 # plt.show()
 # exit()
-
 
 
 # atl = runner('ATL', 1, 2)
@@ -253,7 +253,6 @@ from statannotations.Annotator import Annotator
 # exit()
 
 
-
 def plot_original_graph(skel_img_path):
     """
 
@@ -277,7 +276,6 @@ def plot_original_graph(skel_img_path):
             ps_multi = graph[start_node][end_node][1]['pts']
             plt.plot(ps_multi[:, 1], ps_multi[:, 0], 'cyan')
     plt.show()
-
 
 
 def plot_relevant_graph(skel_img_path, relevant_nodes, relevant_edge_list):
@@ -311,10 +309,11 @@ def plot_total_graph(group, num_series, graph, relevant_nodes, relevant_edge_lis
 
     pref = 'Ct' if group == 'Control' else group[0]
 
-    #projection frame analysis
-    input = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{num_series}_er_mean.png')
+    # projection frame analysis
+    input = imageio.imread(
+        f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{num_series}_er_mean.png')
 
-    #per frame analysis
+    # per frame analysis
     # input = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/{pref}{num_series}_decon_t050_ch00.tif')
     # input = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/img_{num_series}_decon_t050.tif')
     # ip = (input - input.min())/(input.max() - input.min())
@@ -341,13 +340,12 @@ def plot_total_graph(group, num_series, graph, relevant_nodes, relevant_edge_lis
     plt.plot(ps[:, 1], ps[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow', mew=0.5, markersize=3)
 
     # plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'b.')
-    plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue', markersize=4)
+    plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue',
+             markersize=4)
     plt.axis('off')
     plt.savefig(f'graphs/{group}_{num_series}_edge_graph_projection', bbox_inches='tight', pad_inches=0)
     plt.close()
     # plt.show()
-
-
 
 
 def get_nbrs(a):
@@ -365,8 +363,29 @@ def get_nbrs(a):
     return indices[:, 1]
 
 
-def graph_plotter(group, series):
+def check_path():
+    import networkx as nx
 
+    # create a sample graph
+    # G = nx.Graph()
+    # G.add_edges_from([(1,2),(2,3),(3,4),(4,5),(2,5)])
+
+    # define the source and target nodes
+    source = 1
+    target = 5
+
+    # check if there exists a node between the source and target nodes
+    has_path = any(nx.has_path(G, source, x) and nx.has_path(G, x, target) for x in G.nodes)
+
+    # print the result
+    if has_path:
+        print("There exists a node between nodes {} and {}.".format(source, target))
+    else:
+        print("There is no node between nodes {} and {}.".format(source, target))
+
+
+
+def graph_plotter(group, series):
     pref = 'Ct' if group == 'Control' else group[0]
 
     # path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{pref}{series}/{pref}{series}_decon_t050_ch00_skel.png'
@@ -380,9 +399,15 @@ def graph_plotter(group, series):
     relevant_nodes = get_relevant_nodes(junctions)
 
     junc_data = [x.tolist() for x in junctions]
-    # print(junc_data)
     nbrs = get_nbrs(junc_data)
-    print(nbrs)
+    # print(nbrs)
+
+    l = []
+    for i, each in enumerate(nbrs):
+        l.append((junc_data[i], junc_data[each]))
+
+    print(l)
+
     exit()
 
     relevant_edges = get_relevant_tubules(graph, relevant_nodes)
@@ -398,7 +423,7 @@ exit()
 
 def rel_edges_length(group, r_start, r_end):
     l = []
-    for i, frame in itertools.product(range(r_start, r_end+1), range(100)):
+    for i, frame in itertools.product(range(r_start, r_end + 1), range(100)):
         # input = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/{group[0]}{i}_decon_t0{frame:02d}_ch00.tif')
         # ip = (input - input.min())/(input.max() - input.min())
 
@@ -412,11 +437,6 @@ def rel_edges_length(group, r_start, r_end):
     return l
 
 
-
-
-
-
-
 # nps, skdata, labelled_img = label_junctions(group, ser_num)
 # label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
 # iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
@@ -427,14 +447,14 @@ def rel_edge_intensity(group, r_start, r_end):
     l_std = []
     pref = 'Ct' if group == 'Control' else group[0]
 
-    for i, frame in itertools.product(range(r_start, r_end+1), range(100)):
+    for i, frame in itertools.product(range(r_start, r_end + 1), range(100)):
         if group == 'Control':
             fname = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/img_{i}_decon_t0{frame:02d}.tif'
         else:
             fname = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/{group[0]}{i}_decon_t0{frame:02d}_ch00.tif'
 
         img = imageio.imread(fname)
-        ip = (img - img.min())/(img.max() - img.min())
+        ip = (img - img.min()) / (img.max() - img.min())
         path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{pref}{i}/{pref}{i}_decon_t0{frame:02d}_ch00_skel.png'
         graph = skel_to_graph(path)
         junctions = get_junctions(graph)
@@ -447,7 +467,9 @@ def rel_edge_intensity(group, r_start, r_end):
 
     return l_std
 
+
 import statannot
+
 
 def rel_edge_count():
     a1 = runner('ATL', 1, 26)
@@ -468,7 +490,8 @@ def rel_edge_count():
     # df['Count'] = pd.Series(np.concatenate((a1, a2, a3, c1, c2, c3, r1, r2, r3, ct1, ct2, ct3)))
     df['Count'] = pd.Series(np.concatenate((a1, c1, r1, ct1)))
     # df['Group'] = pd.Series(np.concatenate((['ATL']*len(a1), ['ATL']*len(a2), ['ATL']*len(a3), ['Climp']*len(c1), ['Climp']*len(c2), ['Climp']*len(c3), ['RTN']*len(r1), ['RTN']*len(r2), ['RTN']*len(r3), ['Control']*len(r3), ['Control']*len(r3), ['Control']*len(r3))))
-    df['Group'] = pd.Series(np.concatenate((['ATL']*len(a1), ['Climp']*len(c1), ['RTN']*len(r1), ['Control']*len(ct1))))
+    df['Group'] = pd.Series(
+        np.concatenate((['ATL'] * len(a1), ['Climp'] * len(c1), ['RTN'] * len(r1), ['Control'] * len(ct1))))
 
     # df['Replicate'] = pd.Series(np.concatenate((['R1']*len(a1), ['R2']*len(a2), ['R3']*len(a3), ['R1']*len(c1),['R2']*len(c2),['R3']*len(c3),['R1']*len(r1),['R2']*len(r2),['R3']*len(r3),['R1']*len(ct1),['R2']*len(ct2),['R3']*len(ct3))))
 
@@ -481,10 +504,12 @@ def rel_edge_count():
     plt.yscale('log')
 
     # box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'ATL'), ('R1', 'Control')), (('R1', 'Climp'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'Control')), (('R1', 'RTN'), ('R1', 'Control')), (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'ATL'), ('R2', 'Control')), (('R2', 'Climp'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'Control')), (('R2', 'RTN'), ('R2', 'Control')), (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'ATL'), ('R3', 'Control')), (('R3', 'Climp'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'Control')), (('R3', 'RTN'), ('R3', 'Control'))]
-    box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')]
+    box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'),
+                 ('RTN', 'Control')]
 
     # statannot.add_stat_annotation(ax, x='Replicate', y='Count', hue='Group', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
-    statannot.add_stat_annotation(ax, x='Group', y='Count', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+    statannot.add_stat_annotation(ax, x='Group', y='Count', data=df, box_pairs=box_pairs, test='Mann-Whitney',
+                                  text_format='simple', loc='inside', verbose=2, fontsize='large')
 
     # region_name = 'Isolated' if region == 'iso' else 'Fuzzy'
 
@@ -501,8 +526,6 @@ def rel_edge_count():
 rel_edge_count()
 exit()
 
-
-
 atl_std = rel_edge_intensity('ATL', 1, 26)
 cl_std = rel_edge_intensity('Climp', 1, 31)
 rt_std = rel_edge_intensity('RTN', 1, 29)
@@ -511,7 +534,8 @@ ct_std = rel_edge_intensity('Control', 1, 31)
 df = pd.DataFrame()
 
 df['Tubule_intensity_std'] = pd.Series(np.concatenate((atl_std, cl_std, rt_std, ct_std)))
-df['Group'] = pd.Series(np.concatenate((['ATL']*len(atl_std), ['Climp']*len(cl_std), ['RTN']*len(rt_std), ['Control']*len(ct_std))))
+df['Group'] = pd.Series(
+    np.concatenate((['ATL'] * len(atl_std), ['Climp'] * len(cl_std), ['RTN'] * len(rt_std), ['Control'] * len(ct_std))))
 
 # sns.distplot(atl_mean, hist=False, label='atl')
 # sns.distplot(cl_mean, hist=False, label='cl')
@@ -524,6 +548,5 @@ plt.xlabel('Intensity standard deviation', fontsize=18)
 plt.ylabel('Group', fontsize=18)
 # plt.legend()
 plt.show()
-
 
 exit()
