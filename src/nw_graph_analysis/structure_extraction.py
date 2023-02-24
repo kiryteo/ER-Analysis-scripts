@@ -2,7 +2,6 @@
 # Load the ER samples
 # Std ER samples
 
-from junction_analysis import *
 
 import contextlib
 import skimage
@@ -18,6 +17,14 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from skimage.measure import label, regionprops
+from junction_analysis_modules import *
+import numpy as np
+from sklearn.neighbors import NearestNeighbors
+
+
+confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
+
 
 
 def get_std_img(path):
@@ -45,9 +52,9 @@ def preproc_individual_sample(img_path):
 def preproc_groups(path, group, num_series):
     """
 
-    @param path: path to all ER input files
-    @param group: group to process (ATL, Climp, Control, RTN)
-    @param num_series: number of movies in the group
+    # @param path: path to all ER input files
+    # @param group: group to process (ATL, Climp, Control, RTN)
+    # @param num_series: number of movies in the group
     """
     # path_pref = '/localhome/asa420/MIAL/data/live-cell-movies/' + group + '/Decon/'
     # # new_pref = '/localhome/asa420/MIAL/data/confocal_movies/' + group + '/new_op_jul/preproc/'
@@ -150,6 +157,103 @@ def get_relevant_tubules(graph, relevant_nodes):
     return [graph[start_node][end_node][0]['pts'] for start_node, end_node in edge_set if start_node in relevant_node_list and end_node in relevant_node_list]
 
 
+def runner(group, r_start, r_end):
+
+    l = []
+
+    pref = 'Ct' if group == 'Control' else group[0]
+    for i, frame in itertools.product(range(r_start, r_end+1), range(100)):
+        # input = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/{group[0]}{i}_decon_t0{frame:02d}_ch00.tif')
+        # ip = (input - input.min())/(input.max() - input.min())
+
+        path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{pref}{i}/{pref}{i}_decon_t0{frame:02d}_ch00_skel.png'
+        graph = skel_to_graph(path)
+        junctions = get_junctions(graph)
+        relevant_nodes = get_relevant_nodes(junctions)
+        relevant_edges = get_relevant_tubules(graph, relevant_nodes)
+        l.append(len(relevant_edges))
+
+    # plot_total_graph(path, graph, relevant_nodes, relevant_edges)
+    return l
+
+
+import statannot
+from statannotations.Annotator import Annotator
+
+# atl = runner('ATL', 1, 2)
+# climp = runner('Climp', 1, 2)
+# rtn = runner('RTN', 1, 2)
+# ctrl = runner('Control', 1, 2)
+#
+# atl_series = pd.Series(atl, name='ATL')
+# climp_series = pd.Series(climp, name='Climp')
+# rtn_series = pd.Series(rtn, name='RTN')
+# ctrl_series = pd.Series(ctrl, name='Control')
+#
+# df = pd.concat([atl_series, climp_series, rtn_series, ctrl_series], axis=1)
+#
+# df_long = pd.melt(df, var_name='Group', value_name='Length')
+#
+# box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')]
+#
+# ax = sns.violinplot(data=df_long, y='Group', x='Length')
+# ax.set_xscale('log')
+#
+# annot = Annotator(ax, box_pairs, data=df_long, x='Length', y='Group')
+# annot.configure(test='Mann-Whitney', text_format='star', loc='outside')
+# annot.apply_and_annotate()
+#
+# plt.title('Count of edges corresponding to nodes with degree greater than two', fontsize=20)
+# plt.xlabel('Number of edges', fontsize=18)
+# plt.ylabel('Group', fontsize=18)
+# plt.show()
+# exit()
+
+
+
+# atl = runner('ATL', 1, 2)
+# climp = runner('Climp', 1, 2)
+# rtn = runner('RTN', 1, 2)
+# ctrl = runner('Control', 1, 2)
+#
+# df = pd.DataFrame()
+#
+# df['Length'] = pd.Series(np.concatenate((atl, climp, rtn, ctrl)))
+# df['Group'] = pd.Series(np.concatenate((['ATL']*len(atl), ['Climp']*len(climp), ['RTN']*len(rtn), ['Control']*len(ctrl))))
+#
+# box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')]
+#
+# # print(atl)
+# # print(climp)
+# # print(rtn)
+# # exit()
+#
+# ax = sns.violinplot(data=df, y='Group', x='Length')
+# # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
+# # plt.title('Length of edges corresponding to nodes with degree greater than two (replicate 2)', fontsize=20)
+# # ax.set_yscale('log')
+#
+# # statannot.add_stat_annotation(ax, x='Length', y='Group', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='outside', verbose=2, fontsize='large')
+#
+# annot = Annotator(ax, box_pairs, data=df, x='Length', y='Group')
+# annot.new_plot(ax=ax, pairs=box_pairs, plot='violinplot', data='df', x='Length', y='Group')
+# annot.configure(test='Mann-Whitney', loc='inside')
+# annot.annotate()
+# # annot.apply_and_annotate()
+#
+# plt.title('Count of edges corresponding to nodes with degree greater than two', fontsize=20)
+# # plt.xlabel('Number of edges', fontsize=18)
+# # plt.ylabel('Group', fontsize=18)
+# # sns.distplot(atl, hist=False, label='ATL')
+# # sns.distplot(climp, hist=False, label='Climp')
+# # sns.distplot(rtn, hist=False, label='RTN')
+# # plt.legend()
+# plt.show()
+#
+# exit()
+
+
+
 def plot_original_graph(skel_img_path):
     """
 
@@ -175,10 +279,6 @@ def plot_original_graph(skel_img_path):
     plt.show()
 
 
-# path = '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t000_ch00_skel.png'
-# plot_original_graph(path)
-# exit()
-
 
 def plot_relevant_graph(skel_img_path, relevant_nodes, relevant_edge_list):
     """
@@ -200,7 +300,7 @@ def plot_relevant_graph(skel_img_path, relevant_nodes, relevant_edge_list):
     plt.show()
 
 
-def plot_total_graph(skel_path, graph, relevant_nodes, relevant_edge_list):
+def plot_total_graph(group, num_series, graph, relevant_nodes, relevant_edge_list):
     """
 
     @param graph: ER graph (obtained from skeleton)
@@ -209,8 +309,17 @@ def plot_total_graph(skel_path, graph, relevant_nodes, relevant_edge_list):
     @return:
     """
 
-    input = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Climp/files/C1_decon_t050_ch00.tif')
-    ip = (input - input.min())/(input.max() - input.min())
+    pref = 'Ct' if group == 'Control' else group[0]
+
+    #projection frame analysis
+    input = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{num_series}_er_mean.png')
+
+    #per frame analysis
+    # input = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/{pref}{num_series}_decon_t050_ch00.tif')
+    # input = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/img_{num_series}_decon_t050.tif')
+    # ip = (input - input.min())/(input.max() - input.min())
+
+    ip = input
     plt.imshow(ip, cmap='gray')
 
     # img = imageio.imread(skel_path)
@@ -233,28 +342,58 @@ def plot_total_graph(skel_path, graph, relevant_nodes, relevant_edge_list):
 
     # plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'b.')
     plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue', markersize=4)
+    plt.axis('off')
+    plt.savefig(f'graphs/{group}_{num_series}_edge_graph_projection', bbox_inches='tight', pad_inches=0)
+    plt.close()
+    # plt.show()
 
-    plt.show()
 
 
-def runner(group, r_start, r_end):
 
-    l = []
+def get_nbrs(a):
+    # Define the numpy array
+    # a = np.array([[ 6, 98], [  6, 124], [  7, 113], [  9, 106], [  9, 119], [ 16, 105], [ 13, 111], [20, 88], [ 20, 120], [25, 79], [32, 90], [ 34, 110], [ 33, 116], [34, 72], [38, 86], [ 42, 114], [ 44, 109], [46, 89], [46, 68], [ 47, 101]])
+
+    # Create a NearestNeighbors object and fit the data
+    nbrs = NearestNeighbors(n_neighbors=2, algorithm='ball_tree').fit(a)
+
+    # Get the distances and indices of the nearest neighbors
+    distances, indices = nbrs.kneighbors(a)
+
+    # Print the indices of the nearest neighbors for each element
+    # print(indices[:,1])
+    return indices[:, 1]
+
+
+def graph_plotter(group, series):
 
     pref = 'Ct' if group == 'Control' else group[0]
-    for i, frame in itertools.product(range(r_start, r_end+1), range(100)):
-        # input = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/{group[0]}{i}_decon_t0{frame:02d}_ch00.tif')
-        # ip = (input - input.min())/(input.max() - input.min())
 
-        path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{pref}{i}/{pref}{i}_decon_t0{frame:02d}_ch00_skel.png'
-        graph = skel_to_graph(path)
-        junctions = get_junctions(graph)
-        relevant_nodes = get_relevant_nodes(junctions)
-        relevant_edges = get_relevant_tubules(graph, relevant_nodes)
-        l.append(len(relevant_edges))
+    # path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{pref}{series}/{pref}{series}_decon_t050_ch00_skel.png'
 
-    # plot_total_graph(path, graph, relevant_nodes, relevant_edges)
-    return l
+    # projection frame analysis
+    # path = '/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/er_mean_proc/climp16_er_mean_proc_enhance_skel.png'
+    path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance_skel.png'
+
+    graph = skel_to_graph(path)
+    junctions = get_junctions(graph)
+    relevant_nodes = get_relevant_nodes(junctions)
+
+    junc_data = [x.tolist() for x in junctions]
+    # print(junc_data)
+    nbrs = get_nbrs(junc_data)
+    print(nbrs)
+    exit()
+
+    relevant_edges = get_relevant_tubules(graph, relevant_nodes)
+
+    plot_total_graph(group, series, graph, relevant_nodes, relevant_edges)
+
+
+graph_plotter('ATL', 5)
+# for i in range(1, 30):
+#     graph_plotter('RTN', i)
+exit()
 
 
 def rel_edges_length(group, r_start, r_end):
@@ -273,9 +412,14 @@ def rel_edges_length(group, r_start, r_end):
     return l
 
 
-nps, skdata, labelled_img = label_junctions(group, ser_num)
-label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
-iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
+
+
+
+
+
+# nps, skdata, labelled_img = label_junctions(group, ser_num)
+# label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
+# iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
 
 
 def rel_edge_intensity(group, r_start, r_end):
@@ -303,6 +447,61 @@ def rel_edge_intensity(group, r_start, r_end):
 
     return l_std
 
+import statannot
+
+def rel_edge_count():
+    a1 = runner('ATL', 1, 26)
+    # a2 = runner('ATL', 11, 20)
+    # a3 = runner('ATL', 21, 26)
+    c1 = runner('Climp', 1, 31)
+    # c2 = runner('Climp', 11, 20)
+    # c3 = runner('Climp', 21, 31)
+    r1 = runner('RTN', 1, 29)
+    # r2 = runner('RTN', 11, 20)
+    # r3 = runner('RTN', 21, 29)
+    ct1 = runner('Control', 1, 31)
+    # ct2 = runner('Control', 11, 20)
+    # ct3 = runner('Control', 21, 31)
+
+    df = pd.DataFrame()
+
+    # df['Count'] = pd.Series(np.concatenate((a1, a2, a3, c1, c2, c3, r1, r2, r3, ct1, ct2, ct3)))
+    df['Count'] = pd.Series(np.concatenate((a1, c1, r1, ct1)))
+    # df['Group'] = pd.Series(np.concatenate((['ATL']*len(a1), ['ATL']*len(a2), ['ATL']*len(a3), ['Climp']*len(c1), ['Climp']*len(c2), ['Climp']*len(c3), ['RTN']*len(r1), ['RTN']*len(r2), ['RTN']*len(r3), ['Control']*len(r3), ['Control']*len(r3), ['Control']*len(r3))))
+    df['Group'] = pd.Series(np.concatenate((['ATL']*len(a1), ['Climp']*len(c1), ['RTN']*len(r1), ['Control']*len(ct1))))
+
+    # df['Replicate'] = pd.Series(np.concatenate((['R1']*len(a1), ['R2']*len(a2), ['R3']*len(a3), ['R1']*len(c1),['R2']*len(c2),['R3']*len(c3),['R1']*len(r1),['R2']*len(r2),['R3']*len(r3),['R1']*len(ct1),['R2']*len(ct2),['R3']*len(ct3))))
+
+    # ax = sns.boxplot(data=df, x='Replicate', y='Count', hue='Group', dodge=True)
+    ax = sns.boxplot(data=df, x='Group', y='Count')
+    # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
+    # sns.boxplot(data=df, x='Group', y='CC_area', hue='replicate', color='white', dodge=True)
+
+    plt.yscale('log')
+
+    # box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'ATL'), ('R1', 'Control')), (('R1', 'Climp'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'Control')), (('R1', 'RTN'), ('R1', 'Control')), (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'ATL'), ('R2', 'Control')), (('R2', 'Climp'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'Control')), (('R2', 'RTN'), ('R2', 'Control')), (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'ATL'), ('R3', 'Control')), (('R3', 'Climp'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'Control')), (('R3', 'RTN'), ('R3', 'Control'))]
+    box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')]
+
+    # statannot.add_stat_annotation(ax, x='Replicate', y='Count', hue='Group', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+    statannot.add_stat_annotation(ax, x='Group', y='Count', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+
+    # region_name = 'Isolated' if region == 'iso' else 'Fuzzy'
+
+    # plt.suptitle(f'{region_name} CC area across conditions', fontsize=20)
+    # plt.suptitle('')
+    plt.title('Count of edges (tubules) corresponding to nodes (junctions) with degree greater than two', fontsize=20)
+    plt.grid(True)
+    plt.ylabel('Number of edges (tubules), log scale', fontsize=18)
+    # plt.xlabel('Replicate', fontsize=18)
+    plt.xlabel('Group', fontsize=18)
+    plt.show()
+
+
+rel_edge_count()
+exit()
+
+
 
 atl_std = rel_edge_intensity('ATL', 1, 26)
 cl_std = rel_edge_intensity('Climp', 1, 31)
@@ -328,30 +527,3 @@ plt.show()
 
 
 exit()
-
-atl = runner('ATL', 1, 26)
-climp = runner('Climp', 1, 31)
-rtn = runner('RTN', 1, 29)
-ctrl = runner('Control', 1, 31)
-
-df = pd.DataFrame()
-
-df['Length'] = pd.Series(np.concatenate((atl, climp, rtn, ctrl)))
-df['Group'] = pd.Series(np.concatenate((['ATL']*len(atl), ['Climp']*len(climp), ['RTN']*len(rtn), ['Control']*len(ctrl))))
-
-# print(atl)
-# print(climp)
-# print(rtn)
-# exit()
-
-ax = sns.violinplot(data=df, y='Group', x='Length')
-ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
-# plt.title('Length of edges corresponding to nodes with degree greater than two (replicate 2)', fontsize=20)
-plt.title('Count of edges corresponding to nodes with degree greater than two', fontsize=20)
-plt.xlabel('Number of edges', fontsize=18)
-plt.ylabel('Group', fontsize=18)
-# sns.distplot(atl, hist=False, label='ATL')
-# sns.distplot(climp, hist=False, label='Climp')
-# sns.distplot(rtn, hist=False, label='RTN')
-# plt.legend()
-plt.show()
