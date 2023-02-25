@@ -18,6 +18,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from skimage.measure import label, regionprops
+from skimage.graph import route_through_array
 from junction_analysis_modules import *
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
@@ -385,7 +386,7 @@ def check_path():
         print("There is no node between nodes {} and {}.".format(source, target))
 
 
-def graph_plotter(group, series):
+def graph_plotter1(group, series):
     pref = 'Ct' if group == 'Control' else group[0]
 
     # path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{pref}{series}/{pref}{series}_decon_t050_ch00_skel.png'
@@ -394,23 +395,40 @@ def graph_plotter(group, series):
     # path = '/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/er_mean_proc/climp16_er_mean_proc_enhance_skel.png'
     path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance_skel.png'
 
-    graph = skel_to_graph(path)
+    # plt.imshow(imageio.imread(path), cmap='gray')
 
-    for (start, end) in graph.edges():
-        # print(start, end)
-        print(list(graph[start][end].keys()))
-        # edlen = len(graph[start][end][0]['pts'])
-        # print(edlen)
-    # print(graph[5])
-    exit()
+    graph = skel_to_graph(path)
+    # print(graph[0][15][0]['pts'])
+    # exit()
+
+    # for (start, end) in graph.edges():
+    #     # print(start, end)
+    #     print(list(graph[start][end].keys()))
+    #     # edlen = len(graph[start][end][0]['pts'])
+    #     # print(edlen)
+    # # print(graph[5])
+    # exit()
 
     junctions = get_junctions(graph)
     # print(junctions)
     # exit()
     relevant_nodes = get_relevant_nodes(junctions)
 
+    # draw node by o
+    nodes = graph.nodes()
+
+    # ps = np.array([nodes[i]['o'] for i in nodes])
+    # # plt.plot(ps[:, 1], ps[:, 0], 'r.')
+    # plt.plot(ps[:, 1], ps[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow', mew=0.5, markersize=3)
+    #
+    # # plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'b.')
+    # plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue',
+    #          markersize=4)
+
     ps = np.array([graph.nodes[i]['o'] for i in graph.nodes])
     # print(ps)
+    #
+    # exit()
     # print(junctions)
     # print(relevant_nodes)
     # print(ps - relevant_nodes)
@@ -437,97 +455,299 @@ def graph_plotter(group, series):
     # junc_data = [x.tolist() for x in junctions]
     # nbrs = get_nbrs(junc_data)
 
-    # get nearest neighbours for the 1, 2 degree nodes
+    # get nearest neighbour distances and indices for the 1, 2 degree nodes
     distances, nbrs = get_nbrs(low_deg_nodes)
 
-    # print(distances)
+    edge_len_list = []
+
+    for each in low_deg_nodes:
+        l = list(graph.neighbors(pspp.index(each)))
+        if len(l) == 1:
+            # if nx.is_simple_path(graph, [pspp.index(each), l[0]]) or nx.is_simple_path(graph, [l[0], pspp.index(each)]):
+            edge_len = len(graph[pspp.index(each)][l[0]][0]['pts'])
+            edge_len_list.append(edge_len)
+        else:
+            edge_len_1 = len(graph[pspp.index(each)][l[0]][0]['pts'])
+            edge_len_2 = len(graph[pspp.index(each)][l[1]][0]['pts'])
+            if edge_len_1 < edge_len_2:
+                edge_len_list.append(edge_len_1)
+            else:
+                edge_len_list.append(edge_len_2)
+
+    # print(edge_len_list)
+    # print(len(edge_len_list))
+
+    new_node_indices = []
+    for (i, a), (j, b) in zip(enumerate(distances), enumerate(edge_len_list)):
+        if a < b:
+            new_node_indices.append(i)
+
+    # print(new_node_indices)
+    # print(nbrs)
+    # print(low_deg_nodes)
+    # print(len(nbrs))
+    # print(len(low_deg_nodes))
+
+    # print(graph.edges)
+
+    skel = imageio.imread(path)
+    for each in new_node_indices:
+        ldi_start = each
+        ldi_end = nbrs[each]
+
+        u = pspp.index(low_deg_nodes[ldi_start])
+        v = pspp.index(low_deg_nodes[ldi_end])
+
+        # print(u, v)
+        st_coord = (pspp[u][0], pspp[u][1])
+        end_coord = (pspp[v][0], pspp[v][1])
+        # path_coords, _ = route_through_array(skel, start=st_coord, end=end_coord)
+        # path_coords = np.array(path_coords)
+        #
+        # print(path_coords)
+        # exit()\
+        path_coords, _ = route_through_array(skel, start=st_coord, end=end_coord)
+        path_coords = np.array(path_coords)
+
+        # print(path_coords)
+        # exit()
+
+        # new_edge = (u, v, {'pts': path_coords})
+        #
+        # if graph.has_edge(u, v) or graph.has_edge(v, u):
+        #     continue
+        # else:
+        #     graph.add_edge(*new_edge)
+
+        if graph.has_edge(u, v) or graph.has_edge(v, u):
+            continue
+        else:
+            graph.add_edge(u, v)
+
+
+            # npath = [(21, 59), (29, 74), (35, 76), (38, 75), (40, 67), (39, 56), (32, 50), (27, 58)]
+
+            edge_data = {(u, v, 0): {'pts': path_coords}}
+
+            nx.set_edge_attributes(graph, edge_data)
+
+
+        # try:
+        #     path_coords, _ = route_through_array(skel, start=st_coord, end=end_coord)
+        #     path_coords = np.array(path_coords)
+        #
+        #     # print(path_coords)
+        #     # exit()
+        #
+        #     new_edge = (u, v, {'pts': path_coords})
+        #
+        #     if graph.has_edge(u, v) or graph.has_edge(v, u):
+        #         continue
+        #     else:
+        #         graph.add_edge(*new_edge)
+        #
+        #         # npath = []
+        #         #
+        #         # for ele in new_path:
+        #         #     npath.append(list(ele))
+        #         #
+        #         # # npath = [(21, 59), (29, 74), (35, 76), (38, 75), (40, 67), (39, 56), (32, 50), (27, 58)]
+        #         #
+        #         # edge_data = {(u, v, 0): {'pts': np.array(npath)}}
+        #         #
+        #         # nx.set_edge_attributes(graph, edge_data)
+        # except:
+        #     pass
+
+    # print(graph.edges)
     # exit()
 
-    ds = {}
-    tree = nx.minimum_spanning_tree(graph)
+    # print(graph.edges[(22, 29, 0)]['pts'])
+    # print(graph.edges)
+    er_mean = imageio.imread(
+        f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png')
+    plt.imshow(er_mean, cmap='gray')
+
+    # plt.imshow(imageio.imread(path), cmap='gray')
+
+    # k = []
+    for (start_node, end_node) in graph.edges():
+        ps = graph[start_node][end_node][0]['pts']
+        plt.plot(ps[:, 1], ps[:, 0], 'green')
+        # k.append(ps)
+
+    ps = np.array([nodes[i]['o'] for i in nodes])
+    # plt.plot(ps[:, 1], ps[:, 0], 'r.')
+    plt.plot(ps[:, 1], ps[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow', mew=0.5, markersize=3)
+
+    # plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'b.')
+    plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue',
+             markersize=4)
+
+    # print(k)
+    # exit()
+    # l0 = [x[0] for x in k]
+    # l1 = [x[1] for x in k]
+
+    # for (start_node, end_node) in graph.edges():
+    #     ps = graph[start_node][end_node][0]['pts']
+    #     plt.plot(ps[:, 1], ps[:, 0], 'green')
+    #     with contextlib.suppress(Exception):
+    #         ps_multi = graph[start_node][end_node][1]['pts']
+    #         plt.plot(ps_multi[:, 1], ps_multi[:, 0], 'green')
+    # plt.plot(l1, l0, 'green')
+    plt.axis('off')
+    plt.savefig(f'graphs/{group}_{series}_edge_graph_projection_updated', bbox_inches='tight', pad_inches=0)
+    plt.close()
+    # plt.show()
+
+
+graph_plotter1('ATL', 4)
+exit()
+
+
+def graph_plotter(group, series):
+    pref = 'Ct' if group == 'Control' else group[0]
+
+    # path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{pref}{series}/{pref}{series}_decon_t050_ch00_skel.png'
+
+    # projection frame analysis
+    # path = '/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/er_mean_proc/climp16_er_mean_proc_enhance_skel.png'
+    path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance_skel.png'
+
+    # plt.imshow(imageio.imread(path), cmap='gray')
+
+    graph = skel_to_graph(path)
+    # print(graph[0][15][0]['pts'])
+    # exit()
+
+    # for (start, end) in graph.edges():
+    #     # print(start, end)
+    #     print(list(graph[start][end].keys()))
+    #     # edlen = len(graph[start][end][0]['pts'])
+    #     # print(edlen)
+    # # print(graph[5])
+    # exit()
+
+    junctions = get_junctions(graph)
+    # print(junctions)
+    # exit()
+    relevant_nodes = get_relevant_nodes(junctions)
+
+    ps = np.array([graph.nodes[i]['o'] for i in graph.nodes])
+    # print(ps)
+    #
+    # exit()
+    # print(junctions)
+    # print(relevant_nodes)
+    # print(ps - relevant_nodes)
+    # print(len(ps))
+    # print(len(relevant_nodes))
+    # yellow_nodes = [x for x in ps if x not in relevant_nodes]
+    # print(len(yellow_nodes))
+
+    # print(ps)
+    # print(relevant_nodes)
+
+    pspp = []
+    rel = []
+
+    # get ps and relevant_nodes in correct format
+    for each in ps:
+        pspp.append([each[0], each[1]])
+    for each in relevant_nodes:
+        rel.append([each[0], each[1]])
+
+    # get only 1, 2 degree nodes (yellow spots)
+    low_deg_nodes = [x for x in pspp if x not in rel]
+
+    # junc_data = [x.tolist() for x in junctions]
+    # nbrs = get_nbrs(junc_data)
+
+    # get nearest neighbour distances and indices for the 1, 2 degree nodes
+    distances, nbrs = get_nbrs(low_deg_nodes)
+
+    edge_len_list = []
+
     for each in low_deg_nodes:
-        nei = list(tree.neighbors(pspp.index(each)))
-        for n in nei:
-            dt = nx.shortest_path_length(tree, pspp.index(each), n)
-            ds[n] = dt
-        nnn = min(ds, key=ds.get)
-        print(nnn)
-        # print(nei[0])
-
-    exit()
-
-    for each in low_deg_nodes:
-        # print(each)
-        # print(pspp.index(each))
-        nei = graph.neighbors(pspp.index(each))
-        # print(graph.adj[pspp.index(each)])
-        nbr_list = [n for n in nei]
-        # if len(nbr_list) > 1:
-            # for nbr in nbr_list:
-                # print(nbr)
-                # print(graph[nbr], graph[pspp.index(each)])
-                # print(graph.get_edge_data(pspp.index(each), nbr))
-
-
-    # print(nbrs)
-    exit()
-
-
-    for i, each in enumerate(nbrs):
-        a, b = pspp.index(low_deg_nodes[i]), pspp.index(low_deg_nodes[each])
-        # print(a, b)
-        # if nx.is_simple_path(graph, [a, b]):
-        #     pass
-        if graph.has_edge(a, b):
-            print(low_deg_nodes[i], low_deg_nodes[each])
+        l = list(graph.neighbors(pspp.index(each)))
+        if len(l) == 1:
+            # if nx.is_simple_path(graph, [pspp.index(each), l[0]]) or nx.is_simple_path(graph, [l[0], pspp.index(each)]):
+            edge_len = len(graph[pspp.index(each)][l[0]][0]['pts'])
+            edge_len_list.append(edge_len)
         else:
+            edge_len_1 = len(graph[pspp.index(each)][l[0]][0]['pts'])
+            edge_len_2 = len(graph[pspp.index(each)][l[1]][0]['pts'])
+            if edge_len_1 < edge_len_2:
+                edge_len_list.append(edge_len_1)
+            else:
+                edge_len_list.append(edge_len_2)
+
+    # print(edge_len_list)
+    # print(len(edge_len_list))
+
+    new_node_indices = []
+    for (i, a), (j, b) in zip(enumerate(distances), enumerate(edge_len_list)):
+        if a < b:
+            new_node_indices.append(i)
+
+    # print(new_node_indices)
+    # print(nbrs)
+    # print(low_deg_nodes)
+    # print(len(nbrs))
+    # print(len(low_deg_nodes))
+
+    # print(graph.edges)
+    for each in new_node_indices:
+        ldi_start = each
+        ldi_end = nbrs[each]
+
+        u = pspp.index(low_deg_nodes[ldi_start])
+        v = pspp.index(low_deg_nodes[ldi_end])
+
+        try:
+            sh_path = nx.shortest_path(graph, u, v)
+
+            st_coord = (pspp[u][0], pspp[u][1])
+            end_coord = (pspp[v][0], pspp[v][1])
+
+            new_path = [graph.nodes[n]['o'] for n in sh_path]
+
+            if graph.has_edge(u, v) or graph.has_edge(v, u):
+                continue
+            else:
+                graph.add_edge(u, v)
+
+                npath = []
+
+                for ele in new_path:
+                    npath.append(list(ele))
+
+            # npath = [(21, 59), (29, 74), (35, 76), (38, 75), (40, 67), (39, 56), (32, 50), (27, 58)]
+
+                edge_data = {(u, v, 0): {'pts': np.array(npath)}}
+
+                nx.set_edge_attributes(graph, edge_data)
+        except:
             pass
 
-    # print(l)
-    exit()
-    # print(l)
-    l0 = [x[0] for x in low_deg_nodes]
-    l1 = [x[1] for x in low_deg_nodes]
 
-    # print(nx.is_simple_path(graph, [l.index([86, 55]), l.index([87, 53])]))
-    # print(list(nx.all_simple_paths(graph, l.index([86, 55]), l.index([87, 53]))))
-    exit()
-
+    # print(graph.edges[(22, 29, 0)]['pts'])
+    # print(graph.edges)
     plt.imshow(imageio.imread(path), cmap='gray')
-    plt.plot(l1, l0, 'o', markerfacecolor='blue')
+
+    for (start_node, end_node) in graph.edges():
+        ps = graph[start_node][end_node][0]['pts']
+        plt.plot(ps[:, 1], ps[:, 0], 'green')
+
 
     plt.show()
 
-    exit()
-
-    # print(nbrs)
-    print(low_deg_nodes[0], low_deg_nodes[3])
-    print(nx.has_path(graph, ))
-    exit()
-    # for i, each in enumerate(nbrs):
-
-    # print(nbrs)
-    # print(nx.has_path(graph, 0, 1))
-
-    for i, each in enumerate(nbrs):
-        if nx.has_path(graph, i, each):
-            pass
-        else:
-            print(junctions[i], junctions[each])
-    exit()
-    for i, each in enumerate(nbrs):
-        hs_path = any(nx.has_path(graph, i, each) for each in nbrs)
-        if not hs_path:
-            print(f"no path between {i} and {each}")
 
     exit()
-    # l = []
-    # for i, each in enumerate(nbrs):
-    #     l.append((junc_data[i], junc_data[each]))
 
-    print(low_deg_nodes)
 
-    exit()
+
 
     relevant_edges = get_relevant_tubules(graph, relevant_nodes)
 

@@ -855,19 +855,19 @@ def plot_junc_areas(group, series_num, iso, fuz, skdata, iso_cc_coords, fuz_cc_c
 
         for k, v in iso_cc_coords.items():
             # plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='magenta', mew=0.35)
-            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='red', mew=0.35)
+            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='red', mew=0.15)#0.35)
 
         for k, v in fuz_cc_coords.items():
-            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='blue', mew=0.35)
+            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='blue', mew=0.15)#0.35)
 
         for k, v in unk_cc_coords.items():
-            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='green', mew=0.5)
+            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='green', mew=0.25)#0.5)
 
         if len(fuz) > 0:
-            plt.plot(fuz[:, 1], fuz[:, 0], '.', markerfacecolor='None', markeredgecolor='white', mew=0.6)
+            plt.plot(fuz[:, 1], fuz[:, 0], '.', markerfacecolor='None', markeredgecolor='white', mew=0.3)#0.6)
 
         # plt.plot(unk[:, 1], unk[:, 0], 'o', markerfacecolor='None', markeredgecolor='green')
-        plt.plot(iso[:, 1], iso[:, 0], '.', markerfacecolor='None', markeredgecolor='yellow', mew=0.6)
+        plt.plot(iso[:, 1], iso[:, 0], '.', markerfacecolor='None', markeredgecolor='yellow', mew=0.3)#0.6)
 
 
 
@@ -928,8 +928,8 @@ def draw_network_areas(group, ser_num):
     plot_junc_areas(group, ser_num, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords, unk_cc_coords, labelled_img)
 
 
-for i in range(1, 27):
-    draw_network_areas('ATL', i)
+for i in range(1, 32):
+    draw_network_areas('Control', i)
 
 exit()
 

@@ -648,22 +648,22 @@ def get_cc_ids(labelled_img, region):
     return [i for i, num in enumerate(dt_vals) if i > 0 and len(num) != 0]
 
 
-nps, skdata, labelled_img = label_junctions('Climp', 8)
+# nps, skdata, labelled_img = label_junctions('Climp', 8)
+#
+# label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
+# iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
+#
+# iso_cc = get_cc_ids(labelled_img, iso)
+# fuz_cc = get_cc_ids(labelled_img, fuz)
+# unk_cc = get_cc_ids(labelled_img, unk)
+#
+# iso_cc_coords = {each: np.where(labelled_img==each) for each in iso_cc}
+# fuz_cc_coords = {each: np.where(labelled_img==each) for each in fuz_cc}
+# unk_cc_coords = {each: np.where(labelled_img==each) for each in unk_cc}
 
-label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
-iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
+# plot_junc_areas_og('Climp', 8, labelled_img, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords, unk_cc_coords)
 
-iso_cc = get_cc_ids(labelled_img, iso)
-fuz_cc = get_cc_ids(labelled_img, fuz)
-unk_cc = get_cc_ids(labelled_img, unk)
-
-iso_cc_coords = {each: np.where(labelled_img==each) for each in iso_cc}
-fuz_cc_coords = {each: np.where(labelled_img==each) for each in fuz_cc}
-unk_cc_coords = {each: np.where(labelled_img==each) for each in unk_cc}
-
-plot_junc_areas_og('Climp', 8, labelled_img, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords, unk_cc_coords)
-
-exit()
+# exit()
 
 def get_label_id(regions, iso, junc_id):
     for j in range(len(regions)):
