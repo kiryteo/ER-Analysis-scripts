@@ -452,9 +452,6 @@ def graph_plotter1(group, series):
     # get only 1, 2 degree nodes (yellow spots)
     low_deg_nodes = [x for x in pspp if x not in rel]
 
-    # junc_data = [x.tolist() for x in junctions]
-    # nbrs = get_nbrs(junc_data)
-
     # get nearest neighbour distances and indices for the 1, 2 degree nodes
     distances, nbrs = get_nbrs(low_deg_nodes)
 
