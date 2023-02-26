@@ -352,38 +352,21 @@ def plot_total_graph(group, num_series, graph, relevant_nodes, relevant_edge_lis
     plt.show()
 
 
-def get_nbrs(a):
-    # Define the numpy array
-    # a = np.array([[ 6, 98], [  6, 124], [  7, 113], [  9, 106], [  9, 119], [ 16, 105], [ 13, 111], [20, 88], [ 20, 120], [25, 79], [32, 90], [ 34, 110], [ 33, 116], [34, 72], [38, 86], [ 42, 114], [ 44, 109], [46, 89], [46, 68], [ 47, 101]])
+def get_nbrs(nodes_array):
+    """
+
+    @param nodes_array: np array with nodes are [x, y] lists
+    """
 
     # Create a NearestNeighbors object and fit the data
-    nbrs = NearestNeighbors(n_neighbors=2, algorithm='ball_tree').fit(a)
+    nbrs = NearestNeighbors(n_neighbors=2, algorithm='ball_tree').fit(nodes_array)
 
     # Get the distances and indices of the nearest neighbors
-    distances, indices = nbrs.kneighbors(a)
+    distances, indices = nbrs.kneighbors(nodes_array)
 
     # Print the indices of the nearest neighbors for each element
     # print(indices[:,1])
     return distances[:, 1], indices[:, 1]
-
-
-def check_path():
-    # create a sample graph
-    # G = nx.Graph()
-    # G.add_edges_from([(1,2),(2,3),(3,4),(4,5),(2,5)])
-
-    # define the source and target nodes
-    source = 1
-    target = 5
-
-    # check if there exists a node between the source and target nodes
-    has_path = any(nx.has_path(G, source, x) and nx.has_path(G, x, target) for x in G.nodes)
-
-    # print the result
-    if has_path:
-        print(f"There exists a node between nodes {source} and {target}.")
-    else:
-        print("There is no node between nodes {} and {}.".format(source, target))
 
 
 def graph_plotter1(group, series):
