@@ -381,20 +381,11 @@ def graph_plotter1(group, series):
     # plt.imshow(imageio.imread(path), cmap='gray')
 
     graph = skel_to_graph(path)
-    # print(graph[0][15][0]['pts'])
-    # exit()
 
-    # for (start, end) in graph.edges():
-    #     # print(start, end)
-    #     print(list(graph[start][end].keys()))
-    #     # edlen = len(graph[start][end][0]['pts'])
-    #     # print(edlen)
-    # # print(graph[5])
-    # exit()
-
+    # all junction from the graph
     junctions = get_junctions(graph)
-    # print(junctions)
-    # exit()
+
+    # nodes with degree > 2
     relevant_nodes = get_relevant_nodes(junctions)
 
     # draw node by o
@@ -438,6 +429,54 @@ def graph_plotter1(group, series):
     # get nearest neighbour distances and indices for the 1, 2 degree nodes
     distances, nbrs = get_nbrs(low_deg_nodes)
 
+    print(distances)
+
+    # print(nbrs)
+    global nbr_dict
+    nbr_dict = {}
+    for i in range(len(nbrs)):
+        nbr_dict[i] = (nbrs[i], distances[i])
+
+    # print(nbr_dict)
+    keys = list(nbr_dict.keys())
+    vals = list(nbr_dict.values())
+
+    # print(keys)
+    # print(vals)
+    # exit()
+
+    # for each key, get all other keys where it appears as a nbr
+    new = {}
+    for k in keys:
+        new[k] = []
+        for v in vals:
+            if v[0] == k:
+                new[k].append(vals.index(v))
+
+    print(new)
+    import copy
+    ncp = copy.deepcopy(new)
+    for k, v in new.items():
+        if len(v) > 1:
+            if distances[v[0]] < distances[v[1]]:
+                del ncp[v[1]]
+                del ncp[k][1]
+            else:
+                del ncp[v[0]]
+                del ncp[k][0]
+
+    print(ncp)
+
+    ncpnn = copy.deepcopy(ncp)
+
+    for k, v in ncp.items():
+        if len(v) == 0:
+            del ncpnn[k]
+
+    print(ncpnn)
+
+    # exit()
+
     edge_len_list = []
 
     for each in low_deg_nodes:
@@ -462,52 +501,57 @@ def graph_plotter1(group, series):
         if a < b:
             new_node_indices.append(i)
 
-    # print(new_node_indices)
-    # print(nbrs)
-    # print(low_deg_nodes)
-    # print(len(nbrs))
-    # print(len(low_deg_nodes))
 
-    # print(graph.edges)
+    # print(new_node_indices)
+    # exit()
 
     skel = imageio.imread(path)
-    for each in new_node_indices:
-        ldi_start = each
-        ldi_end = nbrs[each]
 
-        u = pspp.index(low_deg_nodes[ldi_start])
-        v = pspp.index(low_deg_nodes[ldi_end])
+    for k, v in ncpnn.items():
+        st = pspp.index(low_deg_nodes[k])
+        end = pspp.index(low_deg_nodes[v[0]])
 
-        # print(u, v)
-        st_coord = (pspp[u][0], pspp[u][1])
-        end_coord = (pspp[v][0], pspp[v][1])
-        # path_coords, _ = route_through_array(skel, start=st_coord, end=end_coord)
-        # path_coords = np.array(path_coords)
-        #
-        # print(path_coords)
-        # exit()\
+        st_coord = (pspp[st][0], pspp[st][1])
+        end_coord = (pspp[end][0], pspp[end][1])
+    # for each in new_node_indices:
+    #     ldi_start = each
+    #     ldi_end = nbrs[each]
+    #
+    #     u = pspp.index(low_deg_nodes[ldi_start])
+    #     v = pspp.index(low_deg_nodes[ldi_end])
+
+        # st_coord = (pspp[u][0], pspp[u][1])
+        # end_coord = (pspp[v][0], pspp[v][1])
+
+
         path_coords, _ = route_through_array(skel, start=st_coord, end=end_coord)
         path_coords = np.array(path_coords)
 
         # print(path_coords)
         # exit()
 
-        # new_edge = (u, v, {'pts': path_coords})
+        # # new_edge = (u, v, {'pts': path_coords})
+        # #
+        # # if graph.has_edge(u, v) or graph.has_edge(v, u):
+        # #     continue
+        # # else:
+        # #     graph.add_edge(*new_edge)
         #
         # if graph.has_edge(u, v) or graph.has_edge(v, u):
         #     continue
         # else:
-        #     graph.add_edge(*new_edge)
+        #     graph.add_edge(u, v)
 
-        if graph.has_edge(u, v) or graph.has_edge(v, u):
+        if graph.has_edge(st, end) or graph.has_edge(end, st):
             continue
         else:
-            graph.add_edge(u, v)
+            graph.add_edge(st, end)
 
 
             # npath = [(21, 59), (29, 74), (35, 76), (38, 75), (40, 67), (39, 56), (32, 50), (27, 58)]
 
-            edge_data = {(u, v, 0): {'pts': path_coords}}
+            # edge_data = {(u, v, 0): {'pts': path_coords}}
+            edge_data = {(st, end, 0): {'pts': path_coords}}
 
             nx.set_edge_attributes(graph, edge_data)
 
@@ -577,12 +621,12 @@ def graph_plotter1(group, series):
     #         plt.plot(ps_multi[:, 1], ps_multi[:, 0], 'green')
     # plt.plot(l1, l0, 'green')
     plt.axis('off')
-    plt.savefig(f'graphs/{group}_{series}_edge_graph_projection_updated', bbox_inches='tight', pad_inches=0)
+    plt.savefig(f'graphs/{group}_{series}_edge_graph_projection_updated_new', bbox_inches='tight', pad_inches=0)
     plt.close()
     # plt.show()
 
 
-graph_plotter1('ATL', 4)
+graph_plotter1('ATL', 5)
 exit()
 
 
