@@ -391,40 +391,19 @@ def graph_plotter1(group, series):
     # draw node by o
     nodes = graph.nodes()
 
-    # ps = np.array([nodes[i]['o'] for i in nodes])
-    # # plt.plot(ps[:, 1], ps[:, 0], 'r.')
-    # plt.plot(ps[:, 1], ps[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow', mew=0.5, markersize=3)
-    #
-    # # plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'b.')
-    # plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue',
-    #          markersize=4)
+    g_nodes = np.array([graph.nodes[i]['o'] for i in graph.nodes])
 
-    ps = np.array([graph.nodes[i]['o'] for i in graph.nodes])
-    # print(ps)
-    #
-    # exit()
-    # print(junctions)
-    # print(relevant_nodes)
-    # print(ps - relevant_nodes)
-    # print(len(ps))
-    # print(len(relevant_nodes))
-    # yellow_nodes = [x for x in ps if x not in relevant_nodes]
-    # print(len(yellow_nodes))
+    g_nodes_array = []
+    rel_nodes_array = []
 
-    # print(ps)
-    # print(relevant_nodes)
-
-    pspp = []
-    rel = []
-
-    # get ps and relevant_nodes in correct format
-    for each in ps:
-        pspp.append([each[0], each[1]])
+    # get g_nodes and relevant_nodes in correct format
+    for each in g_nodes:
+        g_nodes_array.append([each[0], each[1]])
     for each in relevant_nodes:
-        rel.append([each[0], each[1]])
+        rel_nodes_array.append([each[0], each[1]])
 
     # get only 1, 2 degree nodes (yellow spots)
-    low_deg_nodes = [x for x in pspp if x not in rel]
+    low_deg_nodes = [x for x in g_nodes_array if x not in rel_nodes_array]
 
     # get nearest neighbour distances and indices for the 1, 2 degree nodes
     distances, nbrs = get_nbrs(low_deg_nodes)
@@ -480,14 +459,14 @@ def graph_plotter1(group, series):
     edge_len_list = []
 
     for each in low_deg_nodes:
-        l = list(graph.neighbors(pspp.index(each)))
+        l = list(graph.neighbors(g_nodes_array.index(each)))
         if len(l) == 1:
             # if nx.is_simple_path(graph, [pspp.index(each), l[0]]) or nx.is_simple_path(graph, [l[0], pspp.index(each)]):
-            edge_len = len(graph[pspp.index(each)][l[0]][0]['pts'])
+            edge_len = len(graph[g_nodes_array.index(each)][l[0]][0]['pts'])
             edge_len_list.append(edge_len)
         else:
-            edge_len_1 = len(graph[pspp.index(each)][l[0]][0]['pts'])
-            edge_len_2 = len(graph[pspp.index(each)][l[1]][0]['pts'])
+            edge_len_1 = len(graph[g_nodes_array.index(each)][l[0]][0]['pts'])
+            edge_len_2 = len(graph[g_nodes_array.index(each)][l[1]][0]['pts'])
             if edge_len_1 < edge_len_2:
                 edge_len_list.append(edge_len_1)
             else:
@@ -508,11 +487,11 @@ def graph_plotter1(group, series):
     skel = imageio.imread(path)
 
     for k, v in ncpnn.items():
-        st = pspp.index(low_deg_nodes[k])
-        end = pspp.index(low_deg_nodes[v[0]])
+        st = g_nodes_array.index(low_deg_nodes[k])
+        end = g_nodes_array.index(low_deg_nodes[v[0]])
 
-        st_coord = (pspp[st][0], pspp[st][1])
-        end_coord = (pspp[end][0], pspp[end][1])
+        st_coord = (g_nodes_array[st][0], g_nodes_array[st][1])
+        end_coord = (g_nodes_array[end][0], g_nodes_array[end][1])
     # for each in new_node_indices:
     #     ldi_start = each
     #     ldi_end = nbrs[each]
