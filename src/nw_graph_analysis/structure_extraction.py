@@ -10,6 +10,7 @@ import os
 import imageio
 import cv2
 import itertools
+import copy
 from plantcv import plantcv as pcv
 import sknw
 import networkx as nx
@@ -369,7 +370,113 @@ def get_nbrs(nodes_array):
     return distances[:, 1], indices[:, 1]
 
 
+def closest_neighbor(distances, nbrs):
+    global nbr_dict
+
+    # node and its (NN, distance)
+    nbr_dict = {i: (nbrs[i], distances[i]) for i in range(len(nbrs))}
+
+    # print(nbr_dict)
+    keys = list(nbr_dict.keys())
+    vals = list(nbr_dict.values())
+
+    # for each key, get all other keys where it appears as nearest nbr
+    new = {}
+    for k in keys:
+        new[k] = []
+        for v in vals:
+            if v[0] == k:
+                new[k].append(vals.index(v))
+
+    ncp = copy.deepcopy(new)
+
+    for k, v in new.items():
+        # print(len(v))
+        min_dist = 1000000
+        if len(v) > 1:
+            num = 0
+            for idx, vl in enumerate(v):
+                if distances[vl] < min_dist:
+                    min_dist = distances[vl]
+                    num = idx
+            ncp[k] = [v[num], min_dist]
+        elif len(v) == 0:
+            del ncp[k]
+
+    # print(ncp)
+
+    ncp2 = copy.deepcopy(ncp)
+
+    for k, v in ncp.items():
+        if v[0] not in ncp.keys():
+            del ncp2[k]
+
+    #
+    # ncpnn = copy.deepcopy(ncp)
+    #
+    # for k, v in ncp.items():
+    #     if len(v) == 0:
+    #         del ncpnn[k]
+
+    # return ncpnn
+
+    # ncp = copy.deepcopy(new)
+    # for k, v in new.items():
+    #     if len(v) > 1:
+    #         if distances[v[0]] < distances[v[1]]:
+    #             del ncp[v[1]]
+    #             del ncp[k][1]
+    #         else:
+    #             del ncp[v[0]]
+    #             del ncp[k][0]
+    #
+    # print(ncp)
+    # exit()
+    #
+    # ncpnn = copy.deepcopy(ncp)
+    #
+    # for k, v in ncp.items():
+    #     if len(v) == 0:
+    #         del ncpnn[k]
+    #
+    # print(ncpnn)
+    return nbr_dict, ncp2
+
+
+def newfunc(graph, temp_graph, degree_dict, nearest_nodes, skel):
+    for node, node_degree in degree_dict.items():
+        if node_degree == 1:
+            neighbor = list(graph.neighbors(node))[0]
+            if degree_dict[neighbor] == 1:
+                with contextlib.suppress(Exception):
+                    if graph.has_edge(node, neighbor):
+                        temp_graph.remove_edge(node, neighbor)
+                    elif graph.has_edge(neighbor, node):
+                        temp_graph.remove_edge(neighbor, node)
+                    temp_graph.remove_node(neighbor)
+                    temp_graph.remove_node(node)
+            elif degree_dict[neighbor] > 2:
+                with contextlib.suppress(Exception):
+                    nn = nearest_nodes[node][0]
+                    # if degree_dict[nn] < 3:
+                    #     temp_graph.add_edge(node, nn)
+                    # else:
+                    path_coords, _ = route_through_array(skel, start=node, end=nn)
+                    path_coords = np.array(path_coords)
+                    # edge_pts = temp_graph.get_edge_data(node, neighbor)['pts']
+                    # edge_len = sum(((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5 for (x1, y1), (x2, y2) in zip(edge_pts, edge_pts[1:]))
+                    # if edge_len >
+                    if temp_graph.has_edge(node, nn) or graph.has_edge(node, nn):
+                        continue
+                    else:
+                        temp_graph.add_edge(node, nn)
+                    edge_data = {(node, nn, 0): {'pts': path_coords}}
+
+                    nx.set_edge_attributes(temp_graph, edge_data)
+
+
 def graph_plotter1(group, series):
+    global rel
     pref = 'Ct' if group == 'Control' else group[0]
 
     # path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{pref}{series}/{pref}{series}_decon_t050_ch00_skel.png'
@@ -378,7 +485,9 @@ def graph_plotter1(group, series):
     # path = '/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/er_mean_proc/climp16_er_mean_proc_enhance_skel.png'
     path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance_skel.png'
 
-    # plt.imshow(imageio.imread(path), cmap='gray')
+    path_proc = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance.png'
+
+    path_er = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png'
 
     graph = skel_to_graph(path)
 
@@ -387,11 +496,131 @@ def graph_plotter1(group, series):
 
     # nodes with degree > 2
     relevant_nodes = get_relevant_nodes(junctions)
+    # print(relevant_nodes)
+    # print(relevant_nodes.shape)
+    # print(list(relevant_nodes))
+    # exit()
 
     # draw node by o
     nodes = graph.nodes()
 
     g_nodes = np.array([graph.nodes[i]['o'] for i in graph.nodes])
+
+    # edge start and end points
+    neighbors_dict = {}
+    for i in graph.nodes:
+        neighbors_dict[i] = list(graph.neighbors(i))[0]
+
+    degree_list = list(graph.degree())
+
+    distances, nbrs_all = get_nbrs(g_nodes)
+
+    nbr_dict, nearest_nodes = closest_neighbor(distances, nbrs_all)
+
+    degree_dict = {}
+
+    for each in degree_list:
+        degree_dict[each[0]] = each[1]
+
+    temp_graph = copy.deepcopy(graph)
+
+    # for all degree 1 nodes, get nbrs
+    # if the nbr degree == 1, remove node and nbr
+    # else if nbr degree > 1
+    # print(graph.edges)
+
+    skel = imageio.imread(path)
+
+    # print(graph.nodes)
+
+    # rel_nodes = copy.deepcopy(relevant_nodes)
+
+    # newfunc(graph, temp_graph, degree_dict, nearest_nodes, skel)
+    for node, node_degree in degree_dict.items():
+        if node_degree == 1:
+            neighbor = next(iter(graph.neighbors(node)))
+
+            if degree_dict.get(neighbor, 0) == 1 and temp_graph.has_edge(node, neighbor):
+                temp_graph.remove_edge(node, neighbor)
+                temp_graph.remove_nodes_from((node, neighbor))
+
+            # if degree_dict[neighbor] == 1:
+            #     with contextlib.suppress(Exception):
+            #         if graph.has_edge(node, neighbor):
+            #             temp_graph.remove_edge(node, neighbor)
+            #         elif graph.has_edge(neighbor, node):
+            #             temp_graph.remove_edge(neighbor, node)
+            #         temp_graph.remove_node(neighbor)
+            #         temp_graph.remove_node(node)
+
+        elif node_degree > 2 and all(degree_dict.get(n, 0)==1 for n in graph.neighbors(node)):
+            coords = temp_graph.nodes[node]['o']
+            x, y = coords[0], coords[1]
+            idx = np.where((relevant_nodes == [x, y]).all(axis=1))[0][0] if (x, y) in relevant_nodes else -1
+            relevant_nodes = np.delete(relevant_nodes, idx, axis=0)
+            nbrs_list = list(temp_graph.neighbors(node))
+            temp_graph.remove_nodes_from(nbrs_list + [node])
+
+        # elif node_degree > 2:
+        #     neighbors = list(graph.neighbors(node))
+        #     cnt = 0
+        #     for each in neighbors:
+        #         if degree_dict[each] == 1:
+        #             cnt += 1
+        #     if cnt == len(neighbors):
+        #         # pos = nx.get_node_attributes(graph, 'pos')
+        #         # print(pos[node])
+        #         coords = temp_graph.nodes[node]['o']
+        #         x, y = coords[0], coords[1]
+        #         # exit()
+        #
+        #         idx = np.where((relevant_nodes[:, 0] == x) & (relevant_nodes[:, 1] == y))[0][0] if (x, y) in relevant_nodes else 0
+        #
+        #         relevant_nodes = np.delete(relevant_nodes, idx, axis=0)
+        #
+        #         nbrs_list = list(temp_graph.neighbors(node))
+        #         temp_graph.remove_nodes_from(nbrs_list)
+        #         temp_graph.remove_node(node)
+
+    # exit()
+    # tgraph = copy.deepcopy(temp_graph)
+    #
+    # for node, node_degree in degree_dict.items():
+    #     if node_degree == 1:
+    #         neighbor = list(graph.neighbors(node))[0]
+    #         if degree_dict[neighbor] > 2:
+    #             # if nn is neighbor - dont do anything
+    #             # if nn is 1/ 2 degree
+
+    # exit()
+
+    er_mean = imageio.imread(
+        f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png')
+    plt.imshow(er_mean, cmap='gray')
+
+    # plt.imshow(imageio.imread(path), cmap='gray')
+
+    # k = []
+    for (start_node, end_node) in temp_graph.edges():
+        ps = graph[start_node][end_node][0]['pts']
+        plt.plot(ps[:, 1], ps[:, 0], 'green')
+        # k.append(ps)
+
+    ps = np.array([temp_graph.nodes[i]['o'] for i in temp_graph.nodes])
+    # plt.plot(ps[:, 1], ps[:, 0], 'r.')
+    plt.plot(ps[:, 1], ps[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow', mew=0.5, markersize=3)
+
+    # plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'b.')
+    plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue',
+             markersize=4)
+
+    # plt.axis('off')
+    # plt.savefig(f'graphs/{group}_{series}_edge_graph_projection_updated_f27_v3', bbox_inches='tight', pad_inches=0)
+    # plt.close()
+
+    plt.show()
+
+    exit()
 
     g_nodes_array = []
     rel_nodes_array = []
@@ -402,8 +631,15 @@ def graph_plotter1(group, series):
     for each in relevant_nodes:
         rel_nodes_array.append([each[0], each[1]])
 
+    deg_one_nodes = []
+
     # get only 1, 2 degree nodes (yellow spots)
     low_deg_nodes = [x for x in g_nodes_array if x not in rel_nodes_array]
+
+    # print(g_nodes_array)
+    # print(low_deg_nodes)
+    # print(g_nodes_array[3] == low_deg_nodes[3])
+    exit()
 
     # get nearest neighbour distances and indices for the 1, 2 degree nodes
     distances, nbrs = get_nbrs(low_deg_nodes)
@@ -411,48 +647,6 @@ def graph_plotter1(group, series):
     print(distances)
 
     # print(nbrs)
-    global nbr_dict
-    nbr_dict = {}
-    for i in range(len(nbrs)):
-        nbr_dict[i] = (nbrs[i], distances[i])
-
-    # print(nbr_dict)
-    keys = list(nbr_dict.keys())
-    vals = list(nbr_dict.values())
-
-    # print(keys)
-    # print(vals)
-    # exit()
-
-    # for each key, get all other keys where it appears as a nbr
-    new = {}
-    for k in keys:
-        new[k] = []
-        for v in vals:
-            if v[0] == k:
-                new[k].append(vals.index(v))
-
-    print(new)
-    import copy
-    ncp = copy.deepcopy(new)
-    for k, v in new.items():
-        if len(v) > 1:
-            if distances[v[0]] < distances[v[1]]:
-                del ncp[v[1]]
-                del ncp[k][1]
-            else:
-                del ncp[v[0]]
-                del ncp[k][0]
-
-    print(ncp)
-
-    ncpnn = copy.deepcopy(ncp)
-
-    for k, v in ncp.items():
-        if len(v) == 0:
-            del ncpnn[k]
-
-    print(ncpnn)
 
     # exit()
 
@@ -480,11 +674,10 @@ def graph_plotter1(group, series):
         if a < b:
             new_node_indices.append(i)
 
-
     # print(new_node_indices)
     # exit()
 
-    skel = imageio.imread(path)
+    skel = imageio.imread(path_er)
 
     for k, v in ncpnn.items():
         st = g_nodes_array.index(low_deg_nodes[k])
@@ -492,16 +685,15 @@ def graph_plotter1(group, series):
 
         st_coord = (g_nodes_array[st][0], g_nodes_array[st][1])
         end_coord = (g_nodes_array[end][0], g_nodes_array[end][1])
-    # for each in new_node_indices:
-    #     ldi_start = each
-    #     ldi_end = nbrs[each]
-    #
-    #     u = pspp.index(low_deg_nodes[ldi_start])
-    #     v = pspp.index(low_deg_nodes[ldi_end])
+        # for each in new_node_indices:
+        #     ldi_start = each
+        #     ldi_end = nbrs[each]
+        #
+        #     u = pspp.index(low_deg_nodes[ldi_start])
+        #     v = pspp.index(low_deg_nodes[ldi_end])
 
         # st_coord = (pspp[u][0], pspp[u][1])
         # end_coord = (pspp[v][0], pspp[v][1])
-
 
         path_coords, _ = route_through_array(skel, start=st_coord, end=end_coord)
         path_coords = np.array(path_coords)
@@ -526,14 +718,12 @@ def graph_plotter1(group, series):
         else:
             graph.add_edge(st, end)
 
-
             # npath = [(21, 59), (29, 74), (35, 76), (38, 75), (40, 67), (39, 56), (32, 50), (27, 58)]
 
             # edge_data = {(u, v, 0): {'pts': path_coords}}
             edge_data = {(st, end, 0): {'pts': path_coords}}
 
             nx.set_edge_attributes(graph, edge_data)
-
 
         # try:
         #     path_coords, _ = route_through_array(skel, start=st_coord, end=end_coord)
@@ -600,12 +790,12 @@ def graph_plotter1(group, series):
     #         plt.plot(ps_multi[:, 1], ps_multi[:, 0], 'green')
     # plt.plot(l1, l0, 'green')
     plt.axis('off')
-    plt.savefig(f'graphs/{group}_{series}_edge_graph_projection_updated_new', bbox_inches='tight', pad_inches=0)
+    plt.savefig(f'graphs/{group}_{series}_edge_graph_projection_updated_new_er', bbox_inches='tight', pad_inches=0)
     plt.close()
     # plt.show()
 
 
-graph_plotter1('ATL', 5)
+graph_plotter1('ATL', 7)
 exit()
 
 
@@ -726,14 +916,13 @@ def graph_plotter(group, series):
                 for ele in new_path:
                     npath.append(list(ele))
 
-            # npath = [(21, 59), (29, 74), (35, 76), (38, 75), (40, 67), (39, 56), (32, 50), (27, 58)]
+                # npath = [(21, 59), (29, 74), (35, 76), (38, 75), (40, 67), (39, 56), (32, 50), (27, 58)]
 
                 edge_data = {(u, v, 0): {'pts': np.array(npath)}}
 
                 nx.set_edge_attributes(graph, edge_data)
         except:
             pass
-
 
     # print(graph.edges[(22, 29, 0)]['pts'])
     # print(graph.edges)
@@ -743,14 +932,9 @@ def graph_plotter(group, series):
         ps = graph[start_node][end_node][0]['pts']
         plt.plot(ps[:, 1], ps[:, 0], 'green')
 
-
     plt.show()
 
-
     exit()
-
-
-
 
     relevant_edges = get_relevant_tubules(graph, relevant_nodes)
 
