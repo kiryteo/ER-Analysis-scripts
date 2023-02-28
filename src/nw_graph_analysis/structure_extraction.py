@@ -157,102 +157,6 @@ def get_relevant_tubules(graph, relevant_nodes):
             start_node in relevant_node_list and end_node in relevant_node_list]
 
 
-
-def runner(group, r_start, r_end):
-    l = []
-
-    pref = 'Ct' if group == 'Control' else group[0]
-    for i, frame in itertools.product(range(r_start, r_end + 1), range(100)):
-        # input = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/{group[0]}{i}_decon_t0{frame:02d}_ch00.tif')
-        # ip = (input - input.min())/(input.max() - input.min())
-
-        path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{pref}{i}/{pref}{i}_decon_t0{frame:02d}_ch00_skel.png'
-        graph = skel_to_graph(path)
-        junctions = get_junctions(graph)
-        relevant_nodes = get_relevant_nodes(junctions)
-        relevant_edges = get_relevant_tubules(graph, relevant_nodes)
-        l.append(len(relevant_edges))
-
-    # plot_total_graph(path, graph, relevant_nodes, relevant_edges)
-    return l
-
-
-import statannot
-from statannotations.Annotator import Annotator
-
-
-# atl = runner('ATL', 1, 2)
-# climp = runner('Climp', 1, 2)
-# rtn = runner('RTN', 1, 2)
-# ctrl = runner('Control', 1, 2)
-#
-# atl_series = pd.Series(atl, name='ATL')
-# climp_series = pd.Series(climp, name='Climp')
-# rtn_series = pd.Series(rtn, name='RTN')
-# ctrl_series = pd.Series(ctrl, name='Control')
-#
-# df = pd.concat([atl_series, climp_series, rtn_series, ctrl_series], axis=1)
-#
-# df_long = pd.melt(df, var_name='Group', value_name='Length')
-#
-# box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')]
-#
-# ax = sns.violinplot(data=df_long, y='Group', x='Length')
-# ax.set_xscale('log')
-#
-# annot = Annotator(ax, box_pairs, data=df_long, x='Length', y='Group')
-# annot.configure(test='Mann-Whitney', text_format='star', loc='outside')
-# annot.apply_and_annotate()
-#
-# plt.title('Count of edges corresponding to nodes with degree greater than two', fontsize=20)
-# plt.xlabel('Number of edges', fontsize=18)
-# plt.ylabel('Group', fontsize=18)
-# plt.show()
-# exit()
-
-
-# atl = runner('ATL', 1, 2)
-# climp = runner('Climp', 1, 2)
-# rtn = runner('RTN', 1, 2)
-# ctrl = runner('Control', 1, 2)
-#
-# df = pd.DataFrame()
-#
-# df['Length'] = pd.Series(np.concatenate((atl, climp, rtn, ctrl)))
-# df['Group'] = pd.Series(np.concatenate((['ATL']*len(atl), ['Climp']*len(climp), ['RTN']*len(rtn), ['Control']*len(ctrl))))
-#
-# box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')]
-#
-# # print(atl)
-# # print(climp)
-# # print(rtn)
-# # exit()
-#
-# ax = sns.violinplot(data=df, y='Group', x='Length')
-# # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
-# # plt.title('Length of edges corresponding to nodes with degree greater than two (replicate 2)', fontsize=20)
-# # ax.set_yscale('log')
-#
-# # statannot.add_stat_annotation(ax, x='Length', y='Group', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='outside', verbose=2, fontsize='large')
-#
-# annot = Annotator(ax, box_pairs, data=df, x='Length', y='Group')
-# annot.new_plot(ax=ax, pairs=box_pairs, plot='violinplot', data='df', x='Length', y='Group')
-# annot.configure(test='Mann-Whitney', loc='inside')
-# annot.annotate()
-# # annot.apply_and_annotate()
-#
-# plt.title('Count of edges corresponding to nodes with degree greater than two', fontsize=20)
-# # plt.xlabel('Number of edges', fontsize=18)
-# # plt.ylabel('Group', fontsize=18)
-# # sns.distplot(atl, hist=False, label='ATL')
-# # sns.distplot(climp, hist=False, label='Climp')
-# # sns.distplot(rtn, hist=False, label='RTN')
-# # plt.legend()
-# plt.show()
-#
-# exit()
-
-
 def plot_original_graph(skel_img_path):
     """
 
@@ -450,8 +354,8 @@ def graph_plotter1(group, series):
     # nodes with degree > 2
     relevant_nodes = get_relevant_nodes(junctions)
 
-    relevant_edges = get_relevant_tubules(graph, relevant_nodes)
-    print(relevant_edges)
+    # relevant_edges = get_relevant_tubules(graph, relevant_nodes)
+    # print(relevant_edges)
 
     # draw node by o
     nodes = graph.nodes()
@@ -459,49 +363,59 @@ def graph_plotter1(group, series):
     g_nodes = np.array([graph.nodes[i]['o'] for i in graph.nodes])
 
     # edge start and end points
-    neighbors_dict = {}
-    for i in graph.nodes:
-        neighbors_dict[i] = list(graph.neighbors(i))[0]
-
+    # neighbors_dict = {i: list(graph.neighbors(i))[0] for i in graph.nodes}
     degree_list = list(graph.degree())
 
+
     distances, nbrs_all = get_nbrs(g_nodes)
+    nbr_dict, ncp2 = close_neighbor(distances, nbrs_all)
 
-    exit()
+    # print(nbr_dict)
+    # print(ncp2)
+    #
+    # exit()
 
-    degree_dict = {}
-
-    for each in degree_list:
-        degree_dict[each[0]] = each[1]
+    degree_dict = {each[0]: each[1] for each in degree_list}
 
     temp_graph = copy.deepcopy(graph)
 
-    # for all degree 1 nodes, get nbrs
-    # if the nbr degree == 1, remove node and nbr
-    # else if nbr degree > 1
-    # print(graph.edges)
 
     skel = imageio.imread(path)
 
-    # newfunc(graph, temp_graph, degree_dict, nearest_nodes, skel)
     for node, node_degree in degree_dict.items():
         if node_degree == 1:
+
+            # access the first element of graph.neighbors
             neighbor = next(iter(graph.neighbors(node)))
 
+            # If the neighbor also has degree 1 and the edge between the two exists in temp_graph, remove the edge and nodes
             if degree_dict.get(neighbor, 0) == 1 and temp_graph.has_edge(node, neighbor):
                 temp_graph.remove_edge(node, neighbor)
                 temp_graph.remove_nodes_from((node, neighbor))
 
+        # If a node has degree > 2 and all its neighbors have degree 1, remove the node and its neighbors
         elif node_degree > 2 and all(degree_dict.get(n, 0) == 1 for n in graph.neighbors(node)):
             coords = temp_graph.nodes[node]['o']
             x, y = coords[0], coords[1]
+
+            # If the node is in relevant_nodes, delete it
             idx = np.where((relevant_nodes == [x, y]).all(axis=1))[0][0] if (x, y) in relevant_nodes else -1
             relevant_nodes = np.delete(relevant_nodes, idx, axis=0)
+
+            # Remove the node and its neighbors from temp_graph
             nbrs_list = list(temp_graph.neighbors(node))
             temp_graph.remove_nodes_from(nbrs_list + [node])
 
     # exit()
-    # tgraph = copy.deepcopy(temp_graph)
+    tgraph = copy.deepcopy(temp_graph)
+    for node, node_degree in degree_dict.items():
+        if node_degree == 1:
+            neighbor = next(iter(graph.neighbors(node)))
+            if degree_dict.get(neighbor, 0) > 2 and temp_graph.has_edge(node, neighbor) and ncp2[node][0] == neighbor:
+                continue
+
+
+
     #
     # for node, node_degree in degree_dict.items():
     #     if node_degree == 1:
@@ -532,23 +446,16 @@ def graph_plotter1(group, series):
     plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue',
              markersize=4)
 
-    # plt.axis('off')
-    # plt.savefig(f'graphs/{group}_{series}_edge_graph_projection_updated_f27_v3', bbox_inches='tight', pad_inches=0)
-    # plt.close()
+    plt.axis('off')
+    plt.savefig(f'graphs/{group}_{series}_edge_graph_projection_updated_f27_v3', bbox_inches='tight', pad_inches=0)
+    plt.close()
 
-    plt.show()
+    # plt.show()
 
     exit()
 
-    g_nodes_array = []
-    rel_nodes_array = []
-
-    # get g_nodes and relevant_nodes in correct format
-    for each in g_nodes:
-        g_nodes_array.append([each[0], each[1]])
-    for each in relevant_nodes:
-        rel_nodes_array.append([each[0], each[1]])
-
+    g_nodes_array = [[each[0], each[1]] for each in g_nodes]
+    rel_nodes_array = [[each[0], each[1]] for each in relevant_nodes]
     deg_one_nodes = []
 
     # get only 1, 2 degree nodes (yellow spots)
@@ -587,10 +494,7 @@ def graph_plotter1(group, series):
     # print(edge_len_list)
     # print(len(edge_len_list))
 
-    new_node_indices = []
-    for (i, a), (j, b) in zip(enumerate(distances), enumerate(edge_len_list)):
-        if a < b:
-            new_node_indices.append(i)
+    new_node_indices = [i for (i, a), (j, b) in zip(enumerate(distances), enumerate(edge_len_list)) if a < b]
 
     # print(new_node_indices)
     # exit()
@@ -616,59 +520,43 @@ def graph_plotter1(group, series):
         path_coords, _ = route_through_array(skel, start=st_coord, end=end_coord)
         path_coords = np.array(path_coords)
 
-        # print(path_coords)
-        # exit()
-
-        # # new_edge = (u, v, {'pts': path_coords})
-        # #
-        # # if graph.has_edge(u, v) or graph.has_edge(v, u):
-        # #     continue
-        # # else:
-        # #     graph.add_edge(*new_edge)
-        #
-        # if graph.has_edge(u, v) or graph.has_edge(v, u):
-        #     continue
-        # else:
-        #     graph.add_edge(u, v)
-
         if graph.has_edge(st, end) or graph.has_edge(end, st):
             continue
-        else:
-            graph.add_edge(st, end)
+        graph.add_edge(st, end)
 
-            # npath = [(21, 59), (29, 74), (35, 76), (38, 75), (40, 67), (39, 56), (32, 50), (27, 58)]
+        # npath = [(21, 59), (29, 74), (35, 76), (38, 75), (40, 67), (39, 56), (32, 50), (27, 58)]
 
-            # edge_data = {(u, v, 0): {'pts': path_coords}}
-            edge_data = {(st, end, 0): {'pts': path_coords}}
+        # edge_data = {(u, v, 0): {'pts': path_coords}}
+        edge_data = {(st, end, 0): {'pts': path_coords}}
 
-            nx.set_edge_attributes(graph, edge_data)
+        nx.set_edge_attributes(graph, edge_data)
 
-        # try:
-        #     path_coords, _ = route_through_array(skel, start=st_coord, end=end_coord)
-        #     path_coords = np.array(path_coords)
-        #
-        #     # print(path_coords)
-        #     # exit()
-        #
-        #     new_edge = (u, v, {'pts': path_coords})
-        #
-        #     if graph.has_edge(u, v) or graph.has_edge(v, u):
-        #         continue
-        #     else:
-        #         graph.add_edge(*new_edge)
-        #
-        #         # npath = []
-        #         #
-        #         # for ele in new_path:
-        #         #     npath.append(list(ele))
-        #         #
-        #         # # npath = [(21, 59), (29, 74), (35, 76), (38, 75), (40, 67), (39, 56), (32, 50), (27, 58)]
-        #         #
-        #         # edge_data = {(u, v, 0): {'pts': np.array(npath)}}
-        #         #
-        #         # nx.set_edge_attributes(graph, edge_data)
-        # except:
-        #     pass
+            # try:
+            #     path_coords, _ = route_through_array(skel, start=st_coord, end=end_coord)
+            #     path_coords = np.array(path_coords)
+            #
+            #     # print(path_coords)
+            #     # exit()
+            #
+            #     new_edge = (u, v, {'pts': path_coords})
+            #
+            #     if graph.has_edge(u, v) or graph.has_edge(v, u):
+            #         continue
+            #     else:
+            #         graph.add_edge(*new_edge)
+            #
+            #         # npath = []
+            #         #
+            #         # for ele in new_path:
+            #         #     npath.append(list(ele))
+            #         #
+            #         # # npath = [(21, 59), (29, 74), (35, 76), (38, 75), (40, 67), (39, 56), (32, 50), (27, 58)]
+            #         #
+            #         # edge_data = {(u, v, 0): {'pts': np.array(npath)}}
+            #         #
+            #         # nx.set_edge_attributes(graph, edge_data)
+            # except:
+            #     pass
 
     # print(graph.edges)
     # exit()
@@ -713,8 +601,108 @@ def graph_plotter1(group, series):
     # plt.show()
 
 
-graph_plotter1('ATL', 7)
+graph_plotter1('ATL', 13)
 exit()
+
+
+
+
+def runner(group, r_start, r_end):
+    l = []
+
+    pref = 'Ct' if group == 'Control' else group[0]
+    for i, frame in itertools.product(range(r_start, r_end + 1), range(100)):
+        # input = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/{group[0]}{i}_decon_t0{frame:02d}_ch00.tif')
+        # ip = (input - input.min())/(input.max() - input.min())
+
+        path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{pref}{i}/{pref}{i}_decon_t0{frame:02d}_ch00_skel.png'
+        graph = skel_to_graph(path)
+        junctions = get_junctions(graph)
+        relevant_nodes = get_relevant_nodes(junctions)
+        relevant_edges = get_relevant_tubules(graph, relevant_nodes)
+        l.append(len(relevant_edges))
+
+    # plot_total_graph(path, graph, relevant_nodes, relevant_edges)
+    return l
+
+
+import statannot
+from statannotations.Annotator import Annotator
+
+
+# atl = runner('ATL', 1, 2)
+# climp = runner('Climp', 1, 2)
+# rtn = runner('RTN', 1, 2)
+# ctrl = runner('Control', 1, 2)
+#
+# atl_series = pd.Series(atl, name='ATL')
+# climp_series = pd.Series(climp, name='Climp')
+# rtn_series = pd.Series(rtn, name='RTN')
+# ctrl_series = pd.Series(ctrl, name='Control')
+#
+# df = pd.concat([atl_series, climp_series, rtn_series, ctrl_series], axis=1)
+#
+# df_long = pd.melt(df, var_name='Group', value_name='Length')
+#
+# box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')]
+#
+# ax = sns.violinplot(data=df_long, y='Group', x='Length')
+# ax.set_xscale('log')
+#
+# annot = Annotator(ax, box_pairs, data=df_long, x='Length', y='Group')
+# annot.configure(test='Mann-Whitney', text_format='star', loc='outside')
+# annot.apply_and_annotate()
+#
+# plt.title('Count of edges corresponding to nodes with degree greater than two', fontsize=20)
+# plt.xlabel('Number of edges', fontsize=18)
+# plt.ylabel('Group', fontsize=18)
+# plt.show()
+# exit()
+
+
+# atl = runner('ATL', 1, 2)
+# climp = runner('Climp', 1, 2)
+# rtn = runner('RTN', 1, 2)
+# ctrl = runner('Control', 1, 2)
+#
+# df = pd.DataFrame()
+#
+# df['Length'] = pd.Series(np.concatenate((atl, climp, rtn, ctrl)))
+# df['Group'] = pd.Series(np.concatenate((['ATL']*len(atl), ['Climp']*len(climp), ['RTN']*len(rtn), ['Control']*len(ctrl))))
+#
+# box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')]
+#
+# # print(atl)
+# # print(climp)
+# # print(rtn)
+# # exit()
+#
+# ax = sns.violinplot(data=df, y='Group', x='Length')
+# # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
+# # plt.title('Length of edges corresponding to nodes with degree greater than two (replicate 2)', fontsize=20)
+# # ax.set_yscale('log')
+#
+# # statannot.add_stat_annotation(ax, x='Length', y='Group', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='outside', verbose=2, fontsize='large')
+#
+# annot = Annotator(ax, box_pairs, data=df, x='Length', y='Group')
+# annot.new_plot(ax=ax, pairs=box_pairs, plot='violinplot', data='df', x='Length', y='Group')
+# annot.configure(test='Mann-Whitney', loc='inside')
+# annot.annotate()
+# # annot.apply_and_annotate()
+#
+# plt.title('Count of edges corresponding to nodes with degree greater than two', fontsize=20)
+# # plt.xlabel('Number of edges', fontsize=18)
+# # plt.ylabel('Group', fontsize=18)
+# # sns.distplot(atl, hist=False, label='ATL')
+# # sns.distplot(climp, hist=False, label='Climp')
+# # sns.distplot(rtn, hist=False, label='RTN')
+# # plt.legend()
+# plt.show()
+#
+# exit()
+
+
+
 
 
 def graph_plotter(group, series):
