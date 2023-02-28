@@ -91,8 +91,7 @@ def skel_to_graph(skel_img_path):
     @param skel_img_path:
     @return:
     """
-    skeleton_input = imageio.imread(skel_img_path)
-    return sknw.build_sknw(skeleton_input, multi=True, iso=False)
+    return sknw.build_sknw(imageio.imread(skel_img_path), multi=True, iso=False)
 
 
 def get_junctions(graph):
@@ -102,13 +101,11 @@ def get_junctions(graph):
     @return: nodes (junctions) with degree > 2
     """
     # get all the nodes from the graph
-    nodes_list = graph.nodes()
-    node_coords = np.array([nodes_list[node]['o'] for node in nodes_list])
+    node_coords = np.array([graph.nodes[node]['o'] for node in graph.nodes()])
 
-    # degree_list provides list of tuples with node id followed by its degree
-    degree_list = graph.degree
+    # graph.degree provides list of tuples with node id followed by its degree
 
-    return [node_coords[node_num] for node_num, degree_val in enumerate(degree_list) if degree_val[1] > 2]
+    return [node_coords[node_num] for node_num, degree_val in enumerate(graph.degree) if degree_val[1] > 2]
 
 
 def get_relevant_nodes(junctions):
@@ -158,6 +155,7 @@ def get_relevant_tubules(graph, relevant_nodes):
 
     return [graph[start_node][end_node][0]['pts'] for start_node, end_node in edge_set if
             start_node in relevant_node_list and end_node in relevant_node_list]
+
 
 
 def runner(group, r_start, r_end):
@@ -370,109 +368,64 @@ def get_nbrs(nodes_array):
     return distances[:, 1], indices[:, 1]
 
 
-def closest_neighbor(distances, nbrs):
-    global nbr_dict
-
-    # node and its (NN, distance)
+def close_neighbor(distances, nbrs):
     nbr_dict = {i: (nbrs[i], distances[i]) for i in range(len(nbrs))}
 
-    # print(nbr_dict)
-    keys = list(nbr_dict.keys())
-    vals = list(nbr_dict.values())
+    # For each key, check its appearance as nearest neighbor
+    nn_check_dict = {k: [i for i, x in enumerate(nbr_dict.values()) if x[0] == k] for k in nbr_dict}
 
-    # for each key, get all other keys where it appears as nearest nbr
-    new = {}
-    for k in keys:
-        new[k] = []
-        for v in vals:
-            if v[0] == k:
-                new[k].append(vals.index(v))
+    # In case of multiple NN candidates, select the closest
+    candidate_nn = {k: min(((v[i], distances[v[i]]) for i in range(len(v))), key=lambda x: x[1]) for k, v in nn_check_dict.items() if v}
 
-    ncp = copy.deepcopy(new)
+    # Reformat the dict
+    ncp2 = {k: v for k, v in candidate_nn.items() if v[0] in candidate_nn}
 
-    for k, v in new.items():
-        # print(len(v))
-        min_dist = 1000000
-        if len(v) > 1:
-            num = 0
-            for idx, vl in enumerate(v):
-                if distances[vl] < min_dist:
-                    min_dist = distances[vl]
-                    num = idx
-            ncp[k] = [v[num], min_dist]
-        elif len(v) == 0:
-            del ncp[k]
-
-    # print(ncp)
-
-    ncp2 = copy.deepcopy(ncp)
-
-    for k, v in ncp.items():
-        if v[0] not in ncp.keys():
-            del ncp2[k]
-
-    #
-    # ncpnn = copy.deepcopy(ncp)
-    #
-    # for k, v in ncp.items():
-    #     if len(v) == 0:
-    #         del ncpnn[k]
-
-    # return ncpnn
-
-    # ncp = copy.deepcopy(new)
-    # for k, v in new.items():
-    #     if len(v) > 1:
-    #         if distances[v[0]] < distances[v[1]]:
-    #             del ncp[v[1]]
-    #             del ncp[k][1]
-    #         else:
-    #             del ncp[v[0]]
-    #             del ncp[k][0]
-    #
-    # print(ncp)
-    # exit()
-    #
-    # ncpnn = copy.deepcopy(ncp)
-    #
-    # for k, v in ncp.items():
-    #     if len(v) == 0:
-    #         del ncpnn[k]
-    #
-    # print(ncpnn)
     return nbr_dict, ncp2
 
 
-def newfunc(graph, temp_graph, degree_dict, nearest_nodes, skel):
-    for node, node_degree in degree_dict.items():
-        if node_degree == 1:
-            neighbor = list(graph.neighbors(node))[0]
-            if degree_dict[neighbor] == 1:
-                with contextlib.suppress(Exception):
-                    if graph.has_edge(node, neighbor):
-                        temp_graph.remove_edge(node, neighbor)
-                    elif graph.has_edge(neighbor, node):
-                        temp_graph.remove_edge(neighbor, node)
-                    temp_graph.remove_node(neighbor)
-                    temp_graph.remove_node(node)
-            elif degree_dict[neighbor] > 2:
-                with contextlib.suppress(Exception):
-                    nn = nearest_nodes[node][0]
-                    # if degree_dict[nn] < 3:
-                    #     temp_graph.add_edge(node, nn)
-                    # else:
-                    path_coords, _ = route_through_array(skel, start=node, end=nn)
-                    path_coords = np.array(path_coords)
-                    # edge_pts = temp_graph.get_edge_data(node, neighbor)['pts']
-                    # edge_len = sum(((x1 - x2) ** 2 + (y1 - y2) ** 2) ** 0.5 for (x1, y1), (x2, y2) in zip(edge_pts, edge_pts[1:]))
-                    # if edge_len >
-                    if temp_graph.has_edge(node, nn) or graph.has_edge(node, nn):
-                        continue
-                    else:
-                        temp_graph.add_edge(node, nn)
-                    edge_data = {(node, nn, 0): {'pts': path_coords}}
+# def closest_neighbor(distances, nbrs):
+#     global nbr_dict
+#
+#     # node and its (NN, distance)
+#     nbr_dict = {i: (nbrs[i], distances[i]) for i in range(len(nbrs))}
+#
+#     # print(nbr_dict)
+#     keys = list(nbr_dict.keys())
+#     vals = list(nbr_dict.values())
+#
+#     # for each key, get all other keys where it appears as nearest nbr
+#     new = {}
+#     for k in keys:
+#         new[k] = []
+#         for v in vals:
+#             if v[0] == k:
+#                 new[k].append(vals.index(v))
+#
+#     ncp = copy.deepcopy(new)
+#
+#     for k, v in new.items():
+#         # print(len(v))
+#         min_dist = 1000000
+#         if len(v) > 1:
+#             num = 0
+#             for idx, vl in enumerate(v):
+#                 if distances[vl] < min_dist:
+#                     min_dist = distances[vl]
+#                     num = idx
+#             ncp[k] = [v[num], min_dist]
+#         elif len(v) == 0:
+#             del ncp[k]
+#
+#     # print(ncp)
+#
+#     ncp2 = copy.deepcopy(ncp)
+#
+#     for k, v in ncp.items():
+#         if v[0] not in ncp.keys():
+#             del ncp2[k]
+#
+#     return nbr_dict, ncp2
 
-                    nx.set_edge_attributes(temp_graph, edge_data)
 
 
 def graph_plotter1(group, series):
@@ -496,10 +449,9 @@ def graph_plotter1(group, series):
 
     # nodes with degree > 2
     relevant_nodes = get_relevant_nodes(junctions)
-    # print(relevant_nodes)
-    # print(relevant_nodes.shape)
-    # print(list(relevant_nodes))
-    # exit()
+
+    relevant_edges = get_relevant_tubules(graph, relevant_nodes)
+    print(relevant_edges)
 
     # draw node by o
     nodes = graph.nodes()
@@ -515,7 +467,7 @@ def graph_plotter1(group, series):
 
     distances, nbrs_all = get_nbrs(g_nodes)
 
-    nbr_dict, nearest_nodes = closest_neighbor(distances, nbrs_all)
+    exit()
 
     degree_dict = {}
 
@@ -531,10 +483,6 @@ def graph_plotter1(group, series):
 
     skel = imageio.imread(path)
 
-    # print(graph.nodes)
-
-    # rel_nodes = copy.deepcopy(relevant_nodes)
-
     # newfunc(graph, temp_graph, degree_dict, nearest_nodes, skel)
     for node, node_degree in degree_dict.items():
         if node_degree == 1:
@@ -544,43 +492,13 @@ def graph_plotter1(group, series):
                 temp_graph.remove_edge(node, neighbor)
                 temp_graph.remove_nodes_from((node, neighbor))
 
-            # if degree_dict[neighbor] == 1:
-            #     with contextlib.suppress(Exception):
-            #         if graph.has_edge(node, neighbor):
-            #             temp_graph.remove_edge(node, neighbor)
-            #         elif graph.has_edge(neighbor, node):
-            #             temp_graph.remove_edge(neighbor, node)
-            #         temp_graph.remove_node(neighbor)
-            #         temp_graph.remove_node(node)
-
-        elif node_degree > 2 and all(degree_dict.get(n, 0)==1 for n in graph.neighbors(node)):
+        elif node_degree > 2 and all(degree_dict.get(n, 0) == 1 for n in graph.neighbors(node)):
             coords = temp_graph.nodes[node]['o']
             x, y = coords[0], coords[1]
             idx = np.where((relevant_nodes == [x, y]).all(axis=1))[0][0] if (x, y) in relevant_nodes else -1
             relevant_nodes = np.delete(relevant_nodes, idx, axis=0)
             nbrs_list = list(temp_graph.neighbors(node))
             temp_graph.remove_nodes_from(nbrs_list + [node])
-
-        # elif node_degree > 2:
-        #     neighbors = list(graph.neighbors(node))
-        #     cnt = 0
-        #     for each in neighbors:
-        #         if degree_dict[each] == 1:
-        #             cnt += 1
-        #     if cnt == len(neighbors):
-        #         # pos = nx.get_node_attributes(graph, 'pos')
-        #         # print(pos[node])
-        #         coords = temp_graph.nodes[node]['o']
-        #         x, y = coords[0], coords[1]
-        #         # exit()
-        #
-        #         idx = np.where((relevant_nodes[:, 0] == x) & (relevant_nodes[:, 1] == y))[0][0] if (x, y) in relevant_nodes else 0
-        #
-        #         relevant_nodes = np.delete(relevant_nodes, idx, axis=0)
-        #
-        #         nbrs_list = list(temp_graph.neighbors(node))
-        #         temp_graph.remove_nodes_from(nbrs_list)
-        #         temp_graph.remove_node(node)
 
     # exit()
     # tgraph = copy.deepcopy(temp_graph)

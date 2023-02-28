@@ -115,13 +115,17 @@ def get_junc_patches(newps, img):
     @return: junction neighbourhood patch (3x3)
     """
     img_patches = []
-    for num, coordinate in enumerate(newps):
-        x, y = newps[num]
-        if x > 1 and x < 126 and y > 1 and y < 126:
-            coord_vals = [img[x - 1, y], img[x + 1, y], img[x, y], img[x, y - 1], img[x, y + 1], img[x - 1, y - 1],
-                          img[x - 1, y + 1], img[x + 1, y - 1],
-                          img[x + 1, y + 1]]  # , img[x+2, y], img[x-2, y], img[x, y+2], img[x, y-2]]
-            img_patches.append(coord_vals)
+    for x, y in newps:
+        if 1 < x < 126 and 1 < y < 126:
+            patch = img[x-1:x+2, y-1:y+2].flatten()
+            img_patches.append(patch)
+    # for num, coordinate in enumerate(newps):
+    #     x, y = newps[num]
+    #     if x > 1 and x < 126 and y > 1 and y < 126:
+    #         coord_vals = [img[x - 1, y], img[x + 1, y], img[x, y], img[x, y - 1], img[x, y + 1], img[x - 1, y - 1],
+    #                       img[x - 1, y + 1], img[x + 1, y - 1],
+    #                       img[x + 1, y + 1]]  # , img[x+2, y], img[x-2, y], img[x, y+2], img[x, y-2]]
+    #         img_patches.append(coord_vals)
     return img_patches
 
 
