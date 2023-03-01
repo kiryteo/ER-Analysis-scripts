@@ -15,10 +15,8 @@ from plantcv import plantcv as pcv
 import sknw
 import networkx as nx
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from skimage.measure import label, regionprops
 from skimage.graph import route_through_array
 from junction_analysis_modules import *
 import numpy as np
@@ -83,6 +81,20 @@ def get_skeleton(img_path):
     """
     vess_enhanced_sample = imageio.imread(img_path)
     return pcv.morphology.skeletonize(mask=vess_enhanced_sample)
+
+
+def get_skeleton(img_path):
+    """
+    Extracts the skeleton from a vessel-enhanced image.
+
+    @param img_path (str): The file path of the vessel-enhanced image.
+    @return: extracted skeleton (numpy.ndarray)
+    """
+    # Load the vessel-enhanced image using the imageio library
+    vess_enhanced_sample = imageio.imread(img_path)
+
+    return pcv.morphology.skeletonize(mask=vess_enhanced_sample)
+
 
 
 def skel_to_graph(skel_img_path):
@@ -275,79 +287,40 @@ def get_nbrs(nodes_array):
 def nearest_node(distances, nbrs):
     nbr_dict = {i: (nbrs[i], distances[i]) for i in range(len(nbrs))}
 
-    # For each key, check its appearance as nearest neighbor
-    nn_check_dict = {k: [i for i, x in enumerate(nbr_dict.values()) if x[0] == k] for k in nbr_dict}
+    # Create a dictionary of nearest neighbors for each node
+    nn_dict = {}
+    for node, (nbr, dist) in nbr_dict.items():
+        if nbr not in nn_dict or nn_dict[nbr][1] > dist:
+            nn_dict[nbr] = (node, dist)
 
-    # In case of multiple NN candidates, select the closest
-    candidate_nn = {k: min(((v[i], distances[v[i]]) for i in range(len(v))), key=lambda x: x[1]) for k, v in nn_check_dict.items() if v}
-
-    # Reformat the dict
-    ncp2 = {k: v for k, v in candidate_nn.items() if v[0] in candidate_nn}
-
-    return nbr_dict, ncp2
+    return nbr_dict, nn_dict
 
 
-# def closest_neighbor(distances, nbrs):
-#     global nbr_dict
-#
-#     # node and its (NN, distance)
-#     nbr_dict = {i: (nbrs[i], distances[i]) for i in range(len(nbrs))}
-#
-#     # print(nbr_dict)
-#     keys = list(nbr_dict.keys())
-#     vals = list(nbr_dict.values())
-#
-#     # for each key, get all other keys where it appears as nearest nbr
-#     new = {}
-#     for k in keys:
-#         new[k] = []
-#         for v in vals:
-#             if v[0] == k:
-#                 new[k].append(vals.index(v))
-#
-#     ncp = copy.deepcopy(new)
-#
-#     for k, v in new.items():
-#         # print(len(v))
-#         min_dist = 1000000
-#         if len(v) > 1:
-#             num = 0
-#             for idx, vl in enumerate(v):
-#                 if distances[vl] < min_dist:
-#                     min_dist = distances[vl]
-#                     num = idx
-#             ncp[k] = [v[num], min_dist]
-#         elif len(v) == 0:
-#             del ncp[k]
-#
-#     # print(ncp)
-#
-#     ncp2 = copy.deepcopy(ncp)
-#
-#     for k, v in ncp.items():
-#         if v[0] not in ncp.keys():
-#             del ncp2[k]
-#
-#     return nbr_dict, ncp2
-
-
+# Find the closest neighbor of a given node in a graph
 def get_closest_from_nbr(graph, node):
+
+    # Get the list of neighbors and their distances to the node
     neighbors = list(graph.neighbors(node))
     distances = [graph.edges[node, neighbor, 0]['weight'] for neighbor in neighbors]
+
+    # Find the index of the closest neighbor in the list of neighbors
     closest_neighbor_index = distances.index(min(distances))
+
+    # Return the closest neighbor and its distance to the node
     return neighbors[closest_neighbor_index], min(distances)
 
 
+# Get the coordinates of the path between a given node and its closest neighbor in a graph
 def get_path_coords(cost_arr, g_nodes_array, node, fin_dict):
-    st_coord = (g_nodes_array[node][0], g_nodes_array[node][1])
-    end_coord = (g_nodes_array[fin_dict[node][0]][0], g_nodes_array[fin_dict[node][0]][1])
-    path_coords, _ = route_through_array(cost_arr, start=st_coord, end=end_coord, fully_connected=True)
-    # if len(path_coords) == 0 or np.array_equal(path_coords[-1], st_coord):
-    #     print((path_coords))
+    # Get the starting and ending coordinates of the path
+    start_coord = tuple(g_nodes_array[node][:2])
+    end_coord = tuple(g_nodes_array[fin_dict[node][0]][:2])
+
+    # Find the path coordinates using the `route_through_array()` function
+    path_coords, _ = route_through_array(cost_arr, start=start_coord, end=end_coord, fully_connected=True)
+
+    # Return the path coordinates as a NumPy array if the path is short enough, otherwise return None
     return np.array(path_coords) if len(path_coords) < 30 else None
-    #     path_coords = None
-    # path_coords =
-    # return path_coords
 
 
 def connect_low_degree_nodes(temp_graph, node, fin_dict, path_coords):
@@ -405,23 +378,19 @@ def graph_plotter1(group, series):
         nbr_id, dist = get_closest_from_nbr(graph, each)
         closest_neighbor_dict[each] = (nbr_id, dist)
 
-    # degree_list = list(graph.degree())
-
     distances, nbrs_all = get_nbrs(g_nodes)
     nbr_dict, ncp2 = nearest_node(distances, nbrs_all)
 
     fin_dict = {}
 
-    for k in closest_neighbor_dict:
-        if k not in ncp2:
-            fin_dict[k] = closest_neighbor_dict[k] if closest_neighbor_dict[k][1] < nbr_dict[k][1] else nbr_dict[k]
-        else:
+    for k, v in closest_neighbor_dict.items():
+        if k in ncp2:
             fin_dict[k] = ncp2[k]
 
-    # degree_dict = {each[0]: each[1] for each in degree_list}
-    # print(degree_dict)
-
-    # deg_dict = dict(graph.degree())
+        elif v[1] < nbr_dict[k][1]:
+            fin_dict[k] = closest_neighbor_dict[k]
+        else:
+            fin_dict[k] = nbr_dict[k]
 
     temp_graph = copy.deepcopy(graph)
 
@@ -451,32 +420,10 @@ def graph_plotter1(group, series):
         f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png')
     plt.imshow(er_mean, cmap='gray')
 
-    # plt.imshow(imageio.imread(path), cmap='gray')
-
-    # for (s, e) in temp_graph.edges():
-    #     print(temp_graph[s][e][0])
-
-    # print(temp_graph.nodes[2])
-    # print(graph.nodes[i] for i in temp_graph.nodes)
-    # ps = ([nodes[i]['o'] for i in nodes])
-    # for each in graph.nodes:
-    #     print(graph.nodes[each])
-
-    # for each in temp_graph.nodes:
-    #     print(temp_graph.nodes[each])
-    # temp_graph.nodes[0])
-    # print(ps)
-
-    # print(temp_graph.nodes)
-
-    # exit()
-
-    # k = []
     for (start_node, end_node) in temp_graph.edges():
         if temp_graph[start_node][end_node][0]:
             ps = temp_graph[start_node][end_node][0]['pts']
             plt.plot(ps[:, 1], ps[:, 0], 'green')
-        # k.append(ps)
 
     # if
     # ps = np.array([temp_graph.nodes[i]['o'] for i in temp_graph.nodes])
@@ -495,35 +442,6 @@ def graph_plotter1(group, series):
 
     exit()
 
-
-
-    er_mean = imageio.imread(
-        f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png')
-    plt.imshow(er_mean, cmap='gray')
-
-    # plt.imshow(imageio.imread(path), cmap='gray')
-
-    # k = []
-    for (start_node, end_node) in temp_graph.edges():
-        ps = graph[start_node][end_node][0]['pts']
-        plt.plot(ps[:, 1], ps[:, 0], 'green')
-        # k.append(ps)
-
-    ps = np.array([temp_graph.nodes[i]['o'] for i in temp_graph.nodes])
-    # plt.plot(ps[:, 1], ps[:, 0], 'r.')
-    plt.plot(ps[:, 1], ps[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow', mew=0.5, markersize=3)
-
-    # plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'b.')
-    plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue',
-             markersize=4)
-
-    plt.axis('off')
-    plt.savefig(f'graphs/{group}_{series}_edge_graph_projection_updated_f27_v3', bbox_inches='tight', pad_inches=0)
-    plt.close()
-
-    # plt.show()
-
-    exit()
 
     er_mean = imageio.imread(
         f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png')
@@ -586,10 +504,6 @@ def runner(group, r_start, r_end):
 
     # plot_total_graph(path, graph, relevant_nodes, relevant_edges)
     return l
-
-
-import statannot
-from statannotations.Annotator import Annotator
 
 
 # atl = runner('ATL', 1, 2)
