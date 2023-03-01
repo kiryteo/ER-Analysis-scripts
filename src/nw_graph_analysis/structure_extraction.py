@@ -429,7 +429,8 @@ def graph_plotter1(group, series):
 
                             nx.set_edge_attributes(temp_graph, edge_data)
 
-            elif degree_dict[neighbor] == 2:
+            # elif degree_dict[neighbor] == 2:
+            else:
                 if fin_dict[node][0] != neighbor:
                     path_coords = get_path_coords(cost_arr, g_nodes_array, node, fin_dict)
 
@@ -445,14 +446,24 @@ def graph_plotter1(group, series):
                         edge_data = connect_low_degree_nodes(temp_graph, neighbor, fin_dict, path_coords)
 
                         nx.set_edge_attributes(temp_graph, edge_data)
+        elif node_degree == 2:
+            neighbor = next(iter(graph.neighbors(node)))
+            if fin_dict[node][0] != neighbor:
+                path_coords = get_path_coords(cost_arr, g_nodes_array, node, fin_dict)
 
+                if not temp_graph.has_edge(node, fin_dict[node][0]):
+                    edge_data = connect_low_degree_nodes(temp_graph, node, fin_dict, path_coords)
 
-                # print(temp_graph[node])
-                # print(temp_graph[neighbor])
+                    nx.set_edge_attributes(temp_graph, edge_data)
 
-    # print(len(graph.edges))
-    # print(len(temp_graph.edges))
-    # exit()
+            if fin_dict[neighbor][0] != node:
+                path_coords = get_path_coords(cost_arr, g_nodes_array, neighbor, fin_dict)
+
+                if not temp_graph.has_edge(neighbor, fin_dict[neighbor][0]):
+                    edge_data = connect_low_degree_nodes(temp_graph, neighbor, fin_dict, path_coords)
+
+                    nx.set_edge_attributes(temp_graph, edge_data)
+
 
     er_mean = imageio.imread(
         f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png')
@@ -715,7 +726,7 @@ def graph_plotter1(group, series):
     # plt.show()
 
 
-graph_plotter1('Climp', 10)
+graph_plotter1('Climp', 16)
 exit()
 
 
