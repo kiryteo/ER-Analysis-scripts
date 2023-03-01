@@ -342,13 +342,33 @@ def get_path_coords(cost_arr, g_nodes_array, node, fin_dict):
     st_coord = (g_nodes_array[node][0], g_nodes_array[node][1])
     end_coord = (g_nodes_array[fin_dict[node][0]][0], g_nodes_array[fin_dict[node][0]][1])
     path_coords, _ = route_through_array(cost_arr, start=st_coord, end=end_coord, fully_connected=True)
-    path_coords = np.array(path_coords)
-    return path_coords
+    # if len(path_coords) == 0 or np.array_equal(path_coords[-1], st_coord):
+    #     print((path_coords))
+    return np.array(path_coords) if len(path_coords) < 30 else None
+    #     path_coords = None
+    # path_coords =
+    # return path_coords
 
 
 def connect_low_degree_nodes(temp_graph, node, fin_dict, path_coords):
     temp_graph.add_edge(node, fin_dict[node][0])
     return {(node, fin_dict[node][0], 0): {'pts': path_coords}}
+
+
+def remove_edge_if_exists(temp_graph, node, neighbor):
+    if temp_graph.has_edge(node, neighbor) or temp_graph.has_edge(neighbor, node):
+        temp_graph.remove_edge(node, neighbor)
+        temp_graph.remove_nodes_from((node, neighbor))
+
+
+def connect_nodes(temp_graph, n1, n2, fin_dict, cost_arr, g_nodes_array):
+    if fin_dict[n1][0] != n2:
+        path_coords = get_path_coords(cost_arr, g_nodes_array, n1, fin_dict)
+
+        if path_coords is not None and not temp_graph.has_edge(n1, fin_dict[n1][0]):
+            edge_data = connect_low_degree_nodes(temp_graph, n1, fin_dict, path_coords)
+
+            nx.set_edge_attributes(temp_graph, edge_data)
 
 
 def graph_plotter1(group, series):
@@ -359,9 +379,11 @@ def graph_plotter1(group, series):
     # path = '/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/er_mean_proc/climp16_er_mean_proc_enhance_skel.png'
     path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance_skel.png'
 
-    path_proc = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance.png'
+    path_proc_enh = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance.png'
 
     path_er = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png'
+
+    path_er_proc = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc.png'
 
     graph = skel_to_graph(path)
 
@@ -400,41 +422,47 @@ def graph_plotter1(group, series):
 
     temp_graph = copy.deepcopy(graph)
 
+    # er_proc = imageio.imread(path_er_proc)
+    # er_proc_bg = np.where(er_proc==0)
+    # er = imageio.imread(path_er)
+    # er_bg = np.where(er==0)
+
+    # er_proc_enh = imageio.imread(path_proc_enh)
+    # er_proc_enh_bg = np.where(er_proc_enh==0)
     cost_arr = np.ones((128, 128))
+    # cost_arr[er_proc_bg] = 0
 
     for node, node_degree in degree_dict.items():
         if node_degree == 1:
-
             # access the first element of graph.neighbors
             neighbor = next(iter(graph.neighbors(node)))
             if degree_dict[neighbor] == 1:
                 if fin_dict[node][0] == neighbor and fin_dict[neighbor][0] == node:
-                    if temp_graph.has_edge(node, neighbor) or temp_graph.has_edge(neighbor, node):
-                        temp_graph.remove_edge(node, neighbor)
-                        temp_graph.remove_nodes_from((node, neighbor))
+                    remove_edge_if_exists(temp_graph, node, neighbor)
+                    # if temp_graph.has_edge(node, neighbor) or temp_graph.has_edge(neighbor, node):
+                    #     temp_graph.remove_edge(node, neighbor)
+                    #     temp_graph.remove_nodes_from((node, neighbor))
                 else:
-                    if fin_dict[node][0] != neighbor:
-                        path_coords = get_path_coords(cost_arr, g_nodes_array, node, fin_dict)
-
-                        if not temp_graph.has_edge(node, fin_dict[node][0]):
-                            edge_data = connect_low_degree_nodes(temp_graph, node, fin_dict, path_coords)
-
-                            nx.set_edge_attributes(temp_graph, edge_data)
+                    connect_nodes(temp_graph, node, neighbor, fin_dict, cost_arr, g_nodes_array)
+                    # if fin_dict[node][0] != neighbor:
+                    #     path_coords = get_path_coords(cost_arr, g_nodes_array, node, fin_dict)
+                    #
+                    #     if path_coords is not None and not temp_graph.has_edge(node, fin_dict[node][0]):
+                    #         edge_data = connect_low_degree_nodes(temp_graph, node, fin_dict, path_coords)
+                    #         nx.set_edge_attributes(temp_graph, edge_data)
 
                     if fin_dict[neighbor][0] != node:
                         path_coords = get_path_coords(cost_arr, g_nodes_array, neighbor, fin_dict)
 
-                        if not temp_graph.has_edge(neighbor, fin_dict[neighbor][0]):
+                        if path_coords is not None and not temp_graph.has_edge(neighbor, fin_dict[neighbor][0]):
                             edge_data = connect_low_degree_nodes(temp_graph, neighbor, fin_dict, path_coords)
-
                             nx.set_edge_attributes(temp_graph, edge_data)
 
-            # elif degree_dict[neighbor] == 2:
             else:
                 if fin_dict[node][0] != neighbor:
                     path_coords = get_path_coords(cost_arr, g_nodes_array, node, fin_dict)
 
-                    if not temp_graph.has_edge(node, fin_dict[node][0]):
+                    if path_coords is not None and not temp_graph.has_edge(node, fin_dict[node][0]):
                         edge_data = connect_low_degree_nodes(temp_graph, node, fin_dict, path_coords)
 
                         nx.set_edge_attributes(temp_graph, edge_data)
@@ -442,7 +470,7 @@ def graph_plotter1(group, series):
                 if fin_dict[neighbor][0] != node:
                     path_coords = get_path_coords(cost_arr, g_nodes_array, neighbor, fin_dict)
 
-                    if not temp_graph.has_edge(neighbor, fin_dict[neighbor][0]):
+                    if path_coords is not None and not temp_graph.has_edge(neighbor, fin_dict[neighbor][0]):
                         edge_data = connect_low_degree_nodes(temp_graph, neighbor, fin_dict, path_coords)
 
                         nx.set_edge_attributes(temp_graph, edge_data)
@@ -451,7 +479,7 @@ def graph_plotter1(group, series):
             if fin_dict[node][0] != neighbor:
                 path_coords = get_path_coords(cost_arr, g_nodes_array, node, fin_dict)
 
-                if not temp_graph.has_edge(node, fin_dict[node][0]):
+                if path_coords is not None and not temp_graph.has_edge(node, fin_dict[node][0]):
                     edge_data = connect_low_degree_nodes(temp_graph, node, fin_dict, path_coords)
 
                     nx.set_edge_attributes(temp_graph, edge_data)
@@ -459,9 +487,8 @@ def graph_plotter1(group, series):
             if fin_dict[neighbor][0] != node:
                 path_coords = get_path_coords(cost_arr, g_nodes_array, neighbor, fin_dict)
 
-                if not temp_graph.has_edge(neighbor, fin_dict[neighbor][0]):
+                if path_coords is not None and not temp_graph.has_edge(neighbor, fin_dict[neighbor][0]):
                     edge_data = connect_low_degree_nodes(temp_graph, neighbor, fin_dict, path_coords)
-
                     nx.set_edge_attributes(temp_graph, edge_data)
 
 
@@ -513,43 +540,7 @@ def graph_plotter1(group, series):
 
     exit()
 
-    # exit()
 
-    for k, v in fin_dict.items():
-
-        print(temp_graph[k])
-        exit()
-
-        if not graph.has_edge(k, v[0]):
-            path_coords, _ = route_through_array(skel, start=st_coord, end=end_coord, fully_connected=True)
-            path_coords = np.array(path_coords)
-
-            if graph.has_edge(st, end) or graph.has_edge(end, st):
-                continue
-            graph.add_edge(st, end)
-
-            edge_data = {(st, end, 0): {'pts': path_coords}}
-
-            nx.set_edge_attributes(graph, edge_data)
-
-    # tgraph = copy.deepcopy(temp_graph)
-    # for node, node_degree in degree_dict.items():
-    #     if node_degree == 1:
-    #         neighbor = next(iter(graph.neighbors(node)))
-    #         if degree_dict.get(neighbor, 0) > 2 and temp_graph.has_edge(node, neighbor) and ncp2[node][0] == neighbor:
-    #             continue
-
-
-
-    #
-    # for node, node_degree in degree_dict.items():
-    #     if node_degree == 1:
-    #         neighbor = list(graph.neighbors(node))[0]
-    #         if degree_dict[neighbor] > 2:
-    #             # if nn is neighbor - dont do anything
-    #             # if nn is 1/ 2 degree
-
-    # exit()
 
     er_mean = imageio.imread(
         f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png')
@@ -579,115 +570,6 @@ def graph_plotter1(group, series):
 
     exit()
 
-    g_nodes_array = [[each[0], each[1]] for each in g_nodes]
-    rel_nodes_array = [[each[0], each[1]] for each in relevant_nodes]
-    deg_one_nodes = []
-
-    # get only 1, 2 degree nodes (yellow spots)
-    low_deg_nodes = [x for x in g_nodes_array if x not in rel_nodes_array]
-
-    # print(g_nodes_array)
-    # print(low_deg_nodes)
-    # print(g_nodes_array[3] == low_deg_nodes[3])
-    exit()
-
-    # get nearest neighbour distances and indices for the 1, 2 degree nodes
-    distances, nbrs = get_nbrs(low_deg_nodes)
-
-    print(distances)
-
-    # print(nbrs)
-
-    # exit()
-
-    edge_len_list = []
-
-    for each in low_deg_nodes:
-        l = list(graph.neighbors(g_nodes_array.index(each)))
-        if len(l) == 1:
-            # if nx.is_simple_path(graph, [pspp.index(each), l[0]]) or nx.is_simple_path(graph, [l[0], pspp.index(each)]):
-            edge_len = len(graph[g_nodes_array.index(each)][l[0]][0]['pts'])
-            edge_len_list.append(edge_len)
-        else:
-            edge_len_1 = len(graph[g_nodes_array.index(each)][l[0]][0]['pts'])
-            edge_len_2 = len(graph[g_nodes_array.index(each)][l[1]][0]['pts'])
-            if edge_len_1 < edge_len_2:
-                edge_len_list.append(edge_len_1)
-            else:
-                edge_len_list.append(edge_len_2)
-
-    # print(edge_len_list)
-    # print(len(edge_len_list))
-
-    new_node_indices = [i for (i, a), (j, b) in zip(enumerate(distances), enumerate(edge_len_list)) if a < b]
-
-    # print(new_node_indices)
-    # exit()
-
-    skel = imageio.imread(path_er)
-
-    for k, v in ncpnn.items():
-        st = g_nodes_array.index(low_deg_nodes[k])
-        end = g_nodes_array.index(low_deg_nodes[v[0]])
-
-        st_coord = (g_nodes_array[st][0], g_nodes_array[st][1])
-        end_coord = (g_nodes_array[end][0], g_nodes_array[end][1])
-        # for each in new_node_indices:
-        #     ldi_start = each
-        #     ldi_end = nbrs[each]
-        #
-        #     u = pspp.index(low_deg_nodes[ldi_start])
-        #     v = pspp.index(low_deg_nodes[ldi_end])
-
-        # st_coord = (pspp[u][0], pspp[u][1])
-        # end_coord = (pspp[v][0], pspp[v][1])
-
-        path_coords, _ = route_through_array(skel, start=st_coord, end=end_coord, fully_connected=True)
-        path_coords = np.array(path_coords)
-
-        if graph.has_edge(st, end) or graph.has_edge(end, st):
-            continue
-        graph.add_edge(st, end)
-
-        # npath = [(21, 59), (29, 74), (35, 76), (38, 75), (40, 67), (39, 56), (32, 50), (27, 58)]
-
-        # edge_data = {(u, v, 0): {'pts': path_coords}}
-        edge_data = {(st, end, 0): {'pts': path_coords}}
-
-        nx.set_edge_attributes(graph, edge_data)
-
-            # try:
-            #     path_coords, _ = route_through_array(skel, start=st_coord, end=end_coord)
-            #     path_coords = np.array(path_coords)
-            #
-            #     # print(path_coords)
-            #     # exit()
-            #
-            #     new_edge = (u, v, {'pts': path_coords})
-            #
-            #     if graph.has_edge(u, v) or graph.has_edge(v, u):
-            #         continue
-            #     else:
-            #         graph.add_edge(*new_edge)
-            #
-            #         # npath = []
-            #         #
-            #         # for ele in new_path:
-            #         #     npath.append(list(ele))
-            #         #
-            #         # # npath = [(21, 59), (29, 74), (35, 76), (38, 75), (40, 67), (39, 56), (32, 50), (27, 58)]
-            #         #
-            #         # edge_data = {(u, v, 0): {'pts': np.array(npath)}}
-            #         #
-            #         # nx.set_edge_attributes(graph, edge_data)
-            # except:
-            #     pass
-
-    # print(graph.edges)
-    # exit()
-
-    # print(graph.edges[(22, 29, 0)]['pts'])
-    # print(graph.edges)
     er_mean = imageio.imread(
         f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png')
     plt.imshow(er_mean, cmap='gray')
@@ -726,7 +608,7 @@ def graph_plotter1(group, series):
     # plt.show()
 
 
-graph_plotter1('Climp', 16)
+graph_plotter1('ATL', 5)
 exit()
 
 
