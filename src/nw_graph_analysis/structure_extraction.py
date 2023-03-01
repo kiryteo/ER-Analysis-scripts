@@ -96,7 +96,6 @@ def get_skeleton(img_path):
     return pcv.morphology.skeletonize(mask=vess_enhanced_sample)
 
 
-
 def skel_to_graph(skel_img_path):
     """
 
@@ -118,12 +117,6 @@ def get_junctions(graph):
     # graph.degree provides list of tuples with node id followed by its degree
 
     return [node_coords[node_num] for node_num, degree_val in enumerate(graph.degree) if degree_val[1] > 2]
-
-
-def get_relevant_nodes(junctions):
-    nps = [[junction[0], junction[1]] for junction in junctions]
-    nps = np.array(nps)
-    return nps
 
 
 def get_tubules(graph):
@@ -344,7 +337,7 @@ def connect_nodes(temp_graph, n1, n2, fin_dict, cost_arr, g_nodes_array):
             nx.set_edge_attributes(temp_graph, edge_data)
 
 
-def graph_plotter1(group, series):
+def graph_node_connector(group, series):
     global rel
     pref = 'Ct' if group == 'Control' else group[0]
 
@@ -360,32 +353,30 @@ def graph_plotter1(group, series):
 
     graph = skel_to_graph(path)
 
-    # all junction from the graph
+    # all junction from the graph with degree > 2
     junctions = get_junctions(graph)
 
-    # nodes with degree > 2
-    relevant_nodes = get_relevant_nodes(junctions)
+    relevant_nodes = np.array(junctions)
 
-    # draw node by o
     nodes = graph.nodes()
 
     g_nodes = np.array([graph.nodes[i]['o'] for i in graph.nodes])
+    g_nodes_array = g_nodes.tolist()
 
-    g_nodes_array = [[each[0], each[1]] for each in g_nodes]
-
+    # get closest neighbor from
     closest_neighbor_dict = {}
     for each in nodes:
         nbr_id, dist = get_closest_from_nbr(graph, each)
         closest_neighbor_dict[each] = (nbr_id, dist)
 
     distances, nbrs_all = get_nbrs(g_nodes)
-    nbr_dict, ncp2 = nearest_node(distances, nbrs_all)
+    nbr_dict, nn_dict = nearest_node(distances, nbrs_all)
 
     fin_dict = {}
 
     for k, v in closest_neighbor_dict.items():
-        if k in ncp2:
-            fin_dict[k] = ncp2[k]
+        if k in nn_dict:
+            fin_dict[k] = nn_dict[k]
 
         elif v[1] < nbr_dict[k][1]:
             fin_dict[k] = closest_neighbor_dict[k]
@@ -415,6 +406,39 @@ def graph_plotter1(group, series):
         else:
             connect_nodes(temp_graph, node, neighbor, fin_dict, cost_arr, g_nodes_array)
 
+    # print(graph.degree)
+
+    deg1_nodes = []
+    deg2_nodes = []
+    high_deg_nodes = []
+
+    for each in temp_graph.degree:
+        if each[1] == 1:
+            deg1_nodes.append(each[0])
+        elif each[1] == 2:
+            deg2_nodes.append(each[0])
+        else:
+            high_deg_nodes.append(each[0])
+
+
+    ps_deg1 = []
+    ps_deg2 = []
+    ps_high_deg = []
+    for each in deg1_nodes:
+        if 'o' in temp_graph.nodes[each]:
+            ps_deg1.append(list(temp_graph.nodes[each]['o']))
+    for each in deg2_nodes:
+        if 'o' in temp_graph.nodes[each]:
+            ps_deg2.append(list(temp_graph.nodes[each]['o']))
+    for each in high_deg_nodes:
+        if 'o' in temp_graph.nodes[each]:
+            ps_high_deg.append(list(temp_graph.nodes[each]['o']))
+
+
+
+    ps_deg1 = np.array(ps_deg1)
+    ps_deg2 = np.array(ps_deg2)
+    ps_high_deg = np.array(ps_high_deg)
 
     er_mean = imageio.imread(
         f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png')
@@ -425,63 +449,75 @@ def graph_plotter1(group, series):
             ps = temp_graph[start_node][end_node][0]['pts']
             plt.plot(ps[:, 1], ps[:, 0], 'green')
 
+    plt.plot(ps_deg1[:, 1], ps_deg1[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow', mew=0.5, markersize=3)
+
+    plt.plot(ps_deg2[:, 1], ps_deg2[:, 0], 'o', markerfacecolor='magenta', markeredgecolor='magenta', mew=0.5, markersize=3)
+
+    plt.plot(ps_high_deg[:, 1], ps_high_deg[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue', mew=0.5, markersize=3)
+
     # if
     # ps = np.array([temp_graph.nodes[i]['o'] for i in temp_graph.nodes])
+
     # # plt.plot(ps[:, 1], ps[:, 0], 'r.')
     # plt.plot(ps[:, 1], ps[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow', mew=0.5, markersize=3)
 
     # plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'b.')
-    plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue',
-             markersize=4)
 
-    # plt.axis('off')
-    # plt.savefig(f'graphs/{group}_{series}_edge_graph_projection_updated_f27_v3', bbox_inches='tight', pad_inches=0)
-    # plt.close()
+    # plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue',
+    #          markersize=4)
 
-    plt.show()
+    plt.axis('off')
+    plt.savefig(f'graphs/connected/{group}_{series}_edge_graph_projection_connected_nbrs_v2', bbox_inches='tight', pad_inches=0)
+    plt.close()
 
-    exit()
+    # plt.show()
 
-
-    er_mean = imageio.imread(
-        f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png')
-    plt.imshow(er_mean, cmap='gray')
-
-    # plt.imshow(imageio.imread(path), cmap='gray')
-
-    # k = []
-    for (start_node, end_node) in graph.edges():
-        ps = graph[start_node][end_node][0]['pts']
-        plt.plot(ps[:, 1], ps[:, 0], 'green')
-        # k.append(ps)
-
-    ps = np.array([nodes[i]['o'] for i in nodes])
-    # plt.plot(ps[:, 1], ps[:, 0], 'r.')
-    plt.plot(ps[:, 1], ps[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow', mew=0.5, markersize=3)
-
-    # plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'b.')
-    plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue',
-             markersize=4)
-
-    # print(k)
     # exit()
-    # l0 = [x[0] for x in k]
-    # l1 = [x[1] for x in k]
 
+
+    # er_mean = imageio.imread(
+    #     f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png')
+    # plt.imshow(er_mean, cmap='gray')
+    #
+    # # plt.imshow(imageio.imread(path), cmap='gray')
+    #
+    # # k = []
     # for (start_node, end_node) in graph.edges():
     #     ps = graph[start_node][end_node][0]['pts']
     #     plt.plot(ps[:, 1], ps[:, 0], 'green')
-    #     with contextlib.suppress(Exception):
-    #         ps_multi = graph[start_node][end_node][1]['pts']
-    #         plt.plot(ps_multi[:, 1], ps_multi[:, 0], 'green')
-    # plt.plot(l1, l0, 'green')
-    plt.axis('off')
-    plt.savefig(f'graphs/{group}_{series}_edge_graph_projection_updated_new_er', bbox_inches='tight', pad_inches=0)
-    plt.close()
-    # plt.show()
+    #     # k.append(ps)
+    #
+    # ps = np.array([nodes[i]['o'] for i in nodes])
+    # # plt.plot(ps[:, 1], ps[:, 0], 'r.')
+    # plt.plot(ps[:, 1], ps[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow', mew=0.5, markersize=3)
+    #
+    # # plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'b.')
+    # plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue',
+    #          markersize=4)
+    #
+    # # print(k)
+    # # exit()
+    # # l0 = [x[0] for x in k]
+    # # l1 = [x[1] for x in k]
+    #
+    # # for (start_node, end_node) in graph.edges():
+    # #     ps = graph[start_node][end_node][0]['pts']
+    # #     plt.plot(ps[:, 1], ps[:, 0], 'green')
+    # #     with contextlib.suppress(Exception):
+    # #         ps_multi = graph[start_node][end_node][1]['pts']
+    # #         plt.plot(ps_multi[:, 1], ps_multi[:, 0], 'green')
+    # # plt.plot(l1, l0, 'green')
+    # plt.axis('off')
+    # plt.savefig(f'graphs/{group}_{series}_edge_graph_projection_updated_new_er', bbox_inches='tight', pad_inches=0)
+    # plt.close()
+    # # plt.show()
 
+graph_node_connector('ATL', 1)
+exit()
 
-graph_plotter1('ATL', 5)
+for i in range(1, 30):
+    graph_node_connector('RTN', i)
+
 exit()
 
 
@@ -498,7 +534,7 @@ def runner(group, r_start, r_end):
         path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{pref}{i}/{pref}{i}_decon_t0{frame:02d}_ch00_skel.png'
         graph = skel_to_graph(path)
         junctions = get_junctions(graph)
-        relevant_nodes = get_relevant_nodes(junctions)
+        relevant_nodes = np.array(junctions)
         relevant_edges = get_relevant_tubules(graph, relevant_nodes)
         l.append(len(relevant_edges))
 
@@ -607,7 +643,7 @@ def graph_plotter(group, series):
     junctions = get_junctions(graph)
     # print(junctions)
     # exit()
-    relevant_nodes = get_relevant_nodes(junctions)
+    relevant_nodes = np.array(junctions)
 
     ps = np.array([graph.nodes[i]['o'] for i in graph.nodes])
     # print(ps)
@@ -738,7 +774,7 @@ def rel_edges_length(group, r_start, r_end):
         path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{group[0]}{i}/{group[0]}{i}_decon_t0{frame:02d}_ch00_skel.png'
         graph = skel_to_graph(path)
         junctions = get_junctions(graph)
-        relevant_nodes = get_relevant_nodes(junctions)
+        relevant_nodes = np.array(junctions)
         relevant_edges = get_relevant_tubules(graph, relevant_nodes)
         l.extend(len(each) for each in relevant_edges)
 
@@ -766,7 +802,7 @@ def rel_edge_intensity(group, r_start, r_end):
         path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{pref}{i}/{pref}{i}_decon_t0{frame:02d}_ch00_skel.png'
         graph = skel_to_graph(path)
         junctions = get_junctions(graph)
-        relevant_nodes = get_relevant_nodes(junctions)
+        relevant_nodes = np.array(junctions)
         relevant_edges = get_relevant_tubules(graph, relevant_nodes)
         for edge in relevant_edges:
             edge_intensity_data = [ip[coords[0], coords[1]] for coords in edge]
