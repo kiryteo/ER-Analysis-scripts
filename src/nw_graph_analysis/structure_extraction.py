@@ -337,6 +337,20 @@ def connect_nodes(temp_graph, n1, n2, fin_dict, cost_arr, g_nodes_array):
             nx.set_edge_attributes(temp_graph, edge_data)
 
 
+def get_updated_degree_nodes(temp_graph):
+    deg_one_nodes, deg_two_nodes, high_deg_nodes = [], [], []
+    for node, degree in temp_graph.degree:
+        if 'o' in temp_graph.nodes[node]:
+            point = list(temp_graph.nodes[node]['o'])
+            if degree == 1:
+                deg_one_nodes.append(point)
+            elif degree == 2:
+                deg_two_nodes.append(point)
+            else:
+                high_deg_nodes.append(point)
+    return np.array(deg_one_nodes), np.array(deg_two_nodes), np.array(high_deg_nodes)
+
+
 def graph_node_connector(group, series):
     global rel
     pref = 'Ct' if group == 'Control' else group[0]
@@ -387,11 +401,7 @@ def graph_node_connector(group, series):
 
     # er_proc = imageio.imread(path_er_proc)
     # er_proc_bg = np.where(er_proc==0)
-    # er = imageio.imread(path_er)
-    # er_bg = np.where(er==0)
 
-    # er_proc_enh = imageio.imread(path_proc_enh)
-    # er_proc_enh_bg = np.where(er_proc_enh==0)
     cost_arr = np.ones((128, 128))
     # cost_arr[er_proc_bg] = 0
 
@@ -406,39 +416,7 @@ def graph_node_connector(group, series):
         else:
             connect_nodes(temp_graph, node, neighbor, fin_dict, cost_arr, g_nodes_array)
 
-    # print(graph.degree)
-
-    deg1_nodes = []
-    deg2_nodes = []
-    high_deg_nodes = []
-
-    for each in temp_graph.degree:
-        if each[1] == 1:
-            deg1_nodes.append(each[0])
-        elif each[1] == 2:
-            deg2_nodes.append(each[0])
-        else:
-            high_deg_nodes.append(each[0])
-
-
-    ps_deg1 = []
-    ps_deg2 = []
-    ps_high_deg = []
-    for each in deg1_nodes:
-        if 'o' in temp_graph.nodes[each]:
-            ps_deg1.append(list(temp_graph.nodes[each]['o']))
-    for each in deg2_nodes:
-        if 'o' in temp_graph.nodes[each]:
-            ps_deg2.append(list(temp_graph.nodes[each]['o']))
-    for each in high_deg_nodes:
-        if 'o' in temp_graph.nodes[each]:
-            ps_high_deg.append(list(temp_graph.nodes[each]['o']))
-
-
-
-    ps_deg1 = np.array(ps_deg1)
-    ps_deg2 = np.array(ps_deg2)
-    ps_high_deg = np.array(ps_high_deg)
+    deg_one_nodes, deg_two_nodes, high_deg_nodes = get_updated_degree_nodes(temp_graph)
 
     er_mean = imageio.imread(
         f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png')
@@ -449,70 +427,20 @@ def graph_node_connector(group, series):
             ps = temp_graph[start_node][end_node][0]['pts']
             plt.plot(ps[:, 1], ps[:, 0], 'green')
 
-    plt.plot(ps_deg1[:, 1], ps_deg1[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow', mew=0.5, markersize=3)
+    plt.plot(deg_one_nodes[:, 1], deg_one_nodes[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow', mew=0.5, markersize=3)
 
-    plt.plot(ps_deg2[:, 1], ps_deg2[:, 0], 'o', markerfacecolor='magenta', markeredgecolor='magenta', mew=0.5, markersize=3)
+    plt.plot(deg_two_nodes[:, 1], deg_two_nodes[:, 0], 'o', markerfacecolor='magenta', markeredgecolor='magenta', mew=0.5, markersize=3)
 
-    plt.plot(ps_high_deg[:, 1], ps_high_deg[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue', mew=0.5, markersize=3)
+    plt.plot(high_deg_nodes[:, 1], high_deg_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue', mew=0.5, markersize=3)
 
-    # if
-    # ps = np.array([temp_graph.nodes[i]['o'] for i in temp_graph.nodes])
-
-    # # plt.plot(ps[:, 1], ps[:, 0], 'r.')
-    # plt.plot(ps[:, 1], ps[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow', mew=0.5, markersize=3)
-
-    # plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'b.')
-
-    # plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue',
-    #          markersize=4)
-
-    plt.axis('off')
-    plt.savefig(f'graphs/connected/{group}_{series}_edge_graph_projection_connected_nbrs_v2', bbox_inches='tight', pad_inches=0)
-    plt.close()
-
-    # plt.show()
-
-    # exit()
-
-
-    # er_mean = imageio.imread(
-    #     f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png')
-    # plt.imshow(er_mean, cmap='gray')
-    #
-    # # plt.imshow(imageio.imread(path), cmap='gray')
-    #
-    # # k = []
-    # for (start_node, end_node) in graph.edges():
-    #     ps = graph[start_node][end_node][0]['pts']
-    #     plt.plot(ps[:, 1], ps[:, 0], 'green')
-    #     # k.append(ps)
-    #
-    # ps = np.array([nodes[i]['o'] for i in nodes])
-    # # plt.plot(ps[:, 1], ps[:, 0], 'r.')
-    # plt.plot(ps[:, 1], ps[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow', mew=0.5, markersize=3)
-    #
-    # # plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'b.')
-    # plt.plot(relevant_nodes[:, 1], relevant_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue',
-    #          markersize=4)
-    #
-    # # print(k)
-    # # exit()
-    # # l0 = [x[0] for x in k]
-    # # l1 = [x[1] for x in k]
-    #
-    # # for (start_node, end_node) in graph.edges():
-    # #     ps = graph[start_node][end_node][0]['pts']
-    # #     plt.plot(ps[:, 1], ps[:, 0], 'green')
-    # #     with contextlib.suppress(Exception):
-    # #         ps_multi = graph[start_node][end_node][1]['pts']
-    # #         plt.plot(ps_multi[:, 1], ps_multi[:, 0], 'green')
-    # # plt.plot(l1, l0, 'green')
     # plt.axis('off')
-    # plt.savefig(f'graphs/{group}_{series}_edge_graph_projection_updated_new_er', bbox_inches='tight', pad_inches=0)
+    # plt.savefig(f'graphs/connected/{group}_{series}_edge_graph_projection_connected_nbrs_v2', bbox_inches='tight', pad_inches=0)
     # plt.close()
-    # # plt.show()
 
-graph_node_connector('ATL', 1)
+    plt.show()
+
+
+graph_node_connector('Control', 8)
 exit()
 
 for i in range(1, 30):
