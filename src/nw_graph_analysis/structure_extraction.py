@@ -405,7 +405,7 @@ def graph_plotter1(group, series):
         nbr_id, dist = get_closest_from_nbr(graph, each)
         closest_neighbor_dict[each] = (nbr_id, dist)
 
-    degree_list = list(graph.degree())
+    # degree_list = list(graph.degree())
 
     distances, nbrs_all = get_nbrs(g_nodes)
     nbr_dict, ncp2 = nearest_node(distances, nbrs_all)
@@ -418,7 +418,10 @@ def graph_plotter1(group, series):
         else:
             fin_dict[k] = ncp2[k]
 
-    degree_dict = {each[0]: each[1] for each in degree_list}
+    # degree_dict = {each[0]: each[1] for each in degree_list}
+    # print(degree_dict)
+
+    # deg_dict = dict(graph.degree())
 
     temp_graph = copy.deepcopy(graph)
 
@@ -432,64 +435,16 @@ def graph_plotter1(group, series):
     cost_arr = np.ones((128, 128))
     # cost_arr[er_proc_bg] = 0
 
-    for node, node_degree in degree_dict.items():
-        if node_degree == 1:
-            # access the first element of graph.neighbors
-            neighbor = next(iter(graph.neighbors(node)))
-            if degree_dict[neighbor] == 1:
-                if fin_dict[node][0] == neighbor and fin_dict[neighbor][0] == node:
-                    remove_edge_if_exists(temp_graph, node, neighbor)
-                    # if temp_graph.has_edge(node, neighbor) or temp_graph.has_edge(neighbor, node):
-                    #     temp_graph.remove_edge(node, neighbor)
-                    #     temp_graph.remove_nodes_from((node, neighbor))
-                else:
-                    connect_nodes(temp_graph, node, neighbor, fin_dict, cost_arr, g_nodes_array)
-                    # if fin_dict[node][0] != neighbor:
-                    #     path_coords = get_path_coords(cost_arr, g_nodes_array, node, fin_dict)
-                    #
-                    #     if path_coords is not None and not temp_graph.has_edge(node, fin_dict[node][0]):
-                    #         edge_data = connect_low_degree_nodes(temp_graph, node, fin_dict, path_coords)
-                    #         nx.set_edge_attributes(temp_graph, edge_data)
+    # for node, node_degree in degree_dict.items():
+    for node, node_degree in dict(graph.degree()).items():
 
-                    if fin_dict[neighbor][0] != node:
-                        path_coords = get_path_coords(cost_arr, g_nodes_array, neighbor, fin_dict)
+        # access the first element of graph.neighbors
+        neighbor = next(iter(graph.neighbors(node)))
 
-                        if path_coords is not None and not temp_graph.has_edge(neighbor, fin_dict[neighbor][0]):
-                            edge_data = connect_low_degree_nodes(temp_graph, neighbor, fin_dict, path_coords)
-                            nx.set_edge_attributes(temp_graph, edge_data)
-
-            else:
-                if fin_dict[node][0] != neighbor:
-                    path_coords = get_path_coords(cost_arr, g_nodes_array, node, fin_dict)
-
-                    if path_coords is not None and not temp_graph.has_edge(node, fin_dict[node][0]):
-                        edge_data = connect_low_degree_nodes(temp_graph, node, fin_dict, path_coords)
-
-                        nx.set_edge_attributes(temp_graph, edge_data)
-
-                if fin_dict[neighbor][0] != node:
-                    path_coords = get_path_coords(cost_arr, g_nodes_array, neighbor, fin_dict)
-
-                    if path_coords is not None and not temp_graph.has_edge(neighbor, fin_dict[neighbor][0]):
-                        edge_data = connect_low_degree_nodes(temp_graph, neighbor, fin_dict, path_coords)
-
-                        nx.set_edge_attributes(temp_graph, edge_data)
-        elif node_degree == 2:
-            neighbor = next(iter(graph.neighbors(node)))
-            if fin_dict[node][0] != neighbor:
-                path_coords = get_path_coords(cost_arr, g_nodes_array, node, fin_dict)
-
-                if path_coords is not None and not temp_graph.has_edge(node, fin_dict[node][0]):
-                    edge_data = connect_low_degree_nodes(temp_graph, node, fin_dict, path_coords)
-
-                    nx.set_edge_attributes(temp_graph, edge_data)
-
-            if fin_dict[neighbor][0] != node:
-                path_coords = get_path_coords(cost_arr, g_nodes_array, neighbor, fin_dict)
-
-                if path_coords is not None and not temp_graph.has_edge(neighbor, fin_dict[neighbor][0]):
-                    edge_data = connect_low_degree_nodes(temp_graph, neighbor, fin_dict, path_coords)
-                    nx.set_edge_attributes(temp_graph, edge_data)
+        if node_degree == 1 and dict(graph.degree())[neighbor] == 1:
+            remove_edge_if_exists(temp_graph, node, neighbor)
+        else:
+            connect_nodes(temp_graph, node, neighbor, fin_dict, cost_arr, g_nodes_array)
 
 
     er_mean = imageio.imread(
