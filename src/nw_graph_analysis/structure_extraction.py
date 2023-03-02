@@ -360,6 +360,58 @@ def get_new_edge_data(tgraph, nbr_a, nbr_b, path_a, path_b):
     return {(nbr_a, nbr_b, 0): {'pts': np.array(path_coords)}}
 
 
+def process_node(tgraph, node):
+    nbrs = list(tgraph.neighbors(node))
+    if len(nbrs) != 2:
+        return
+
+    nbr1, nbr2 = nbrs
+    deg1, deg2 = tgraph.degree(nbr1), tgraph.degree(nbr2)
+
+    if deg1 == deg2 == 2:
+        path_nbr1 = [[int(x) for x in a] for a in tgraph[node][nbr1][0]['pts']]
+        path_nbr2 = [[int(x) for x in a] for a in tgraph[node][nbr2][0]['pts']]
+
+        if path_nbr1[0] == path_nbr2[0]:
+            path_nbr2 = path_nbr2[::-1]
+            edge_data = get_new_edge_data(tgraph, nbr2, nbr1, path_nbr2, path_nbr1)
+
+        elif path_nbr1[0] == path_nbr2[-1]:
+            edge_data = get_new_edge_data(tgraph, nbr2, nbr1, path_nbr2, path_nbr1)
+
+        elif path_nbr1[-1] == path_nbr2[0]:
+            edge_data = get_new_edge_data(tgraph, nbr1, nbr2, path_nbr1, path_nbr2)
+
+        else:
+            path_nbr2 = path_nbr2[::-1]
+            edge_data = get_new_edge_data(tgraph, nbr1, nbr2, path_nbr1, path_nbr2)
+
+        tgraph.remove_node(node)
+        nx.set_edge_attributes(tgraph, edge_data)
+
+    elif deg1 > 2 and deg2 > 2:
+        path_nbr1 = [[int(x) for x in a] for a in tgraph[node][nbr1][0]['pts']]
+        path_nbr2 = [[int(x) for x in a] for a in tgraph[node][nbr2][0]['pts']]
+
+        if path_nbr1[0] == path_nbr2[0]:
+            path_nbr2 = path_nbr2[::-1]
+            edge_data = get_new_edge_data(tgraph, nbr2, nbr1, path_nbr2, path_nbr1)
+
+        elif path_nbr1[0] == path_nbr2[-1]:
+            edge_data = get_new_edge_data(tgraph, nbr2, nbr1, path_nbr2, path_nbr1)
+
+        elif path_nbr1[-1] == path_nbr2[0]:
+            edge_data = get_new_edge_data(tgraph, nbr1, nbr2, path_nbr1, path_nbr2)
+
+        else:
+            path_nbr2 = path_nbr2[::-1]
+            edge_data = get_new_edge_data(tgraph, nbr1, nbr2, path_nbr1, path_nbr2)
+
+        tgraph.remove_node(node)
+        nx.set_edge_attributes(tgraph, edge_data)
+
+
+
 def graph_node_connector(group, series):
     global rel
     pref = 'Ct' if group == 'Control' else group[0]
@@ -445,32 +497,64 @@ def graph_node_connector(group, series):
     tgraph = copy.deepcopy(temp_graph)
 
     for node in temp_graph.nodes():
-        if temp_graph.degree(node) == 2:
+        process_node(tgraph, node)
 
-            nbr1, nbr2 = list(temp_graph.neighbors(node))
-            if temp_graph.degree(nbr1) == temp_graph.degree(nbr2) == 2:
-                path_nbr1 = [[int(x) for x in a] for a in temp_graph[node][nbr1][0]['pts']]
-                path_nbr2 = [[int(x) for x in a] for a in temp_graph[node][nbr2][0]['pts']]
 
-                if path_nbr1[0] == path_nbr2[0]:
-                    path_nbr2 = path_nbr2[::-1]
-                    edge_data = get_new_edge_data(tgraph, nbr2, nbr1, path_nbr2, path_nbr1)
+        # if temp_graph.degree(node) == 2:
+        #
+        #     if len(list(temp_graph.neighbors(node))) != 2:
+        #         continue
+        #
+        #     nbr1, nbr2 = list(temp_graph.neighbors(node))
+        #
+        #     if temp_graph.degree(nbr1) == temp_graph.degree(nbr2) == 2:
+        #
+        #         path_nbr1 = [[int(x) for x in a] for a in temp_graph[node][nbr1][0]['pts']]
+        #         path_nbr2 = [[int(x) for x in a] for a in temp_graph[node][nbr2][0]['pts']]
+        #
+        #         if path_nbr1[0] == path_nbr2[0]:
+        #             path_nbr2 = path_nbr2[::-1]
+        #             edge_data = get_new_edge_data(tgraph, nbr2, nbr1, path_nbr2, path_nbr1)
+        #
+        #         elif path_nbr1[0] == path_nbr2[-1]:
+        #             edge_data = get_new_edge_data(tgraph, nbr2, nbr1, path_nbr2, path_nbr1)
+        #
+        #         elif path_nbr1[-1] == path_nbr2[0]:
+        #             edge_data = get_new_edge_data(tgraph, nbr1, nbr2, path_nbr1, path_nbr2)
+        #
+        #         else:
+        #             path_nbr2 = path_nbr2[::-1]
+        #             edge_data = get_new_edge_data(tgraph, nbr1, nbr2, path_nbr1, path_nbr2)
+        #
+        #         tgraph.remove_node(node)
+        #         nx.set_edge_attributes(tgraph, edge_data)
+        #
+        #     elif temp_graph.degree(nbr1) > 2 and temp_graph.degree(nbr2) > 2:
+        #
+        #         path_nbr1 = [[int(x) for x in a] for a in temp_graph[node][nbr1][0]['pts']]
+        #         path_nbr2 = [[int(x) for x in a] for a in temp_graph[node][nbr2][0]['pts']]
+        #
+        #         if path_nbr1[0] == path_nbr2[0]:
+        #             path_nbr2 = path_nbr2[::-1]
+        #             edge_data = get_new_edge_data(tgraph, nbr2, nbr1, path_nbr2, path_nbr1)
+        #
+        #         elif path_nbr1[0] == path_nbr2[-1]:
+        #             edge_data = get_new_edge_data(tgraph, nbr2, nbr1, path_nbr2, path_nbr1)
+        #
+        #         elif path_nbr1[-1] == path_nbr2[0]:
+        #             edge_data = get_new_edge_data(tgraph, nbr1, nbr2, path_nbr1, path_nbr2)
+        #
+        #         else:
+        #             path_nbr2 = path_nbr2[::-1]
+        #             edge_data = get_new_edge_data(tgraph, nbr1, nbr2, path_nbr1, path_nbr2)
+        #
+        #         tgraph.remove_node(node)
+        #         nx.set_edge_attributes(tgraph, edge_data)
 
-                elif path_nbr1[0] == path_nbr2[-1]:
-                    edge_data = get_new_edge_data(tgraph, nbr2, nbr1, path_nbr2, path_nbr1)
-
-                elif path_nbr1[-1] == path_nbr2[0]:
-                    edge_data = get_new_edge_data(tgraph, nbr1, nbr2, path_nbr1, path_nbr2)
-
-                else:
-                    path_nbr2 = path_nbr2[::-1]
-                    edge_data = get_new_edge_data(tgraph, nbr1, nbr2, path_nbr1, path_nbr2)
-
-                tgraph.remove_node(node)
-                nx.set_edge_attributes(tgraph, edge_data)
 
 
     deg_one_nodes, deg_two_nodes, high_deg_nodes = get_updated_degree_nodes(tgraph)
+
 
 
     er_mean = imageio.imread(
@@ -482,25 +566,28 @@ def graph_node_connector(group, series):
             ps = tgraph[start_node][end_node][0]['pts']
             plt.plot(ps[:, 1], ps[:, 0], 'green')
 
-    plt.plot(deg_one_nodes[:, 1], deg_one_nodes[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow', mew=0.5, markersize=3)
+    if len(deg_one_nodes) != 0:
+        plt.plot(deg_one_nodes[:, 1], deg_one_nodes[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow', mew=0.5, markersize=3)
 
-    plt.plot(deg_two_nodes[:, 1], deg_two_nodes[:, 0], 'o', markerfacecolor='magenta', markeredgecolor='magenta', mew=0.5, markersize=3)
+    if len(deg_two_nodes) != 0:
+        plt.plot(deg_two_nodes[:, 1], deg_two_nodes[:, 0], 'o', markerfacecolor='magenta', markeredgecolor='magenta', mew=0.5, markersize=3)
 
-    plt.plot(high_deg_nodes[:, 1], high_deg_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue', mew=0.5, markersize=3)
+    if len(high_deg_nodes) != 0:
+        plt.plot(high_deg_nodes[:, 1], high_deg_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue', mew=0.5, markersize=3)
 
     plt.axis('off')
-    # plt.savefig(f'graphs/connected/{group}_{series}_edge_graph_projection_connected_nbrs_v2', bbox_inches='tight', pad_inches=0)
-    plt.savefig(f'graphs/connected/{group}_{series}_v2-2', bbox_inches='tight', pad_inches=0)
+    plt.savefig(f'graphs/connected/{group}_{series}_edge_graph_projection_connected_nbrs_v4-1', bbox_inches='tight', pad_inches=0)
+    # plt.savefig(f'graphs/connected/{group}_{series}_v2-2', bbox_inches='tight', pad_inches=0)
     plt.close()
 
     # plt.show()
 
 
-graph_node_connector('RTN', 14)
+graph_node_connector('ATL', 2)
 exit()
 
-for i in range(1, 30):
-    graph_node_connector('RTN', i)
+# for i in range(17, 32):
+#     graph_node_connector('Control', i)
 
 exit()
 
