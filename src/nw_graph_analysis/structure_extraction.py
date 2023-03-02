@@ -402,8 +402,7 @@ def graph_node_connector(group, series):
     cost_arr = np.ones((128, 128))
     # cost_arr[er_proc_bg] = 0
 
-    for node, node_degree in dict(graph.degree()).items():
-
+    for node in dict(graph.degree()):
         # access the first element of graph.neighbors
         neighbor = next(iter(graph.neighbors(node)))
 
@@ -414,10 +413,31 @@ def graph_node_connector(group, series):
 
         # if node_degree > 1 and dict(graph.degree())[neighbor] > 1:
         connect_nodes(er_input, temp_graph, node, neighbor, fin_dict, cost_arr, g_nodes_array)
-        # else:
-        #     remove_edge_if_exists(temp_graph, node, neighbor)
+
+    ### removal of 1d-1d edges
+    # for node, node_degree in dict(temp_graph.degree()).items():
+    #     neighbor = next(iter(graph.neighbors(node)))
+    #
+    #     if node_degree == 1 and dict(graph.degree())[neighbor] == 1:
+    #         remove_edge_if_exists(temp_graph, node, neighbor)
+
+    for node, node_degree in dict(temp_graph.degree()).items():
+        if node_degree > 2:
+            all_nbrs = list(temp_graph.neighbors(node))
+            for nbr in all_nbrs:
+                if temp_graph.degree(nbr) == 1:
+                    temp_graph.remove_node(nbr)
+
+
+    #     neighbor = next(iter(graph.neighbors(node)))
+    #
+    #     if node_degree > 2 and dict(graph.degree())[neighbor] == 1:
+    #         remove_edge_if_exists(temp_graph, node, neighbor)
+
+    # exit()
 
     deg_one_nodes, deg_two_nodes, high_deg_nodes = get_updated_degree_nodes(temp_graph)
+
 
     er_mean = imageio.imread(
         f'{confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png')
@@ -428,9 +448,9 @@ def graph_node_connector(group, series):
             ps = temp_graph[start_node][end_node][0]['pts']
             plt.plot(ps[:, 1], ps[:, 0], 'green')
 
-    plt.plot(deg_one_nodes[:, 1], deg_one_nodes[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow', mew=0.5, markersize=3)
+    # plt.plot(deg_one_nodes[:, 1], deg_one_nodes[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow', mew=0.5, markersize=3)
 
-    plt.plot(deg_two_nodes[:, 1], deg_two_nodes[:, 0], 'o', markerfacecolor='magenta', markeredgecolor='magenta', mew=0.5, markersize=3)
+    # plt.plot(deg_two_nodes[:, 1], deg_two_nodes[:, 0], 'o', markerfacecolor='magenta', markeredgecolor='magenta', mew=0.5, markersize=3)
 
     plt.plot(high_deg_nodes[:, 1], high_deg_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue', mew=0.5, markersize=3)
 
@@ -441,7 +461,7 @@ def graph_node_connector(group, series):
     plt.show()
 
 
-graph_node_connector('ATL', 4)
+graph_node_connector('RTN', 14)
 exit()
 
 for i in range(1, 30):
