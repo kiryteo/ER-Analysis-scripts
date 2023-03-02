@@ -55,7 +55,7 @@ def preproc_groups(path, group, num_series):
     # @param num_series: number of movies in the group
     """
     # path_pref = '/localhome/asa420/MIAL/data/live-cell-movies/' + group + '/Decon/'
-    # # new_pref = '/localhome/asa420/MIAL/data/confocal_movies/' + group + '/new_op_jul/preproc/'
+    # # new_pref = '{confocal_data_path}' + group + '/new_op_jul/preproc/'
     # new_pref = '/localhome/asa420/MIAL/data/live-cell-movies/' + group + '/Decon/'
 
     # for i in range(2, 3):
@@ -72,17 +72,6 @@ def preproc_groups(path, group, num_series):
 
 
 # run Vessel2d.m to get the vessel enhancement output
-
-def get_skeleton(img_path):
-    """
-
-    @param img_path: path to vessel enhancement output of preproc sample
-    @return: extracted skeleton
-    """
-    vess_enhanced_sample = imageio.imread(img_path)
-    return pcv.morphology.skeletonize(mask=vess_enhanced_sample)
-
-
 def get_skeleton(img_path):
     """
     Extracts the skeleton from a vessel-enhanced image.
@@ -220,11 +209,11 @@ def plot_total_graph(group, num_series, graph, relevant_nodes, relevant_edge_lis
 
     # projection frame analysis
     input = imageio.imread(
-        f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{num_series}_er_mean.png')
+        f'{confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{num_series}_er_mean.png')
 
     # per frame analysis
-    # input = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/{pref}{num_series}_decon_t050_ch00.tif')
-    # input = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/img_{num_series}_decon_t050.tif')
+    # input = imageio.imread(f'{confocal_data_path}{group}/files/{pref}{num_series}_decon_t050_ch00.tif')
+    # input = imageio.imread(f'{confocal_data_path}{group}/files/img_{num_series}_decon_t050.tif')
     # ip = (input - input.min())/(input.max() - input.min())
 
     ip = input
@@ -304,7 +293,7 @@ def get_closest_from_nbr(graph, node):
 
 
 # Get the coordinates of the path between a given node and its closest neighbor in a graph
-def get_path_coords(cost_arr, g_nodes_array, node, fin_dict):
+def get_path_coords(er_input, cost_arr, g_nodes_array, node, fin_dict):
     # Get the starting and ending coordinates of the path
     start_coord = tuple(g_nodes_array[node][:2])
     end_coord = tuple(g_nodes_array[fin_dict[node][0]][:2])
@@ -312,8 +301,15 @@ def get_path_coords(cost_arr, g_nodes_array, node, fin_dict):
     # Find the path coordinates using the `route_through_array()` function
     path_coords, _ = route_through_array(cost_arr, start=start_coord, end=end_coord, fully_connected=True)
 
+    zero_signal_coords = sum(er_input[each] == 0 for each in path_coords)
+
+    signal_coords = len(path_coords) - zero_signal_coords
+
+    if zero_signal_coords > signal_coords:
+        return None
+
     # Return the path coordinates as a NumPy array if the path is short enough, otherwise return None
-    return np.array(path_coords) if len(path_coords) < 30 else None
+    return np.array(path_coords) if len(path_coords) < 20 else None
 
 
 def connect_low_degree_nodes(temp_graph, node, fin_dict, path_coords):
@@ -327,9 +323,9 @@ def remove_edge_if_exists(temp_graph, node, neighbor):
         temp_graph.remove_nodes_from((node, neighbor))
 
 
-def connect_nodes(temp_graph, n1, n2, fin_dict, cost_arr, g_nodes_array):
+def connect_nodes(er_input, temp_graph, n1, n2, fin_dict, cost_arr, g_nodes_array):
     if fin_dict[n1][0] != n2:
-        path_coords = get_path_coords(cost_arr, g_nodes_array, n1, fin_dict)
+        path_coords = get_path_coords(er_input, cost_arr, g_nodes_array, n1, fin_dict)
 
         if path_coords is not None and not temp_graph.has_edge(n1, fin_dict[n1][0]):
             edge_data = connect_low_degree_nodes(temp_graph, n1, fin_dict, path_coords)
@@ -356,14 +352,14 @@ def graph_node_connector(group, series):
     pref = 'Ct' if group == 'Control' else group[0]
 
     # projection frame analysis
-    # path = '/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/er_mean_proc/climp16_er_mean_proc_enhance_skel.png'
-    path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance_skel.png'
+    # path = '{confocal_data_path}Climp/new_op_jul/er_mean_proc/climp16_er_mean_proc_enhance_skel.png'
+    path = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance_skel.png'
 
-    path_proc_enh = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance.png'
+    path_proc_enh = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance.png'
 
-    path_er = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png'
+    path_er = f'{confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png'
 
-    path_er_proc = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc.png'
+    path_er_proc = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc.png'
 
     graph = skel_to_graph(path)
 
@@ -402,24 +398,29 @@ def graph_node_connector(group, series):
     # er_proc = imageio.imread(path_er_proc)
     # er_proc_bg = np.where(er_proc==0)
 
+    er_input = imageio.imread(path_er)
     cost_arr = np.ones((128, 128))
     # cost_arr[er_proc_bg] = 0
 
-    # for node, node_degree in degree_dict.items():
     for node, node_degree in dict(graph.degree()).items():
 
         # access the first element of graph.neighbors
         neighbor = next(iter(graph.neighbors(node)))
 
-        if node_degree == 1 and dict(graph.degree())[neighbor] == 1:
-            remove_edge_if_exists(temp_graph, node, neighbor)
-        else:
-            connect_nodes(temp_graph, node, neighbor, fin_dict, cost_arr, g_nodes_array)
+        # if node_degree == 1 and dict(graph.degree())[neighbor] == 1:
+        #     remove_edge_if_exists(temp_graph, node, neighbor)
+        # else:
+        #     connect_nodes(temp_graph, node, neighbor, fin_dict, cost_arr, g_nodes_array)
+
+        # if node_degree > 1 and dict(graph.degree())[neighbor] > 1:
+        connect_nodes(er_input, temp_graph, node, neighbor, fin_dict, cost_arr, g_nodes_array)
+        # else:
+        #     remove_edge_if_exists(temp_graph, node, neighbor)
 
     deg_one_nodes, deg_two_nodes, high_deg_nodes = get_updated_degree_nodes(temp_graph)
 
     er_mean = imageio.imread(
-        f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png')
+        f'{confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png')
     plt.imshow(er_mean, cmap='gray')
 
     for (start_node, end_node) in temp_graph.edges():
@@ -440,7 +441,7 @@ def graph_node_connector(group, series):
     plt.show()
 
 
-graph_node_connector('Control', 8)
+graph_node_connector('ATL', 4)
 exit()
 
 for i in range(1, 30):
@@ -456,10 +457,10 @@ def runner(group, r_start, r_end):
 
     pref = 'Ct' if group == 'Control' else group[0]
     for i, frame in itertools.product(range(r_start, r_end + 1), range(100)):
-        # input = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/{group[0]}{i}_decon_t0{frame:02d}_ch00.tif')
+        # input = imageio.imread(f'{confocal_data_path}{group}/files/{group[0]}{i}_decon_t0{frame:02d}_ch00.tif')
         # ip = (input - input.min())/(input.max() - input.min())
 
-        path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{pref}{i}/{pref}{i}_decon_t0{frame:02d}_ch00_skel.png'
+        path = f'{confocal_data_path}{group}/new_op_jul/skel/{pref}{i}/{pref}{i}_decon_t0{frame:02d}_ch00_skel.png'
         graph = skel_to_graph(path)
         junctions = get_junctions(graph)
         relevant_nodes = np.array(junctions)
@@ -548,11 +549,11 @@ def runner(group, r_start, r_end):
 def graph_plotter(group, series):
     pref = 'Ct' if group == 'Control' else group[0]
 
-    # path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{pref}{series}/{pref}{series}_decon_t050_ch00_skel.png'
+    # path = f'{confocal_data_path}{group}/new_op_jul/skel/{pref}{series}/{pref}{series}_decon_t050_ch00_skel.png'
 
     # projection frame analysis
-    # path = '/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/er_mean_proc/climp16_er_mean_proc_enhance_skel.png'
-    path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance_skel.png'
+    # path = '{confocal_data_path}Climp/new_op_jul/er_mean_proc/climp16_er_mean_proc_enhance_skel.png'
+    path = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance_skel.png'
 
     # plt.imshow(imageio.imread(path), cmap='gray')
 
@@ -696,10 +697,10 @@ exit()
 def rel_edges_length(group, r_start, r_end):
     l = []
     for i, frame in itertools.product(range(r_start, r_end + 1), range(100)):
-        # input = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/{group[0]}{i}_decon_t0{frame:02d}_ch00.tif')
+        # input = imageio.imread(f'{confocal_data_path}{group}/files/{group[0]}{i}_decon_t0{frame:02d}_ch00.tif')
         # ip = (input - input.min())/(input.max() - input.min())
 
-        path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{group[0]}{i}/{group[0]}{i}_decon_t0{frame:02d}_ch00_skel.png'
+        path = f'{confocal_data_path}{group}/new_op_jul/skel/{group[0]}{i}/{group[0]}{i}_decon_t0{frame:02d}_ch00_skel.png'
         graph = skel_to_graph(path)
         junctions = get_junctions(graph)
         relevant_nodes = np.array(junctions)
@@ -721,13 +722,13 @@ def rel_edge_intensity(group, r_start, r_end):
 
     for i, frame in itertools.product(range(r_start, r_end + 1), range(100)):
         if group == 'Control':
-            fname = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/img_{i}_decon_t0{frame:02d}.tif'
+            fname = f'{confocal_data_path}{group}/files/img_{i}_decon_t0{frame:02d}.tif'
         else:
-            fname = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/{group[0]}{i}_decon_t0{frame:02d}_ch00.tif'
+            fname = f'{confocal_data_path}{group}/files/{group[0]}{i}_decon_t0{frame:02d}_ch00.tif'
 
         img = imageio.imread(fname)
         ip = (img - img.min()) / (img.max() - img.min())
-        path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{pref}{i}/{pref}{i}_decon_t0{frame:02d}_ch00_skel.png'
+        path = f'{confocal_data_path}{group}/new_op_jul/skel/{pref}{i}/{pref}{i}_decon_t0{frame:02d}_ch00_skel.png'
         graph = skel_to_graph(path)
         junctions = get_junctions(graph)
         relevant_nodes = np.array(junctions)
