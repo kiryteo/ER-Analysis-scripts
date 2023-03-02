@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from skimage.graph import route_through_array
 from junction_analysis_modules import *
+from collections import OrderedDict
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 
@@ -347,6 +348,18 @@ def get_updated_degree_nodes(temp_graph):
     return np.array(deg_one_nodes), np.array(deg_two_nodes), np.array(high_deg_nodes)
 
 
+def create_new_path(path_nbr1, path_nbr2):
+    union_dict = OrderedDict.fromkeys(map(tuple, path_nbr1 + path_nbr2))
+
+    return list(map(list, union_dict.keys()))
+
+
+def get_new_edge_data(tgraph, nbr_a, nbr_b, path_a, path_b):
+    path_coords = create_new_path(path_a, path_b)
+    tgraph.add_edge(nbr_a, nbr_b)
+    return {(nbr_a, nbr_b, 0): {'pts': np.array(path_coords)}}
+
+
 def graph_node_connector(group, series):
     global rel
     pref = 'Ct' if group == 'Control' else group[0]
@@ -429,36 +442,58 @@ def graph_node_connector(group, series):
                     temp_graph.remove_node(nbr)
 
 
-    #     neighbor = next(iter(graph.neighbors(node)))
-    #
-    #     if node_degree > 2 and dict(graph.degree())[neighbor] == 1:
-    #         remove_edge_if_exists(temp_graph, node, neighbor)
+    tgraph = copy.deepcopy(temp_graph)
 
-    # exit()
+    for node in temp_graph.nodes():
+        if temp_graph.degree(node) == 2:
 
-    deg_one_nodes, deg_two_nodes, high_deg_nodes = get_updated_degree_nodes(temp_graph)
+            nbr1, nbr2 = list(temp_graph.neighbors(node))
+            if temp_graph.degree(nbr1) == temp_graph.degree(nbr2) == 2:
+                path_nbr1 = [[int(x) for x in a] for a in temp_graph[node][nbr1][0]['pts']]
+                path_nbr2 = [[int(x) for x in a] for a in temp_graph[node][nbr2][0]['pts']]
+
+                if path_nbr1[0] == path_nbr2[0]:
+                    path_nbr2 = path_nbr2[::-1]
+                    edge_data = get_new_edge_data(tgraph, nbr2, nbr1, path_nbr2, path_nbr1)
+
+                elif path_nbr1[0] == path_nbr2[-1]:
+                    edge_data = get_new_edge_data(tgraph, nbr2, nbr1, path_nbr2, path_nbr1)
+
+                elif path_nbr1[-1] == path_nbr2[0]:
+                    edge_data = get_new_edge_data(tgraph, nbr1, nbr2, path_nbr1, path_nbr2)
+
+                else:
+                    path_nbr2 = path_nbr2[::-1]
+                    edge_data = get_new_edge_data(tgraph, nbr1, nbr2, path_nbr1, path_nbr2)
+
+                tgraph.remove_node(node)
+                nx.set_edge_attributes(tgraph, edge_data)
+
+
+    deg_one_nodes, deg_two_nodes, high_deg_nodes = get_updated_degree_nodes(tgraph)
 
 
     er_mean = imageio.imread(
         f'{confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png')
     plt.imshow(er_mean, cmap='gray')
 
-    for (start_node, end_node) in temp_graph.edges():
-        if temp_graph[start_node][end_node][0]:
-            ps = temp_graph[start_node][end_node][0]['pts']
+    for (start_node, end_node) in tgraph.edges():
+        if tgraph[start_node][end_node][0]:
+            ps = tgraph[start_node][end_node][0]['pts']
             plt.plot(ps[:, 1], ps[:, 0], 'green')
 
-    # plt.plot(deg_one_nodes[:, 1], deg_one_nodes[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow', mew=0.5, markersize=3)
+    plt.plot(deg_one_nodes[:, 1], deg_one_nodes[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow', mew=0.5, markersize=3)
 
-    # plt.plot(deg_two_nodes[:, 1], deg_two_nodes[:, 0], 'o', markerfacecolor='magenta', markeredgecolor='magenta', mew=0.5, markersize=3)
+    plt.plot(deg_two_nodes[:, 1], deg_two_nodes[:, 0], 'o', markerfacecolor='magenta', markeredgecolor='magenta', mew=0.5, markersize=3)
 
     plt.plot(high_deg_nodes[:, 1], high_deg_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue', mew=0.5, markersize=3)
 
-    # plt.axis('off')
+    plt.axis('off')
     # plt.savefig(f'graphs/connected/{group}_{series}_edge_graph_projection_connected_nbrs_v2', bbox_inches='tight', pad_inches=0)
-    # plt.close()
+    plt.savefig(f'graphs/connected/{group}_{series}_v2-2', bbox_inches='tight', pad_inches=0)
+    plt.close()
 
-    plt.show()
+    # plt.show()
 
 
 graph_node_connector('RTN', 14)
