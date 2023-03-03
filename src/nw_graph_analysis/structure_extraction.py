@@ -276,12 +276,14 @@ def nearest_node(distances, nbrs):
         if nbr not in nn_dict or nn_dict[nbr][1] > dist:
             nn_dict[nbr] = (node, dist)
 
+    # print(nn_dict)
+    # exit()
+
     return nbr_dict, nn_dict
 
 
 # Find the closest neighbor of a given node in a graph
 def get_closest_from_nbr(graph, node):
-
     # Get the list of neighbors and their distances to the node
     neighbors = list(graph.neighbors(node))
     distances = [graph.edges[node, neighbor, 0]['weight'] for neighbor in neighbors]
@@ -313,9 +315,15 @@ def get_path_coords(er_input, cost_arr, g_nodes_array, node, fin_dict):
     return np.array(path_coords) if len(path_coords) < 20 else None
 
 
+import math
+
+
 def connect_low_degree_nodes(temp_graph, node, fin_dict, path_coords):
     temp_graph.add_edge(node, fin_dict[node][0])
-    return {(node, fin_dict[node][0], 0): {'pts': path_coords}}
+    total_distance = sum(
+        math.sqrt((path_coords[i + 1][0] - path_coords[i][0]) ** 2 + (path_coords[i + 1][1] - path_coords[i][1]) ** 2)
+        for i in range(len(path_coords) - 1))
+    return {(node, fin_dict[node][0], 0): {'pts': path_coords, 'weight': total_distance}}
 
 
 def remove_edge_if_exists(temp_graph, node, neighbor):
@@ -326,6 +334,8 @@ def remove_edge_if_exists(temp_graph, node, neighbor):
 
 def connect_nodes(er_input, temp_graph, n1, n2, fin_dict, cost_arr, g_nodes_array):
     if fin_dict[n1][0] != n2:
+
+        # print(n1)
         path_coords = get_path_coords(er_input, cost_arr, g_nodes_array, n1, fin_dict)
 
         if path_coords is not None and not temp_graph.has_edge(n1, fin_dict[n1][0]):
@@ -355,9 +365,34 @@ def create_new_path(path_nbr1, path_nbr2):
 
 
 def get_new_edge_data(tgraph, nbr_a, nbr_b, path_a, path_b):
-    path_coords = create_new_path(path_a, path_b)
+    path_coords = np.array(create_new_path(path_a, path_b))
+    total_distance = sum(
+        math.sqrt((path_coords[i + 1][0] - path_coords[i][0]) ** 2 + (path_coords[i + 1][1] - path_coords[i][1]) ** 2)
+        for i in range(len(path_coords) - 1))
     tgraph.add_edge(nbr_a, nbr_b)
-    return {(nbr_a, nbr_b, 0): {'pts': np.array(path_coords)}}
+    return {(nbr_a, nbr_b, 0): {'pts': path_coords, 'weight': total_distance}}
+
+
+def high_deg_connections(tgraph, node, nbr1, nbr2):
+    path_nbr1 = [[int(x) for x in a] for a in tgraph[node][nbr1][0]['pts']]
+    path_nbr2 = [[int(x) for x in a] for a in tgraph[node][nbr2][0]['pts']]
+
+    if path_nbr1[0] == path_nbr2[0]:
+        path_nbr2 = path_nbr2[::-1]
+        edge_data = get_new_edge_data(tgraph, nbr2, nbr1, path_nbr2, path_nbr1)
+
+    elif path_nbr1[0] == path_nbr2[-1]:
+        edge_data = get_new_edge_data(tgraph, nbr2, nbr1, path_nbr2, path_nbr1)
+
+    elif path_nbr1[-1] == path_nbr2[0]:
+        edge_data = get_new_edge_data(tgraph, nbr1, nbr2, path_nbr1, path_nbr2)
+
+    else:
+        path_nbr2 = path_nbr2[::-1]
+        edge_data = get_new_edge_data(tgraph, nbr1, nbr2, path_nbr1, path_nbr2)
+
+    tgraph.remove_node(node)
+    nx.set_edge_attributes(tgraph, edge_data)
 
 
 def process_node(tgraph, node):
@@ -368,48 +403,61 @@ def process_node(tgraph, node):
     nbr1, nbr2 = nbrs
     deg1, deg2 = tgraph.degree(nbr1), tgraph.degree(nbr2)
 
-    if deg1 == deg2 == 2:
-        path_nbr1 = [[int(x) for x in a] for a in tgraph[node][nbr1][0]['pts']]
-        path_nbr2 = [[int(x) for x in a] for a in tgraph[node][nbr2][0]['pts']]
 
-        if path_nbr1[0] == path_nbr2[0]:
-            path_nbr2 = path_nbr2[::-1]
-            edge_data = get_new_edge_data(tgraph, nbr2, nbr1, path_nbr2, path_nbr1)
+    if deg1 >= 2 and deg2 >= 2:
+        high_deg_connections(tgraph, node, nbr1, nbr2)
 
-        elif path_nbr1[0] == path_nbr2[-1]:
-            edge_data = get_new_edge_data(tgraph, nbr2, nbr1, path_nbr2, path_nbr1)
 
-        elif path_nbr1[-1] == path_nbr2[0]:
-            edge_data = get_new_edge_data(tgraph, nbr1, nbr2, path_nbr1, path_nbr2)
+def get_updated_neighbor_dict(graph):
+    nodes = graph.nodes()
 
+    g_nodes = np.array([graph.nodes[i]['o'] for i in graph.nodes])
+    g_nodes_array = g_nodes.tolist()
+
+    # closest point in graph which is connected by edge ('neighbor')
+    closest_neighbor_dict = {}
+    for each in nodes:
+        nbr_id, dist = get_closest_from_nbr(graph, each)
+        closest_neighbor_dict[each] = (nbr_id, dist)
+
+    # closest point in graph that may or may not be connected by an edge
+    distances, nbrs_all = get_nbrs(g_nodes)
+
+    # print(g_nodes[146])
+    # print(nbrs_all[139])
+    # exit()
+
+    # nbr_dict: node id and nearest node id
+    # nn_dict:
+    nbr_dict, nn_dict = nearest_node(distances, nbrs_all)
+
+    # print(closest_neighbor_dict)
+    # print(nbr_dict)
+    # print(nn_dict)
+    #
+    # exit()
+
+    # print(nn_dict[125])
+    # print(nn_dict[139])
+
+    fin_dict = {}
+
+    # for k, v in closest_neighbor_dict.items():
+    #     if k in nn_dict:
+    #         fin_dict[k] = nn_dict[k]
+    #
+    #     elif v[1] < nbr_dict[k][1]:
+    #         fin_dict[k] = closest_neighbor_dict[k]
+    #     else:
+    #         fin_dict[k] = nbr_dict[k]
+
+    for k, v in closest_neighbor_dict.items():
+        if v[1] < nbr_dict[k][1]:
+            fin_dict[k] = closest_neighbor_dict[k]
         else:
-            path_nbr2 = path_nbr2[::-1]
-            edge_data = get_new_edge_data(tgraph, nbr1, nbr2, path_nbr1, path_nbr2)
+            fin_dict[k] = nbr_dict[k]
 
-        tgraph.remove_node(node)
-        nx.set_edge_attributes(tgraph, edge_data)
-
-    elif deg1 > 2 and deg2 > 2:
-        path_nbr1 = [[int(x) for x in a] for a in tgraph[node][nbr1][0]['pts']]
-        path_nbr2 = [[int(x) for x in a] for a in tgraph[node][nbr2][0]['pts']]
-
-        if path_nbr1[0] == path_nbr2[0]:
-            path_nbr2 = path_nbr2[::-1]
-            edge_data = get_new_edge_data(tgraph, nbr2, nbr1, path_nbr2, path_nbr1)
-
-        elif path_nbr1[0] == path_nbr2[-1]:
-            edge_data = get_new_edge_data(tgraph, nbr2, nbr1, path_nbr2, path_nbr1)
-
-        elif path_nbr1[-1] == path_nbr2[0]:
-            edge_data = get_new_edge_data(tgraph, nbr1, nbr2, path_nbr1, path_nbr2)
-
-        else:
-            path_nbr2 = path_nbr2[::-1]
-            edge_data = get_new_edge_data(tgraph, nbr1, nbr2, path_nbr1, path_nbr2)
-
-        tgraph.remove_node(node)
-        nx.set_edge_attributes(tgraph, edge_data)
-
+    return fin_dict, g_nodes_array
 
 
 def graph_node_connector(group, series):
@@ -433,30 +481,37 @@ def graph_node_connector(group, series):
 
     relevant_nodes = np.array(junctions)
 
-    nodes = graph.nodes()
-
-    g_nodes = np.array([graph.nodes[i]['o'] for i in graph.nodes])
-    g_nodes_array = g_nodes.tolist()
-
     # get closest neighbor from
-    closest_neighbor_dict = {}
-    for each in nodes:
-        nbr_id, dist = get_closest_from_nbr(graph, each)
-        closest_neighbor_dict[each] = (nbr_id, dist)
+    # closest_neighbor_dict = {}
+    # for each in nodes:
+    #     nbr_id, dist = get_closest_from_nbr(graph, each)
+    #     closest_neighbor_dict[each] = (nbr_id, dist)
+    #
+    # distances, nbrs_all = get_nbrs(g_nodes)
+    # nbr_dict, nn_dict = nearest_node(distances, nbrs_all)
+    #
+    # fin_dict = {}
+    #
+    # for k, v in closest_neighbor_dict.items():
+    #     if k in nn_dict:
+    #         fin_dict[k] = nn_dict[k]
+    #
+    #     elif v[1] < nbr_dict[k][1]:
+    #         fin_dict[k] = closest_neighbor_dict[k]
+    #     else:
+    #         fin_dict[k] = nbr_dict[k]
+    fin_dict, g_nodes_array = get_updated_neighbor_dict(graph)
 
-    distances, nbrs_all = get_nbrs(g_nodes)
-    nbr_dict, nn_dict = nearest_node(distances, nbrs_all)
+    # print(graph[125])
+    # print(fin_dict[139])
+    # print(list(graph.neighbors(139)))
+    # exit()
 
-    fin_dict = {}
-
-    for k, v in closest_neighbor_dict.items():
-        if k in nn_dict:
-            fin_dict[k] = nn_dict[k]
-
-        elif v[1] < nbr_dict[k][1]:
-            fin_dict[k] = closest_neighbor_dict[k]
-        else:
-            fin_dict[k] = nbr_dict[k]
+    # for i, val in enumerate(g_nodes_array):
+    #     print(i, val)
+    # idx = np.where(g_nodes_array == [110, 4])
+    # print(idx)
+    # exit()
 
     temp_graph = copy.deepcopy(graph)
 
@@ -468,8 +523,7 @@ def graph_node_connector(group, series):
     # cost_arr[er_proc_bg] = 0
 
     for node in dict(graph.degree()):
-
-        print(temp_graph[node])
+        # print(temp_graph[node])
 
         # access the first element of graph.neighbors
         neighbor = next(iter(graph.neighbors(node)))
@@ -489,42 +543,65 @@ def graph_node_connector(group, series):
     #     if node_degree == 1 and dict(graph.degree())[neighbor] == 1:
     #         remove_edge_if_exists(temp_graph, node, neighbor)
 
-    if group != 'Control':
-        for node, node_degree in dict(temp_graph.degree()).items():
-            if node_degree > 2:
-                all_nbrs = list(temp_graph.neighbors(node))
-                for nbr in all_nbrs:
-                    if temp_graph.degree(nbr) == 1:
-                        temp_graph.remove_node(nbr)
 
+    # updated_fin_dict, tg_nodes_array = get_updated_neighbor_dict(temp_graph)
 
-        tgraph = copy.deepcopy(temp_graph)
+    # before the following, update the dict and recheck for NN and connections
 
-        for node in temp_graph.nodes():
-            process_node(tgraph, node)
+    # for node in dict(temp_graph.degree()):
+        # neighbor = next(iter(graph.neighbors(node)))
 
+        # connect_nodes(er_input, temp_graph, node, neighbor, updated_fin_dict, cost_arr, tg_nodes_array)
 
-    deg_one_nodes, deg_two_nodes, high_deg_nodes = get_updated_degree_nodes(temp_graph)
+    # if group != 'Control':
+    #     for node, node_degree in dict(temp_graph.degree()).items():
+    #         if node_degree > 2:
+    #             all_nbrs = list(temp_graph.neighbors(node))
+    #             for nbr in all_nbrs:
+    #                 if temp_graph.degree(nbr) == 1:
+    #                     temp_graph.remove_node(nbr)
+    #
+    #
 
+        # tgraph = copy.deepcopy(temp_graph)
 
+        # for node in temp_graph.nodes():
+        #     process_node(tgraph, node)
+    tgraph = copy.deepcopy(temp_graph)
+
+    for node in temp_graph.nodes():
+        process_node(tgraph, node)
+
+    # else:
+    #     for node, node_degree in dict(temp_graph.degree()).items():
+    #         if node_degree == 2:
+    #             all_nbrs = list(temp_graph.neighbors(node))
+    #             for nbr in all_nbrs:
+    #                 if temp_graph.degree(nbr) == 1:
+    #                     temp_graph.remove_node(nbr)
+
+    deg_one_nodes, deg_two_nodes, high_deg_nodes = get_updated_degree_nodes(tgraph)
 
     er_mean = imageio.imread(
         f'{confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png')
     plt.imshow(er_mean, cmap='gray')
 
-    for (start_node, end_node) in temp_graph.edges():
-        if temp_graph[start_node][end_node][0]:
-            ps = temp_graph[start_node][end_node][0]['pts']
+    for (start_node, end_node) in tgraph.edges():
+        if tgraph[start_node][end_node][0]:
+            ps = tgraph[start_node][end_node][0]['pts']
             plt.plot(ps[:, 1], ps[:, 0], 'green')
 
     if len(deg_one_nodes) != 0:
-        plt.plot(deg_one_nodes[:, 1], deg_one_nodes[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow', mew=0.5, markersize=3)
+        plt.plot(deg_one_nodes[:, 1], deg_one_nodes[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow',
+                 mew=0.5, markersize=3)
 
     if len(deg_two_nodes) != 0:
-        plt.plot(deg_two_nodes[:, 1], deg_two_nodes[:, 0], 'o', markerfacecolor='magenta', markeredgecolor='magenta', mew=0.5, markersize=3)
+        plt.plot(deg_two_nodes[:, 1], deg_two_nodes[:, 0], 'o', markerfacecolor='magenta', markeredgecolor='magenta',
+                 mew=0.5, markersize=3)
 
     if len(high_deg_nodes) != 0:
-        plt.plot(high_deg_nodes[:, 1], high_deg_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue', mew=0.5, markersize=3)
+        plt.plot(high_deg_nodes[:, 1], high_deg_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue',
+                 mew=0.5, markersize=3)
 
     # plt.axis('off')
     # plt.savefig(f'graphs/connected/{group}_{series}_edge_graph_projection_connected_nbrs_v4', bbox_inches='tight', pad_inches=0)
@@ -534,15 +611,13 @@ def graph_node_connector(group, series):
     plt.show()
 
 
-graph_node_connector('ATL', 1)
+# graph_node_connector('ATL', 3)
+# exit()
+
+for i in range(1, 27):
+    graph_node_connector('ATL', i)
+
 exit()
-
-# for i in range(1, 32):
-#     graph_node_connector('Control', i)
-
-exit()
-
-
 
 
 def runner(group, r_start, r_end):
@@ -634,9 +709,6 @@ def runner(group, r_start, r_end):
 # plt.show()
 #
 # exit()
-
-
-
 
 
 def graph_plotter(group, series):
