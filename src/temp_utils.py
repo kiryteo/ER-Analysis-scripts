@@ -248,3 +248,12 @@ def preprocess_samples(group):
             loc = threshold_local(aop, 3)
             loc = threshold_local(loc, 3)
             cv2.imwrite(f'{new_pref}Series{i:03d}_decon_converted/new_op_sept/preproc/C{i}/C{i}_decon_t0{j:02d}_ch00_proc.png', loc)
+
+
+import cv2
+def get_std_samples(group, num_series):
+    for i in range(1, num_series+1):
+        for j in range(100):
+            img = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/{group[0]}{i}_decon_t0{j:02d}_ch00.tif')
+            op = (img - img.min()) / (img.max() - img.min())
+            cv2.imwrite(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_egfp/{group[0]}{i}_decon_t0{j:02d}_ch00_std.png', op*255)
