@@ -17,6 +17,8 @@ import statannot
 from statsmodels.stats.multicomp import MultiComparison
 from scipy.stats import kruskal, mannwhitneyu
 
+from structure_extraction import node_connector
+
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 
@@ -41,6 +43,7 @@ def skel_to_graph(skel):
     G.add_edges_from(g.edges)
 
     degree_list = G.degree
+
     return node_set, degree_list
 
 
@@ -102,7 +105,7 @@ def separate_junc_cc(nps, skdata, labelled_img):
     return label_vals, unassigned_cc_dict
 
 
-def get_junctions(mean_img):
+def get_junctions(er_input_path, mean_img):
     """
 
     @param mean_img: Input mean projection skel image (ndarray, binary)
@@ -120,13 +123,28 @@ def get_junctions(mean_img):
 
     # skel = pcv.morphology.skeletonize(mask=mean_proj_img)
 
-    skel = imageio.imread(mean_img)
+    conn_graph = node_connector(er_input_path, mean_img)
+
+    # skel = imageio.imread(mean_img)
+    #
+    # sk_graph = sknw.build_sknw(skel, multi=True, iso=False)
+
+    node_set, degree_list = conn_graph.nodes, conn_graph.degree
 
     # Build graph from the skeleton
-    node_set, degree_list = skel_to_graph(skel)
+    # node_set, degree_list = skel_to_graph(skel)
+
+    # node_set, degree_list = sk_graph.nodes, sk_graph.degree
+
     node_coords = np.array([node_set[node]['o'] for node in node_set])
 
     return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
+
+# group = 'ATL'
+# num_series = 1
+# mean_img = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
+# k = get_junctions(mean_img)
+# exit()
 
 
 def get_all_junc(group, num_series):
@@ -136,21 +154,28 @@ def get_all_junc(group, num_series):
     @param num_series: sequence number
     @return: nps (list) - provides all junctions with degree > 2 from the mean projection proc skeleton, skdata (list) - provides all junctions per skel frame
     """
-    # mean_img = 'confocal_data_pathATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
 
     group_pref = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
 
-    mean_img = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
+    er_mean_img = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{num_series}_er_mean.png'
+    skel_mean_img = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
+
+    # graph = graph_node_connector(group, num_series)
+
+
 
     # Get junction coordinates from projection frame
-    newps = get_junctions(mean_img)
+    newps = get_junctions(er_mean_img, skel_mean_img)
 
     nps = [[each[0], each[1]] for each in newps]
     skdata = []
+
     for frame in range(100):
+
+        er_img = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_egfp/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_std.png'
         sk_img = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
 
-        sk_newps = get_junctions(sk_img)
+        sk_newps = get_junctions(er_img, sk_img)
 
         sk_nps = [[each[0], each[1]] for each in sk_newps]
         # sk_nps = np.array(sk_nps)
@@ -309,10 +334,6 @@ def junction_cc_mean_distplot(channel):
     # plt.show()
 
 
-# junction_cc_mean_distplot('ERmoxGFP')
-# exit()
-
-
 def junction_cc_mean_boxplot(channel, region):
     region_name = 'isolated' if region == 'iso' else 'fuzzy'
     atl = calc_egfp_deposit('ATL', channel, 26, region)
@@ -348,8 +369,6 @@ def junction_cc_mean_boxplot(channel, region):
 # junction_cc_mean_boxplot('ERmoxGFP', 'fuz')
 # junction_cc_mean_boxplot('mCherry', 'fuz')
 
-import cv2
-
 
 def cc_area_measure(group, region, rstart, rend):
     cc_area_list = []
@@ -363,9 +382,6 @@ def cc_area_measure(group, region, rstart, rend):
     for i in range(rstart, rend+1):
         nps, skdata, labelled_img = label_junctions(group, i)
         regions = regionprops(labelled_img)
-        # print(len(regions))
-        # print(regions[2]['Area'])
-        # exit()
 
         label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
         iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
@@ -373,8 +389,6 @@ def cc_area_measure(group, region, rstart, rend):
             region_cc = get_cc_ids(labelled_img, iso)
         else:
             region_cc = get_cc_ids(labelled_img, fuz)
-
-        # print(region_cc)
 
         l = [regions[each - 1]['Area'] for each in region_cc]
         cc_area_list.extend(l)
