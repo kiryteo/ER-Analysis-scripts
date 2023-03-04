@@ -106,6 +106,7 @@ def separate_junc_cc(nps, skdata, labelled_img):
 
 
 def get_junctions(er_input_path, mean_img):
+# def get_junctions(mean_img):
     """
 
     @param mean_img: Input mean projection skel image (ndarray, binary)
@@ -123,17 +124,20 @@ def get_junctions(er_input_path, mean_img):
 
     # skel = pcv.morphology.skeletonize(mask=mean_proj_img)
 
+
+
     conn_graph = node_connector(er_input_path, mean_img)
+
+    node_set, degree_list = conn_graph.nodes, conn_graph.degree
+
 
     # skel = imageio.imread(mean_img)
     #
     # sk_graph = sknw.build_sknw(skel, multi=True, iso=False)
-
-    node_set, degree_list = conn_graph.nodes, conn_graph.degree
-
-    # Build graph from the skeleton
-    # node_set, degree_list = skel_to_graph(skel)
-
+    #
+    # # Build graph from the skeleton
+    # # node_set, degree_list = skel_to_graph(skel)
+    #
     # node_set, degree_list = sk_graph.nodes, sk_graph.degree
 
     node_coords = np.array([node_set[node]['o'] for node in node_set])
@@ -160,15 +164,23 @@ def get_all_junc(group, num_series):
     er_mean_img = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{num_series}_er_mean.png'
     skel_mean_img = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
 
-    # graph = graph_node_connector(group, num_series)
 
-
-
-    # Get junction coordinates from projection frame
+    # conn_graph = node_connector(er_mean_img, skel_mean_img)
+    # #
+    # node_set, degree_list = conn_graph.nodes, conn_graph.degree
+    #
+    # node_coords = np.array([node_set[node]['o'] for node in node_set])
+    #
+    # newps = [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
     newps = get_junctions(er_mean_img, skel_mean_img)
 
     nps = [[each[0], each[1]] for each in newps]
     skdata = []
+
+
+    ### Get junction coordinates from projection frame
+    # newps = get_junctions(er_mean_img, skel_mean_img)
+    # newps = get_junctions(skel_mean_img)
 
     for frame in range(100):
 
@@ -176,6 +188,7 @@ def get_all_junc(group, num_series):
         sk_img = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
 
         sk_newps = get_junctions(er_img, sk_img)
+        # sk_newps = get_junctions(sk_img)
 
         sk_nps = [[each[0], each[1]] for each in sk_newps]
         # sk_nps = np.array(sk_nps)
@@ -372,12 +385,6 @@ def junction_cc_mean_boxplot(channel, region):
 
 def cc_area_measure(group, region, rstart, rend):
     cc_area_list = []
-    if group == 'ATL':
-        end = 26
-    elif group in ['Climp', 'Control']:
-        end = 31
-    else:
-        end = 29
 
     for i in range(rstart, rend+1):
         nps, skdata, labelled_img = label_junctions(group, i)
@@ -467,8 +474,8 @@ def get_data_cc_area(region):
     plot_cc_area(at1, at2, at3, cl1, cl2, cl3, rt1, rt2, rt3, ctrl1, ctrl2, ctrl3, region)
 
 
-get_data_cc_area('iso')
-exit()
+# get_data_cc_area('fuz')
+# exit()
 
 
 def calc_deposit(num_series, group, region):
@@ -590,8 +597,8 @@ def calc_deposit_net_norm(num_series, group, region):
         ln_egfp = []
         ln_mch = []
 
-        mnmx_egfp = []
-        mnmx_mch = []
+        # mnmx_egfp = []
+        # mnmx_mch = []
 
         if group == 'Control':
             path_skel = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel_max_proj/Ct{num}_max.png'
@@ -1343,7 +1350,7 @@ def full_data_variation_plots(region, measure, channel):
     plt.show()
 
 
-full_data_variation_plots('fuz', 'std', 'mCherry')
+full_data_variation_plots('iso', 'std', 'mCherry')
 # total_data_variation_plots('Control', 'iso', 'std')
 exit()
 
