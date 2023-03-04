@@ -22,6 +22,8 @@ from junction_analysis_modules import *
 from collections import OrderedDict
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
+from statannotations.Annotator import Annotator
+
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 
@@ -576,55 +578,79 @@ def node_connector(path_er, path_frame):
 # exit()
 
 
+# def runner(group, r_start, r_end):
+#     l = []
+#
+#     pref = 'Ct' if group == 'Control' else group[0]
+#     for i, frame in itertools.product(range(r_start, r_end + 1), range(100)):
+#         # input = imageio.imread(f'{confocal_data_path}{group}/files/{group[0]}{i}_decon_t0{frame:02d}_ch00.tif')
+#         # ip = (input - input.min())/(input.max() - input.min())
+#         er_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_egfp/{pref}{i}_decon_t0{frame:02d}_ch00_std.png'
+#
+#         path = f'{confocal_data_path}{group}/new_op_jul/skel/{pref}{i}/{pref}{i}_decon_t0{frame:02d}_ch00_skel.png'
+#         # graph = skel_to_graph(path)
+#
+#         graph = node_connector(er_path, path)
+#         junctions = get_junctions(graph)
+#         relevant_nodes = np.array(junctions)
+#         relevant_edges = get_relevant_tubules(graph, relevant_nodes)
+#
+#         # print(relevant_edges)
+#
+#         l.append(len(relevant_edges))
+#
+#     # plot_total_graph(path, graph, relevant_nodes, relevant_edges)
+#     return l
 
 
 def runner(group, r_start, r_end):
     l = []
 
-    pref = 'Ct' if group == 'Control' else group[0]
-    for i, frame in itertools.product(range(r_start, r_end + 1), range(100)):
-        # input = imageio.imread(f'{confocal_data_path}{group}/files/{group[0]}{i}_decon_t0{frame:02d}_ch00.tif')
-        # ip = (input - input.min())/(input.max() - input.min())
+    for series in range(r_start, r_end+1):
 
-        path = f'{confocal_data_path}{group}/new_op_jul/skel/{pref}{i}/{pref}{i}_decon_t0{frame:02d}_ch00_skel.png'
-        graph = skel_to_graph(path)
+        path_er = f'{confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png'
+
+        path = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance_skel.png'
+
+        graph = node_connector(path_er, path)
         junctions = get_junctions(graph)
         relevant_nodes = np.array(junctions)
         relevant_edges = get_relevant_tubules(graph, relevant_nodes)
-        l.append(len(relevant_edges))
 
-    # plot_total_graph(path, graph, relevant_nodes, relevant_edges)
+        # print(relevant_edges)
+
+        l.append(len(relevant_edges))
     return l
 
 
-# atl = runner('ATL', 1, 2)
-# climp = runner('Climp', 1, 2)
-# rtn = runner('RTN', 1, 2)
-# ctrl = runner('Control', 1, 2)
-#
-# atl_series = pd.Series(atl, name='ATL')
-# climp_series = pd.Series(climp, name='Climp')
-# rtn_series = pd.Series(rtn, name='RTN')
-# ctrl_series = pd.Series(ctrl, name='Control')
-#
-# df = pd.concat([atl_series, climp_series, rtn_series, ctrl_series], axis=1)
-#
-# df_long = pd.melt(df, var_name='Group', value_name='Length')
+atl = runner('ATL', 1, 26)
+climp = runner('Climp', 1, 31)
+rtn = runner('RTN', 1, 29)
+ctrl = runner('Control', 1, 31)
+
+atl_series = pd.Series(atl, name='ATL')
+climp_series = pd.Series(climp, name='Climp')
+rtn_series = pd.Series(rtn, name='RTN')
+ctrl_series = pd.Series(ctrl, name='Control')
+
+df = pd.concat([atl_series, climp_series, rtn_series, ctrl_series], axis=1)
+
+df_long = pd.melt(df, var_name='Group', value_name='Length')
 #
 # box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')]
 #
-# ax = sns.violinplot(data=df_long, y='Group', x='Length')
-# ax.set_xscale('log')
+ax = sns.boxplot(data=df_long, y='Group', x='Length')
+ax.set_xscale('log')
 #
 # annot = Annotator(ax, box_pairs, data=df_long, x='Length', y='Group')
 # annot.configure(test='Mann-Whitney', text_format='star', loc='outside')
 # annot.apply_and_annotate()
 #
-# plt.title('Count of edges corresponding to nodes with degree greater than two', fontsize=20)
-# plt.xlabel('Number of edges', fontsize=18)
-# plt.ylabel('Group', fontsize=18)
-# plt.show()
-# exit()
+plt.title('Count of edges corresponding to nodes with degree greater than two', fontsize=20)
+plt.xlabel('Number of edges', fontsize=18)
+plt.ylabel('Group', fontsize=18)
+plt.show()
+exit()
 
 
 # atl = runner('ATL', 1, 2)
