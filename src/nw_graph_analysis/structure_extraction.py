@@ -246,8 +246,9 @@ def plot_total_graph(group, num_series, graph, relevant_nodes, relevant_edge_lis
              markersize=4)
     plt.axis('off')
     # plt.savefig(f'graphs/{group}_{num_series}_edge_graph_projection', bbox_inches='tight', pad_inches=0)
-    # plt.close()
-    plt.show()
+    plt.savefig(f'{group}_{num_series}_edge_graph_conn', bbox_inches='tight', pad_inches=0)
+    plt.close()
+    # plt.show()
 
 
 def get_nbrs(nodes_array):
@@ -404,7 +405,11 @@ def process_node(tgraph, node):
     deg1, deg2 = tgraph.degree(nbr1), tgraph.degree(nbr2)
 
 
-    if deg1 >= 2 and deg2 >= 2:
+    # if deg1 >= 2 and deg2 >= 2:
+    #     high_deg_connections(tgraph, node, nbr1, nbr2)
+    # if (deg1 == 1 and deg2 >= 2) or (deg1 >= 2 and deg2 == 1):
+    #     high_deg_connections(tgraph, node, nbr1, nbr2)
+    if deg1 >= 1 and deg2 >= 1:
         high_deg_connections(tgraph, node, nbr1, nbr2)
 
 
@@ -423,33 +428,15 @@ def get_updated_neighbor_dict(graph):
     # closest point in graph that may or may not be connected by an edge
     distances, nbrs_all = get_nbrs(g_nodes)
 
-    # print(g_nodes[146])
-    # print(nbrs_all[139])
-    # exit()
-
     # nbr_dict: node id and nearest node id
     # nn_dict:
     nbr_dict, nn_dict = nearest_node(distances, nbrs_all)
-
-    # print(closest_neighbor_dict)
-    # print(nbr_dict)
-    # print(nn_dict)
-    #
-    # exit()
-
-    # print(nn_dict[125])
-    # print(nn_dict[139])
 
     fin_dict = {}
 
     # for k, v in closest_neighbor_dict.items():
     #     if k in nn_dict:
     #         fin_dict[k] = nn_dict[k]
-    #
-    #     elif v[1] < nbr_dict[k][1]:
-    #         fin_dict[k] = closest_neighbor_dict[k]
-    #     else:
-    #         fin_dict[k] = nbr_dict[k]
 
     for k, v in closest_neighbor_dict.items():
         if v[1] < nbr_dict[k][1]:
@@ -468,50 +455,23 @@ def graph_node_connector(group, series):
     # path = '{confocal_data_path}Climp/new_op_jul/er_mean_proc/climp16_er_mean_proc_enhance_skel.png'
     path = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance_skel.png'
 
+    path_frame = f'{confocal_data_path}{group}/new_op_jul/skel/{group[0]}{series}/{group[0]}{series}_decon_t006_ch00_skel.png'
+
+
     path_proc_enh = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance.png'
 
     path_er = f'{confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png'
 
     path_er_proc = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc.png'
 
-    graph = skel_to_graph(path)
+    graph = skel_to_graph(path_frame)
 
     # all junction from the graph with degree > 2
     junctions = get_junctions(graph)
 
     relevant_nodes = np.array(junctions)
 
-    # get closest neighbor from
-    # closest_neighbor_dict = {}
-    # for each in nodes:
-    #     nbr_id, dist = get_closest_from_nbr(graph, each)
-    #     closest_neighbor_dict[each] = (nbr_id, dist)
-    #
-    # distances, nbrs_all = get_nbrs(g_nodes)
-    # nbr_dict, nn_dict = nearest_node(distances, nbrs_all)
-    #
-    # fin_dict = {}
-    #
-    # for k, v in closest_neighbor_dict.items():
-    #     if k in nn_dict:
-    #         fin_dict[k] = nn_dict[k]
-    #
-    #     elif v[1] < nbr_dict[k][1]:
-    #         fin_dict[k] = closest_neighbor_dict[k]
-    #     else:
-    #         fin_dict[k] = nbr_dict[k]
     fin_dict, g_nodes_array = get_updated_neighbor_dict(graph)
-
-    # print(graph[125])
-    # print(fin_dict[139])
-    # print(list(graph.neighbors(139)))
-    # exit()
-
-    # for i, val in enumerate(g_nodes_array):
-    #     print(i, val)
-    # idx = np.where(g_nodes_array == [110, 4])
-    # print(idx)
-    # exit()
 
     temp_graph = copy.deepcopy(graph)
 
@@ -528,96 +488,94 @@ def graph_node_connector(group, series):
         # access the first element of graph.neighbors
         neighbor = next(iter(graph.neighbors(node)))
 
-        # if node_degree == 1 and dict(graph.degree())[neighbor] == 1:
-        #     remove_edge_if_exists(temp_graph, node, neighbor)
-        # else:
-        #     connect_nodes(temp_graph, node, neighbor, fin_dict, cost_arr, g_nodes_array)
-
-        # if node_degree > 1 and dict(graph.degree())[neighbor] > 1:
         connect_nodes(er_input, temp_graph, node, neighbor, fin_dict, cost_arr, g_nodes_array)
 
-    ### removal of 1d-1d edges
-    # for node, node_degree in dict(temp_graph.degree()).items():
-    #     neighbor = next(iter(graph.neighbors(node)))
-    #
-    #     if node_degree == 1 and dict(graph.degree())[neighbor] == 1:
-    #         remove_edge_if_exists(temp_graph, node, neighbor)
-
-
-    # updated_fin_dict, tg_nodes_array = get_updated_neighbor_dict(temp_graph)
-
-    # before the following, update the dict and recheck for NN and connections
-
-    # for node in dict(temp_graph.degree()):
-        # neighbor = next(iter(graph.neighbors(node)))
-
-        # connect_nodes(er_input, temp_graph, node, neighbor, updated_fin_dict, cost_arr, tg_nodes_array)
-
-    # if group != 'Control':
-    #     for node, node_degree in dict(temp_graph.degree()).items():
-    #         if node_degree > 2:
-    #             all_nbrs = list(temp_graph.neighbors(node))
-    #             for nbr in all_nbrs:
-    #                 if temp_graph.degree(nbr) == 1:
-    #                     temp_graph.remove_node(nbr)
-    #
-    #
-
-        # tgraph = copy.deepcopy(temp_graph)
-
-        # for node in temp_graph.nodes():
-        #     process_node(tgraph, node)
     tgraph = copy.deepcopy(temp_graph)
-
     for node in temp_graph.nodes():
         process_node(tgraph, node)
 
-    # else:
-    #     for node, node_degree in dict(temp_graph.degree()).items():
-    #         if node_degree == 2:
-    #             all_nbrs = list(temp_graph.neighbors(node))
-    #             for nbr in all_nbrs:
-    #                 if temp_graph.degree(nbr) == 1:
-    #                     temp_graph.remove_node(nbr)
-
-    deg_one_nodes, deg_two_nodes, high_deg_nodes = get_updated_degree_nodes(tgraph)
-
-    er_mean = imageio.imread(
-        f'{confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png')
-    plt.imshow(er_mean, cmap='gray')
-
-    for (start_node, end_node) in tgraph.edges():
-        if tgraph[start_node][end_node][0]:
-            ps = tgraph[start_node][end_node][0]['pts']
-            plt.plot(ps[:, 1], ps[:, 0], 'green')
-
-    if len(deg_one_nodes) != 0:
-        plt.plot(deg_one_nodes[:, 1], deg_one_nodes[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow',
-                 mew=0.5, markersize=3)
-
-    if len(deg_two_nodes) != 0:
-        plt.plot(deg_two_nodes[:, 1], deg_two_nodes[:, 0], 'o', markerfacecolor='magenta', markeredgecolor='magenta',
-                 mew=0.5, markersize=3)
-
-    if len(high_deg_nodes) != 0:
-        plt.plot(high_deg_nodes[:, 1], high_deg_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue',
-                 mew=0.5, markersize=3)
-
-    # plt.axis('off')
-    # plt.savefig(f'graphs/connected/{group}_{series}_edge_graph_projection_connected_nbrs_v4', bbox_inches='tight', pad_inches=0)
-    # # plt.savefig(f'graphs/connected/{group}_{series}_v2-2', bbox_inches='tight', pad_inches=0)
-    # plt.close()
-
-    plt.show()
+    tgraph2 = copy.deepcopy(tgraph)
+    for node in tgraph.nodes():
+        process_node(tgraph2, node)
 
 
-# graph_node_connector('ATL', 3)
+    ### Plotting the updated graph
+    # deg_one_nodes, deg_two_nodes, high_deg_nodes = get_updated_degree_nodes(tgraph2)
+    #
+    # er_mean = imageio.imread(
+    #     f'{confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png')
+    # plt.imshow(er_mean, cmap='gray')
+    #
+    # for (start_node, end_node) in tgraph2.edges():
+    #     if tgraph2[start_node][end_node][0]:
+    #         ps = tgraph2[start_node][end_node][0]['pts']
+    #         plt.plot(ps[:, 1], ps[:, 0], 'green')
+    #
+    # if len(deg_one_nodes) != 0:
+    #     plt.plot(deg_one_nodes[:, 1], deg_one_nodes[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow',
+    #              mew=0.5, markersize=3)
+    #
+    # # if len(deg_two_nodes) != 0:
+    # #     plt.plot(deg_two_nodes[:, 1], deg_two_nodes[:, 0], 'o', markerfacecolor='magenta', markeredgecolor='magenta',
+    # #              mew=0.5, markersize=3)
+    #
+    # if len(high_deg_nodes) != 0:
+    #     plt.plot(high_deg_nodes[:, 1], high_deg_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue',
+    #              mew=0.5, markersize=3)
+    #
+    # # plt.axis('off')
+    # # plt.savefig(f'graphs/connected/repair/{group}_{series}_edge_graph_projection_connected_final_v1', bbox_inches='tight', pad_inches=0)
+    # # # plt.savefig(f'graphs/connected/{group}_{series}_v2-2', bbox_inches='tight', pad_inches=0)
+    # # plt.close()
+    # #
+    # plt.show()
+    return tgraph2
+
+
+def node_connector(path_er, path_frame):
+
+    graph = skel_to_graph(path_frame)
+
+    # all junction from the graph with degree > 2
+    junctions = get_junctions(graph)
+
+    relevant_nodes = np.array(junctions)
+
+    fin_dict, g_nodes_array = get_updated_neighbor_dict(graph)
+
+    temp_graph = copy.deepcopy(graph)
+
+    # er_proc = imageio.imread(path_er_proc)
+    # er_proc_bg = np.where(er_proc==0)
+
+    er_input = imageio.imread(path_er)
+    cost_arr = np.ones((128, 128))
+    # cost_arr[er_proc_bg] = 0
+
+    for node in dict(graph.degree()):
+        # access the first element of graph.neighbors
+        neighbor = next(iter(graph.neighbors(node)))
+
+        connect_nodes(er_input, temp_graph, node, neighbor, fin_dict, cost_arr, g_nodes_array)
+
+    tgraph = copy.deepcopy(temp_graph)
+    for node in temp_graph.nodes():
+        process_node(tgraph, node)
+
+    tgraph2 = copy.deepcopy(tgraph)
+    for node in tgraph.nodes():
+        process_node(tgraph2, node)
+
+    return tgraph2
+
+# graph = graph_node_connector('ATL', 1)
+# exit()
+# print(graph.degree)
+# print(graph.nodes)
+# # graph_node_connector('ATL', 3)
 # exit()
 
-for i in range(1, 27):
-    graph_node_connector('ATL', i)
 
-exit()
 
 
 def runner(group, r_start, r_end):
@@ -718,145 +676,106 @@ def graph_plotter(group, series):
 
     # projection frame analysis
     # path = '{confocal_data_path}Climp/new_op_jul/er_mean_proc/climp16_er_mean_proc_enhance_skel.png'
-    path = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance_skel.png'
+
+
+    # path = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance_skel.png'
+
+    path_frame = f'{confocal_data_path}{group}/new_op_jul/skel/{group[0]}{series}/{group[0]}{series}_decon_t006_ch00_skel.png'
 
     # plt.imshow(imageio.imread(path), cmap='gray')
 
-    graph = skel_to_graph(path)
-    # print(graph[0][15][0]['pts'])
-    # exit()
-
-    # for (start, end) in graph.edges():
-    #     # print(start, end)
-    #     print(list(graph[start][end].keys()))
-    #     # edlen = len(graph[start][end][0]['pts'])
-    #     # print(edlen)
-    # # print(graph[5])
-    # exit()
+    # graph = skel_to_graph(path_frame)
+    graph = graph_node_connector(group, series)
 
     junctions = get_junctions(graph)
-    # print(junctions)
-    # exit()
     relevant_nodes = np.array(junctions)
 
     ps = np.array([graph.nodes[i]['o'] for i in graph.nodes])
-    # print(ps)
+
+    # pspp = []
+    # rel = []
+    #
+    # # get ps and relevant_nodes in correct format
+    # for each in ps:
+    #     pspp.append([each[0], each[1]])
+    # for each in relevant_nodes:
+    #     rel.append([each[0], each[1]])
+    #
+    # # get only 1, 2 degree nodes (yellow spots)
+    # low_deg_nodes = [x for x in pspp if x not in rel]
+    #
+    # # get nearest neighbour distances and indices for the 1, 2 degree nodes
+    # distances, nbrs = get_nbrs(low_deg_nodes)
+    #
+    # edge_len_list = []
+    #
+    # new_node_indices = []
+    # for (i, a), (j, b) in zip(enumerate(distances), enumerate(edge_len_list)):
+    #     if a < b:
+    #         new_node_indices.append(i)
+    #
+    # # print(new_node_indices)
+    # # print(nbrs)
+    # # print(low_deg_nodes)
+    # # print(len(nbrs))
+    # # print(len(low_deg_nodes))
+    #
+    # # print(graph.edges)
+    # for each in new_node_indices:
+    #     ldi_start = each
+    #     ldi_end = nbrs[each]
+    #
+    #     u = pspp.index(low_deg_nodes[ldi_start])
+    #     v = pspp.index(low_deg_nodes[ldi_end])
+    #
+    #     try:
+    #         sh_path = nx.shortest_path(graph, u, v)
+    #
+    #         st_coord = (pspp[u][0], pspp[u][1])
+    #         end_coord = (pspp[v][0], pspp[v][1])
+    #
+    #         new_path = [graph.nodes[n]['o'] for n in sh_path]
+    #
+    #         if graph.has_edge(u, v) or graph.has_edge(v, u):
+    #             continue
+    #         else:
+    #             graph.add_edge(u, v)
+    #
+    #             npath = []
+    #
+    #             for ele in new_path:
+    #                 npath.append(list(ele))
+    #
+    #             # npath = [(21, 59), (29, 74), (35, 76), (38, 75), (40, 67), (39, 56), (32, 50), (27, 58)]
+    #
+    #             edge_data = {(u, v, 0): {'pts': np.array(npath)}}
+    #
+    #             nx.set_edge_attributes(graph, edge_data)
+    #     except:
+    #         pass
+    #
+    # # print(graph.edges[(22, 29, 0)]['pts'])
+    # # print(graph.edges)
+    # plt.imshow(imageio.imread(path), cmap='gray')
+    #
+    # for (start_node, end_node) in graph.edges():
+    #     ps = graph[start_node][end_node][0]['pts']
+    #     plt.plot(ps[:, 1], ps[:, 0], 'green')
+    #
+    # plt.show()
     #
     # exit()
-    # print(junctions)
-    # print(relevant_nodes)
-    # print(ps - relevant_nodes)
-    # print(len(ps))
-    # print(len(relevant_nodes))
-    # yellow_nodes = [x for x in ps if x not in relevant_nodes]
-    # print(len(yellow_nodes))
-
-    # print(ps)
-    # print(relevant_nodes)
-
-    pspp = []
-    rel = []
-
-    # get ps and relevant_nodes in correct format
-    for each in ps:
-        pspp.append([each[0], each[1]])
-    for each in relevant_nodes:
-        rel.append([each[0], each[1]])
-
-    # get only 1, 2 degree nodes (yellow spots)
-    low_deg_nodes = [x for x in pspp if x not in rel]
-
-    # junc_data = [x.tolist() for x in junctions]
-    # nbrs = get_nbrs(junc_data)
-
-    # get nearest neighbour distances and indices for the 1, 2 degree nodes
-    distances, nbrs = get_nbrs(low_deg_nodes)
-
-    edge_len_list = []
-
-    for each in low_deg_nodes:
-        l = list(graph.neighbors(pspp.index(each)))
-        if len(l) == 1:
-            # if nx.is_simple_path(graph, [pspp.index(each), l[0]]) or nx.is_simple_path(graph, [l[0], pspp.index(each)]):
-            edge_len = len(graph[pspp.index(each)][l[0]][0]['pts'])
-            edge_len_list.append(edge_len)
-        else:
-            edge_len_1 = len(graph[pspp.index(each)][l[0]][0]['pts'])
-            edge_len_2 = len(graph[pspp.index(each)][l[1]][0]['pts'])
-            if edge_len_1 < edge_len_2:
-                edge_len_list.append(edge_len_1)
-            else:
-                edge_len_list.append(edge_len_2)
-
-    # print(edge_len_list)
-    # print(len(edge_len_list))
-
-    new_node_indices = []
-    for (i, a), (j, b) in zip(enumerate(distances), enumerate(edge_len_list)):
-        if a < b:
-            new_node_indices.append(i)
-
-    # print(new_node_indices)
-    # print(nbrs)
-    # print(low_deg_nodes)
-    # print(len(nbrs))
-    # print(len(low_deg_nodes))
-
-    # print(graph.edges)
-    for each in new_node_indices:
-        ldi_start = each
-        ldi_end = nbrs[each]
-
-        u = pspp.index(low_deg_nodes[ldi_start])
-        v = pspp.index(low_deg_nodes[ldi_end])
-
-        try:
-            sh_path = nx.shortest_path(graph, u, v)
-
-            st_coord = (pspp[u][0], pspp[u][1])
-            end_coord = (pspp[v][0], pspp[v][1])
-
-            new_path = [graph.nodes[n]['o'] for n in sh_path]
-
-            if graph.has_edge(u, v) or graph.has_edge(v, u):
-                continue
-            else:
-                graph.add_edge(u, v)
-
-                npath = []
-
-                for ele in new_path:
-                    npath.append(list(ele))
-
-                # npath = [(21, 59), (29, 74), (35, 76), (38, 75), (40, 67), (39, 56), (32, 50), (27, 58)]
-
-                edge_data = {(u, v, 0): {'pts': np.array(npath)}}
-
-                nx.set_edge_attributes(graph, edge_data)
-        except:
-            pass
-
-    # print(graph.edges[(22, 29, 0)]['pts'])
-    # print(graph.edges)
-    plt.imshow(imageio.imread(path), cmap='gray')
-
-    for (start_node, end_node) in graph.edges():
-        ps = graph[start_node][end_node][0]['pts']
-        plt.plot(ps[:, 1], ps[:, 0], 'green')
-
-    plt.show()
-
-    exit()
 
     relevant_edges = get_relevant_tubules(graph, relevant_nodes)
 
     plot_total_graph(group, series, graph, relevant_nodes, relevant_edges)
 
 
-graph_plotter('ATL', 1)
+# graph_plotter('ATL', 1)
+# exit()
 # for i in range(1, 30):
 #     graph_plotter('RTN', i)
-exit()
+# exit()
 
 
 def rel_edges_length(group, r_start, r_end):
@@ -961,30 +880,31 @@ def rel_edge_count():
     plt.show()
 
 
-rel_edge_count()
-exit()
+# rel_edge_count()
+# exit()
 
-atl_std = rel_edge_intensity('ATL', 1, 26)
-cl_std = rel_edge_intensity('Climp', 1, 31)
-rt_std = rel_edge_intensity('RTN', 1, 29)
-ct_std = rel_edge_intensity('Control', 1, 31)
 
-df = pd.DataFrame()
-
-df['Tubule_intensity_std'] = pd.Series(np.concatenate((atl_std, cl_std, rt_std, ct_std)))
-df['Group'] = pd.Series(
-    np.concatenate((['ATL'] * len(atl_std), ['Climp'] * len(cl_std), ['RTN'] * len(rt_std), ['Control'] * len(ct_std))))
-
-# sns.distplot(atl_mean, hist=False, label='atl')
-# sns.distplot(cl_mean, hist=False, label='cl')
-# sns.distplot(rt_mean, hist=False, label='rtn')
-# sns.distplot(ct_mean, hist=False, label='ctrl')
-sns.violinplot(data=df, y='Group', x='Tubule_intensity_std')
-plt.title('Standard deviation per tubule intensity for tubules (edges) corresponding to nodes with degree greater '
-          'than two', fontsize=20)
-plt.xlabel('Intensity standard deviation', fontsize=18)
-plt.ylabel('Group', fontsize=18)
-# plt.legend()
-plt.show()
-
-exit()
+# atl_std = rel_edge_intensity('ATL', 1, 26)
+# cl_std = rel_edge_intensity('Climp', 1, 31)
+# rt_std = rel_edge_intensity('RTN', 1, 29)
+# ct_std = rel_edge_intensity('Control', 1, 31)
+#
+# df = pd.DataFrame()
+#
+# df['Tubule_intensity_std'] = pd.Series(np.concatenate((atl_std, cl_std, rt_std, ct_std)))
+# df['Group'] = pd.Series(
+#     np.concatenate((['ATL'] * len(atl_std), ['Climp'] * len(cl_std), ['RTN'] * len(rt_std), ['Control'] * len(ct_std))))
+#
+# # sns.distplot(atl_mean, hist=False, label='atl')
+# # sns.distplot(cl_mean, hist=False, label='cl')
+# # sns.distplot(rt_mean, hist=False, label='rtn')
+# # sns.distplot(ct_mean, hist=False, label='ctrl')
+# sns.violinplot(data=df, y='Group', x='Tubule_intensity_std')
+# plt.title('Standard deviation per tubule intensity for tubules (edges) corresponding to nodes with degree greater '
+#           'than two', fontsize=20)
+# plt.xlabel('Intensity standard deviation', fontsize=18)
+# plt.ylabel('Group', fontsize=18)
+# # plt.legend()
+# plt.show()
+#
+# exit()
