@@ -457,7 +457,7 @@ def graph_node_connector(group, series):
     # path = '{confocal_data_path}Climp/new_op_jul/er_mean_proc/climp16_er_mean_proc_enhance_skel.png'
     path = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance_skel.png'
 
-    path_frame = f'{confocal_data_path}{group}/new_op_jul/skel/{group[0]}{series}/{group[0]}{series}_decon_t006_ch00_skel.png'
+    # path_frame = f'{confocal_data_path}{group}/new_op_jul/skel/{group[0]}{series}/{group[0]}{series}_decon_t006_ch00_skel.png'
 
 
     path_proc_enh = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance.png'
@@ -466,7 +466,7 @@ def graph_node_connector(group, series):
 
     path_er_proc = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc.png'
 
-    graph = skel_to_graph(path_frame)
+    graph = skel_to_graph(path)
 
     # all junction from the graph with degree > 2
     junctions = get_junctions(graph)
@@ -485,7 +485,6 @@ def graph_node_connector(group, series):
     # cost_arr[er_proc_bg] = 0
 
     for node in dict(graph.degree()):
-        # print(temp_graph[node])
 
         # access the first element of graph.neighbors
         neighbor = next(iter(graph.neighbors(node)))
@@ -501,37 +500,62 @@ def graph_node_connector(group, series):
         process_node(tgraph2, node)
 
 
+    # for (st, end) in tgraph2.edges():
+    #     print(st, end)
+    #
+    #
+    exclude_edges = []
+    for (node1, node2) in tgraph2.edges():
+        if tgraph2.degree(node1) == 1 or tgraph2.degree(node2) == 1:
+            exclude_edges.append((node1, node2))
+    #
+    # print(exclude_edges)
+    # exit()
+
     ### Plotting the updated graph
-    # deg_one_nodes, deg_two_nodes, high_deg_nodes = get_updated_degree_nodes(tgraph2)
-    #
-    # er_mean = imageio.imread(
-    #     f'{confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png')
-    # plt.imshow(er_mean, cmap='gray')
-    #
-    # for (start_node, end_node) in tgraph2.edges():
-    #     if tgraph2[start_node][end_node][0]:
-    #         ps = tgraph2[start_node][end_node][0]['pts']
-    #         plt.plot(ps[:, 1], ps[:, 0], 'green')
-    #
-    # if len(deg_one_nodes) != 0:
-    #     plt.plot(deg_one_nodes[:, 1], deg_one_nodes[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow',
+    deg_one_nodes, deg_two_nodes, high_deg_nodes = get_updated_degree_nodes(tgraph2)
+
+    er_mean = imageio.imread(
+        f'{confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png')
+    plt.imshow(er_mean, cmap='gray')
+
+    for (start_node, end_node) in tgraph2.edges():
+        if tgraph2[start_node][end_node][0]:
+            ps = tgraph2[start_node][end_node][0]['pts']
+            if (start_node, end_node) not in exclude_edges:
+                plt.plot(ps[:, 1], ps[:, 0], 'red')
+            else:
+                plt.plot(ps[:, 1], ps[:, 0], 'green')
+        # elif temp_graph[start_node][end_node][1]:
+        #     ps = tgraph2[start_node][end_node][1]['pts']
+        #     plt.plot(ps[:, 1], ps[:, 0], 'red')
+
+    if len(deg_one_nodes) != 0:
+        plt.plot(deg_one_nodes[:, 1], deg_one_nodes[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow',
+                 mew=0.5, markersize=3)
+
+    # if len(deg_two_nodes) != 0:
+    #     plt.plot(deg_two_nodes[:, 1], deg_two_nodes[:, 0], 'o', markerfacecolor='magenta', markeredgecolor='magenta',
     #              mew=0.5, markersize=3)
-    #
-    # # if len(deg_two_nodes) != 0:
-    # #     plt.plot(deg_two_nodes[:, 1], deg_two_nodes[:, 0], 'o', markerfacecolor='magenta', markeredgecolor='magenta',
-    # #              mew=0.5, markersize=3)
-    #
-    # if len(high_deg_nodes) != 0:
-    #     plt.plot(high_deg_nodes[:, 1], high_deg_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue',
-    #              mew=0.5, markersize=3)
-    #
-    # # plt.axis('off')
-    # # plt.savefig(f'graphs/connected/repair/{group}_{series}_edge_graph_projection_connected_final_v1', bbox_inches='tight', pad_inches=0)
-    # # # plt.savefig(f'graphs/connected/{group}_{series}_v2-2', bbox_inches='tight', pad_inches=0)
-    # # plt.close()
+
+    if len(high_deg_nodes) != 0:
+        plt.plot(high_deg_nodes[:, 1], high_deg_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue',
+                 mew=0.5, markersize=3)
+
+    # plt.axis('off')
+    # plt.savefig(f'graphs/connected/repair/{group}_{series}_edge_graph_projection_connected_final_v2', bbox_inches='tight', pad_inches=0)
+    # plt.savefig(f'graphs/connected/{group}_{series}_v2-2', bbox_inches='tight', pad_inches=0)
+    # plt.close()
     # #
-    # plt.show()
-    return tgraph2
+    plt.show()
+    # return tgraph2
+
+
+
+for i in range(1, 27):
+    graph_node_connector('ATL', i)
+
+exit()
 
 
 def node_connector(path_er, path_frame):
@@ -623,10 +647,12 @@ def runner(group, r_start, r_end):
     return l
 
 
-atl = runner('ATL', 1, 26)
-climp = runner('Climp', 1, 31)
-rtn = runner('RTN', 1, 29)
-ctrl = runner('Control', 1, 31)
+from statannot import add_stat_annotation
+
+atl = runner('ATL', 1, 10)
+climp = runner('Climp', 1, 10)
+rtn = runner('RTN', 1, 10)
+ctrl = runner('Control', 1, 10)
 
 atl_series = pd.Series(atl, name='ATL')
 climp_series = pd.Series(climp, name='Climp')
@@ -635,17 +661,30 @@ ctrl_series = pd.Series(ctrl, name='Control')
 
 df = pd.concat([atl_series, climp_series, rtn_series, ctrl_series], axis=1)
 
+
 df_long = pd.melt(df, var_name='Group', value_name='Length')
+
+
+
+
+print(df_long)
+exit()
+
 #
-# box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')]
-#
+box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')]
+
 ax = sns.boxplot(data=df_long, y='Group', x='Length')
+# ax = sns.violinplot(data=df_long, y='Length', x='Group')
 ax.set_xscale('log')
-#
-# annot = Annotator(ax, box_pairs, data=df_long, x='Length', y='Group')
-# annot.configure(test='Mann-Whitney', text_format='star', loc='outside')
-# annot.apply_and_annotate()
-#
+
+
+# test_results = add_stat_annotation(ax, data=df_long, y="Group", x="Length", box_pairs=[('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')], test='Mann-Whitney', text_format='star', loc='outside')
+
+annot = Annotator(ax, box_pairs, data=df_long, x='Length', y='Group')
+annot.configure(test='Mann-Whitney', text_format='star', loc='outside')
+annot.apply_and_annotate()
+
+
 plt.title('Count of edges corresponding to nodes with degree greater than two', fontsize=20)
 plt.xlabel('Number of edges', fontsize=18)
 plt.ylabel('Group', fontsize=18)
