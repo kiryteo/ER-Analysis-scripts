@@ -552,10 +552,12 @@ def graph_node_connector(group, series):
 
 
 
-for i in range(1, 27):
-    graph_node_connector('ATL', i)
 
-exit()
+
+# for i in range(1, 27):
+#     graph_node_connector('ATL', i)
+#
+# exit()
 
 
 def node_connector(path_er, path_frame):
@@ -593,6 +595,21 @@ def node_connector(path_er, path_frame):
         process_node(tgraph2, node)
 
     return tgraph2
+
+
+atl_t0 = node_connector('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/std_egfp/A1_decon_t000_ch00_std.png', '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t000_ch00_skel.png')
+
+atl_t1 = node_connector('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/std_egfp/A1_decon_t001_ch00_std.png', '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t001_ch00_skel.png')
+
+# t0 = skel_to_graph('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t000_ch00_skel.png')
+# t1 = skel_to_graph('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t001_ch00_skel.png')
+
+d1 = nx.optimize_graph_edit_distance(atl_t0, atl_t1)
+for v in d1:
+    print(v)
+# print(d1)
+
+exit()
 
 # graph = graph_node_connector('ATL', 1)
 # exit()
