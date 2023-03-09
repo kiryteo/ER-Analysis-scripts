@@ -21,6 +21,8 @@ from junction_analysis_modules import JunctionAnalysis as JA
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 
+junc_analysis = JA(confocal_data_path)
+
 
 def get_std_img(path):
     img = imageio.imread(path)
@@ -171,9 +173,10 @@ def calc_egfp_deposit(group, channel, num_series, region):
     sl = []
     for series_num in range(1, num_series + 1):
 
-        ref_junctions, per_frame_junctions, labelled_img = JA.label_junctions(group, series_num)
-        label_ids, unassigned_cc_dict = JA.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
-        iso, fuz, unk = JA.get_junction_areas(label_ids, unassigned_cc_dict)
+        ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions(group, series_num)
+        label_ids, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
+        junc_analysis = JA(confocal_data_path)
+        iso, fuz, unk = junc_analysis.get_junction_areas(label_ids, unassigned_cc_dict)
         # iso_cc = get_cc_ids(labelled_img, iso)
         if region == 'iso':
             region_cc = get_cc_ids(labelled_img, iso)
@@ -269,12 +272,14 @@ def junction_cc_mean_boxplot(channel, region):
 def cc_area_measure(group, region, rstart, rend):
     cc_area_list = []
 
+    junc_analysis = JA(confocal_data_path)
+
     for i in range(rstart, rend+1):
-        nps, skdata, labelled_img = label_junctions(group, i)
+        nps, skdata, labelled_img = junc_analysis.label_junctions(group, i)
         regions = regionprops(labelled_img)
 
-        label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
-        iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
+        label_vals, unassigned_cc_dict = junc_analysis.separate_junc_cc(nps, skdata, labelled_img)
+        iso, fuz, unk = junc_analysis.get_junction_areas(label_vals, unassigned_cc_dict)
         if region == 'iso':
             region_cc = get_cc_ids(labelled_img, iso)
         else:
@@ -341,24 +346,31 @@ def plot_cc_area(a1, a2, a3, c1, c2, c3, r1, r2, r3, ct1, ct2, ct3, region):
 
 
 def get_data_cc_area(region):
-    at1 = (pd.Series(cc_area_measure('ATL', region, 1, 10)))
-    cl1 = (pd.Series(cc_area_measure('Climp', region, 1, 10)))
-    rt1 = (pd.Series(cc_area_measure('RTN', region, 1, 10)))
-    ctrl1 = (pd.Series(cc_area_measure('Control', region, 1, 10)))
-    at2 = (pd.Series(cc_area_measure('ATL', region, 11, 20)))
-    cl2 = (pd.Series(cc_area_measure('Climp', region, 11, 20)))
-    rt2 = (pd.Series(cc_area_measure('RTN', region, 11, 20)))
-    ctrl2 = (pd.Series(cc_area_measure('Control', region, 11, 20)))
+    # at1 = (pd.Series(cc_area_measure('ATL', region, 1, 10)))
     at3 = (pd.Series(cc_area_measure('ATL', region, 21, 26)))
-    cl3 = (pd.Series(cc_area_measure('Climp', region, 21, 31)))
-    rt3 = (pd.Series(cc_area_measure('RTN', region, 21, 29)))
-    ctrl3 = (pd.Series(cc_area_measure('Control', region, 21, 31)))
 
-    plot_cc_area(at1, at2, at3, cl1, cl2, cl3, rt1, rt2, rt3, ctrl1, ctrl2, ctrl3, region)
+    sns.displot(at3)
+    plt.xlabel('CC Area', fontsize=15)
+    plt.title('ATL-Replicate3 fuzzy CC distribution', fontsize=20)
+    plt.show()
+
+    # cl1 = (pd.Series(cc_area_measure('Climp', region, 1, 10)))
+    # rt1 = (pd.Series(cc_area_measure('RTN', region, 1, 10)))
+    # ctrl1 = (pd.Series(cc_area_measure('Control', region, 1, 10)))
+    # at2 = (pd.Series(cc_area_measure('ATL', region, 11, 20)))
+    # cl2 = (pd.Series(cc_area_measure('Climp', region, 11, 20)))
+    # rt2 = (pd.Series(cc_area_measure('RTN', region, 11, 20)))
+    # ctrl2 = (pd.Series(cc_area_measure('Control', region, 11, 20)))
+    # at3 = (pd.Series(cc_area_measure('ATL', region, 21, 26)))
+    # cl3 = (pd.Series(cc_area_measure('Climp', region, 21, 31)))
+    # rt3 = (pd.Series(cc_area_measure('RTN', region, 21, 29)))
+    # ctrl3 = (pd.Series(cc_area_measure('Control', region, 21, 31)))
+    #
+    # plot_cc_area(at1, at2, at3, cl1, cl2, cl3, rt1, rt2, rt3, ctrl1, ctrl2, ctrl3, region)
 
 
-# get_data_cc_area('fuz')
-# exit()
+get_data_cc_area('fuz')
+exit()
 
 
 def calc_deposit(num_series, group, region):
@@ -372,7 +384,7 @@ def calc_deposit(num_series, group, region):
 
     for num in range(num_series, num_series + 1):
 
-        nps, skdata, labelled_img = label_junctions(group, num)
+        nps, skdata, labelled_img = junc_analysis.label_junctions(group, num)
         regions = regionprops(labelled_img)
 
         for num, reg in enumerate(regions):
@@ -387,12 +399,12 @@ def calc_deposit(num_series, group, region):
         exit()
 
         # label_vals: dict with ids as key and (x, y) as value
-        label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
+        label_vals, unassigned_cc_dict = junc_analysis.separate_junc_cc(nps, skdata, labelled_img)
         print(label_vals)
         exit()
 
         # iso, fuz, unk: list of lists with x, y
-        iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
+        iso, fuz, unk = junc_analysis.get_junction_areas(label_vals, unassigned_cc_dict)
 
         # iso_cc = get_cc_ids(labelled_img, iso)
         # region_cc:
@@ -462,13 +474,13 @@ def calc_deposit_net_norm(num_series, group, region):
     global ln_mch
 
     for num in range(num_series, num_series + 1):
-        nps, skdata, labelled_img = label_junctions(group, num)
+        nps, skdata, labelled_img = junc_analysis.label_junctions(group, num)
 
         # label_vals: dict with ids as key and (x, y) as value
-        label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
+        label_vals, unassigned_cc_dict = junc_analysis.separate_junc_cc(nps, skdata, labelled_img)
 
         # iso, fuz, unk: list of lists with x, y
-        iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
+        iso, fuz, unk = junc_analysis.get_junction_areas(label_vals, unassigned_cc_dict)
 
         if region == 'iso':
             region_cc = get_cc_ids(labelled_img, iso)
@@ -593,14 +605,14 @@ def calc_deposit_cc_norm(num_series, group, region):
     # sl = []
     for num in range(num_series, num_series + 1):
 
-        nps, skdata, labelled_img = label_junctions(group, num)
+        nps, skdata, labelled_img = junc_analysis.label_junctions(group, num)
 
         # label_vals: dict with ids as key and (x, y) as value
-        label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
+        label_vals, unassigned_cc_dict = junc_analysis.separate_junc_cc(nps, skdata, labelled_img)
         # print(label_vals)
 
         # iso, fuz, unk: list of lists with x, y
-        iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
+        iso, fuz, unk = junc_analysis.get_junction_areas(label_vals, unassigned_cc_dict)
 
         # iso_cc = get_cc_ids(labelled_img, iso)
         # region_cc:
@@ -1194,15 +1206,15 @@ def total_data_variation_plots(group, region, measure):
 # exit()
 
 def full_data_variation_plots(region, measure, channel):
-    a_r1_egfp = junc_line_mean_std('ATL', 1, 10, region, measure)
-    a_r2_egfp = junc_line_mean_std('ATL', 11, 20, region, measure)
-    a_r3_egfp = junc_line_mean_std('ATL', 21, 26, region, measure)
-    c_r1_egfp = junc_line_mean_std('Climp', 1, 10, region, measure)
-    c_r2_egfp = junc_line_mean_std('Climp', 11, 20, region, measure)
-    c_r3_egfp = junc_line_mean_std('Climp', 21, 31, region, measure)
-    r_r1_egfp = junc_line_mean_std('RTN', 1, 10, region, measure)
-    r_r2_egfp = junc_line_mean_std('RTN', 11, 20, region, measure)
-    r_r3_egfp = junc_line_mean_std('RTN', 21, 29, region, measure)
+    a_r1_egfp = junc_line_mean_std('ATL', 1, 2, region, measure)
+    a_r2_egfp = junc_line_mean_std('ATL', 11, 12, region, measure)
+    a_r3_egfp = junc_line_mean_std('ATL', 21, 22, region, measure)
+    c_r1_egfp = junc_line_mean_std('Climp', 1, 2, region, measure)
+    c_r2_egfp = junc_line_mean_std('Climp', 11, 12, region, measure)
+    c_r3_egfp = junc_line_mean_std('Climp', 21, 22, region, measure)
+    r_r1_egfp = junc_line_mean_std('RTN', 1, 2, region, measure)
+    r_r2_egfp = junc_line_mean_std('RTN', 11, 12, region, measure)
+    r_r3_egfp = junc_line_mean_std('RTN', 21, 22, region, measure)
     # ct_r1_egfp = junc_line_mean_std('Control', 1, 10, region, measure)
     # ct_r2_egfp = junc_line_mean_std('Control', 11, 20, region, measure)
     # ct_r3_egfp = junc_line_mean_std('Control', 21, 31, region, measure)
@@ -1213,6 +1225,9 @@ def full_data_variation_plots(region, measure, channel):
     df['Group'] = pd.Series(np.concatenate((['ATL']*len(a_r1_egfp), ['ATL']*len(a_r2_egfp), ['ATL']*len(a_r3_egfp), ['Climp']*len(c_r1_egfp), ['Climp']*len(c_r2_egfp), ['Climp']*len(c_r3_egfp), ['RTN']*len(r_r1_egfp), ['RTN']*len(r_r2_egfp), ['RTN']*len(r_r3_egfp))))#, ['Control']*len(ct_r1_egfp), ['Control']*len(ct_r2_egfp), ['Control']*len(ct_r3_egfp))))
     df['Replicate'] = pd.Series(np.concatenate((['R1']*len(a_r1_egfp), ['R2']*len(a_r2_egfp), ['R3']*len(a_r3_egfp), ['R1']*len(c_r1_egfp),['R2']*len(c_r2_egfp),['R3']*len(c_r3_egfp),['R1']*len(r_r1_egfp),['R2']*len(r_r2_egfp),['R3']*len(r_r3_egfp))))#,['R1']*len(ct_r1_egfp),['R2']*len(ct_r2_egfp),['R3']*len(ct_r3_egfp))))
     ax = sns.boxplot(data=df, x='Replicate', y='data_junc_CC_mean', hue='Group', dodge=True)#, yscale='log')
+
+    # sns.swarmplot(data=df, x='Replicate', y='data_junc_CC_mean', hue='Group', dodge=True, linewidth=0)
+
     # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
     # sns.boxplot(data=df, x='Group', y='CC_area', hue='replicate', color='white', dodge=True)
@@ -1233,9 +1248,9 @@ def full_data_variation_plots(region, measure, channel):
     plt.show()
 
 
-full_data_variation_plots('iso', 'std', 'mCherry')
+# full_data_variation_plots('iso', 'std', 'mCherry')
 # total_data_variation_plots('Control', 'iso', 'std')
-exit()
+# exit()
 
 
 def junc_line_charts_norm(ser_num, group, junc_num):

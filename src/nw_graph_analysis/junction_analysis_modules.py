@@ -1,6 +1,8 @@
 import numpy as np
 from skimage.measure import label, regionprops
 import itertools
+import sknw
+import imageio
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 
@@ -8,6 +10,13 @@ class JunctionAnalysis:
 
     def __init__(self, confocal_data_path):
         self.confocal_data_path = confocal_data_path
+
+    def skel_to_graph(self, skel_img_path):
+        """
+        @param skel_img_path:
+        @return:
+        """
+        return sknw.build_sknw(imageio.imread(skel_img_path), multi=True, iso=False)
 
     def get_junctions(self, graph):
         """
@@ -18,9 +27,7 @@ class JunctionAnalysis:
         # get all the nodes from the graph
         node_coords = np.array([graph.nodes[node]['o'] for node in graph.nodes()])
 
-        # graph.degree provides list of tuples with node id followed by its degree
-        junctions = [node_coords[node_num] for node_num, degree_val in enumerate(graph.degree) if degree_val[1] > 2]
-        return junctions
+        return [node_coords[node_num] for node_num, degree_val in enumerate(graph.degree) if degree_val[1] > 2]
 
     def get_all_junc(self, group, num_series):
         """
@@ -34,14 +41,16 @@ class JunctionAnalysis:
         mean_img = f'{self.confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
 
         # Get junction coordinates from projection frame
-        newps = self.get_junctions(mean_img)
+        graph = self.skel_to_graph(mean_img)
+        newps = self.get_junctions(graph)
 
         ref_junctions = [[each[0], each[1]] for each in newps]
 
         per_frame_junctions = []
         for frame in range(100):
             skeleton_path = f'{confocal_data_path}{group}/new_op_jul/skel/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
-            junctions = self.get_junctions(skeleton_path)
+            graph = self.skel_to_graph(skeleton_path)
+            junctions = self.get_junctions(graph)
 
             junc_array = [[junc[0], junc[1]] for junc in junctions]
             # sk_nps = np.array(sk_nps)

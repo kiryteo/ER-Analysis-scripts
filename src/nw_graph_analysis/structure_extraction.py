@@ -93,75 +93,65 @@ def preproc_groups(path, group, num_series):
                 f'{new_pref}Series{i:03d}_decon_converted/new_op_sept/preproc/C{i}/C{i}_decon_t0{j:02d}_ch00_proc.png',
                 processed_sample)
 
+# run Vessel2d.m to get the vessel enhancement output
+def get_skeleton(img_path):
+    """
+    Extracts the skeleton from a vessel-enhanced image.
 
-class StructureExtration:
+    @param img_path (str): The file path of the vessel-enhanced image.
+    @return: extracted skeleton (numpy.ndarray)
+    """
+    # Load the vessel-enhanced image using the imageio library
+    vess_enhanced_sample = imageio.imread(img_path)
 
-    def __init__(self):
-        pass
+    return pcv.morphology.skeletonize(mask=vess_enhanced_sample)
 
-    def
+def skel_to_graph(skel_img_path):
+    """
+    @param skel_img_path:
+    @return:
+    """
+    return sknw.build_sknw(imageio.imread(skel_img_path), multi=True, iso=False)
 
-    # run Vessel2d.m to get the vessel enhancement output
-    def get_skeleton(self, img_path):
-        """
-        Extracts the skeleton from a vessel-enhanced image.
+def get_tubules(graph):
+    """
 
-        @param img_path (str): The file path of the vessel-enhanced image.
-        @return: extracted skeleton (numpy.ndarray)
-        """
-        # Load the vessel-enhanced image using the imageio library
-        vess_enhanced_sample = imageio.imread(img_path)
+    @param graph: Input graph to obtain the edges (tubules)
+    @return: List of coordinates for all tubules
+    """
+    # store all the tubule coordinates (edges)
+    tubule_coords_list = []
 
-        return pcv.morphology.skeletonize(mask=vess_enhanced_sample)
+    # graph.edges provides list of tuples with start and end node of the edge
+    edges_list = graph.edges()
 
-    def skel_to_graph(self, skel_img_path):
-        """
+    # get the list of edge coordinates list
+    tubule_coords_list.extend(graph[start_node][end_node][0]['pts'] for start_node, end_node in edges_list)
 
-        @param skel_img_path:
-        @return:
-        """
-        return sknw.build_sknw(imageio.imread(skel_img_path), multi=True, iso=False)
+    return tubule_coords_list
 
-    def get_tubules(self, graph):
-        """
+def get_relevant_tubules(self, graph, relevant_nodes):
+    """
 
-        @param graph: Input graph to obtain the edges (tubules)
-        @return: List of coordinates for all tubules
-        """
-        # store all the tubule coordinates (edges)
-        tubule_coords_list = []
+    @param graph: Input graph from skeleton
+    @param relevant_nodes: nodes in the graph with degree > 2
+    @return: tubules corresponding to nodes with degree > 2
+    """
 
-        # graph.edges provides list of tuples with start and end node of the edge
-        edges_list = graph.edges()
+    node_set = graph.nodes()
+    edge_set = graph.edges()
 
-        # get the list of edge coordinates list
-        tubule_coords_list.extend(graph[start_node][end_node][0]['pts'] for start_node, end_node in edges_list)
+    # get the relevant nodes which provide start and end points
+    # for corresponding edge
+    relevant_node_list = []
+    for r_node in relevant_nodes:
+        for each in node_set:
+            node_val = node_set[each]['o']
+            # print(node_set[each]['o'])
+            if r_node[0] == node_val[0] and r_node[1] == node_val[1]:
+                relevant_node_list.append(each)
 
-        return tubule_coords_list
-
-    def get_relevant_tubules(self, graph, relevant_nodes):
-        """
-
-        @param graph: Input graph from skeleton
-        @param relevant_nodes: nodes in the graph with degree > 2
-        @return: tubules corresponding to nodes with degree > 2
-        """
-
-        node_set = graph.nodes()
-        edge_set = graph.edges()
-
-        # get the relevant nodes which provide start and end points
-        # for corresponding edge
-        relevant_node_list = []
-        for r_node in relevant_nodes:
-            for each in node_set:
-                node_val = node_set[each]['o']
-                # print(node_set[each]['o'])
-                if r_node[0] == node_val[0] and r_node[1] == node_val[1]:
-                    relevant_node_list.append(each)
-
-        return [graph[start_node][end_node][0]['pts'] for start_node, end_node in edge_set if
-                start_node in relevant_node_list and end_node in relevant_node_list]
+    return [graph[start_node][end_node][0]['pts'] for start_node, end_node in edge_set if start_node in relevant_node_list and end_node in relevant_node_list]
 
 
 def plot_original_graph(skel_img_path):
@@ -479,7 +469,8 @@ def graph_node_connector(group, series):
     graph = skel_to_graph(path)
 
     # all junction from the graph with degree > 2
-    junctions = JA.get_junctions(graph)
+    junc_analysis = JA(confocal_data_path)
+    junctions = junc_analysis.get_junctions(graph)
 
     relevant_nodes = np.array(junctions)
 
@@ -575,7 +566,8 @@ def node_connector(path_er, path_frame):
     graph = skel_to_graph(path_frame)
 
     # all junction from the graph with degree > 2
-    junctions = JA.get_junctions(graph)
+    junc_analysis = JA(confocal_data_path)
+    junctions = junc_analysis.get_junctions(graph)
 
     relevant_nodes = np.array(junctions)
 
@@ -607,19 +599,19 @@ def node_connector(path_er, path_frame):
     return tgraph2
 
 
-atl_t0 = node_connector('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/std_egfp/A1_decon_t000_ch00_std.png', '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t000_ch00_skel.png')
-
-atl_t1 = node_connector('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/std_egfp/A1_decon_t001_ch00_std.png', '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t001_ch00_skel.png')
-
-# t0 = skel_to_graph('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t000_ch00_skel.png')
-# t1 = skel_to_graph('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t001_ch00_skel.png')
-
-d1 = nx.optimize_graph_edit_distance(atl_t0, atl_t1)
-for v in d1:
-    print(v)
-# print(d1)
-
-exit()
+# atl_t0 = node_connector('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/std_egfp/A1_decon_t000_ch00_std.png', '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t000_ch00_skel.png')
+#
+# atl_t1 = node_connector('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/std_egfp/A1_decon_t001_ch00_std.png', '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t001_ch00_skel.png')
+#
+# # t0 = skel_to_graph('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t000_ch00_skel.png')
+# # t1 = skel_to_graph('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t001_ch00_skel.png')
+#
+# d1 = nx.optimize_graph_edit_distance(atl_t0, atl_t1)
+# for v in d1:
+#     print(v)
+# # print(d1)
+#
+# exit()
 
 # graph = graph_node_connector('ATL', 1)
 # exit()
@@ -639,7 +631,8 @@ def runner(group, r_start, r_end):
         path = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance_skel.png'
 
         graph = node_connector(path_er, path)
-        junctions = JA.get_junctions(graph)
+        junc_analysis = JA(confocal_data_path)
+        junctions = junc_analysis.get_junctions(graph)
         relevant_nodes = np.array(junctions)
         relevant_edges = get_relevant_tubules(graph, relevant_nodes)
 
@@ -651,47 +644,47 @@ def runner(group, r_start, r_end):
 
 from statannot import add_stat_annotation
 
-atl = runner('ATL', 1, 10)
-climp = runner('Climp', 1, 10)
-rtn = runner('RTN', 1, 10)
-ctrl = runner('Control', 1, 10)
-
-atl_series = pd.Series(atl, name='ATL')
-climp_series = pd.Series(climp, name='Climp')
-rtn_series = pd.Series(rtn, name='RTN')
-ctrl_series = pd.Series(ctrl, name='Control')
-
-df = pd.concat([atl_series, climp_series, rtn_series, ctrl_series], axis=1)
-
-
-df_long = pd.melt(df, var_name='Group', value_name='Length')
-
-
-
-
-print(df_long)
-exit()
-
+# atl = runner('ATL', 1, 10)
+# climp = runner('Climp', 1, 10)
+# rtn = runner('RTN', 1, 10)
+# ctrl = runner('Control', 1, 10)
 #
-box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')]
-
-ax = sns.boxplot(data=df_long, y='Group', x='Length')
-# ax = sns.violinplot(data=df_long, y='Length', x='Group')
-ax.set_xscale('log')
+# atl_series = pd.Series(atl, name='ATL')
+# climp_series = pd.Series(climp, name='Climp')
+# rtn_series = pd.Series(rtn, name='RTN')
+# ctrl_series = pd.Series(ctrl, name='Control')
+#
+# df = pd.concat([atl_series, climp_series, rtn_series, ctrl_series], axis=1)
+#
+#
+# df_long = pd.melt(df, var_name='Group', value_name='Length')
+#
+#
+#
+#
+# print(df_long)
+# exit()
+#
+# #
+# box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')]
+#
+# ax = sns.boxplot(data=df_long, y='Group', x='Length')
+# # ax = sns.violinplot(data=df_long, y='Length', x='Group')
+# ax.set_xscale('log')
 
 
 # test_results = add_stat_annotation(ax, data=df_long, y="Group", x="Length", box_pairs=[('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')], test='Mann-Whitney', text_format='star', loc='outside')
 
-annot = Annotator(ax, box_pairs, data=df_long, x='Length', y='Group')
-annot.configure(test='Mann-Whitney', text_format='star', loc='outside')
-annot.apply_and_annotate()
-
-
-plt.title('Count of edges corresponding to nodes with degree greater than two', fontsize=20)
-plt.xlabel('Number of edges', fontsize=18)
-plt.ylabel('Group', fontsize=18)
-plt.show()
-exit()
+# annot = Annotator(ax, box_pairs, data=df_long, x='Length', y='Group')
+# annot.configure(test='Mann-Whitney', text_format='star', loc='outside')
+# annot.apply_and_annotate()
+#
+#
+# plt.title('Count of edges corresponding to nodes with degree greater than two', fontsize=20)
+# plt.xlabel('Number of edges', fontsize=18)
+# plt.ylabel('Group', fontsize=18)
+# plt.show()
+# exit()
 
 
 # atl = runner('ATL', 1, 2)
@@ -754,7 +747,8 @@ def graph_plotter(group, series):
     # graph = skel_to_graph(path_frame)
     graph = graph_node_connector(group, series)
 
-    junctions = get_junctions(graph)
+    junc_analysis = JA(confocal_data_path)
+    junctions = junc_analysis.get_junctions(graph)
     relevant_nodes = np.array(junctions)
 
     ps = np.array([graph.nodes[i]['o'] for i in graph.nodes])
@@ -853,7 +847,8 @@ def rel_edges_length(group, r_start, r_end):
 
         path = f'{confocal_data_path}{group}/new_op_jul/skel/{group[0]}{i}/{group[0]}{i}_decon_t0{frame:02d}_ch00_skel.png'
         graph = skel_to_graph(path)
-        junctions = get_junctions(graph)
+        junc_analysis = JA(confocal_data_path)
+        junctions = junc_analysis.get_junctions(graph)
         relevant_nodes = np.array(junctions)
         relevant_edges = get_relevant_tubules(graph, relevant_nodes)
         l.extend(len(each) for each in relevant_edges)
@@ -881,7 +876,8 @@ def rel_edge_intensity(group, r_start, r_end):
         ip = (img - img.min()) / (img.max() - img.min())
         path = f'{confocal_data_path}{group}/new_op_jul/skel/{pref}{i}/{pref}{i}_decon_t0{frame:02d}_ch00_skel.png'
         graph = skel_to_graph(path)
-        junctions = get_junctions(graph)
+        junc_analysis = JA(confocal_data_path)
+        junctions = junc_analysis.get_junctions(graph)
         relevant_nodes = np.array(junctions)
         relevant_edges = get_relevant_tubules(graph, relevant_nodes)
         for edge in relevant_edges:
