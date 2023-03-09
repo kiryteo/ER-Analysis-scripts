@@ -2,8 +2,6 @@ import numpy as np
 from skimage.measure import label, regionprops
 import imageio
 import sknw
-# import skelnw
-# from skelnw import *
 import networkx as nx
 import itertools
 import seaborn as sns
@@ -18,6 +16,7 @@ from statsmodels.stats.multicomp import MultiComparison
 from scipy.stats import kruskal, mannwhitneyu
 
 from structure_extraction import node_connector
+from junction_analysis_modules import JunctionAnalysis as JA
 
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
@@ -47,63 +46,6 @@ def skel_to_graph(skel):
     return node_set, degree_list
 
 
-def get_junction_types(nps, lab):
-    """
-
-    @param nps: (ndarray) reference junctions
-    @param lab: (ndarray) connected components for junctions
-    @return: label_vals (dict) provides corresponding reference junctions per cc_id, assigned_components (list) provides cc with at least 1 reference junction
-    """
-    label_vals = {}
-
-    assigned_components = []
-
-    for each in nps:
-        if lab[each[0], each[1]] != 0:
-            if lab[each[0], each[1]] not in label_vals.keys():
-                label_vals[(lab[each[0], each[1]])] = []
-            label_vals[(lab[each[0], each[1]])].append([each[0], each[1]])
-            assigned_components.append(lab[each[0], each[1]])
-    return label_vals, assigned_components
-
-
-def get_uncertain_junctions(lab, skdata, num_components, assigned_components):
-    unassigned_components = [x for x in num_components if x not in assigned_components]
-
-    unassigned_cc_dict = {}
-
-    for each in skdata:
-        cc_label = lab[each[0], each[1]]
-        if cc_label != 0 and cc_label in unassigned_components:
-            if cc_label not in unassigned_cc_dict.keys():
-                unassigned_cc_dict[(lab[each[0], each[1]])] = []
-            unassigned_cc_dict[(lab[each[0], each[1]])].append([each[0], each[1]])
-    return unassigned_cc_dict
-
-
-def separate_junc_cc(nps, skdata, labelled_img):
-    regions = regionprops(labelled_img)
-
-    # cc_list = []
-    # for idx in range(1, labelled_img.max()):
-    #     lab_i = props[idx].label
-
-    # cc_area_dict = {}
-    # for idx, props in enumerate(regions):
-    #     cc_area_dict[idx] = props.area
-    # cc_area_dict[idx] = [props.area, props.axis_major_length]
-
-    num_components = np.unique(labelled_img)
-    # print(num_components)
-
-    label_vals, assigned_components = get_junction_types(nps, labelled_img)
-    # print(label_vals)
-
-    unassigned_cc_dict = get_uncertain_junctions(labelled_img, skdata, num_components, assigned_components)
-
-    # return label_vals, cc_area_dict, unassigned_cc_dict
-    return label_vals, unassigned_cc_dict
-
 
 def get_junctions(er_input_path, mean_img):
 # def get_junctions(mean_img):
@@ -112,19 +54,6 @@ def get_junctions(er_input_path, mean_img):
     @param mean_img: Input mean projection skel image (ndarray, binary)
     @return: list of Nodes with degree > 2
     """
-
-    # if mean_img is obtained via skel mean projection
-    # step, then use otsu else directly read the image
-
-    # mean_proj_img = imageio.imread(mean_img)
-    #
-    # # perform thresholding + binarization + skel
-    # thresh = threshold_otsu(mean_proj_img)
-    # bin_img = mean_proj_img > thresh
-
-    # skel = pcv.morphology.skeletonize(mask=mean_proj_img)
-
-
 
     conn_graph = node_connector(er_input_path, mean_img)
 
@@ -197,71 +126,6 @@ def get_all_junc(group, num_series):
     return nps, skdata
 
 
-def label_junctions(group, series_num):
-    # fig, ax = plt.subplots()
-    nps, skdata = get_all_junc(group, series_num)
-
-    nps = np.array(nps)
-    skdata = np.array(skdata)
-
-    spread_img = np.zeros((128, 128))
-    for each in skdata:
-        spread_img[each[0], each[1]] = 255.
-
-    # fig.add_subplot(1,2,1)
-    # plt.imshow(spread_img)
-    #
-    labelled_img = label(spread_img, connectivity=2)
-    # imageio.imsave('Climp12_junc_labelled.png', labelled_img)
-    # fig.add_subplot(1,2,2)
-    # plt.axis('off')
-    # plt.imshow(labelled_img, cmap='gray')
-    # plt.savefig('Climp12_junc_labelled.png', bbox_inches='tight', pad_inches=0, dpi=700)
-    # plt.close()
-    # plt.show()
-    # exit()
-
-    return nps, skdata, labelled_img
-
-
-def get_junction_areas(label_vals, unassigned_cc_dict):
-    isolated_junc = []
-    isolated_junc_area = []
-    fuzzy_junc = []
-    fuzzy_junc_area = []
-    for k, v in label_vals.items():
-        if k != 0:
-            if len(v) == 1:
-                isolated_junc.append(v[0])
-                # try:
-                #     isolated_junc_area.append(cc_area_dict[k])
-                # except:
-                #     pass
-            else:
-                fuzzy_junc.append(v)
-                # try:
-                #     fuzzy_junc_area.append(cc_area_dict[k])
-                # except:
-                #     pass
-
-    unknown_junc = [v for k, v in unassigned_cc_dict.items()]
-    iso = np.array(isolated_junc)
-
-    fuz = list(itertools.chain.from_iterable(fuzzy_junc))
-    fuz = np.array(fuz)
-
-    unk = list(itertools.chain.from_iterable(unknown_junc))
-    unk = np.array(unk)
-
-    # iso_area = list(itertools.chain.from_iterable(isolated_junc_area))
-    # iso_area = np.array(isolated_junc_area)
-
-    # fuz_area = list(itertools.chain.from_iterable(fuzzy_junc_area))
-    # fuz_area = np.array(fuzzy_junc_area)
-
-    return iso, fuz, unk  # , iso_area, fuz_area
-
-
 def get_cc_ids(labelled_img, region):
     """
 
@@ -283,14 +147,33 @@ def get_cc_ids(labelled_img, region):
     return [i for i, num in enumerate(dt_vals) if i > 0 and len(num) != 0]
 
 
+# def get_cc_ids(labelled_img, region):
+#     """
+#     Returns the IDs of connected components that intersect with the specified region.
+#
+#     Args:
+#     labelled_img: (numpy.ndarray) Image with connected components labelled by integers.
+#     region: (list of tuples) List of pixel coordinates defining the region.
+#
+#     Returns:
+#     A list of integers representing the IDs of connected components that intersect with the region.
+#     """
+#     cc_ids = set()
+#     for loc in region:
+#         cc_id = labelled_img[loc]
+#         if cc_id != 0:
+#             cc_ids.add(cc_id)
+#     return sorted(cc_ids)
+
+
 def calc_egfp_deposit(group, channel, num_series, region):
     ch = 1 if channel == 'mCherry' else 0
     sl = []
     for series_num in range(1, num_series + 1):
 
-        nps, skdata, labelled_img = label_junctions(group, series_num)
-        label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
-        iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
+        ref_junctions, per_frame_junctions, labelled_img = JA.label_junctions(group, series_num)
+        label_ids, unassigned_cc_dict = JA.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
+        iso, fuz, unk = JA.get_junction_areas(label_ids, unassigned_cc_dict)
         # iso_cc = get_cc_ids(labelled_img, iso)
         if region == 'iso':
             region_cc = get_cc_ids(labelled_img, iso)

@@ -24,8 +24,28 @@ import numpy as np
 from sklearn.neighbors import NearestNeighbors
 from statannotations.Annotator import Annotator
 
+from junction_analysis_modules import JunctionAnalysis as JA
+
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
+
+
+# group = 'ATL'
+# series = 1
+#
+# path = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance_skel.png'
+#
+# # path_frame = f'{confocal_data_path}{group}/new_op_jul/skel/{group[0]}{series}/{group[0]}{series}_decon_t006_ch00_skel.png'
+#
+# graph = sknw.build_sknw(imageio.imread(path), multi=True, iso=False)
+# for each in graph.nodes():
+#     print(each)
+#
+# for each in graph.nodes:
+#     print(each)
+#
+#
+# exit()
 
 
 def get_std_img(path):
@@ -74,84 +94,74 @@ def preproc_groups(path, group, num_series):
                 processed_sample)
 
 
-# run Vessel2d.m to get the vessel enhancement output
-def get_skeleton(img_path):
-    """
-    Extracts the skeleton from a vessel-enhanced image.
+class StructureExtration:
 
-    @param img_path (str): The file path of the vessel-enhanced image.
-    @return: extracted skeleton (numpy.ndarray)
-    """
-    # Load the vessel-enhanced image using the imageio library
-    vess_enhanced_sample = imageio.imread(img_path)
+    def __init__(self):
+        pass
 
-    return pcv.morphology.skeletonize(mask=vess_enhanced_sample)
+    def
 
+    # run Vessel2d.m to get the vessel enhancement output
+    def get_skeleton(self, img_path):
+        """
+        Extracts the skeleton from a vessel-enhanced image.
 
-def skel_to_graph(skel_img_path):
-    """
+        @param img_path (str): The file path of the vessel-enhanced image.
+        @return: extracted skeleton (numpy.ndarray)
+        """
+        # Load the vessel-enhanced image using the imageio library
+        vess_enhanced_sample = imageio.imread(img_path)
 
-    @param skel_img_path:
-    @return:
-    """
-    return sknw.build_sknw(imageio.imread(skel_img_path), multi=True, iso=False)
+        return pcv.morphology.skeletonize(mask=vess_enhanced_sample)
 
+    def skel_to_graph(self, skel_img_path):
+        """
 
-def get_junctions(graph):
-    """
+        @param skel_img_path:
+        @return:
+        """
+        return sknw.build_sknw(imageio.imread(skel_img_path), multi=True, iso=False)
 
-    @param graph: Input graph to obtain the junctions
-    @return: nodes (junctions) with degree > 2
-    """
-    # get all the nodes from the graph
-    node_coords = np.array([graph.nodes[node]['o'] for node in graph.nodes()])
+    def get_tubules(self, graph):
+        """
 
-    # graph.degree provides list of tuples with node id followed by its degree
+        @param graph: Input graph to obtain the edges (tubules)
+        @return: List of coordinates for all tubules
+        """
+        # store all the tubule coordinates (edges)
+        tubule_coords_list = []
 
-    return [node_coords[node_num] for node_num, degree_val in enumerate(graph.degree) if degree_val[1] > 2]
+        # graph.edges provides list of tuples with start and end node of the edge
+        edges_list = graph.edges()
 
+        # get the list of edge coordinates list
+        tubule_coords_list.extend(graph[start_node][end_node][0]['pts'] for start_node, end_node in edges_list)
 
-def get_tubules(graph):
-    """
+        return tubule_coords_list
 
-    @param graph: Input graph to obtain the edges (tubules)
-    @return: List of coordinates for all tubules
-    """
-    # store all the tubule coordinates (edges)
-    tubule_coords_list = []
+    def get_relevant_tubules(self, graph, relevant_nodes):
+        """
 
-    # graph.edges provides list of tuples with start and end node of the edge
-    edges_list = graph.edges()
+        @param graph: Input graph from skeleton
+        @param relevant_nodes: nodes in the graph with degree > 2
+        @return: tubules corresponding to nodes with degree > 2
+        """
 
-    # get the list of edge coordinates list
-    tubule_coords_list.extend(graph[start_node][end_node][0]['pts'] for start_node, end_node in edges_list)
+        node_set = graph.nodes()
+        edge_set = graph.edges()
 
-    return tubule_coords_list
+        # get the relevant nodes which provide start and end points
+        # for corresponding edge
+        relevant_node_list = []
+        for r_node in relevant_nodes:
+            for each in node_set:
+                node_val = node_set[each]['o']
+                # print(node_set[each]['o'])
+                if r_node[0] == node_val[0] and r_node[1] == node_val[1]:
+                    relevant_node_list.append(each)
 
-
-def get_relevant_tubules(graph, relevant_nodes):
-    """
-
-    @param graph: Input graph from skeleton
-    @param relevant_nodes: nodes in the graph with degree > 2
-    @return: tubules corresponding to nodes with degree > 2
-    """
-
-    node_set = graph.nodes()
-    edge_set = graph.edges()
-
-    # get the relevant nodes which provide start and end points
-    # for corresponding edge
-    relevant_node_list = []
-    for r_node in relevant_nodes:
-        for each in node_set:
-            node_val = node_set[each]['o']
-            # print(node_set[each]['o'])
-            if r_node[0] == node_val[0] and r_node[1] == node_val[1]:
-                relevant_node_list.append(each)
-
-    return [graph[start_node][end_node][0]['pts'] for start_node, end_node in edge_set if
-            start_node in relevant_node_list and end_node in relevant_node_list]
+        return [graph[start_node][end_node][0]['pts'] for start_node, end_node in edge_set if
+                start_node in relevant_node_list and end_node in relevant_node_list]
 
 
 def plot_original_graph(skel_img_path):
@@ -469,7 +479,7 @@ def graph_node_connector(group, series):
     graph = skel_to_graph(path)
 
     # all junction from the graph with degree > 2
-    junctions = get_junctions(graph)
+    junctions = JA.get_junctions(graph)
 
     relevant_nodes = np.array(junctions)
 
@@ -565,7 +575,7 @@ def node_connector(path_er, path_frame):
     graph = skel_to_graph(path_frame)
 
     # all junction from the graph with degree > 2
-    junctions = get_junctions(graph)
+    junctions = JA.get_junctions(graph)
 
     relevant_nodes = np.array(junctions)
 
@@ -619,31 +629,6 @@ exit()
 # exit()
 
 
-# def runner(group, r_start, r_end):
-#     l = []
-#
-#     pref = 'Ct' if group == 'Control' else group[0]
-#     for i, frame in itertools.product(range(r_start, r_end + 1), range(100)):
-#         # input = imageio.imread(f'{confocal_data_path}{group}/files/{group[0]}{i}_decon_t0{frame:02d}_ch00.tif')
-#         # ip = (input - input.min())/(input.max() - input.min())
-#         er_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_egfp/{pref}{i}_decon_t0{frame:02d}_ch00_std.png'
-#
-#         path = f'{confocal_data_path}{group}/new_op_jul/skel/{pref}{i}/{pref}{i}_decon_t0{frame:02d}_ch00_skel.png'
-#         # graph = skel_to_graph(path)
-#
-#         graph = node_connector(er_path, path)
-#         junctions = get_junctions(graph)
-#         relevant_nodes = np.array(junctions)
-#         relevant_edges = get_relevant_tubules(graph, relevant_nodes)
-#
-#         # print(relevant_edges)
-#
-#         l.append(len(relevant_edges))
-#
-#     # plot_total_graph(path, graph, relevant_nodes, relevant_edges)
-#     return l
-
-
 def runner(group, r_start, r_end):
     l = []
 
@@ -654,7 +639,7 @@ def runner(group, r_start, r_end):
         path = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance_skel.png'
 
         graph = node_connector(path_er, path)
-        junctions = get_junctions(graph)
+        junctions = JA.get_junctions(graph)
         relevant_nodes = np.array(junctions)
         relevant_edges = get_relevant_tubules(graph, relevant_nodes)
 
