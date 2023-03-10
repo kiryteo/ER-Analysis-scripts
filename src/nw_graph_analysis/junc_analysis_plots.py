@@ -15,7 +15,7 @@ import statannot
 from statsmodels.stats.multicomp import MultiComparison
 from scipy.stats import kruskal, mannwhitneyu
 
-from structure_extraction import node_connector
+from structure_extraction import node_connector, get_updated_degree_nodes
 from junction_analysis_modules import JunctionAnalysis as JA
 
 
@@ -369,8 +369,8 @@ def get_data_cc_area(region):
     # plot_cc_area(at1, at2, at3, cl1, cl2, cl3, rt1, rt2, rt3, ctrl1, ctrl2, ctrl3, region)
 
 
-get_data_cc_area('fuz')
-exit()
+# get_data_cc_area('fuz')
+# exit()
 
 
 def calc_deposit(num_series, group, region):
@@ -724,6 +724,111 @@ def calc_deposit_cc_norm(num_series, group, region):
 
     # return ln_egfp.T, ln_mch.T, region_cc_coords
     return op_egfp, op_mch, region_cc_coords
+
+
+def get_intersection(a, b):
+    return np.array([x for x in a if np.any(np.all(x == b, axis=1))])
+
+
+def get_tubule_length(group, series_num):
+    er_input_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{series_num}_er_mean.png'
+    skel_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean_proc/{group.lower()}{series_num}_er_mean_proc_enhance_skel.png'
+
+    conn_graph = node_connector(er_input_path, skel_path)
+
+    deg_one_nodes, deg_two_nodes, high_deg_nodes = get_updated_degree_nodes(conn_graph)
+
+    # graph = junc_analysis.skel_to_graph(mean_img)
+    ref_junctions = junc_analysis.get_junctions(conn_graph)
+
+    ref_junctions = [[each[0], each[1]] for each in ref_junctions]
+
+    per_frame_junctions = []
+    for frame in range(100):
+        er_path = f'{confocal_data_path}{group}/new_op_jul/std_egfp/{group[0]}{series_num}_decon_t0{frame:02d}_ch00_std.png'
+        skeleton_path = f'{confocal_data_path}{group}/new_op_jul/skel/{group[0]}{series_num}/{group[0]}{series_num}_decon_t0{frame:02d}_ch00_skel.png'
+
+        # er_img = imageio.imread(er_path)
+        # plt.imshow(er_img, cmap='gray')
+
+        graph = node_connector(er_path, skeleton_path)
+
+        # exclude_edges = [(node1, node2) for node1, node2 in graph.edges() if graph.degree(node1) == 1 or graph.degree(node2) == 1]
+        #
+        # for (start_node, end_node) in graph.edges():
+        #     if graph[start_node][end_node][0]:
+        #         ps = graph[start_node][end_node][0]['pts']
+        #         if (start_node, end_node) not in exclude_edges:
+        #             plt.plot(ps[:, 1], ps[:, 0], 'red')
+        #         else:
+        #             plt.plot(ps[:, 1], ps[:, 0], 'green')
+        #
+        # deg_one_nodes, deg_two_nodes, high_deg_nodes = get_updated_degree_nodes(graph)
+        #
+        # if len(deg_one_nodes) != 0:
+        #     plt.plot(deg_one_nodes[:, 1], deg_one_nodes[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow',
+        #              mew=0.5, markersize=3)
+        #
+        # if len(high_deg_nodes) != 0:
+        #     plt.plot(high_deg_nodes[:, 1], high_deg_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue',
+        #              mew=0.5, markersize=3)
+        #
+        # plt.show()
+
+        junctions = junc_analysis.get_junctions(graph)
+
+        junc_array = [[junc[0], junc[1]] for junc in junctions]
+        # sk_nps = np.array(sk_nps)
+        per_frame_junctions.extend(junc_array)
+
+    # exit()
+
+    ref_junctions = np.array(ref_junctions)
+    per_frame_junctions = np.array(per_frame_junctions)
+
+    spread_img = np.zeros((128, 128))
+    for each in per_frame_junctions:
+        spread_img[each[0], each[1]] = 255.
+
+    labelled_img = label(spread_img, connectivity=2)
+
+
+    # label_vals: dict with ids as key and (x, y) as value
+    label_vals, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
+
+    # iso, fuz, unk: list of lists with x, y
+    iso, fuz, unk = junc_analysis.get_junction_areas(label_vals, unassigned_cc_dict)
+
+    # Find the intersection of iso and fuz with high_deg_nodes
+    intersection_iso = get_intersection(iso, high_deg_nodes)
+    intersection_fuz = get_intersection(fuz, high_deg_nodes)
+
+    # Find the nodes in conn_graph that have an intersection with iso or fuz
+    iso_ids = [k for k in conn_graph.nodes if (conn_graph.nodes[k]['o'][0] in intersection_iso[:, 0] and conn_graph.nodes[k]['o'][1] in intersection_iso[:, 1])]
+    fuz_ids = [k for k in conn_graph.nodes if (conn_graph.nodes[k]['o'][0] in intersection_fuz[:, 0] and conn_graph.nodes[k]['o'][1] in intersection_fuz[:, 1])]
+
+    # Find the edges between iso-iso, iso-fuz, fuz-fuz
+    iso_iso_edges = [(u, v) for (u, v) in conn_graph.edges() if (u in iso_ids and v in iso_ids)]
+    # iso_fuz_edges = [(u, v) for (u, v) in conn_graph.edges() if ((u in iso_ids and v in fuz_ids) or (u in fuz_ids and v in iso_ids))]
+    # fuz_fuz_edges = [(u, v) for (u, v) in conn_graph.edges() if (u in fuz_ids and v in fuz_ids)]
+
+    # Find the length of each edge in iso-iso
+    iso_iso_length = [conn_graph[u][v][0]['weight'] for (u, v) in iso_iso_edges]
+
+    return iso_iso_length
+    # plt.hist(iso_iso_length)
+    # plt.show()
+
+
+l = []
+for i in range(1, 11):
+    ln = get_tubule_length('ATL', i)
+    l.extend(ln)
+
+
+plt.hist(l)
+plt.show()
+exit()
 
 
 def get_above_mean_across_groups():
