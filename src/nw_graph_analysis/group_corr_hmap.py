@@ -1,3 +1,149 @@
+import skimage
+from skimage import io, filters, morphology, measure, util
+from scipy.ndimage import distance_transform_edt
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+import imageio
+import cv2
+
+# import seaborn as sns
+# import matplotlib.pyplot as plt
+# from statannot import add_stat_annotation
+#
+# # Create a sample data
+# data = {'Group': ['ATL', 'ATL', 'ATL', 'ATL', 'ATL', 'ATL', 'ATL', 'ATL', 'ATL', 'ATL',
+#                   'Climp', 'Climp', 'Climp', 'Climp', 'Climp', 'Climp', 'Climp', 'Climp', 'Climp', 'Climp',
+#                   'RTN', 'RTN', 'RTN', 'RTN', 'RTN', 'RTN', 'RTN', 'RTN', 'RTN', 'RTN',
+#                   'Control', 'Control', 'Control', 'Control', 'Control', 'Control', 'Control', 'Control', 'Control', 'Control'],
+#         'Length': [205, 189, 73, 246, 185, 210, 183, 192, 220, 111,
+#                    127, 125, 142, 182, 40, 85, 34, 109, 50, 112,
+#                    144, 95, 126, 129, 99, 101, 140, 189, 209, 175,
+#                    76, 40, 53, 77, 76, 100, 92, 103, 91, 120]}
+#
+# df = pd.DataFrame(data)
+#
+# # Set the order of the groups
+# group_order = ['ATL', 'Climp', 'RTN', 'Control']
+#
+# # Create the violinplot
+# # fig, ax = plt.subplots(figsize=(8, 6))
+# fig, ax = plt.subplots()
+# sns.violinplot(x='Length', y='Group', data=df, order=group_order, ax=ax)
+#
+# # Add statistical annotations
+# test_results = add_stat_annotation(ax, x='Length', y='Group', data=df, order=group_order,
+#                                    box_pairs=[('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'),
+#                                               ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')],
+#                                    test='Mann-Whitney', text_format='simple', loc='outside', verbose=2)
+#
+# plt.show()
+
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Define the variables
+variables = ["Isolated CC mean", "ERmoxGFP", "mCherry", "Mean", "Standard Deviation"]
+
+# Define the data (replace the values with the actual data)
+isolated_cc_mean = [2, 3, 4, 5]
+er_moxgfp = [4, 3, 2, 1]
+m_cherry = [1, 2, 3, 4]
+mean = [5, 1, 2, 3]
+std_dev = [3, 4, 5, 1]
+
+# Create the radar plot
+fig = plt.figure(figsize=(6, 6))
+ax = fig.add_subplot(111, polar=True)
+theta = np.linspace(0, 2*np.pi, len(variables), endpoint=False)
+theta += np.pi/2
+data = [isolated_cc_mean, er_moxgfp, m_cherry, mean, std_dev]
+for i in range(len(data)):
+    data[i].append(data[i][0])
+ax.plot(theta, isolated_cc_mean)
+ax.fill(theta, isolated_cc_mean, alpha=0.25)
+ax.plot(theta, er_moxgfp)
+ax.fill(theta, er_moxgfp, alpha=0.25)
+ax.plot(theta, m_cherry)
+ax.fill(theta, m_cherry, alpha=0.25)
+ax.plot(theta, mean)
+ax.fill(theta, mean, alpha=0.25)
+ax.plot(theta, std_dev)
+ax.fill(theta, std_dev, alpha=0.25)
+ax.set_xticks(theta[:-1])
+# ax.set_xticklabels(variables)
+ax.set_ylim([0, max(max(data))*1.1])
+ax.set_title("Radar Plot")
+plt.show()
+
+exit()
+
+
+# import scipy
+#
+# import imageio
+# from skimage.filters import threshold_otsu
+# import numpy as np
+# import cv2
+#
+#
+# img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/er_mean_proc/climp22_er_mean_proc.png')
+#
+# thr = threshold_otsu(img)
+# # print(thr)
+# import copy
+#
+# op = copy.deepcopy(img)
+# # op = (img > thr)
+#
+# smoothed = cv2.GaussianBlur(img, (5, 5), 0)
+# gradient_x = cv2.Sobel(smoothed, cv2.CV_64F, 1, 0, ksize=3)
+# gradient_y = cv2.Sobel(smoothed, cv2.CV_64F, 0, 1, ksize=3)
+# gradient_mag = np.sqrt(gradient_x**2 + gradient_y**2)
+#
+# plt.imshow(gradient_mag)
+# plt.show()
+#
+# op[gradient_mag <= thr] = 0
+#
+# peaks , _ = scipy.signal.find_peaks(op.flatten())
+# # print(peaks)
+# radius = 5
+#
+# mask = np.zeros_like(op)
+# for peak in peaks:
+#     y, x = np.unravel_index(peak, img.shape)
+#     mask[max(y-radius,0):min(y+radius+1,img.shape[0]),
+#     max(x-radius,0):min(x+radius+1,img.shape[1])] = 1
+# peaks_masked = np.where(mask.flatten())[0]
+#
+# selected_peaks = []
+# for peak in peaks_masked:
+#     y, x = np.unravel_index(peak, img.shape)
+#     sub_image = img[max(y-radius,0):min(y+radius+1,img.shape[0]),
+#                 max(x-radius,0):min(x+radius+1, img.shape[1])]
+#     sub_peak_y, sub_peak_x = np.unravel_index(sub_image.argmax(), sub_image.shape)
+#     selected_peaks.append((sub_peak_y + y - radius, sub_peak_x + x - radius))
+#
+# print(set(selected_peaks))
+# exit()
+
+
+
+# plt.imshow(img, cmap='gray')
+# for peak in peaks:
+#     y, x = np.unravel_index(peak, img.shape)
+#     # cv2.circle(img, (x, y), 5, (0, 0, 255), 2)
+#     plt.plot(x, y, 'o')
+#
+# plt.show()
+# # cv2.imshow('dfd', img)
+# # cv2.waitKey(0)
+# # cv2.destroyAllWindows()
+#
+# exit()
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -5,30 +151,36 @@ import numpy as np
 # Load the images
 # img1 = plt.imread('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/roi/Control/Control_6_edge_graph_projection_1.png')
 
-img1 = plt.imread('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/graphs/ATL_4_edge_graph_projection.png')
+
+for i in range(1, 32):
+    img1 = plt.imread(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/graphs/RTN_{i}_edge_graph_projection.png')
+    img2 = plt.imread(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/graphs/connected/repair/RTN_{i}_edge_graph_projection_connected_final_v2.png')
+# img3 = plt.imread('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/graphs/connected/Control_8_edge_graph_projection_connected_nbrs_v2.png')
 
 
-img2 = plt.imread('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/graphs/ATL_4_edge_graph_projection_updated.png')
+    # Create the figure and axes
+    fig, axs = plt.subplots(1, 2, figsize=(10, 5))
 
-# Create the figure and axes
-fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+    plt.axis('off')
 
-plt.axis('off')
+    # Display the first image
+    axs[0].imshow(img1)
+    # axs[0].set_title('Graph RoI')
+    axs[0].set_title('Initial graph')
+    axs[0].axis('off')
+    # Display the second image
+    # axs[1].imshow(img2)
+    # axs[1].set_title('Near node connections')
+    # axs[1].axis('off')
+    # Show the plot
 
-# Display the first image
-axs[0].imshow(img1)
-# axs[0].set_title('Graph RoI')
-axs[0].set_title('Initial graph')
-axs[0].axis('off')
-# Display the second image
-axs[1].imshow(img2)
-axs[1].set_title('Updated graph with near node connections')
-axs[1].axis('off')
-# Show the plot
+    axs[1].imshow(img2)
+    axs[1].set_title('Connected graph')
+    axs[1].axis('off')
 
-plt.savefig('ATL_4_updated', bbox_inches='tight', pad_inches=0.1)
-# plt.show()
-plt.close()
+    plt.savefig(f'repaired_graphs/RTN_{i}_graph_versions_v1', bbox_inches='tight', pad_inches=0.1)
+    # plt.show()
+    plt.close()
 
 exit()
 

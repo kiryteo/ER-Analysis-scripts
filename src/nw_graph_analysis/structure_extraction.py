@@ -596,6 +596,8 @@ def node_connector(path_er, path_frame):
     for node in tgraph.nodes():
         process_node(tgraph2, node)
 
+    # deg_one_nodes, deg_two_nodes, high_deg_nodes = get_updated_degree_nodes(tgraph2)
+
     return tgraph2
 
 

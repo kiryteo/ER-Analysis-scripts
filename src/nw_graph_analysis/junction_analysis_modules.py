@@ -42,9 +42,9 @@ class JunctionAnalysis:
 
         # Get junction coordinates from projection frame
         graph = self.skel_to_graph(mean_img)
-        newps = self.get_junctions(graph)
+        ref_junctions = self.get_junctions(graph)
 
-        ref_junctions = [[each[0], each[1]] for each in newps]
+        ref_junctions = [[each[0], each[1]] for each in ref_junctions]
 
         per_frame_junctions = []
         for frame in range(100):
