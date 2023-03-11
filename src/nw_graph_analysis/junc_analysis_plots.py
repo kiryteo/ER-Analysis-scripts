@@ -835,31 +835,11 @@ def tubule_sequence_analysis(group, series_num, connection):
     edges, conn_graph = get_tubule_data(group, series_num, connection)
 
     if edges:
-        # er_input_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{series_num}_er_mean.png'
-        # #
-        # er = imageio.imread(er_input_path)
-        #
-        # er = (er - er.min()) / (er.max() - er.min())
         edge_pts = [conn_graph[u][v][0]['pts'] for (u, v) in edges]
-        vals = []
-
-
 
         group_pref = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
 
         seq_data = []
-
-        # for i in range(100):
-        #     er_input_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_egfp/{group_pref[group]}{series_num}_decon_t0{i:02d}_ch00_std.png'
-        #     er = imageio.imread(er_input_path)
-        #     er = (er - er.min()) / (er.max() - er.min())
-        #
-        #     l = []
-        #     for each in edge_pts:
-        #         l.append(np.mean(er[each]))
-        #         seq_data.append(l)
-
-        # return seq_data
 
         for each in edge_pts:
             l = []
@@ -919,28 +899,15 @@ exit()
 # exit()
 
 def plot_seq_mean_tubule_mean(group, connection):
-    data = pkl.load(open(f'{group.lower()}_{connection}.pkl', 'rb'))
-    r1 = data[:10]
-    d1 = []
-    for each in r1:
-        try:
-            d1.extend(np.mean(i) for i in each)
-        except:
-            pass
-    r2 = data[10:20]
-    d2 = []
-    for each in r2:
-        try:
-            d2.extend(np.mean(i) for i in each)
-        except:
-            pass
-    r3 = data[20:]
-    d3 = []
-    for each in r3:
-        try:
-            d3.extend(np.mean(i) for i in each)
-        except:
-            pass
+
+    with open(f'{group.lower()}_{connection}.pkl', 'rb') as f:
+        data = pkl.load(f)
+
+    # data = pkl.load(open(f'{group.lower()}_{connection}.pkl', 'rb'))
+    d1 = [np.mean(i) for each in data[:10] for i in each if len(i) > 0]
+    d2 = [np.mean(i) for each in data[10:20] for i in each if len(i) > 0]
+    d3 = [np.mean(i) for each in data[20:] for i in each if len(i) > 0]
+
     return d1, d2, d3
 
 
