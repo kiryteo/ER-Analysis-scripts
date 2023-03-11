@@ -14,6 +14,7 @@ from scipy.stats import pearsonr
 import statannot
 from statsmodels.stats.multicomp import MultiComparison
 from scipy.stats import kruskal, mannwhitneyu
+import pickle as pkl
 
 from structure_extraction import node_connector, get_updated_degree_nodes
 from junction_analysis_modules import JunctionAnalysis as JA
@@ -873,20 +874,40 @@ def tubule_sequence_analysis(group, series_num, connection):
         return seq_data
 
 
-import pickle as pkl
-#
-# with open('atl_iso-iso.pkl', 'wb') as fl:
-#     data = pkl.dump(np.array(tubule_sequence_analysis('ATL')))
 
-l = []
-for i in range(1, 27):
-    seq_data = np.array(tubule_sequence_analysis('ATL', i, 'iso-iso'))
-    l.append(seq_data)
+def create_tubule_seq_pickles(group, total_series, connection):
+    l1 = []
+    for i in range(1, total_series+1):
+        seq_data = np.array(tubule_sequence_analysis(group, i, connection))
+        l1.append(seq_data)
 
-with open('atl_iso-iso.pkl', 'wb') as fl:
-    data = pkl.dump(l, fl)
+    with open(f'{group.lower()}_{connection}.pkl', 'wb') as fl:
+        pkl.dump(l1, fl)
 
+
+# create_tubule_seq_pickles('ATL', 26, 'iso-fuz')
+create_tubule_seq_pickles('Climp', 31, 'iso-fuz')
+create_tubule_seq_pickles('Control', 31, 'iso-fuz')
+create_tubule_seq_pickles('RTN', 29, 'iso-fuz')
+
+create_tubule_seq_pickles('ATL', 26, 'fuz-fuz')
+create_tubule_seq_pickles('Climp', 31, 'fuz-fuz')
+create_tubule_seq_pickles('Control', 31, 'fuz-fuz')
+create_tubule_seq_pickles('RTN', 29, 'fuz-fuz')
 exit()
+
+# atl_iso_iso_data = pkl.load(open('atl_iso-iso.pkl', 'rb'))
+# climp_iso_iso_data = pkl.load(open('climp_iso-iso.pkl', 'rb'))
+# rtn_iso_iso_data = pkl.load(open('rtn_iso-iso.pkl', 'rb'))
+# ctrl_iso_iso_data = pkl.load(open('ctrl_iso-iso.pkl', 'rb'))
+
+
+def plot_seq_mean_tubule_mean(group):
+    data = f'{group}_iso_iso_data'
+    r1 = data[:10]
+    r2 = data[10:20]
+    r3 = data[20:]
+    return r1, r2, r3
 
 
 
