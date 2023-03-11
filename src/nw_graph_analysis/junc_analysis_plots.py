@@ -18,7 +18,6 @@ from scipy.stats import kruskal, mannwhitneyu
 from structure_extraction import node_connector, get_updated_degree_nodes
 from junction_analysis_modules import JunctionAnalysis as JA
 
-
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 
 junc_analysis = JA(confocal_data_path)
@@ -48,9 +47,8 @@ def skel_to_graph(skel):
     return node_set, degree_list
 
 
-
 def get_junctions(er_input_path, mean_img):
-# def get_junctions(mean_img):
+    # def get_junctions(mean_img):
     """
 
     @param mean_img: Input mean projection skel image (ndarray, binary)
@@ -60,7 +58,6 @@ def get_junctions(er_input_path, mean_img):
     conn_graph = node_connector(er_input_path, mean_img)
 
     node_set, degree_list = conn_graph.nodes, conn_graph.degree
-
 
     # skel = imageio.imread(mean_img)
     #
@@ -74,6 +71,7 @@ def get_junctions(er_input_path, mean_img):
     node_coords = np.array([node_set[node]['o'] for node in node_set])
 
     return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
+
 
 # group = 'ATL'
 # num_series = 1
@@ -95,7 +93,6 @@ def get_all_junc(group, num_series):
     er_mean_img = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{num_series}_er_mean.png'
     skel_mean_img = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
 
-
     # conn_graph = node_connector(er_mean_img, skel_mean_img)
     # #
     # node_set, degree_list = conn_graph.nodes, conn_graph.degree
@@ -108,13 +105,11 @@ def get_all_junc(group, num_series):
     nps = [[each[0], each[1]] for each in newps]
     skdata = []
 
-
     ### Get junction coordinates from projection frame
     # newps = get_junctions(er_mean_img, skel_mean_img)
     # newps = get_junctions(skel_mean_img)
 
     for frame in range(100):
-
         er_img = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_egfp/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_std.png'
         sk_img = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
 
@@ -274,7 +269,7 @@ def cc_area_measure(group, region, rstart, rend):
 
     junc_analysis = JA(confocal_data_path)
 
-    for i in range(rstart, rend+1):
+    for i in range(rstart, rend + 1):
         nps, skdata, labelled_img = junc_analysis.label_junctions(group, i)
         regions = regionprops(labelled_img)
 
@@ -318,9 +313,16 @@ def plot_cc_area(a1, a2, a3, c1, c2, c3, r1, r2, r3, ct1, ct2, ct3, region):
     #                                         ['RTN'] * len(cc_area_rtn), ['Control'] * len(cc_area_ctrl))))
 
     df['CC_area'] = pd.Series(np.concatenate((a1, a2, a3, c1, c2, c3, r1, r2, r3, ct1, ct2, ct3)))
-    df['Group'] = pd.Series(np.concatenate((['ATL']*len(a1), ['ATL']*len(a2), ['ATL']*len(a3), ['Climp']*len(c1), ['Climp']*len(c2), ['Climp']*len(c3), ['RTN']*len(r1), ['RTN']*len(r2), ['RTN']*len(r3), ['Control']*len(r3), ['Control']*len(r3), ['Control']*len(r3))))
+    df['Group'] = pd.Series(np.concatenate((
+                                           ['ATL'] * len(a1), ['ATL'] * len(a2), ['ATL'] * len(a3), ['Climp'] * len(c1),
+                                           ['Climp'] * len(c2), ['Climp'] * len(c3), ['RTN'] * len(r1),
+                                           ['RTN'] * len(r2), ['RTN'] * len(r3), ['Control'] * len(r3),
+                                           ['Control'] * len(r3), ['Control'] * len(r3))))
 
-    df['Replicate'] = pd.Series(np.concatenate((['R1']*len(a1), ['R2']*len(a2), ['R3']*len(a3), ['R1']*len(c1),['R2']*len(c2),['R3']*len(c3),['R1']*len(r1),['R2']*len(r2),['R3']*len(r3),['R1']*len(ct1),['R2']*len(ct2),['R3']*len(ct3))))
+    df['Replicate'] = pd.Series(np.concatenate((['R1'] * len(a1), ['R2'] * len(a2), ['R3'] * len(a3), ['R1'] * len(c1),
+                                                ['R2'] * len(c2), ['R3'] * len(c3), ['R1'] * len(r1), ['R2'] * len(r2),
+                                                ['R3'] * len(r3), ['R1'] * len(ct1), ['R2'] * len(ct2),
+                                                ['R3'] * len(ct3))))
 
     # ax = sns.swarmplot(data=df, x='Group', y='CC_area', hue='Replicate', dodge=True)
     # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
@@ -331,9 +333,18 @@ def plot_cc_area(a1, a2, a3, c1, c2, c3, r1, r2, r3, ct1, ct2, ct3, region):
 
     plt.yscale('log')
 
-    box_pairs = box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'ATL'), ('R1', 'Control')), (('R1', 'Climp'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'Control')), (('R1', 'RTN'), ('R1', 'Control')), (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'ATL'), ('R2', 'Control')), (('R2', 'Climp'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'Control')), (('R2', 'RTN'), ('R2', 'Control')), (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'ATL'), ('R3', 'Control')), (('R3', 'Climp'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'Control')), (('R3', 'RTN'), ('R3', 'Control'))]
+    box_pairs = box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')),
+                             (('R1', 'ATL'), ('R1', 'Control')), (('R1', 'Climp'), ('R1', 'RTN')),
+                             (('R1', 'Climp'), ('R1', 'Control')), (('R1', 'RTN'), ('R1', 'Control')),
+                             (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')),
+                             (('R2', 'ATL'), ('R2', 'Control')), (('R2', 'Climp'), ('R2', 'RTN')),
+                             (('R2', 'Climp'), ('R2', 'Control')), (('R2', 'RTN'), ('R2', 'Control')),
+                             (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')),
+                             (('R3', 'ATL'), ('R3', 'Control')), (('R3', 'Climp'), ('R3', 'RTN')),
+                             (('R3', 'Climp'), ('R3', 'Control')), (('R3', 'RTN'), ('R3', 'Control'))]
 
-    statannot.add_stat_annotation(ax, x='Replicate', y='CC_area', hue='Group', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+    statannot.add_stat_annotation(ax, x='Replicate', y='CC_area', hue='Group', data=df, box_pairs=box_pairs,
+                                  test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
 
     region_name = 'Isolated' if region == 'iso' else 'Fuzzy'
 
@@ -512,29 +523,8 @@ def calc_deposit_net_norm(num_series, group, region):
             img_egfp = imageio.imread(path_EGFP)
             skel = imageio.imread(path_skel)
 
-            # print(img_egfp.max())
-            # print(img_egfp.min())
-
-            # plt.imshow(skel)
-            # plt.show()
-            # print(np.where(skel))
             data_egfp = img_egfp[np.where(skel)]
 
-            # print(max(data_egfp))
-            # print(min(data_egfp))
-            # dd = np.where(img_egfp) - np.where(skel)
-            # print(dd)
-            # exit()
-
-            # print(img_egfp[np.where(skel)])
-            # exit()
-
-            # print(data)
-            # print(len(data))
-            # exit()
-            # minval = min(data_egfp)
-            # maxval = max(data_egfp)
-            # mnmx_egfp.append((minval, maxval))
 
             egfp_norm = (img_egfp - min(data_egfp)) / (max(data_egfp) - min(data_egfp))
 
@@ -545,13 +535,8 @@ def calc_deposit_net_norm(num_series, group, region):
             if path_mch is not None:
                 img_mch = imageio.imread(path_mch)
 
-                # print(img_mch.max())
-                # print(img_mch.min())
-
                 data_mch = img_mch[np.where(skel)]
 
-                # print(max(data_mch))
-                # print(min(data_mch))
                 # minval = min(data_mch)
                 # maxval = max(data_mch)
                 #
@@ -702,9 +687,6 @@ def calc_deposit_cc_norm(num_series, group, region):
 
         ln_mch = np.array(ln_mch)
 
-        # print(ln_egfp.shape)
-        # print(ln_egfp[0])
-
         op_egfp = []
         op_mch = []
 
@@ -732,7 +714,8 @@ def create_tubule_junc_plot(er_path, skeleton_path):
 
     graph = node_connector(er_path, skeleton_path)
 
-    exclude_edges = [(node1, node2) for node1, node2 in graph.edges() if graph.degree(node1) == 1 or graph.degree(node2) == 1]
+    exclude_edges = [(node1, node2) for node1, node2 in graph.edges() if
+                     graph.degree(node1) == 1 or graph.degree(node2) == 1]
 
     for (start_node, end_node) in graph.edges():
         if graph[start_node][end_node][0]:
@@ -756,22 +739,30 @@ def create_tubule_junc_plot(er_path, skeleton_path):
 
 
 def get_intersection(a, b):
+    # get common elements between 2 ndarrays (list of nodes)
     return np.array([x for x in a if np.any(np.all(x == b, axis=1))])
 
 
 def get_edges(conn_graph, iso_ids, fuz_ids, connection):
     # Find the edges between iso-iso, iso-fuz, fuz-fuz
     if connection == 'iso-iso':
-        return [(u, v) for (u, v) in conn_graph.edges() if (u in iso_ids and v in iso_ids)]
+        if len(iso_ids) > 0:
+            return [(u, v) for (u, v) in conn_graph.edges() if (u in iso_ids and v in iso_ids)]
 
     elif connection == 'iso-fuz':
-        return [(u, v) for (u, v) in conn_graph.edges() if ((u in iso_ids and v in fuz_ids) or (u in fuz_ids and v in iso_ids))]
+        if len(iso_ids) > 0 and len(fuz_ids) > 0:
+            return [(u, v) for (u, v) in conn_graph.edges() if
+                ((u in iso_ids and v in fuz_ids) or (u in fuz_ids and v in iso_ids))]
 
     else:
-        return [(u, v) for (u, v) in conn_graph.edges() if (u in fuz_ids and v in fuz_ids)]
+        if len(fuz_ids) > 0:
+            return [(u, v) for (u, v) in conn_graph.edges() if (u in fuz_ids and v in fuz_ids)]
 
 
-def get_tubule_length(group, series_num, connection):
+def get_tubule_data(group, series_num, connection):
+
+    group_pref = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
+
     # sourcery skip: inline-immediately-returned-variable
     er_input_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{series_num}_er_mean.png'
     skel_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean_proc/{group.lower()}{series_num}_er_mean_proc_enhance_skel.png'
@@ -787,8 +778,8 @@ def get_tubule_length(group, series_num, connection):
 
     per_frame_junctions = []
     for frame in range(100):
-        er_path = f'{confocal_data_path}{group}/new_op_jul/std_egfp/{group[0]}{series_num}_decon_t0{frame:02d}_ch00_std.png'
-        skeleton_path = f'{confocal_data_path}{group}/new_op_jul/skel/{group[0]}{series_num}/{group[0]}{series_num}_decon_t0{frame:02d}_ch00_skel.png'
+        er_path = f'{confocal_data_path}{group}/new_op_jul/std_egfp/{group_pref[group]}{series_num}_decon_t0{frame:02d}_ch00_std.png'
+        skeleton_path = f'{confocal_data_path}{group}/new_op_jul/skel/{group_pref[group]}{series_num}/{group_pref[group]}{series_num}_decon_t0{frame:02d}_ch00_skel.png'
 
         graph = node_connector(er_path, skeleton_path)
 
@@ -799,7 +790,6 @@ def get_tubule_length(group, series_num, connection):
         junc_array = [[junc[0], junc[1]] for junc in junctions]
         per_frame_junctions.extend(junc_array)
 
-
     ref_junctions = np.array(ref_junctions)
     per_frame_junctions = np.array(per_frame_junctions)
 
@@ -809,23 +799,186 @@ def get_tubule_length(group, series_num, connection):
 
     labelled_img = label(spread_img, connectivity=2)
 
-
     # label_vals: dict with ids as key and (x, y) as value
     label_vals, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
 
     # iso, fuz, unk: list of lists with x, y
     iso, fuz, unk = junc_analysis.get_junction_areas(label_vals, unassigned_cc_dict)
 
-    # Find the intersection of iso and fuz with high_deg_nodes
+    # Find the iso and fuz from high_deg_nodes
     intersection_iso = get_intersection(iso, high_deg_nodes)
     intersection_fuz = get_intersection(fuz, high_deg_nodes)
 
-    # Find the nodes in conn_graph that have an intersection with iso or fuz
-    iso_ids = [k for k in conn_graph.nodes if (conn_graph.nodes[k]['o'][0] in intersection_iso[:, 0] and conn_graph.nodes[k]['o'][1] in intersection_iso[:, 1])]
-    fuz_ids = [k for k in conn_graph.nodes if (conn_graph.nodes[k]['o'][0] in intersection_fuz[:, 0] and conn_graph.nodes[k]['o'][1] in intersection_fuz[:, 1])]
+    # Find the iso/ fuz nodes in conn_graph
+
+    if len(intersection_iso) > 0:
+        iso_ids = [k for k in conn_graph.nodes if (
+                conn_graph.nodes[k]['o'][0] in intersection_iso[:, 0] and conn_graph.nodes[k]['o'][
+            1] in intersection_iso[:, 1])]
+    else:
+        iso_ids = []
+    if len(intersection_fuz) > 0:
+        fuz_ids = [k for k in conn_graph.nodes if (
+                conn_graph.nodes[k]['o'][0] in intersection_fuz[:, 0] and conn_graph.nodes[k]['o'][
+            1] in intersection_fuz[:, 1])]
+    else:
+        fuz_ids = []
 
     edges = get_edges(conn_graph, iso_ids, fuz_ids, connection)
 
+    return edges, conn_graph
+
+
+def tubule_sequence_analysis(group, series_num, connection):
+
+    edges, conn_graph = get_tubule_data(group, series_num, connection)
+
+    if edges:
+        # er_input_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{series_num}_er_mean.png'
+        # #
+        # er = imageio.imread(er_input_path)
+        #
+        # er = (er - er.min()) / (er.max() - er.min())
+        edge_pts = [conn_graph[u][v][0]['pts'] for (u, v) in edges]
+        vals = []
+
+
+
+        group_pref = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
+
+        seq_data = []
+
+        # for i in range(100):
+        #     er_input_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_egfp/{group_pref[group]}{series_num}_decon_t0{i:02d}_ch00_std.png'
+        #     er = imageio.imread(er_input_path)
+        #     er = (er - er.min()) / (er.max() - er.min())
+        #
+        #     l = []
+        #     for each in edge_pts:
+        #         l.append(np.mean(er[each]))
+        #         seq_data.append(l)
+
+        # return seq_data
+
+        for each in edge_pts:
+            l = []
+            for i in range(100):
+                er_input_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_egfp/{group_pref[group]}{series_num}_decon_t0{i:02d}_ch00_std.png'
+                er = imageio.imread(er_input_path)
+                er = (er - er.min()) / (er.max() - er.min())
+
+                l.append(np.mean(er[each]))
+            seq_data.append(l)
+
+        return seq_data
+
+
+import pickle as pkl
+#
+# with open('atl_iso-iso.pkl', 'wb') as fl:
+#     data = pkl.dump(np.array(tubule_sequence_analysis('ATL')))
+
+l = []
+for i in range(1, 27):
+    seq_data = np.array(tubule_sequence_analysis('ATL', i, 'iso-iso'))
+    l.append(seq_data)
+
+with open('atl_iso-iso.pkl', 'wb') as fl:
+    data = pkl.dump(l, fl)
+
+exit()
+
+
+
+mean_vals_atl = []
+mean_vals_climp = []
+mean_vals_rtn = []
+mean_vals_ctrl = []
+for i in range(1, 11):
+    seq_data_atl = np.array(tubule_sequence_analysis('ATL', i, 'iso-iso'))
+    seq_data_climp = np.array(tubule_sequence_analysis('Climp', i, 'iso-iso'))
+    seq_data_rtn = np.array(tubule_sequence_analysis('RTN', i, 'iso-iso'))
+    seq_data_ctrl = np.array(tubule_sequence_analysis('Control', i, 'iso-iso'))
+
+    mean_vals_atl.extend(np.mean(each) for each in seq_data_atl)
+    mean_vals_climp.extend(np.mean(each) for each in seq_data_climp)
+    mean_vals_rtn.extend(np.mean(each) for each in seq_data_rtn)
+    mean_vals_ctrl.extend(np.mean(each) for each in seq_data_ctrl)
+
+# mean_vals = []
+# std_vals = []
+# for each in seq_data_atl:
+#     mean_vals.append(np.mean(each))
+#     std_vals.append(np.std(each))
+
+sns.distplot(mean_vals_atl, hist=False, label='ATL')
+sns.distplot(mean_vals_climp, hist=False, label='Climp')
+sns.distplot(mean_vals_rtn, hist=False, label='RTN')
+sns.distplot(mean_vals_ctrl, hist=False, label='Control')
+plt.legend()
+plt.title('Mean over sequence for tubule intensity mean value')
+# plt.hist(mean_vals)
+plt.show()
+
+exit()
+
+
+def tubule_intensity_analysis(group, series_num, connection, measure):
+    edges, conn_graph = get_tubule_data(group, series_num, connection)
+
+    if edges:
+        er_input_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{series_num}_er_mean.png'
+    #
+        er = imageio.imread(er_input_path)
+
+        er = (er - er.min()) / (er.max() - er.min())
+
+        edge_pts = [conn_graph[u][v][0]['pts'] for (u, v) in edges]
+        vals = []
+        if measure == 'mean':
+            vals.extend(np.mean(er[each]) for each in edge_pts)
+        else:
+            vals.extend(np.std(er[each]) for each in edge_pts)
+
+        return vals
+
+
+# for i in range(1, 11):
+#     tubule_intensity_analysis('Control', i, 'iso-iso')
+# exit()
+
+
+atl = []
+climp = []
+rtn = []
+ctrl = []
+
+
+for i in range(1, 11):
+    vals = tubule_intensity_analysis('ATL', i, 'iso-iso', 'mean')
+    atl.extend(vals)
+    vals = tubule_intensity_analysis('Climp', i, 'iso-iso', 'mean')
+    climp.extend(vals)
+    vals = tubule_intensity_analysis('RTN', i, 'iso-iso', 'mean')
+    rtn.extend(vals)
+    vals = tubule_intensity_analysis('Control', i, 'iso-iso', 'mean')
+    ctrl.extend(vals)
+
+df = pd.DataFrame()
+
+
+df['Tubule mean '] = pd.Series(np.concatenate((a1, a2, a3, c1, c2, c3, r1, r2, r3)))
+
+sns.distplot(atl, hist=False, label='ATL')
+sns.distplot(climp, hist=False, label='Climp')
+sns.distplot(rtn, hist=False, label='RTN')
+sns.distplot(ctrl, hist=False, label='Control')
+plt.show()
+exit()
+
+
+def tubule_length_analysis(conn_graph, edges):
+    # sourcery skip: inline-immediately-returned-variable
     # Find the length of each edge in iso-iso
     connection_length = [conn_graph[u][v][0]['weight'] for (u, v) in edges]
 
@@ -835,22 +988,32 @@ def get_tubule_length(group, series_num, connection):
 def get_group_len_data(group, connection):
     l1 = []
     for i in range(1, 11):
-        ln = get_tubule_length(group, i, connection)
+        edges, conn_graph = get_tubule_data(group, i, connection)
+        ln = tubule_length_analysis(conn_graph, edges)
         l1.extend(ln)
+    return l1
 
 
-atl = get_group_len_data('ATL', 'iso-iso')
-climp = get_group_len_data('Climp', 'iso-iso')
+atl1 = get_group_len_data('ATL', 'iso-iso')
+atl2 = get_group_len_data('ATL', 'iso-fuz')
+atl3 = get_group_len_data('ATL', 'fuz-fuz')
+
+climp1 = get_group_len_data('Climp', 'iso-iso')
+climp2 = get_group_len_data('Climp', 'iso-fuz')
+climp3 = get_group_len_data('Climp', 'fuz-fuz')
 # ctrl = get_group_len_data('Control', 'iso-iso')
-rtn = get_group_len_data('RTN', 'iso-iso')
+rtn1 = get_group_len_data('RTN', 'iso-iso')
+rtn2 = get_group_len_data('RTN', 'iso-fuz')
+rtn3 = get_group_len_data('RTN', 'fuz-fuz')
 
 
-sns.distplot(atl, hist=False, label='ATL')
-sns.distplot(climp, hist=False, label='Climp')
-# sns.distplot(ctrl, hist=False, label='Control')
-sns.distplot(rtn, hist=False, label='RTN')
-plt.show()
-exit()
+
+# sns.distplot(atl1+atl2+atl3, hist=False, label='ATL')
+# sns.distplot(climp1+climp2+climp3, hist=False, label='Climp')
+# # sns.distplot(ctrl, hist=False, label='Control')
+# sns.distplot(rtn1+rtn2+rtn3, hist=False, label='RTN')
+# plt.show()
+# exit()
 
 
 def get_above_mean_across_groups():
@@ -1238,7 +1401,6 @@ def correlation_analysis(group, repl_start, repl_end, region):
 
 
 def corr_plots(region):
-
     a1 = correlation_analysis('ATL', 1, 10, region)
     a2 = correlation_analysis('ATL', 11, 20, region)
     a3 = correlation_analysis('ATL', 21, 26, region)
@@ -1253,21 +1415,29 @@ def corr_plots(region):
 
     df['Channel correlation'] = pd.Series(np.concatenate((a1, a2, a3, c1, c2, c3, r1, r2, r3)))
 
-    df['Group'] = pd.Series(np.concatenate((['ATL']*len(a1), ['ATL']*len(a2), ['ATL']*len(a3), ['Climp']*len(c1), ['Climp']*len(c2), ['Climp']*len(c3), ['RTN']*len(r1), ['RTN']*len(r2), ['RTN']*len(r3))))
-    df['Replicate'] = pd.Series(np.concatenate((['R1']*len(a1), ['R2']*len(a2), ['R3']*len(a3), ['R1']*len(c1),['R2']*len(c2),['R3']*len(c3),['R1']*len(r1),['R2']*len(r2),['R3']*len(r3))))
+    df['Group'] = pd.Series(np.concatenate((
+                                           ['ATL'] * len(a1), ['ATL'] * len(a2), ['ATL'] * len(a3), ['Climp'] * len(c1),
+                                           ['Climp'] * len(c2), ['Climp'] * len(c3), ['RTN'] * len(r1),
+                                           ['RTN'] * len(r2), ['RTN'] * len(r3))))
+    df['Replicate'] = pd.Series(np.concatenate((['R1'] * len(a1), ['R2'] * len(a2), ['R3'] * len(a3), ['R1'] * len(c1),
+                                                ['R2'] * len(c2), ['R3'] * len(c3), ['R1'] * len(r1), ['R2'] * len(r2),
+                                                ['R3'] * len(r3))))
 
-    ax = sns.boxplot(data=df, x='Replicate', y='Channel correlation', hue='Group', dodge=True)#, yscale='log')
+    ax = sns.boxplot(data=df, x='Replicate', y='Channel correlation', hue='Group', dodge=True)  # , yscale='log')
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
 
-    box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'RTN')), (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'RTN')), (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'RTN'))]
-    statannot.add_stat_annotation(ax, x='Replicate', y='Channel correlation', hue='Group', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
-
+    box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'RTN')),
+                 (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'RTN')),
+                 (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'RTN'))]
+    statannot.add_stat_annotation(ax, x='Replicate', y='Channel correlation', hue='Group', data=df, box_pairs=box_pairs,
+                                  test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
 
     # plt.suptitle('Isolated CC area across conditions', fontsize=20)
     # plt.title('Standard Deviation per sequence for junction CC mean intensity (isolated junctions)', fontsize=18)
     # measure_name = 'Standard deviation' if measure == 'std' else 'Mean'
     region_name = 'isolated' if region == 'iso' else 'fuzzy'
-    plt.title(f'Cross correlation between EGFP and mCherry channels in {region_name} CC mean intensity sequences', fontsize=18)
+    plt.title(f'Cross correlation between EGFP and mCherry channels in {region_name} CC mean intensity sequences',
+              fontsize=18)
     plt.grid(True)
     plt.xlabel('Replicate', fontsize=18)
     plt.ylabel('Pearson correlation coefficient value', fontsize=18)
@@ -1348,10 +1518,22 @@ def full_data_variation_plots(region, measure, channel):
 
     df = pd.DataFrame()
 
-    df['data_junc_CC_mean'] = pd.Series(np.concatenate((a_r1_egfp, a_r2_egfp, a_r3_egfp, c_r1_egfp, c_r2_egfp, c_r3_egfp, r_r1_egfp, r_r2_egfp, r_r3_egfp)))#, ct_r1_egfp, ct_r2_egfp, ct_r3_egfp)))
-    df['Group'] = pd.Series(np.concatenate((['ATL']*len(a_r1_egfp), ['ATL']*len(a_r2_egfp), ['ATL']*len(a_r3_egfp), ['Climp']*len(c_r1_egfp), ['Climp']*len(c_r2_egfp), ['Climp']*len(c_r3_egfp), ['RTN']*len(r_r1_egfp), ['RTN']*len(r_r2_egfp), ['RTN']*len(r_r3_egfp))))#, ['Control']*len(ct_r1_egfp), ['Control']*len(ct_r2_egfp), ['Control']*len(ct_r3_egfp))))
-    df['Replicate'] = pd.Series(np.concatenate((['R1']*len(a_r1_egfp), ['R2']*len(a_r2_egfp), ['R3']*len(a_r3_egfp), ['R1']*len(c_r1_egfp),['R2']*len(c_r2_egfp),['R3']*len(c_r3_egfp),['R1']*len(r_r1_egfp),['R2']*len(r_r2_egfp),['R3']*len(r_r3_egfp))))#,['R1']*len(ct_r1_egfp),['R2']*len(ct_r2_egfp),['R3']*len(ct_r3_egfp))))
-    ax = sns.boxplot(data=df, x='Replicate', y='data_junc_CC_mean', hue='Group', dodge=True)#, yscale='log')
+    df['data_junc_CC_mean'] = pd.Series(np.concatenate((
+                                                       a_r1_egfp, a_r2_egfp, a_r3_egfp, c_r1_egfp, c_r2_egfp, c_r3_egfp,
+                                                       r_r1_egfp, r_r2_egfp,
+                                                       r_r3_egfp)))  # , ct_r1_egfp, ct_r2_egfp, ct_r3_egfp)))
+    df['Group'] = pd.Series(np.concatenate((
+                                           ['ATL'] * len(a_r1_egfp), ['ATL'] * len(a_r2_egfp), ['ATL'] * len(a_r3_egfp),
+                                           ['Climp'] * len(c_r1_egfp), ['Climp'] * len(c_r2_egfp),
+                                           ['Climp'] * len(c_r3_egfp), ['RTN'] * len(r_r1_egfp),
+                                           ['RTN'] * len(r_r2_egfp), ['RTN'] * len(
+                                               r_r3_egfp))))  # , ['Control']*len(ct_r1_egfp), ['Control']*len(ct_r2_egfp), ['Control']*len(ct_r3_egfp))))
+    df['Replicate'] = pd.Series(np.concatenate((['R1'] * len(a_r1_egfp), ['R2'] * len(a_r2_egfp),
+                                                ['R3'] * len(a_r3_egfp), ['R1'] * len(c_r1_egfp),
+                                                ['R2'] * len(c_r2_egfp), ['R3'] * len(c_r3_egfp),
+                                                ['R1'] * len(r_r1_egfp), ['R2'] * len(r_r2_egfp), ['R3'] * len(
+        r_r3_egfp))))  # ,['R1']*len(ct_r1_egfp),['R2']*len(ct_r2_egfp),['R3']*len(ct_r3_egfp))))
+    ax = sns.boxplot(data=df, x='Replicate', y='data_junc_CC_mean', hue='Group', dodge=True)  # , yscale='log')
 
     # sns.swarmplot(data=df, x='Replicate', y='data_junc_CC_mean', hue='Group', dodge=True, linewidth=0)
 
@@ -1360,15 +1542,19 @@ def full_data_variation_plots(region, measure, channel):
     # sns.boxplot(data=df, x='Group', y='CC_area', hue='replicate', color='white', dodge=True)
     # hue_order = ['ATL', 'Climp', 'RTN', 'Control']
     # box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'ATL'), ('R1', 'Control')), (('R1', 'Climp'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'Control')), (('R1', 'RTN'), ('R1', 'Control')), (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'ATL'), ('R2', 'Control')), (('R2', 'Climp'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'Control')), (('R2', 'RTN'), ('R2', 'Control')), (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'ATL'), ('R3', 'Control')), (('R3', 'Climp'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'Control')), (('R3', 'RTN'), ('R3', 'Control'))]
-    box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'RTN')), (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'RTN')), (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'RTN'))]
-    statannot.add_stat_annotation(ax, x='Replicate', y='data_junc_CC_mean', hue='Group', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
-
+    box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'RTN')),
+                 (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'RTN')),
+                 (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'RTN'))]
+    statannot.add_stat_annotation(ax, x='Replicate', y='data_junc_CC_mean', hue='Group', data=df, box_pairs=box_pairs,
+                                  test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
 
     # plt.suptitle('Isolated CC area across conditions', fontsize=20)
     # plt.title('Standard Deviation per sequence for junction CC mean intensity (isolated junctions)', fontsize=18)
     measure_name = 'Standard deviation' if measure == 'std' else 'Mean'
     region_name = 'isolated' if region == 'iso' else 'fuzzy'
-    plt.title(f'{measure_name} per sequence for junction CC mean intensity ({region_name} junctions) - {channel} channel', fontsize=18)
+    plt.title(
+        f'{measure_name} per sequence for junction CC mean intensity ({region_name} junctions) - {channel} channel',
+        fontsize=18)
     plt.grid(True)
     plt.xlabel('Replicate', fontsize=18)
     plt.ylabel(f'{measure_name} value per sequence', fontsize=18)
