@@ -869,21 +869,21 @@ def create_tubule_seq_pickles(group, total_series, connection):
 # create_tubule_seq_pickles('RTN', 29, 'iso-iso')
 # exit()
 
-create_tubule_seq_pickles('ATL', 26, 'iso-iso')
-create_tubule_seq_pickles('Climp', 31, 'iso-iso')
-# create_tubule_seq_pickles('Control', 31, 'iso-iso')
-create_tubule_seq_pickles('RTN', 29, 'iso-iso')
-
-create_tubule_seq_pickles('ATL', 26, 'iso-fuz')
-create_tubule_seq_pickles('Climp', 31, 'iso-fuz')
-# create_tubule_seq_pickles('Control', 31, 'iso-fuz')
-create_tubule_seq_pickles('RTN', 29, 'iso-fuz')
+# create_tubule_seq_pickles('ATL', 26, 'iso-iso')
+# create_tubule_seq_pickles('Climp', 31, 'iso-iso')
+# # create_tubule_seq_pickles('Control', 31, 'iso-iso')
+# create_tubule_seq_pickles('RTN', 29, 'iso-iso')
 #
-create_tubule_seq_pickles('ATL', 26, 'fuz-fuz')
-create_tubule_seq_pickles('Climp', 31, 'fuz-fuz')
-# create_tubule_seq_pickles('Control', 31, 'fuz-fuz')
-create_tubule_seq_pickles('RTN', 29, 'fuz-fuz')
-exit()
+# create_tubule_seq_pickles('ATL', 26, 'iso-fuz')
+# create_tubule_seq_pickles('Climp', 31, 'iso-fuz')
+# # create_tubule_seq_pickles('Control', 31, 'iso-fuz')
+# create_tubule_seq_pickles('RTN', 29, 'iso-fuz')
+# #
+# create_tubule_seq_pickles('ATL', 26, 'fuz-fuz')
+# create_tubule_seq_pickles('Climp', 31, 'fuz-fuz')
+# # create_tubule_seq_pickles('Control', 31, 'fuz-fuz')
+# create_tubule_seq_pickles('RTN', 29, 'fuz-fuz')
+# exit()
 
 # atl_iso_iso_data = pkl.load(open('atl_iso-iso.pkl', 'rb'))
 # climp_iso_iso_data = pkl.load(open('climp_iso-iso.pkl', 'rb'))
@@ -898,39 +898,97 @@ exit()
 # print(len(d1))
 # exit()
 
-def plot_seq_mean_tubule_mean(group, connection):
 
+def get_channel_corr(group, connection):
     with open(f'{group.lower()}_{connection}.pkl', 'rb') as f:
+        data_egfp = pkl.load(f)
+
+    with open(f'{group.lower()}_{connection}_mch.pkl', 'rb') as f:
+        data_mch = pkl.load(f)
+
+    # print(data_egfp[3].shape)
+    # exit()
+
+    # data = pkl.load(open(f'{group.lower()}_{connection}.pkl', 'rb'))
+
+    # a = data_egfp[2]
+    # b = data_mch[2]
+    # print(a.shape)
+    # print(b.shape)
+    # print(np.corrcoef(a[0], b[0]))
+    # exit()
+
+    d1 = []
+    for tub_eg, tub_mch in zip(data_egfp[:10], data_mch[:10]):
+        d1.extend(np.corrcoef(i, j)[0][1] for i, j in zip(tub_eg, tub_mch))
+
+    d2 = []
+    for tub_eg, tub_mch in zip(data_egfp[10:20], data_mch[10:20]):
+        d2.extend(np.corrcoef(i, j)[0][1] for i, j in zip(tub_eg, tub_mch))
+
+    d3 = []
+    for tub_eg, tub_mch in zip(data_egfp[20:], data_mch[20:]):
+        d3.extend(np.corrcoef(i, j)[0][1] for i, j in zip(tub_eg, tub_mch))
+
+    return d1, d2, d3
+    # d1_egfp = [np.corrcoef(i) for each in data_egfp[:10] for i in each if len(i) > 0]
+    # d2_egfp = [np.std(i) for each in data_egfp[10:20] for i in each if len(i) > 0]
+    # d3_egfp = [np.std(i) for each in data_egfp[20:] for i in each if len(i) > 0]
+    # d1_mch = [np.std(i) for each in data_mch[:10] for i in each if len(i) > 0]
+    # d2_mch = [np.std(i) for each in data_mch[10:20] for i in each if len(i) > 0]
+    # d3_mch = [np.std(i) for each in data_mch[20:] for i in each if len(i) > 0]
+
+
+# d1, d2, d3 = get_channel_corr('ATL', 'iso-iso')
+# print(d1)
+
+# exit()
+
+def plot_seq_mean_tubule_mean(group, channel, connection):
+
+    with open(f'{group.lower()}_{connection}_{channel}.pkl', 'rb') as f:
         data = pkl.load(f)
 
     # data = pkl.load(open(f'{group.lower()}_{connection}.pkl', 'rb'))
-    d1 = [np.mean(i) for each in data[:10] for i in each if len(i) > 0]
-    d2 = [np.mean(i) for each in data[10:20] for i in each if len(i) > 0]
-    d3 = [np.mean(i) for each in data[20:] for i in each if len(i) > 0]
+    d1 = [np.std(i) for each in data[:10] for i in each if len(i) > 0]
+    d2 = [np.std(i) for each in data[10:20] for i in each if len(i) > 0]
+    d3 = [np.std(i) for each in data[20:] for i in each if len(i) > 0]
 
     return d1, d2, d3
 
 
-a1, a2, a3 = plot_seq_mean_tubule_mean('ATL', 'fuz-fuz')
-c1, c2, c3 = plot_seq_mean_tubule_mean('Climp', 'fuz-fuz')
-ct1, ct2, ct3 = plot_seq_mean_tubule_mean('Control', 'fuz-fuz')
-r1, r2, r3 = plot_seq_mean_tubule_mean('RTN', 'fuz-fuz')
+# a1, a2, a3 = plot_seq_mean_tubule_mean('ATL', 'mch', 'iso-iso')
+# c1, c2, c3 = plot_seq_mean_tubule_mean('Climp', 'mch', 'iso-iso')
+# # ct1, ct2, ct3 = plot_seq_mean_tubule_mean('Control', 'mch', 'fuz-fuz')
+# r1, r2, r3 = plot_seq_mean_tubule_mean('RTN', 'mch', 'iso-iso')
+
+a1, a2, a3 = get_channel_corr('ATL', 'fuz-fuz')
+c1, c2, c3 = get_channel_corr('Climp', 'fuz-fuz')
+# ct1, ct2, ct3 = plot_seq_mean_tubule_mean('Control', 'mch', 'fuz-fuz')
+r1, r2, r3 = get_channel_corr('RTN', 'fuz-fuz')
 
 
 df = pd.DataFrame()
-df['data_tubule_mean'] = pd.Series(np.concatenate((a1, a2, a3, c1, c2, c3, ct1, ct2, ct3, r1, r2, r3)))
+# df['data_tubule_mean'] = pd.Series(np.concatenate((a1, a2, a3, c1, c2, c3, ct1, ct2, ct3, r1, r2, r3)))
+df['data_tubule_mean'] = pd.Series(np.concatenate((a1, a2, a3, c1, c2, c3, r1, r2, r3)))
+
+# df['Group'] = pd.Series(np.concatenate((
+#     ['ATL'] * len(a1), ['ATL'] * len(a2), ['ATL'] * len(a3), ['Climp'] * len(c1), ['Climp'] * len(c2), ['Climp'] * len(c3), ['Control'] * len(ct1), ['Control'] * len(ct2), ['Control'] * len(ct3), ['RTN'] * len(r1), ['RTN'] * len(r2), ['RTN'] * len(r3))))
 
 df['Group'] = pd.Series(np.concatenate((
-    ['ATL'] * len(a1), ['ATL'] * len(a2), ['ATL'] * len(a3), ['Climp'] * len(c1), ['Climp'] * len(c2), ['Climp'] * len(c3), ['Control'] * len(ct1), ['Control'] * len(ct2), ['Control'] * len(ct3), ['RTN'] * len(r1), ['RTN'] * len(r2), ['RTN'] * len(r3))))
+    ['ATL'] * len(a1), ['ATL'] * len(a2), ['ATL'] * len(a3), ['Climp'] * len(c1), ['Climp'] * len(c2), ['Climp'] * len(c3), ['RTN'] * len(r1), ['RTN'] * len(r2), ['RTN'] * len(r3))))
 
-df['Replicate'] = pd.Series(np.concatenate((['R1'] * len(a1), ['R2'] * len(a2), ['R3'] * len(a3), ['R1'] * len(c1), ['R2'] * len(c2), ['R3'] * len(c3), ['R1'] * len(ct1), ['R2'] * len(ct2), ['R3'] * len(ct3), ['R1'] * len(r1), ['R2'] * len(r2), ['R3'] * len(r3))))
+# df['Replicate'] = pd.Series(np.concatenate((['R1'] * len(a1), ['R2'] * len(a2), ['R3'] * len(a3), ['R1'] * len(c1), ['R2'] * len(c2), ['R3'] * len(c3), ['R1'] * len(ct1), ['R2'] * len(ct2), ['R3'] * len(ct3), ['R1'] * len(r1), ['R2'] * len(r2), ['R3'] * len(r3))))
+
+df['Replicate'] = pd.Series(np.concatenate((['R1'] * len(a1), ['R2'] * len(a2), ['R3'] * len(a3), ['R1'] * len(c1), ['R2'] * len(c2), ['R3'] * len(c3), ['R1'] * len(r1), ['R2'] * len(r2), ['R3'] * len(r3))))
 
 ax = sns.boxenplot(data=df, x='Replicate', y='data_tubule_mean', hue='Group', dodge=True)  # , yscale='log')
 ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
 
-box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'Control')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'Control')), (('R1', 'Control'), ('R1', 'RTN')),
-             (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'Control')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'Control')), (('R2', 'Control'), ('R2', 'RTN')),
-             (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'Control')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'Control')), (('R3', 'Control'), ('R3', 'RTN'))]
+# box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'Control')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'Control')), (('R1', 'Control'), ('R1', 'RTN')), (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'Control')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'Control')), (('R2', 'Control'), ('R2', 'RTN')), (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'Control')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'Control')), (('R3', 'Control'), ('R3', 'RTN'))]
+
+box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'RTN')), (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'RTN')), (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'RTN'))]
+
 statannot.add_stat_annotation(ax, x='Replicate', y='data_tubule_mean', hue='Group', data=df, box_pairs=box_pairs,
                               test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
 
@@ -938,11 +996,11 @@ statannot.add_stat_annotation(ax, x='Replicate', y='data_tubule_mean', hue='Grou
 # plt.title('Standard Deviation per sequence for junction CC mean intensity (isolated junctions)', fontsize=18)
 # measure_name = 'Standard deviation' if measure == 'std' else 'Mean'
 # region_name = 'isolated' if region == 'iso' else 'fuzzy'
-plt.title('Mean of sequence for tubule intensity mean (ERmoxGFP) in fuz-fuz edges',
+plt.title('Cross-correlation between ERmoxGFP and mCherry over sequence for tubule intensity mean in fuz-fuz edges',
           fontsize=18)
 plt.grid(True)
 plt.xlabel('Replicate', fontsize=18)
-plt.ylabel('Sequence mean value', fontsize=18)
+plt.ylabel('Cross-correlation value', fontsize=18)
 
 plt.show()
 # figm = plt.get_current_fig_manager()
