@@ -231,50 +231,49 @@ def get_junction_areas(label_ids, unassigned_cc_dict):
     return isolated_junctions, fuzzy_junctions, unknown_junctions
 
 
+def get_region_cc(group, series_num, region):
+    ref_junctions, per_frame_junctions, labelled_img = label_junctions(group, series_num)
+
+    # dict with ids as key and (x, y) as value
+    label_ids, unassigned_cc_dict = separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
+
+    # iso, fuz, unk: list of lists with x, y
+    iso, fuz, unk = get_junction_areas(label_ids, unassigned_cc_dict)
+
+    if region == 'iso':
+        return get_cc_ids(labelled_img, iso), labelled_img
+    else:
+        return get_cc_ids(labelled_img, fuz), labelled_img
+
+    # dict to store the coords for each cc id
+    # iso_cc_coords = {}
+    # for each in iso_cc:
+    #     iso_cc_coords[each] = np.where(labelled_img==each)
+
+
 ##################################################################
 
 def calc_egfp_deposit(group, channel, num_series, region):
-    ch = 1 if channel == 'mCherry' else 0
-    sl = []
+    channel_idx = 1 if channel == 'mCherry' else 0
+    series_data = []
+
     for series_num in range(1, num_series + 1):
-
-        ref_junctions, per_frame_junctions, labelled_img = label_junctions(group, series_num)
-        label_ids, unassigned_cc_dict = separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
-
-        iso, fuz, unk = get_junction_areas(label_ids, unassigned_cc_dict)
-        # iso_cc = get_cc_ids(labelled_img, iso)
-        if region == 'iso':
-            region_cc = get_cc_ids(labelled_img, iso)
-        else:
-            region_cc = get_cc_ids(labelled_img, fuz)
-
-        # dict to store the coords for each cc id
-        # iso_cc_coords = {}
-        # for each in iso_cc:
-        #     iso_cc_coords[each] = np.where(labelled_img==each)
-
+        region_cc, labelled_img = get_region_cc(group, series_num, region)
         region_cc_coords = {each: np.where(labelled_img == each) for each in region_cc}
-        # for each cc, we obtain the index of dispersion per frame
 
-        ln = []
+        series_values = []
         for i in range(100):
             if group == 'Control':
                 path = f'{confocal_data_path}Control/files/img_{series_num}_decon_t0{i:02d}.tif'
-
-
             else:
-                path = f'{confocal_data_path}{group}/files/{group[0]}{series_num}_decon_t0{i:02d}_ch0{ch}.tif'
-
-            # path = confocal_data_path + '%s/files/%s_decon_t0%s_ch0%s.tif'%(f'{group}', f'{group[0]}{series_num}', f'{i:02d}', f'{ch}')
+                path = f'{confocal_data_path}{group}/files/{group[0]}{series_num}_decon_t0{i:02d}_ch0{channel_idx}.tif'
             img = get_std_img(path)
-            frame_data = [np.mean(img[v]) for v in region_cc_coords.values()]
-            # ln.append(np.std(frame_data) / np.mean(frame_data))
-            # ln.append(frame_data)
-            ln.extend(frame_data)
-        ln = np.array(ln)
+            region_means = [np.mean(img[coords]) for coords in region_cc_coords.values()]
+            series_values.extend(region_means)
 
-        sl.extend(ln)
-    return sl
+        series_data.extend(np.array(series_values))
+
+    return series_data
 
 
 def junction_cc_mean_distplot(channel):
@@ -337,17 +336,11 @@ def junction_cc_mean_boxplot(channel, region):
 def cc_area_measure(group, region, rstart, rend):
     cc_area_list = []
 
-    for i in range(rstart, rend + 1):
-        nps, skdata, labelled_img = label_junctions(group, i)
+    for series_num in range(rstart, rend + 1):
+
+        region_cc, labelled_img = get_region_cc(group, series_num, region)
+
         regions = regionprops(labelled_img)
-
-        label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
-        iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
-        if region == 'iso':
-            region_cc = get_cc_ids(labelled_img, iso)
-        else:
-            region_cc = get_cc_ids(labelled_img, fuz)
-
         l = [regions[each - 1]['Area'] for each in region_cc]
         cc_area_list.extend(l)
 
@@ -501,59 +494,11 @@ def get_data_cc_area(region):
 
 
 def calc_deposit(num_series, group, region):
-    # ch = 1 if channel=='mCherry' else 0
-    # global ln
-    global ln_egfp, region_cc_coords
-    global ln_mch
-    # sl = []
-
-    cc_area_list = []
-
     for num in range(num_series, num_series + 1):
 
-        nps, skdata, labelled_img = junc_analysis.label_junctions(group, num)
-        regions = regionprops(labelled_img)
-
-        for num, reg in enumerate(regions):
-            cc_area_list.append(regions[num]['Area'])
-
-        # print(len(regions))
-        print(regions[0]['Area'])
-        # print(regions[3])
-        for prop in regions[0]:
-            print(prop, regions[0][prop])
-        # print(labelled_img)
-        exit()
-
-        # label_vals: dict with ids as key and (x, y) as value
-        label_vals, unassigned_cc_dict = junc_analysis.separate_junc_cc(nps, skdata, labelled_img)
-        print(label_vals)
-        exit()
-
-        # iso, fuz, unk: list of lists with x, y
-        iso, fuz, unk = junc_analysis.get_junction_areas(label_vals, unassigned_cc_dict)
-
-        # iso_cc = get_cc_ids(labelled_img, iso)
-        # region_cc:
-        if region == 'iso':
-            region_cc = get_cc_ids(labelled_img, iso)
-        else:
-            region_cc = get_cc_ids(labelled_img, fuz)
-
-        # print(region_cc)
-        # exit()
-
-        # dict to store the coords for each cc id
-        # iso_cc_coords = {}
-        # for each in iso_cc:
-        #     iso_cc_coords[each] = np.where(labelled_img==each)
+        region_cc, labelled_img = get_region_cc(group, num, region)
 
         region_cc_coords = {each: np.where(labelled_img == each) for each in region_cc}
-        # print(region_cc_coords[15])
-        # exit()
-        # print(region_cc_coords[57])
-
-        # for each cc, we obtain the index of dispersion per frame
 
         ln_egfp = []
         ln_mch = []
@@ -561,17 +506,11 @@ def calc_deposit(num_series, group, region):
         for i in range(30):
             if group == 'Control':
                 path_EGFP = f'{confocal_data_path}Control/files/img_{num}_decon_t0{i:02d}.tif'
-                # path_EGFP = f'/Users/ashwins/Documents/Ct3_files/Ct3_files/img_3_decon_t0{i:02d}.tif'
                 path_mch = None
-
-
             else:
-                # path_EGFP = f'/Users/ashwins/Documents/{group[0]}{num}_files/{group[0]}{num}_files/{group[0]}{num}_decon_t0{i:02d}_ch00.tif'
-                # path_mch = f'/Users/ashwins/Documents/{group[0]}{num}_files/{group[0]}{num}_files/{group[0]}{num}_decon_t0{i:02d}_ch01.tif'
                 path_EGFP = f'{confocal_data_path}{group}/files/{group[0]}{num}_decon_t0{i:02d}_ch00.tif'
                 path_mch = f'{confocal_data_path}{group}/files/{group[0]}{num}_decon_t0{i:02d}_ch01.tif'
 
-            # path = confocal_data_path + '%s/files/%s_decon_t0%s_ch0%s.tif'%(f'{group}', f'{group[0]}{series_num}', f'{i:02d}', f'{ch}')
             img_egfp = get_std_img(path_EGFP)
             frame_data_egfp = [np.mean(img_egfp[v]) for v in region_cc_coords.values()]
 
@@ -601,18 +540,7 @@ def calc_deposit_net_norm(num_series, group, region):
     global ln_mch
 
     for num in range(num_series, num_series + 1):
-        nps, skdata, labelled_img = junc_analysis.label_junctions(group, num)
-
-        # label_vals: dict with ids as key and (x, y) as value
-        label_vals, unassigned_cc_dict = junc_analysis.separate_junc_cc(nps, skdata, labelled_img)
-
-        # iso, fuz, unk: list of lists with x, y
-        iso, fuz, unk = junc_analysis.get_junction_areas(label_vals, unassigned_cc_dict)
-
-        if region == 'iso':
-            region_cc = get_cc_ids(labelled_img, iso)
-        else:
-            region_cc = get_cc_ids(labelled_img, fuz)
+        region_cc, labelled_img = get_region_cc(group, num, region)
 
         region_cc_coords = {each: np.where(labelled_img == each) for each in region_cc}
 
@@ -705,37 +633,9 @@ def calc_deposit_cc_norm(num_series, group, region):
     global ln_mch
     # sl = []
     for num in range(num_series, num_series + 1):
-
-        nps, skdata, labelled_img = junc_analysis.label_junctions(group, num)
-
-        # label_vals: dict with ids as key and (x, y) as value
-        label_vals, unassigned_cc_dict = junc_analysis.separate_junc_cc(nps, skdata, labelled_img)
-        # print(label_vals)
-
-        # iso, fuz, unk: list of lists with x, y
-        iso, fuz, unk = junc_analysis.get_junction_areas(label_vals, unassigned_cc_dict)
-
-        # iso_cc = get_cc_ids(labelled_img, iso)
-        # region_cc:
-        if region == 'iso':
-            region_cc = get_cc_ids(labelled_img, iso)
-        else:
-            region_cc = get_cc_ids(labelled_img, fuz)
-
-        # print(region_cc)
-        # exit()
-
-        # dict to store the coords for each cc id
-        # iso_cc_coords = {}
-        # for each in iso_cc:
-        #     iso_cc_coords[each] = np.where(labelled_img==each)
+        region_cc, labelled_img = get_region_cc(group, num, region)
 
         region_cc_coords = {each: np.where(labelled_img == each) for each in region_cc}
-        # print(region_cc_coords[15])
-        # exit()
-        # print(region_cc_coords[57])
-
-        # for each cc, we obtain the index of dispersion per frame
 
         ln_egfp = []
         ln_mch = []
@@ -743,18 +643,11 @@ def calc_deposit_cc_norm(num_series, group, region):
         for i in range(100):
             if group == 'Control':
                 path_EGFP = f'{confocal_data_path}Control/files/img_{num}_decon_t0{i:02d}.tif'
-                # path_EGFP = f'/Users/ashwins/Documents/Ct3_files/Ct3_files/img_3_decon_t0{i:02d}.tif'
                 path_mch = None
-
-
             else:
-                # path_EGFP = f'/Users/ashwins/Documents/{group[0]}{num}_files/{group[0]}{num}_files/{group[0]}{num}_decon_t0{i:02d}_ch00.tif'
-                # path_mch = f'/Users/ashwins/Documents/{group[0]}{num}_files/{group[0]}{num}_files/{group[0]}{num}_decon_t0{i:02d}_ch01.tif'
                 path_EGFP = f'{confocal_data_path}{group}/files/{group[0]}{num}_decon_t0{i:02d}_ch00.tif'
                 path_mch = f'{confocal_data_path}{group}/files/{group[0]}{num}_decon_t0{i:02d}_ch01.tif'
 
-            # path = confocal_data_path + '%s/files/%s_decon_t0%s_ch0%s.tif'%(f'{group}', f'{group[0]}{series_num}', f'{i:02d}', f'{ch}')
-            # img_egfp = get_std_img(path_EGFP)
             img_egfp = imageio.imread(path_EGFP)
 
             # img_egfp = get_std_img(path_EGFP)
@@ -1064,47 +957,64 @@ def get_group_data(group):
     eg = a1e + a2e + a3e
     mc = a1m + a2m + a3m
 
-    corr_data = []
+    egr1 = eg[:10]
+    mcr1 = mc[:10]
+    egr2 = eg[10:20]
+    mcr2 = mc[10:20]
+    egr3 = eg[20:]
+    mcr3 = mc[20:]
 
-    for tub_eg, tub_mch in zip(eg, mc):
-        corr_data.extend(np.corrcoef(i, j)[0][1] for i, j in zip(tub_eg, tub_mch))
+    corr_data_r1 = []
+    corr_data_r2 = []
+    corr_data_r3 = []
 
-    return corr_data
+    for tub_eg, tub_mch in zip(egr1, mcr1):
+        corr_data_r1.extend(np.corrcoef(i, j)[0][1] for i, j in zip(tub_eg, tub_mch))
+
+    for tub_eg, tub_mch in zip(egr2, mcr2):
+        corr_data_r2.extend(np.corrcoef(i, j)[0][1] for i, j in zip(tub_eg, tub_mch))
+
+    for tub_eg, tub_mch in zip(egr3, mcr3):
+        corr_data_r3.extend(np.corrcoef(i, j)[0][1] for i, j in zip(tub_eg, tub_mch))
+
+    return corr_data_r1, corr_data_r2, corr_data_r3
 
 
-atl = get_group_data('ATL')
-climp = get_group_data('Climp')
-rtn = get_group_data('RTN')
+a1, a2, a3 = get_group_data('ATL')
+c1, c2, c3 = get_group_data('Climp')
+r1, r2, r3 = get_group_data('RTN')
 # control = get_group_data('Control')
 
 
 df = pd.DataFrame()
 
-df['data_tubule_mean'] = pd.Series(np.concatenate((atl, climp, rtn)))
+# df['data_tubule_mean'] = pd.Series(np.concatenate((atl, climp, rtn)))
+df['data_tubule_mean'] = pd.Series(np.concatenate((a1, a2, a3, c1, c2, c3, r1, r2, r3)))
 
+
+df['Replicate'] = pd.Series(np.concatenate((['R1'] * len(a1), ['R2'] * len(a2), ['R3'] * len(a3), ['R1'] * len(c1), ['R2'] * len(c2), ['R3'] * len(c3), ['R1'] * len(r1), ['R2'] * len(r2), ['R3'] * len(r3))))
 
 df['Group'] = pd.Series(np.concatenate((
-    ['ATL'] * len(atl), ['Climp'] * len(climp), ['RTN'] * len(rtn))))
+    ['ATL'] * len(a1), ['ATL'] * len(a2), ['ATL'] * len(a3), ['Climp'] * len(c1), ['Climp'] * len(c2), ['Climp'] * len(c3), ['RTN'] * len(r1), ['RTN'] * len(r2), ['RTN'] * len(r3))))
 
 
-ax = sns.boxenplot(data=df, x='Group', y='data_tubule_mean')
-# ax = sns.boxenplot(data=df, x='Replicate', y='data_tubule_mean', hue='Group', dodge=True)  # , yscale='log')
+# ax = sns.boxenplot(data=df, x='Group', y='data_tubule_mean')
+ax = sns.boxenplot(data=df, x='Replicate', y='data_tubule_mean', hue='Group', dodge=True)  # , yscale='log')
 ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
 
 
-
 # egfp
-box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
+box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'RTN')), (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'RTN')), (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'RTN'))]
 
-# statannot.add_stat_annotation(ax, x='Replicate', y='data_tubule_mean', hue='Group', data=df, box_pairs=box_pairs,
-#                               test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
-
-statannot.add_stat_annotation(ax, x='Group', y='data_tubule_mean', data=df, box_pairs=box_pairs,
+statannot.add_stat_annotation(ax, x='Replicate', y='data_tubule_mean', hue='Group', data=df, box_pairs=box_pairs,
                               test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+
+# statannot.add_stat_annotation(ax, x='Group', y='data_tubule_mean', data=df, box_pairs=box_pairs,
+#                               test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
 
 plt.title('Cross-correlation between ERmoxGFP and mCherry over sequence for tubule intensity mean in all tubules', fontsize=18)
 plt.grid(True)
-plt.xlabel('Group', fontsize=20)
+plt.xlabel('Replicate', fontsize=20)
 plt.ylabel('Cross-correlation value', fontsize=18)
 
 plt.show()
@@ -1114,18 +1024,15 @@ exit()
 
 def plot_seq_mean_tubule_mean(group, channel, connection):
 
-    with open(f'{group.lower()}_{connection}_{channel}.pkl', 'rb') as f:
+    filename = f'{group.lower()}_{connection}_{channel}.pkl'
+    with open(filename, 'rb') as f:
         data = pkl.load(f)
-
-    # data = pkl.load(open(f'{group.lower()}_{connection}.pkl', 'rb'))
 
     d1 = []
     # d1 = [np.mean(i) for each in data for i in each if len(i) > 0]
     for each in data:
         try:
-            for i in each:
-                if len(i) > 0:
-                    d1.append(np.std(i))
+            d1.extend(np.std(i) for i in each if len(i) > 0)
         except:
             pass
 
