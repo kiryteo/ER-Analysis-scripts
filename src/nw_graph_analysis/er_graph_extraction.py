@@ -3,8 +3,8 @@
 
 class ERGraphExtraction:
 
-    def __init__(self):
-        pass
+    def __init__(self, confocal_data_path):
+        self.confocal_data_path = confocal_data_path
 
     def get_vess_enh_er(self):
         """
