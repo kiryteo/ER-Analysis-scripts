@@ -6,6 +6,8 @@ import imageio
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 
+
+
 class JunctionAnalysis:
 
     def __init__(self, confocal_data_path):
@@ -38,18 +40,29 @@ class JunctionAnalysis:
         """
 
         group_pref = {'ATL':'A', 'Climp':'C', 'Control':'Ct', 'RTN':'R'}
-        mean_img = f'{self.confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
+
+        mean_er = f'{self.confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{num_series}_er_mean.png'
+
+        mean_skel = f'{self.confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
 
         # Get junction coordinates from projection frame
-        graph = self.skel_to_graph(mean_img)
+        # graph = self.skel_to_graph(mean_skel)
+
+        graph = node_connector(mean_er, mean_skel)
+
         ref_junctions = self.get_junctions(graph)
 
         ref_junctions = [[each[0], each[1]] for each in ref_junctions]
 
         per_frame_junctions = []
         for frame in range(100):
+
+            er_path = f'{confocal_data_path}{group}/new_op_jul/std_egfp/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_std.png'
+
             skeleton_path = f'{confocal_data_path}{group}/new_op_jul/skel/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
-            graph = self.skel_to_graph(skeleton_path)
+
+            # graph = self.skel_to_graph(skeleton_path)
+            graph = node_connector(er_path, skeleton_path)
             junctions = self.get_junctions(graph)
 
             junc_array = [[junc[0], junc[1]] for junc in junctions]

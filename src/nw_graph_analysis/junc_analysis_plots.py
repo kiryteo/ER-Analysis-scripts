@@ -74,13 +74,6 @@ def get_junctions(er_input_path, mean_img):
     return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
 
 
-# group = 'ATL'
-# num_series = 1
-# mean_img = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
-# k = get_junctions(mean_img)
-# exit()
-
-
 def get_all_junc(group, num_series):
     """
 
@@ -124,6 +117,22 @@ def get_all_junc(group, num_series):
     return nps, skdata
 
 
+def label_junctions(group, series_num):
+
+    # fig, ax = plt.subplots()
+    ref_junctions, per_frame_junctions = get_all_junc(group, series_num)
+
+    ref_junctions = np.array(ref_junctions)
+    per_frame_junctions = np.array(per_frame_junctions)
+
+    spread_img = np.zeros((128, 128))
+    for each in per_frame_junctions:
+        spread_img[each[0], each[1]] = 255.
+
+    labelled_img = label(spread_img, connectivity=2)
+    return ref_junctions, per_frame_junctions, labelled_img
+
+
 def get_cc_ids(labelled_img, region):
     """
 
@@ -145,34 +154,94 @@ def get_cc_ids(labelled_img, region):
     return [i for i, num in enumerate(dt_vals) if i > 0 and len(num) != 0]
 
 
-# def get_cc_ids(labelled_img, region):
-#     """
-#     Returns the IDs of connected components that intersect with the specified region.
-#
-#     Args:
-#     labelled_img: (numpy.ndarray) Image with connected components labelled by integers.
-#     region: (list of tuples) List of pixel coordinates defining the region.
-#
-#     Returns:
-#     A list of integers representing the IDs of connected components that intersect with the region.
-#     """
-#     cc_ids = set()
-#     for loc in region:
-#         cc_id = labelled_img[loc]
-#         if cc_id != 0:
-#             cc_ids.add(cc_id)
-#     return sorted(cc_ids)
+def get_junction_types(reference_junctions, connected_components):
+    """
+    Return the reference junctions per connected component and the list of connected components with at least 1 reference
+    junction.
 
+    :param reference_junctions: (ndarray) the reference junctions
+    :param connected_components: (ndarray) the connected components for the junctions
+    :return: label_values (dict) provides corresponding reference junctions per cc_id,
+             assigned_components (list) provides cc with at least 1 reference junction
+    """
+    label_ids = {}
+    assigned_components = []
+
+    for junction in reference_junctions:
+        if connected_components[junction[0], junction[1]] != 0:
+            cc_id = connected_components[junction[0], junction[1]]
+            if cc_id not in label_ids:
+                label_ids[cc_id] = []
+            label_ids[cc_id].append([junction[0], junction[1]])
+            assigned_components.append(cc_id)
+
+    return label_ids, assigned_components
+
+
+def get_uncertain_junctions(labelled_img, per_frame_junctions, num_components, assigned_components):
+    unassigned_components = [x for x in num_components if x not in assigned_components]
+
+    unassigned_cc_dict = {}
+
+    for each in per_frame_junctions:
+        cc_label = labelled_img[each[0], each[1]]
+        if cc_label != 0 and cc_label in unassigned_components:
+            if cc_label not in unassigned_cc_dict.keys():
+                unassigned_cc_dict[(labelled_img[each[0], each[1]])] = []
+            unassigned_cc_dict[(labelled_img[each[0], each[1]])].append([each[0], each[1]])
+    return unassigned_cc_dict
+
+
+def separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img):
+
+    num_components = np.unique(labelled_img)
+
+    label_ids, assigned_components = get_junction_types(ref_junctions, labelled_img)
+    # print(label_vals)
+
+    unassigned_cc_dict = get_uncertain_junctions(labelled_img, per_frame_junctions, num_components, assigned_components)
+
+    # return label_vals, cc_area_dict, unassigned_cc_dict
+    return label_ids, unassigned_cc_dict
+
+
+def get_junction_areas(label_ids, unassigned_cc_dict):
+    isolated_junctions = []
+    fuzzy_junctions = []
+    unknown_junctions = []
+
+    for cc_id, junctions in label_ids.items():
+        if cc_id != 0:
+            if len(junctions) == 1:
+                isolated_junctions.append(junctions[0])
+            else:
+                fuzzy_junctions.append(junctions)
+
+    for junctions in unassigned_cc_dict.values():
+        unknown_junctions.extend(junctions)
+
+    isolated_junctions = np.array(isolated_junctions)
+
+    fuzzy_junctions = list(itertools.chain.from_iterable(fuzzy_junctions))
+    fuz = np.array(fuzzy_junctions)
+
+    unknown_junctions = list(itertools.chain.from_iterable(unknown_junctions))
+    unknown_junctions = np.array(unknown_junctions)
+
+    return isolated_junctions, fuzzy_junctions, unknown_junctions
+
+
+##################################################################
 
 def calc_egfp_deposit(group, channel, num_series, region):
     ch = 1 if channel == 'mCherry' else 0
     sl = []
     for series_num in range(1, num_series + 1):
 
-        ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions(group, series_num)
-        label_ids, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
-        junc_analysis = JA(confocal_data_path)
-        iso, fuz, unk = junc_analysis.get_junction_areas(label_ids, unassigned_cc_dict)
+        ref_junctions, per_frame_junctions, labelled_img = label_junctions(group, series_num)
+        label_ids, unassigned_cc_dict = separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
+
+        iso, fuz, unk = get_junction_areas(label_ids, unassigned_cc_dict)
         # iso_cc = get_cc_ids(labelled_img, iso)
         if region == 'iso':
             region_cc = get_cc_ids(labelled_img, iso)
@@ -268,14 +337,12 @@ def junction_cc_mean_boxplot(channel, region):
 def cc_area_measure(group, region, rstart, rend):
     cc_area_list = []
 
-    junc_analysis = JA(confocal_data_path)
-
     for i in range(rstart, rend + 1):
-        nps, skdata, labelled_img = junc_analysis.label_junctions(group, i)
+        nps, skdata, labelled_img = label_junctions(group, i)
         regions = regionprops(labelled_img)
 
-        label_vals, unassigned_cc_dict = junc_analysis.separate_junc_cc(nps, skdata, labelled_img)
-        iso, fuz, unk = junc_analysis.get_junction_areas(label_vals, unassigned_cc_dict)
+        label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
+        iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
         if region == 'iso':
             region_cc = get_cc_ids(labelled_img, iso)
         else:
@@ -327,14 +394,14 @@ def plot_cc_area(a1, a2, a3, c1, c2, c3, r1, r2, r3, ct1, ct2, ct3, region):
 
     # ax = sns.swarmplot(data=df, x='Group', y='CC_area', hue='Replicate', dodge=True)
     # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
-    ax = sns.boxplot(data=df, x='Replicate', y='CC_area', hue='Group', dodge=True)
+    ax = sns.boxenplot(data=df, x='Replicate', y='CC_area', hue='Group', dodge=True)
     # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
     # sns.boxplot(data=df, x='Group', y='CC_area', hue='replicate', color='white', dodge=True)
 
     plt.yscale('log')
 
-    box_pairs = box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')),
+    box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')),
                              (('R1', 'ATL'), ('R1', 'Control')), (('R1', 'Climp'), ('R1', 'RTN')),
                              (('R1', 'Climp'), ('R1', 'Control')), (('R1', 'RTN'), ('R1', 'Control')),
                              (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')),
@@ -357,28 +424,76 @@ def plot_cc_area(a1, a2, a3, c1, c2, c3, r1, r2, r3, ct1, ct2, ct3, region):
     plt.show()
 
 
-def get_data_cc_area(region):
-    # at1 = (pd.Series(cc_area_measure('ATL', region, 1, 10)))
-    at3 = (pd.Series(cc_area_measure('ATL', region, 21, 26)))
+def plot_cc_area_all(a1, c1, r1, ct1, region):
+    df = pd.DataFrame()
+    # df['CC_area'] = pd.Series(np.concatenate((cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl)))
+    # df['Group'] = pd.Series(np.concatenate((['ATL'] * len(cc_area_atl), ['Climp'] * len(cc_area_climp),
+    #                                         ['RTN'] * len(cc_area_rtn), ['Control'] * len(cc_area_ctrl))))
 
-    sns.displot(at3)
-    plt.xlabel('CC Area', fontsize=15)
-    plt.title('ATL-Replicate3 fuzzy CC distribution', fontsize=20)
+    df['CC_area'] = pd.Series(np.concatenate((a1, c1, r1, ct1)))
+    df['Group'] = pd.Series(np.concatenate((
+        ['ATL'] * len(a1), ['Climp'] * len(c1), ['RTN'] * len(r1), ['Control'] * len(ct1))))
+
+    # df['Replicate'] = pd.Series(np.concatenate((['R1'] * len(a1), ['R2'] * len(a2), ['R3'] * len(a3), ['R1'] * len(c1),
+    #                                             ['R2'] * len(c2), ['R3'] * len(c3), ['R1'] * len(r1), ['R2'] * len(r2),
+    #                                             ['R3'] * len(r3), ['R1'] * len(ct1), ['R2'] * len(ct2),
+    #                                             ['R3'] * len(ct3))))
+
+    # ax = sns.swarmplot(data=df, x='Group', y='CC_area', hue='Replicate', dodge=True)
+    # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
+    ax = sns.boxenplot(data=df, x='Group', y='CC_area')
+    # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
+    # sns.boxplot(data=df, x='Group', y='CC_area', hue='replicate', color='white', dodge=True)
+
+    plt.yscale('log')
+
+    box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')]
+
+    statannot.add_stat_annotation(ax, x='Group', y='CC_area', data=df, box_pairs=box_pairs,
+                                  test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+
+    region_name = 'Isolated' if region == 'iso' else 'Fuzzy'
+
+    plt.suptitle(f'{region_name} CC area across conditions', fontsize=20)
+    plt.title('CC area denotes the total movement of each junction', fontsize=18)
+    plt.grid(True)
+    plt.xlabel('Group', fontsize=18)
+    plt.ylabel('CC_area (movement of junctions), log scale', fontsize=18)
     plt.show()
 
-    # cl1 = (pd.Series(cc_area_measure('Climp', region, 1, 10)))
-    # rt1 = (pd.Series(cc_area_measure('RTN', region, 1, 10)))
-    # ctrl1 = (pd.Series(cc_area_measure('Control', region, 1, 10)))
-    # at2 = (pd.Series(cc_area_measure('ATL', region, 11, 20)))
-    # cl2 = (pd.Series(cc_area_measure('Climp', region, 11, 20)))
-    # rt2 = (pd.Series(cc_area_measure('RTN', region, 11, 20)))
-    # ctrl2 = (pd.Series(cc_area_measure('Control', region, 11, 20)))
-    # at3 = (pd.Series(cc_area_measure('ATL', region, 21, 26)))
-    # cl3 = (pd.Series(cc_area_measure('Climp', region, 21, 31)))
-    # rt3 = (pd.Series(cc_area_measure('RTN', region, 21, 29)))
-    # ctrl3 = (pd.Series(cc_area_measure('Control', region, 21, 31)))
-    #
-    # plot_cc_area(at1, at2, at3, cl1, cl2, cl3, rt1, rt2, rt3, ctrl1, ctrl2, ctrl3, region)
+
+# a1 = pd.Series(cc_area_measure('ATL', 'fuz', 1, 26))
+# c1 = pd.Series(cc_area_measure('Climp', 'fuz', 1, 31))
+# r1 = pd.Series(cc_area_measure('RTN', 'fuz', 1, 29))
+# ct1 = pd.Series(cc_area_measure('Control', 'fuz', 1, 31))
+#
+# plot_cc_area_all(a1, c1, r1, ct1, 'fuz')
+# exit()
+
+
+def get_data_cc_area(region):
+    # at1 = (pd.Series(cc_area_measure('ATL', region, 1, 10)))
+
+    # sns.displot(at3)
+    # plt.xlabel('CC Area', fontsize=15)
+    # plt.title('ATL-Replicate3 fuzzy CC distribution', fontsize=20)
+    # plt.show()
+
+    at1 = (pd.Series(cc_area_measure('ATL', region, 1, 10)))
+    cl1 = (pd.Series(cc_area_measure('Climp', region, 1, 10)))
+    rt1 = (pd.Series(cc_area_measure('RTN', region, 1, 10)))
+    ctrl1 = (pd.Series(cc_area_measure('Control', region, 1, 10)))
+    at2 = (pd.Series(cc_area_measure('ATL', region, 11, 20)))
+    cl2 = (pd.Series(cc_area_measure('Climp', region, 11, 20)))
+    rt2 = (pd.Series(cc_area_measure('RTN', region, 11, 20)))
+    ctrl2 = (pd.Series(cc_area_measure('Control', region, 11, 20)))
+    at3 = (pd.Series(cc_area_measure('ATL', region, 21, 26)))
+    cl3 = (pd.Series(cc_area_measure('Climp', region, 21, 31)))
+    rt3 = (pd.Series(cc_area_measure('RTN', region, 21, 29)))
+    ctrl3 = (pd.Series(cc_area_measure('Control', region, 21, 31)))
+
+    plot_cc_area(at1, at2, at3, cl1, cl2, cl3, rt1, rt2, rt3, ctrl1, ctrl2, ctrl3, region)
 
 
 # get_data_cc_area('fuz')
@@ -901,6 +1016,21 @@ def create_tubule_seq_pickles(group, total_series, connection):
 # print(len(d1))
 # exit()
 
+def get_correlation_data_per_replicate(data_egfp, data_mch):
+    correlation_data_r1 = []
+    for tub_eg, tub_mch in zip(data_egfp[:10], data_mch[:10]):
+        correlation_data_r1.extend(np.corrcoef(i, j)[0][1] for i, j in zip(tub_eg, tub_mch))
+
+    correlation_data_r2 = []
+    for tub_eg, tub_mch in zip(data_egfp[10:20], data_mch[10:20]):
+        correlation_data_r2.extend(np.corrcoef(i, j)[0][1] for i, j in zip(tub_eg, tub_mch))
+
+    correlation_data_r3 = []
+    for tub_eg, tub_mch in zip(data_egfp[20:], data_mch[20:]):
+        correlation_data_r3.extend(np.corrcoef(i, j)[0][1] for i, j in zip(tub_eg, tub_mch))
+
+    return correlation_data_r1, correlation_data_r2, correlation_data_r3
+
 
 def get_channel_corr(group, connection):
     with open(f'{group.lower()}_{connection}.pkl', 'rb') as f:
@@ -909,45 +1039,78 @@ def get_channel_corr(group, connection):
     with open(f'{group.lower()}_{connection}_mch.pkl', 'rb') as f:
         data_mch = pkl.load(f)
 
-    # print(data_egfp[3].shape)
-    # exit()
-
-    # data = pkl.load(open(f'{group.lower()}_{connection}.pkl', 'rb'))
-
-    # a = data_egfp[2]
-    # b = data_mch[2]
-    # print(a.shape)
-    # print(b.shape)
-    # print(np.corrcoef(a[0], b[0]))
-    # exit()
-
-    d1 = []
+    if connection != 'None':
+        return get_correlation_data_per_replicate(data_egfp, data_mch)
+    correlation_data = []
     for tub_eg, tub_mch in zip(data_egfp, data_mch):
-        d1.extend(np.corrcoef(i, j)[0][1] for i, j in zip(tub_eg, tub_mch))
-
-    # d2 = []
-    # for tub_eg, tub_mch in zip(data_egfp[10:20], data_mch[10:20]):
-    #     d2.extend(np.corrcoef(i, j)[0][1] for i, j in zip(tub_eg, tub_mch))
-    #
-    # d3 = []
-    # for tub_eg, tub_mch in zip(data_egfp[20:], data_mch[20:]):
-    #     d3.extend(np.corrcoef(i, j)[0][1] for i, j in zip(tub_eg, tub_mch))
-
-    return d1
-    # return d1, d2, d3
-
-    # d1_egfp = [np.corrcoef(i) for each in data_egfp[:10] for i in each if len(i) > 0]
-    # d2_egfp = [np.std(i) for each in data_egfp[10:20] for i in each if len(i) > 0]
-    # d3_egfp = [np.std(i) for each in data_egfp[20:] for i in each if len(i) > 0]
-    # d1_mch = [np.std(i) for each in data_mch[:10] for i in each if len(i) > 0]
-    # d2_mch = [np.std(i) for each in data_mch[10:20] for i in each if len(i) > 0]
-    # d3_mch = [np.std(i) for each in data_mch[20:] for i in each if len(i) > 0]
+        correlation_data.extend(np.corrcoef(i, j)[0][1] for i, j in zip(tub_eg, tub_mch))
+    return correlation_data
 
 
-# d1, d2, d3 = get_channel_corr('ATL', 'iso-iso')
-# print(d1)
+def channel_corr_all(group, conn, channel):
+    with open(f'{group.lower()}_{conn}_{channel}.pkl', 'rb') as f:
+        data = pkl.load(f)
+    return data
 
-# exit()
+
+def get_group_data(group):
+    a1e = channel_corr_all(group, 'iso-iso', 'egfp')
+    a2e = channel_corr_all(group, 'iso-fuz', 'egfp')
+    a3e = channel_corr_all(group, 'fuz-fuz', 'egfp')
+    a1m = channel_corr_all(group, 'iso-iso', 'mch')
+    a2m = channel_corr_all(group, 'iso-fuz', 'mch')
+    a3m = channel_corr_all(group, 'fuz-fuz', 'mch')
+
+    eg = a1e + a2e + a3e
+    mc = a1m + a2m + a3m
+
+    corr_data = []
+
+    for tub_eg, tub_mch in zip(eg, mc):
+        corr_data.extend(np.corrcoef(i, j)[0][1] for i, j in zip(tub_eg, tub_mch))
+
+    return corr_data
+
+
+atl = get_group_data('ATL')
+climp = get_group_data('Climp')
+rtn = get_group_data('RTN')
+# control = get_group_data('Control')
+
+
+df = pd.DataFrame()
+
+df['data_tubule_mean'] = pd.Series(np.concatenate((atl, climp, rtn)))
+
+
+df['Group'] = pd.Series(np.concatenate((
+    ['ATL'] * len(atl), ['Climp'] * len(climp), ['RTN'] * len(rtn))))
+
+
+ax = sns.boxenplot(data=df, x='Group', y='data_tubule_mean')
+# ax = sns.boxenplot(data=df, x='Replicate', y='data_tubule_mean', hue='Group', dodge=True)  # , yscale='log')
+ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
+
+
+
+# egfp
+box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
+
+# statannot.add_stat_annotation(ax, x='Replicate', y='data_tubule_mean', hue='Group', data=df, box_pairs=box_pairs,
+#                               test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+
+statannot.add_stat_annotation(ax, x='Group', y='data_tubule_mean', data=df, box_pairs=box_pairs,
+                              test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+
+plt.title('Cross-correlation between ERmoxGFP and mCherry over sequence for tubule intensity mean in all tubules', fontsize=18)
+plt.grid(True)
+plt.xlabel('Group', fontsize=20)
+plt.ylabel('Cross-correlation value', fontsize=18)
+
+plt.show()
+
+exit()
+
 
 def plot_seq_mean_tubule_mean(group, channel, connection):
 
@@ -955,17 +1118,35 @@ def plot_seq_mean_tubule_mean(group, channel, connection):
         data = pkl.load(f)
 
     # data = pkl.load(open(f'{group.lower()}_{connection}.pkl', 'rb'))
-    d1 = [np.std(i) for each in data[:10] for i in each if len(i) > 0]
-    d2 = [np.std(i) for each in data[10:20] for i in each if len(i) > 0]
-    d3 = [np.std(i) for each in data[20:] for i in each if len(i) > 0]
 
-    return d1, d2, d3
+    d1 = []
+    # d1 = [np.mean(i) for each in data for i in each if len(i) > 0]
+    for each in data:
+        try:
+            for i in each:
+                if len(i) > 0:
+                    d1.append(np.std(i))
+        except:
+            pass
+
+    # d1 = [np.std(i) for each in data[:10] for i in each if len(i) > 0]
+    # d2 = [np.std(i) for each in data[10:20] for i in each if len(i) > 0]
+    # d3 = [np.std(i) for each in data[20:] for i in each if len(i) > 0]
+
+    return d1
 
 
 # a1, a2, a3 = plot_seq_mean_tubule_mean('ATL', 'mch', 'iso-iso')
 # c1, c2, c3 = plot_seq_mean_tubule_mean('Climp', 'mch', 'iso-iso')
 # # ct1, ct2, ct3 = plot_seq_mean_tubule_mean('Control', 'mch', 'fuz-fuz')
 # r1, r2, r3 = plot_seq_mean_tubule_mean('RTN', 'mch', 'iso-iso')
+
+
+a1 = plot_seq_mean_tubule_mean('ATL', 'egfp', 'fuz-fuz')
+c1 = plot_seq_mean_tubule_mean('Climp', 'egfp', 'fuz-fuz')
+# ct1, ct2, ct3 = plot_seq_mean_tubule_mean('Control', 'mch', 'fuz-fuz')
+ct1 = plot_seq_mean_tubule_mean('Control', 'egfp', 'fuz-fuz')
+r1 = plot_seq_mean_tubule_mean('RTN', 'egfp', 'fuz-fuz')
 
 # a1, a2, a3 = get_channel_corr('ATL', 'fuz-fuz')
 # c1, c2, c3 = get_channel_corr('Climp', 'fuz-fuz')
@@ -981,14 +1162,14 @@ df = pd.DataFrame()
 # df['data_tubule_mean'] = pd.Series(np.concatenate((a1, a2, a3, c1, c2, c3, ct1, ct2, ct3, r1, r2, r3)))
 # df['data_tubule_mean'] = pd.Series(np.concatenate((a1, a2, a3, c1, c2, c3, r1, r2, r3)))
 
-df['data_tubule_mean'] = pd.Series(np.concatenate((a1, c1, r1)))
+df['data_tubule_mean'] = pd.Series(np.concatenate((a1, c1, ct1, r1)))
 
 # df['Group'] = pd.Series(np.concatenate((
 #     ['ATL'] * len(a1), ['ATL'] * len(a2), ['ATL'] * len(a3), ['Climp'] * len(c1), ['Climp'] * len(c2), ['Climp'] * len(c3), ['Control'] * len(ct1), ['Control'] * len(ct2), ['Control'] * len(ct3), ['RTN'] * len(r1), ['RTN'] * len(r2), ['RTN'] * len(r3))))
 
 
 df['Group'] = pd.Series(np.concatenate((
-    ['ATL'] * len(a1), ['Climp'] * len(c1), ['RTN'] * len(r1))))
+    ['ATL'] * len(a1), ['Climp'] * len(c1), ['Control'] * len(ct1), ['RTN'] * len(r1))))
 
 # df['Group'] = pd.Series(np.concatenate((
 #     ['ATL'] * len(a1), ['ATL'] * len(a2), ['ATL'] * len(a3), ['Climp'] * len(c1), ['Climp'] * len(c2), ['Climp'] * len(c3), ['RTN'] * len(r1), ['RTN'] * len(r2), ['RTN'] * len(r3))))
@@ -1007,7 +1188,11 @@ ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
 
 # box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'RTN')), (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'RTN')), (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'RTN'))]
 
-box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
+# mcherry
+# box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
+
+# egfp
+box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'Control'), ('Climp', 'RTN'), ('Control', 'RTN')]
 
 # statannot.add_stat_annotation(ax, x='Replicate', y='data_tubule_mean', hue='Group', data=df, box_pairs=box_pairs,
 #                               test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
@@ -1019,11 +1204,12 @@ statannot.add_stat_annotation(ax, x='Group', y='data_tubule_mean', data=df, box_
 # plt.title('Standard Deviation per sequence for junction CC mean intensity (isolated junctions)', fontsize=18)
 # measure_name = 'Standard deviation' if measure == 'std' else 'Mean'
 # region_name = 'isolated' if region == 'iso' else 'fuzzy'
-plt.title('Cross-correlation between ERmoxGFP and mCherry over sequence for tubule intensity mean in iso-iso edges',
-          fontsize=18)
+plt.title('Standard deviation of sequence for tubule intensity mean (ERmoxGFP) in fuz-fuz edges', fontsize=18)
+
+# plt.title('Cross-correlation between ERmoxGFP and mCherry over sequence for tubule intensity mean in iso-iso edges', fontsize=18)
 plt.grid(True)
 plt.xlabel('Group', fontsize=20)
-plt.ylabel('Cross-correlation value', fontsize=18)
+plt.ylabel('Standard deviation value', fontsize=18)
 
 plt.show()
 # figm = plt.get_current_fig_manager()

@@ -29,69 +29,9 @@ from junction_analysis_modules import JunctionAnalysis as JA
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 
-
-# group = 'ATL'
-# series = 1
-#
-# path = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance_skel.png'
-#
-# # path_frame = f'{confocal_data_path}{group}/new_op_jul/skel/{group[0]}{series}/{group[0]}{series}_decon_t006_ch00_skel.png'
-#
-# graph = sknw.build_sknw(imageio.imread(path), multi=True, iso=False)
-# for each in graph.nodes():
-#     print(each)
-#
-# for each in graph.nodes:
-#     print(each)
-#
-#
-# exit()
-
-
 def get_std_img(path):
     img = imageio.imread(path)
     return (img - img.min()) / (img.max() - img.min())
-
-
-def preproc_individual_sample(img_path):
-    """
-
-    @param img_path: path to ER input sample
-    @return: processed sample
-    """
-    img = imageio.imread(img_path)
-    std_img = ((img) / (img.max() - img.min())) * 255
-    img_aop = skimage.morphology.area_opening(std_img, area_threshold=2)
-    img_erod = skimage.morphology.erosion(img_aop)
-    img_aop = skimage.morphology.area_opening(img_erod, area_threshold=2)
-    img_closing = skimage.morphology.area_closing(img_aop, area_threshold=32)
-    img_aop = skimage.morphology.area_opening(img_closing, area_threshold=2)
-    img_thr_loc = threshold_local(img_aop, 3)
-    return threshold_local(img_thr_loc, 3)
-
-
-def preproc_groups(path, group, num_series):
-    """
-
-    # @param path: path to all ER input files
-    # @param group: group to process (ATL, Climp, Control, RTN)
-    # @param num_series: number of movies in the group
-    """
-    # path_pref = '/localhome/asa420/MIAL/data/live-cell-movies/' + group + '/Decon/'
-    # # new_pref = '{confocal_data_path}' + group + '/new_op_jul/preproc/'
-    # new_pref = '/localhome/asa420/MIAL/data/live-cell-movies/' + group + '/Decon/'
-
-    # for i in range(2, 3):
-    for _ in range(num_series):
-        os.makedirs(f'{new_pref}C{i}')
-        for _ in range(100):
-            img_path = ...
-            # img = imageio.imread(path_pref + 'Series%s_decon_converted/files/Series%s_decon_converted_t%s_ch00.tif' % (f'{i:03d}', f'{i:03d}', f'{j:02d}'))
-            processed_sample = preproc_individual_sample(img_path)
-
-            cv2.imwrite(
-                f'{new_pref}Series{i:03d}_decon_converted/new_op_sept/preproc/C{i}/C{i}_decon_t0{j:02d}_ch00_proc.png',
-                processed_sample)
 
 # run Vessel2d.m to get the vessel enhancement output
 def get_skeleton(img_path):
@@ -106,12 +46,14 @@ def get_skeleton(img_path):
 
     return pcv.morphology.skeletonize(mask=vess_enhanced_sample)
 
+
 def skel_to_graph(skel_img_path):
     """
     @param skel_img_path:
     @return:
     """
     return sknw.build_sknw(imageio.imread(skel_img_path), multi=True, iso=False)
+
 
 def get_tubules(graph):
     """
@@ -129,6 +71,7 @@ def get_tubules(graph):
     tubule_coords_list.extend(graph[start_node][end_node][0]['pts'] for start_node, end_node in edges_list)
 
     return tubule_coords_list
+
 
 def get_relevant_tubules(self, graph, relevant_nodes):
     """
