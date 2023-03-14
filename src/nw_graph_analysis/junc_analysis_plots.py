@@ -21,6 +21,12 @@ from junction_analysis_modules import JunctionAnalysis as JA
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 
+GROUP_PREF = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
+VALID_GROUPS = ['ATL', 'Climp', 'RTN', 'Control']
+VALID_CONNECTIONS = ['iso-iso', 'iso-fuz', 'fuz-fuz']
+VALID_CHANNELS = ['egfp', 'mch']
+VALID_MEASURES = ['tubule', 'tub-mean']
+
 junc_analysis = JA(confocal_data_path)
 
 
@@ -841,176 +847,98 @@ def get_tubule_data(group, series_num, connection):
     return edges, conn_graph
 
 
-def tubule_sequence_data(group, series_num, connection):
-    edges, conn_graph = get_tubule_data(group, series_num, connection)
+def tubule_sequence_data(group, series_num, connection, channel, measure):
+    """
+    Returns sequence data for tubule images from a given group, series, connection, and channel.
 
-    if edges:
-        edge_pts = [conn_graph[u][v][0]['pts'] for (u, v) in edges]
+    Args:
+    - group (str): Name of the group, must be one of ['ATL', 'Climp', 'RTN', 'Control'].
+    - series_num (int): Series number.
+    - connection (str): Type of connection, must be one of ['iso-iso', 'iso-fuz', 'fuz-fuz'].
+    - channel (str): Channel name, must be one of ['egfp', 'mch'].
 
-        group_pref = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
+    Returns:
+    - seq_data (list): A list of lists of pixel values for each edge in image sequence.
+    """
 
-        seq_data = []
+    assert group in VALID_GROUPS, f"Invalid group name: {group}"
+    assert connection in VALID_CONNECTIONS, f"Invalid connection type: {connection}"
+    assert channel in VALID_CHANNELS, f"Invalid channel name: {channel}"
+    assert measure in VALID_MEASURES, f"Invalid channel name: {measure}"
 
-        for each in edge_pts:
-            l = []
-            for i in range(100):
-                # er_input_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_egfp/{group_pref[group]}{series_num}_decon_t0{i:02d}_ch00_std.png'
-                er_input_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_mch/{group_pref[group]}{series_num}_decon_t0{i:02d}_ch01_std.png'
-                er = imageio.imread(er_input_path)
-                er = (er - er.min()) / (er.max() - er.min())
+    group_pref = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
 
-                l.append(er[each[:, 0], each[:, 1]])
-            seq_data.append(l)
-
-        return seq_data
-
-
-def tubule_sequence_data_egfp(group, series_num, connection):
-    edges, conn_graph = get_tubule_data(group, series_num, connection)
-
-    if edges:
-        edge_pts = [conn_graph[u][v][0]['pts'] for (u, v) in edges]
-
-        group_pref = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
-
-        seq_data = []
-
-        for each in edge_pts:
-            l = []
-            for i in range(100):
-                er_input_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_egfp/{group_pref[group]}{series_num}_decon_t0{i:02d}_ch00_std.png'
-                # er_input_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_mch/{group_pref[group]}{series_num}_decon_t0{i:02d}_ch01_std.png'
-                er = imageio.imread(er_input_path)
-                er = (er - er.min()) / (er.max() - er.min())
-
-                l.append(er[each[:, 0], each[:, 1]])
-            seq_data.append(l)
-
-        return seq_data
-
-
-def create_tub_data_pickles(group, total_series, connection):
-    l1 = []
-    for i in range(1, total_series+1):
-        seq_data = np.array(tubule_sequence_data(group, i, connection))
-        l1.append(seq_data)
-
-    with open(f'{group.lower()}_{connection}_tubules_mch.pkl', 'wb') as fl:
-        pkl.dump(l1, fl)
-
-def create_tub_data_pickles_egfp(group, total_series, connection):
-    l1 = []
-    for i in range(1, total_series+1):
-        seq_data = np.array(tubule_sequence_data(group, i, connection))
-        l1.append(seq_data)
-
-    with open(f'{group.lower()}_{connection}_tubules_egfp.pkl', 'wb') as fl:
-        pkl.dump(l1, fl)
-
-
-
-create_tub_data_pickles('ATL', 26, 'iso-iso')
-create_tub_data_pickles('Climp', 31, 'iso-iso')
-create_tub_data_pickles('RTN', 29, 'iso-iso')
-# create_tub_data_pickles('ATL', 26, 'iso-iso')
-
-create_tub_data_pickles('ATL', 26, 'iso-fuz')
-create_tub_data_pickles('Climp', 31, 'iso-fuz')
-create_tub_data_pickles('RTN', 29, 'iso-fuz')
-# create_tub_data_pickles('ATL', 26, 'iso-fuz')
-
-create_tub_data_pickles('ATL', 26, 'fuz-fuz')
-create_tub_data_pickles('Climp', 31, 'fuz-fuz')
-create_tub_data_pickles('RTN', 29, 'fuz-fuz')
-
-
-create_tub_data_pickles_egfp('ATL', 26, 'iso-iso')
-create_tub_data_pickles_egfp('Climp', 31, 'iso-iso')
-create_tub_data_pickles_egfp('RTN', 29, 'iso-iso')
-create_tub_data_pickles_egfp('Control', 31, 'iso-iso')
-
-create_tub_data_pickles_egfp('ATL', 26, 'iso-fuz')
-create_tub_data_pickles_egfp('Climp', 31, 'iso-fuz')
-create_tub_data_pickles_egfp('RTN', 29, 'iso-fuz')
-create_tub_data_pickles_egfp('Control', 31, 'iso-fuz')
-
-create_tub_data_pickles_egfp('ATL', 26, 'fuz-fuz')
-create_tub_data_pickles_egfp('Climp', 31, 'fuz-fuz')
-create_tub_data_pickles_egfp('RTN', 29, 'fuz-fuz')
-create_tub_data_pickles_egfp('Control', 31, 'fuz-fuz')
-
-
-exit()
-
-def tubule_sequence_analysis(group, series_num, connection):
+    def get_er_input(num, group, channel, series_num, ch_id):
+        er_input_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_{channel}/{group_pref[group]}{series_num}_decon_t0{num:02d}_ch0{ch_id}_std.png'
+        er = imageio.imread(er_input_path)
+        er = (er - er.min()) / (er.max() - er.min())
+        return er
 
     edges, conn_graph = get_tubule_data(group, series_num, connection)
 
-    if edges:
-        edge_pts = [conn_graph[u][v][0]['pts'] for (u, v) in edges]
+    if not edges:
+        return None
 
-        group_pref = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
+    edge_pts = [conn_graph[u][v][0]['pts'] for (u, v) in edges]
 
-        seq_data = []
+    seq_data = []
 
-        for each in edge_pts:
-            l = []
-            for i in range(100):
-                # er_input_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_egfp/{group_pref[group]}{series_num}_decon_t0{i:02d}_ch00_std.png'
-                er_input_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_mch/{group_pref[group]}{series_num}_decon_t0{i:02d}_ch01_std.png'
-                er = imageio.imread(er_input_path)
-                er = (er - er.min()) / (er.max() - er.min())
+    ch_id = 0 if channel == 'egfp' else 1
 
-                l.append(np.mean(er[each[:, 0], each[:, 1]]))
-            seq_data.append(l)
+    for each in edge_pts:
+        edge_data = []
+        for i in range(100):
+            er = get_er_input(i, group, channel, series_num, ch_id)
+            if measure == 'tubule':
+                edge_data.append(er[each[:, 0], each[:, 1]])
+            elif measure == 'tub-mean':
+                edge_data.append(np.mean(er[each[:, 0], each[:, 1]]))
+        seq_data.append(edge_data)
 
-        return seq_data
+    return seq_data
 
 
-
-def create_tubule_seq_pickles(group, total_series, connection):
-    l1 = []
+def create_tub_data_pickles(group, total_series, connection, channel, measure):
+    group_data = []
     for i in range(1, total_series+1):
-        seq_data = np.array(tubule_sequence_analysis(group, i, connection))
-        l1.append(seq_data)
+        seq_data = np.array(tubule_sequence_data(group, i, connection, channel, measure))
+        group_data.append(seq_data)
 
-    with open(f'{group.lower()}_{connection}_mch.pkl', 'wb') as fl:
-        pkl.dump(l1, fl)
+    with open(f'{group.lower()}_{connection}_{measure}_{channel}.pkl', 'wb') as fl:
+        pkl.dump(group_data, fl)
 
 
-# create_tubule_seq_pickles('RTN', 29, 'iso-iso')
-# exit()
+def create_pickles(groups: dict, connections: list, channels:list, measure: str) -> None:
+    """
+    Creates pickles of tubule data for the given groups, connections, channels, and measure.
 
-# create_tubule_seq_pickles('ATL', 26, 'iso-iso')
-# create_tubule_seq_pickles('Climp', 31, 'iso-iso')
-# # create_tubule_seq_pickles('Control', 31, 'iso-iso')
-# create_tubule_seq_pickles('RTN', 29, 'iso-iso')
-#
-# create_tubule_seq_pickles('ATL', 26, 'iso-fuz')
-# create_tubule_seq_pickles('Climp', 31, 'iso-fuz')
-# # create_tubule_seq_pickles('Control', 31, 'iso-fuz')
-# create_tubule_seq_pickles('RTN', 29, 'iso-fuz')
-# #
-# create_tubule_seq_pickles('ATL', 26, 'fuz-fuz')
-# create_tubule_seq_pickles('Climp', 31, 'fuz-fuz')
-# # create_tubule_seq_pickles('Control', 31, 'fuz-fuz')
-# create_tubule_seq_pickles('RTN', 29, 'fuz-fuz')
-# exit()
+    Args:
+        groups (dict): A dictionary of group names and the number of series in each group.
+        connections (list): A list of connection types.
+        channels (list): A list of channel names.
+        measure (str): The name of the measure to be pickled.
 
-# atl_iso_iso_data = pkl.load(open('atl_iso-iso.pkl', 'rb'))
-# climp_iso_iso_data = pkl.load(open('climp_iso-iso.pkl', 'rb'))
-# rtn_iso_iso_data = pkl.load(open('rtn_iso-iso.pkl', 'rb'))
-# ctrl_iso_iso_data = pkl.load(open('control_iso-iso.pkl', 'rb'))
+    Returns:
+        None
+    """
 
-# a1 = atl_iso_iso_data[:10]
-# d1 = []
-# for each in a1:
-#     d1.extend(np.mean(i) for i in each)
-#
-# print(len(d1))
-# exit()
+    for group, num_series in groups.items():
+        for connection in connections:
+            if group != 'Control':
+                for channel in channels:
+                    create_tub_data_pickles(group, num_series, connection, channel, measure)
+            else:
+                create_tub_data_pickles(group, num_series, connection, 'egfp', measure)
 
-def get_correlation_data_per_replicate(data_egfp, data_mch):
+
+def pickle_creation_runner():
+    groups = {'ATL': 26, 'Climp': 31, 'Control': 31, 'RTN': 29}
+    connections = ['iso-iso', 'iso-fuz', 'fuz-fuz']
+    channels = ['egfp', 'mch']
+    create_pickles(groups, connections, channels)
+
+
+def get_correlation_data_per_replicate(data_egfp, data_mch) -> object:
     correlation_data_r1 = []
     for tub_eg, tub_mch in zip(data_egfp[:10], data_mch[:10]):
         correlation_data_r1.extend(np.corrcoef(i, j)[0][1] for i, j in zip(tub_eg, tub_mch))
@@ -1277,7 +1205,7 @@ def tubule_intensity_analysis(group, series_num, connection, measure):
         edge_pts = [conn_graph[u][v][0]['pts'] for (u, v) in edges]
         vals = []
         if measure == 'mean':
-            vals.extend(np.mean(er[each]) for each in edge_pts)
+            vals.extend(np.mean(er[each[:, 0], each[:, 1]]) for each in edge_pts)
         else:
             vals.extend(np.std(er[each]) for each in edge_pts)
 
