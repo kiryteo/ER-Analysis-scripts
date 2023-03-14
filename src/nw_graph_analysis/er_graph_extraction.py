@@ -1,25 +1,26 @@
 # Pipeline to get the ER graph starting with skeleton
 
+import imageio
+from plantcv import plantcv as pcv
+import sknw
 
-class ERGraphExtraction:
 
-    def __init__(self, confocal_data_path):
-        self.confocal_data_path = confocal_data_path
+def get_skel(self, img_path):
+    """
+    Extracts the skeleton from a vessel-enhanced image.
 
-    def get_vess_enh_er(self):
-        """
-        Get the vessel enhanced input for skeletonization
-        """
-        pass
+    @param img_path (str): The file path of the vessel-enhanced image.
+    @return: extracted skeleton (numpy.ndarray)
+    """
+    vess_enhanced_sample = imageio.imread(img_path)
+    return pcv.morphology.skeletonize(mask=vess_enhanced_sample)
 
-    def get_skel(self):
-        """
-        Get skeleton from vessel enhanced input
-        """
-        pass
 
-    def get_graph_from_skel(self):
-        """
-        Get a networkx graph from skeleton input
-        """
-        pass
+def get_graph_from_skel(skel_img_path):
+    """
+    @param skel_img_path:
+    @return:
+    """
+    return sknw.build_sknw(imageio.imread(skel_img_path), multi=True, iso=False)
+
+
