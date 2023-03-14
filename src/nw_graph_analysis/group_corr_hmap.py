@@ -8,6 +8,91 @@ import pandas as pd
 import imageio
 import cv2
 
+from structure_extraction import node_connector, get_updated_degree_nodes
+
+import contextlib
+
+img1 = plt.imread('/localhome/asa420/Pictures/Screenshot_from_2023-03-13_16-16-11.png')
+img2 = plt.imread('/localhome/asa420/Pictures/Screenshot_from_2023-03-13_16-16-05.png')
+# img3 = plt.imread('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/graphs/connected/Control_8_edge_graph_projection_connected_nbrs_v2.png')
+
+
+# Create the figure and axes
+fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+
+plt.axis('off')
+
+# Display the first image
+axs[0].imshow(img1)
+# axs[0].set_title('Graph RoI')
+axs[0].set_title('Tubule')
+axs[0].axis('off')
+# Display the second image
+# axs[1].imshow(img2)
+# axs[1].set_title('Near node connections')
+# axs[1].axis('off')
+# Show the plot
+
+axs[1].imshow(img2)
+axs[1].set_title('Projection')
+axs[1].axis('off')
+
+plt.savefig('Tubule_width', bbox_inches='tight', pad_inches=0.1)
+# plt.show()
+plt.close()
+
+
+exit()
+
+
+
+
+
+
+
+
+
+
+
+proj = np.zeros((369, 369, 4))
+for i in range(100):
+    img = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/per_frame_connected/A1_decon_t0{i:02d}_ch00_conn_graph.png')
+    proj += img
+
+plt.axis('off')
+plt.imshow(proj/100)
+plt.savefig('ATL1_connected_skel_projection.png', bbox_inches='tight', pad_inches=0)
+plt.close()
+# plt.show()
+
+exit()
+
+
+ip = np.zeros((128, 128))
+
+for i in range(100):
+
+    er_input_path = f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/std_egfp/A1_decon_t0{i:02d}_ch00_std.png'
+    mean_img = f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t0{i:02d}_ch00_skel.png'
+    conn_graph = node_connector(er_input_path, mean_img)
+    plt.imshow(ip, cmap='gray')
+    for (start_node, end_node) in conn_graph.edges():
+        ps = conn_graph[start_node][end_node][0]['pts']
+        plt.plot(ps[:, 1], ps[:, 0], 'white')
+        with contextlib.suppress(Exception):
+            ps_multi = conn_graph[start_node][end_node][1]['pts']
+            plt.plot(ps_multi[:, 1], ps_multi[:, 0], 'white')
+    # plt.imshow(conn_graph)
+    # plt.show()
+    plt.axis('off')
+
+    plt.savefig(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/per_frame_connected/A1_decon_t0{i:02d}_ch00_conn_graph.png', bbox_inches='tight', pad_inches=0)
+    plt.close()
+    # cv2.imwrite(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/per_frame_connected/A1_decon_t0{i:02d}_ch00_conn_graph.png', conn_graph)
+
+
+exit()
+
 # import seaborn as sns
 # import matplotlib.pyplot as plt
 # from statannot import add_stat_annotation

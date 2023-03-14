@@ -841,6 +841,107 @@ def get_tubule_data(group, series_num, connection):
     return edges, conn_graph
 
 
+def tubule_sequence_data(group, series_num, connection):
+    edges, conn_graph = get_tubule_data(group, series_num, connection)
+
+    if edges:
+        edge_pts = [conn_graph[u][v][0]['pts'] for (u, v) in edges]
+
+        group_pref = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
+
+        seq_data = []
+
+        for each in edge_pts:
+            l = []
+            for i in range(100):
+                # er_input_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_egfp/{group_pref[group]}{series_num}_decon_t0{i:02d}_ch00_std.png'
+                er_input_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_mch/{group_pref[group]}{series_num}_decon_t0{i:02d}_ch01_std.png'
+                er = imageio.imread(er_input_path)
+                er = (er - er.min()) / (er.max() - er.min())
+
+                l.append(er[each[:, 0], each[:, 1]])
+            seq_data.append(l)
+
+        return seq_data
+
+
+def tubule_sequence_data_egfp(group, series_num, connection):
+    edges, conn_graph = get_tubule_data(group, series_num, connection)
+
+    if edges:
+        edge_pts = [conn_graph[u][v][0]['pts'] for (u, v) in edges]
+
+        group_pref = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
+
+        seq_data = []
+
+        for each in edge_pts:
+            l = []
+            for i in range(100):
+                er_input_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_egfp/{group_pref[group]}{series_num}_decon_t0{i:02d}_ch00_std.png'
+                # er_input_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_mch/{group_pref[group]}{series_num}_decon_t0{i:02d}_ch01_std.png'
+                er = imageio.imread(er_input_path)
+                er = (er - er.min()) / (er.max() - er.min())
+
+                l.append(er[each[:, 0], each[:, 1]])
+            seq_data.append(l)
+
+        return seq_data
+
+
+def create_tub_data_pickles(group, total_series, connection):
+    l1 = []
+    for i in range(1, total_series+1):
+        seq_data = np.array(tubule_sequence_data(group, i, connection))
+        l1.append(seq_data)
+
+    with open(f'{group.lower()}_{connection}_tubules_mch.pkl', 'wb') as fl:
+        pkl.dump(l1, fl)
+
+def create_tub_data_pickles_egfp(group, total_series, connection):
+    l1 = []
+    for i in range(1, total_series+1):
+        seq_data = np.array(tubule_sequence_data(group, i, connection))
+        l1.append(seq_data)
+
+    with open(f'{group.lower()}_{connection}_tubules_egfp.pkl', 'wb') as fl:
+        pkl.dump(l1, fl)
+
+
+
+create_tub_data_pickles('ATL', 26, 'iso-iso')
+create_tub_data_pickles('Climp', 31, 'iso-iso')
+create_tub_data_pickles('RTN', 29, 'iso-iso')
+# create_tub_data_pickles('ATL', 26, 'iso-iso')
+
+create_tub_data_pickles('ATL', 26, 'iso-fuz')
+create_tub_data_pickles('Climp', 31, 'iso-fuz')
+create_tub_data_pickles('RTN', 29, 'iso-fuz')
+# create_tub_data_pickles('ATL', 26, 'iso-fuz')
+
+create_tub_data_pickles('ATL', 26, 'fuz-fuz')
+create_tub_data_pickles('Climp', 31, 'fuz-fuz')
+create_tub_data_pickles('RTN', 29, 'fuz-fuz')
+
+
+create_tub_data_pickles_egfp('ATL', 26, 'iso-iso')
+create_tub_data_pickles_egfp('Climp', 31, 'iso-iso')
+create_tub_data_pickles_egfp('RTN', 29, 'iso-iso')
+create_tub_data_pickles_egfp('Control', 31, 'iso-iso')
+
+create_tub_data_pickles_egfp('ATL', 26, 'iso-fuz')
+create_tub_data_pickles_egfp('Climp', 31, 'iso-fuz')
+create_tub_data_pickles_egfp('RTN', 29, 'iso-fuz')
+create_tub_data_pickles_egfp('Control', 31, 'iso-fuz')
+
+create_tub_data_pickles_egfp('ATL', 26, 'fuz-fuz')
+create_tub_data_pickles_egfp('Climp', 31, 'fuz-fuz')
+create_tub_data_pickles_egfp('RTN', 29, 'fuz-fuz')
+create_tub_data_pickles_egfp('Control', 31, 'fuz-fuz')
+
+
+exit()
+
 def tubule_sequence_analysis(group, series_num, connection):
 
     edges, conn_graph = get_tubule_data(group, series_num, connection)
@@ -860,7 +961,7 @@ def tubule_sequence_analysis(group, series_num, connection):
                 er = imageio.imread(er_input_path)
                 er = (er - er.min()) / (er.max() - er.min())
 
-                l.append(np.mean(er[each]))
+                l.append(np.mean(er[each[:, 0], each[:, 1]]))
             seq_data.append(l)
 
         return seq_data
