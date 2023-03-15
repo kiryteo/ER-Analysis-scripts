@@ -1126,27 +1126,35 @@ def compare_groups(connection):
 
     df = pd.DataFrame()
 
-    df['tub-mean'] = pd.Series(np.concatenate((ar1, ar2, ar3, cr1, cr2, cr3, rr1, rr2, rr3, ctr1, ctr2, ctr3)))
+    # df['tub-mean'] = pd.Series(np.concatenate((ar1, ar2, ar3, cr1, cr2, cr3, rr1, rr2, rr3, ctr1, ctr2, ctr3)))
+    df['tub-mean'] = pd.Series(np.concatenate((a1, c1, r1, ct1, ctr2, ctr3)))
+
+    # df['Group'] = pd.Series(np.concatenate((
+    #     ['ATL'] * len(ar1), ['ATL'] * len(ar2), ['ATL'] * len(ar3), ['Climp'] * len(cr1),
+    #     ['Climp'] * len(cr2), ['Climp'] * len(cr3), ['RTN'] * len(rr1),
+    #     ['RTN'] * len(rr2), ['RTN'] * len(rr3), ['Control'] * len(ctr1),
+    #     ['Control'] * len(ctr2), ['Control'] * len(ctr3))))
 
     df['Group'] = pd.Series(np.concatenate((
-        ['ATL'] * len(ar1), ['ATL'] * len(ar2), ['ATL'] * len(ar3), ['Climp'] * len(cr1),
-        ['Climp'] * len(cr2), ['Climp'] * len(cr3), ['RTN'] * len(rr1),
-        ['RTN'] * len(rr2), ['RTN'] * len(rr3), ['Control'] * len(ctr1),
-        ['Control'] * len(ctr2), ['Control'] * len(ctr3))))
+        ['ATL'] * len(a1), ['Climp'] * len(c1), ['RTN'] * len(r1), ['Control'] * len(ct1))))
 
-    df['Replicate'] = pd.Series(
-        np.concatenate((['R1'] * len(ar1), ['R2'] * len(ar2), ['R3'] * len(ar3), ['R1'] * len(cr1),
-                        ['R2'] * len(cr2), ['R3'] * len(cr3), ['R1'] * len(rr1), ['R2'] * len(rr2),
-                        ['R3'] * len(rr3), ['R1'] * len(ctr1), ['R2'] * len(ctr2),
-                        ['R3'] * len(ctr3))))
+    # df['Replicate'] = pd.Series(
+    #     np.concatenate((['R1'] * len(ar1), ['R2'] * len(ar2), ['R3'] * len(ar3), ['R1'] * len(cr1),
+    #                     ['R2'] * len(cr2), ['R3'] * len(cr3), ['R1'] * len(rr1), ['R2'] * len(rr2),
+    #                     ['R3'] * len(rr3), ['R1'] * len(ctr1), ['R2'] * len(ctr2),
+    #                     ['R3'] * len(ctr3))))
 
-    ax = sns.boxplot(data=df, x='Replicate', y='tub-mean', hue='Group', dodge=True)
+    # ax = sns.boxplot(data=df, x='Replicate', y='tub-mean', hue='Group', dodge=True)
+    ax = sns.boxplot(data=df, x='Group', y='tub-mean')
+
     # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
 
     # plt.yscale('log')
 
-    box_pairs = get_box_pairs('egfp')
+    # box_pairs = get_box_pairs('egfp')
+
+    box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')]
 
     # statannot.add_stat_annotation(ax, x='Replicate', y='tub-mean', hue='Group', data=df, box_pairs=box_pairs,
     #                               test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
@@ -1160,11 +1168,11 @@ def compare_groups(connection):
     #     plt.title(f'Mean of sequence for tubule intensity mean ({ch_name}) in {connection} edges',
     #               fontsize=18)
 
-    plt.title(f'Tubule length in {connection} connections', fontsize=18)
+    plt.title(f'Tubule length in {connection} connections for all sequences', fontsize=18)
 
     plt.grid(True)
-    plt.xlabel('Replicate', fontsize=18)
-    plt.ylabel('Tubule length', fontsize=18)
+    plt.xlabel('Group', fontsize=18)
+    plt.ylabel('Tubule length (pixels)', fontsize=18)
     # plt.ylabel(f'Tubular {variation}, log scale', fontsize=18)
     # plt.ylabel(f'Tubular {variation}', fontsize=18)
 
