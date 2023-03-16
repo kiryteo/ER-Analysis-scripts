@@ -25,7 +25,7 @@ GROUP_PREF = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
 VALID_GROUPS = ['ATL', 'Climp', 'RTN', 'Control']
 VALID_CONNECTIONS = ['iso-iso', 'iso-fuz', 'fuz-fuz']
 VALID_CHANNELS = ['egfp', 'mch']
-VALID_MEASURES = ['tubule', 'tub-mean']
+VALID_MEASURES = ['tubules', 'tub-mean']
 
 junc_analysis = JA(confocal_data_path)
 
@@ -778,8 +778,8 @@ def get_tubule_data(group, series_num, connection):
     group_pref = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
 
     # sourcery skip: inline-immediately-returned-variable
-    er_input_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{series_num}_er_mean.png'
-    skel_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean_proc/{group.lower()}{series_num}_er_mean_proc_enhance_skel.png'
+    er_input_path = f'{confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{series_num}_er_mean.png'
+    skel_path = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series_num}_er_mean_proc_enhance_skel.png'
 
     conn_graph = node_connector(er_input_path, skel_path)
 
@@ -843,6 +843,27 @@ def get_tubule_data(group, series_num, connection):
     return edges, conn_graph
 
 
+# edges, conn_graph = get_tubule_data('ATL', 1, 'iso-iso')
+# edge_pts = [conn_graph[u][v][0]['pts'] for (u, v) in edges]
+#
+# def get_er_input(num, group, channel, series_num, ch_id):
+#     er_input_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_{channel}/A1_decon_t0{num:02d}_ch0{ch_id}_std.png'
+#     er = imageio.imread(er_input_path)
+#     # er = (er - er.min()) / (er.max() - er.min())
+#     return er / 255
+#
+# egfp = get_er_input(0, 'ATL', 'egfp', 1, 0)
+# mch = get_er_input(0, 'ATL', 'mch', 1, 1)
+#
+# # egfp = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/std_egfp/A1_decon_t000_ch00_std.png') / 255
+# # mch = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/std_mch/A1_decon_t000_ch01_std.png') / 255
+#
+# a = edge_pts[0]
+# print(egfp[a[:, 0], a[:, 1]])
+# print(mch[a[:, 0], a[:, 1]])
+# exit()
+
+
 def tubule_sequence_data(group, series_num, connection, channel, measure):
     """
     Returns sequence data for tubule images from a given group, series, connection, and channel.
@@ -860,15 +881,15 @@ def tubule_sequence_data(group, series_num, connection, channel, measure):
     assert group in VALID_GROUPS, f"Invalid group name: {group}"
     assert connection in VALID_CONNECTIONS, f"Invalid connection type: {connection}"
     assert channel in VALID_CHANNELS, f"Invalid channel name: {channel}"
-    assert measure in VALID_MEASURES, f"Invalid channel name: {measure}"
+    assert measure in VALID_MEASURES, f"Invalid measure name: {measure}"
 
     group_pref = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
 
     def get_er_input(num, group, channel, series_num, ch_id):
-        er_input_path = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_{channel}/{group_pref[group]}{series_num}_decon_t0{num:02d}_ch0{ch_id}_std.png'
+        er_input_path = f'{confocal_data_path}{group}/new_op_jul/std_{channel}/{group_pref[group]}{series_num}_decon_t0{num:02d}_ch0{ch_id}_std.png'
         er = imageio.imread(er_input_path)
-        er = (er - er.min()) / (er.max() - er.min())
-        return er
+        # er = (er - er.min()) / (er.max() - er.min())
+        return er / 255
 
     edges, conn_graph = get_tubule_data(group, series_num, connection)
 
@@ -879,16 +900,21 @@ def tubule_sequence_data(group, series_num, connection, channel, measure):
 
     seq_data = []
 
-    ch_id = 0 if channel == 'egfp' else 1
+    # ch_id = 0 if channel == 'egfp' else 1
+    if channel == 'egfp':
+        ch_id = 0
+    else:
+        ch_id = 1
 
     for each in edge_pts:
         edge_data = []
         for i in range(100):
             er = get_er_input(i, group, channel, series_num, ch_id)
-            if measure == 'tubule':
-                edge_data.append(er[each[:, 0], each[:, 1]])
-            elif measure == 'tub-mean':
-                edge_data.append(np.mean(er[each[:, 0], each[:, 1]]))
+            edge_data.append(er[each[:, 0], each[:, 1]])
+            # if measure == 'tubules':
+            #     edge_data.append(er[each[:, 0], each[:, 1]])
+            # elif measure == 'tub-mean':
+            #     edge_data.append(np.mean(er[each[:, 0], each[:, 1]]))
         seq_data.append(edge_data)
 
     return seq_data
@@ -902,6 +928,13 @@ def create_tub_data_pickles(group, total_series, connection, channel, measure):
 
     with open(f'{group.lower()}_{connection}_{measure}_{channel}.pkl', 'wb') as fl:
         pkl.dump(group_data, fl)
+
+
+groups = {'ATL': 26, 'Climp': 31, 'Control': 31, 'RTN': 29}
+connections = ['iso-iso', 'iso-fuz', 'fuz-fuz']
+channels = ['egfp', 'mch']
+
+
 
 
 def create_pickles(groups: dict, connections: list, channels: list, measure: list) -> None:
@@ -927,6 +960,9 @@ def create_pickles(groups: dict, connections: list, channels: list, measure: lis
                 create_tub_data_pickles(group, num_series, connection, 'egfp', measure)
 
 
+
+
+
 def pickle_creation_runner():
     groups = {'ATL': 26, 'Climp': 31, 'Control': 31, 'RTN': 29}
     # connections = ['iso-iso', 'iso-fuz', 'fuz-fuz']
@@ -934,286 +970,6 @@ def pickle_creation_runner():
     # measure = ['tubule']
     # measure = VALID_MEASURES
     create_pickles(groups, VALID_CONNECTIONS, VALID_CHANNELS, VALID_MEASURES)
-
-
-def get_correlation_data_per_replicate(data_egfp, data_mch) -> object:
-    correlation_data_r1 = []
-    for tub_eg, tub_mch in zip(data_egfp[:10], data_mch[:10]):
-        correlation_data_r1.extend(np.corrcoef(i, j)[0][1] for i, j in zip(tub_eg, tub_mch))
-
-    correlation_data_r2 = []
-    for tub_eg, tub_mch in zip(data_egfp[10:20], data_mch[10:20]):
-        correlation_data_r2.extend(np.corrcoef(i, j)[0][1] for i, j in zip(tub_eg, tub_mch))
-
-    correlation_data_r3 = []
-    for tub_eg, tub_mch in zip(data_egfp[20:], data_mch[20:]):
-        correlation_data_r3.extend(np.corrcoef(i, j)[0][1] for i, j in zip(tub_eg, tub_mch))
-
-    return correlation_data_r1, correlation_data_r2, correlation_data_r3
-
-
-def get_channel_corr(group, connection):
-    with open(f'{group.lower()}_{connection}.pkl', 'rb') as f:
-        data_egfp = pkl.load(f)
-
-    with open(f'{group.lower()}_{connection}_mch.pkl', 'rb') as f:
-        data_mch = pkl.load(f)
-
-    if connection != 'None':
-        return get_correlation_data_per_replicate(data_egfp, data_mch)
-    correlation_data = []
-    for tub_eg, tub_mch in zip(data_egfp, data_mch):
-        correlation_data.extend(np.corrcoef(i, j)[0][1] for i, j in zip(tub_eg, tub_mch))
-    return correlation_data
-
-
-def get_pickle_data(group, conn, measure, channel):
-    with open(
-            f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/{measure}/{group.lower()}_{conn}_{measure}_{channel}.pkl',
-            'rb') as f:
-        data = pkl.load(f)
-    return data
-
-
-def get_box_pairs(channel):
-    if channel == 'mch':
-        groups = ['ATL', 'Climp', 'RTN']
-    else:
-        groups = ['ATL', 'Climp', 'RTN', 'Control']
-    regions = ['R1', 'R2', 'R3']
-    box_pairs = []
-
-    for r in regions:
-        for i, m1 in enumerate(groups):
-            for m2 in groups[i+1:]:
-                pair = ((r, m1), (r, m2))
-                box_pairs.append(pair)
-
-    return box_pairs
-
-
-def filter_data(data):
-    new_list = [arr for arr in data if arr is not None and not np.all(arr == None)]
-    return new_list
-
-
-def get_egfp_plots(connection, channel, variation):
-
-    def get_variation(data, variation):
-        if variation == 'mean':
-            func = np.mean
-        elif variation == 'std':
-            func = np.std
-        else:
-            raise ValueError('Invalid variation')
-
-        result = []
-
-        for subset in [data[:10], data[10:20], data[20:]]:
-            subset = filter_data(subset)
-            subset_result = [func(i) for each in subset for i in each if len(i) > 0]
-            result.append(subset_result)
-
-        return tuple(result)
-
-    atl = get_pickle_data('ATL', connection, 'tub_mean', channel)
-    climp = get_pickle_data('Climp', connection, 'tub_mean', channel)
-    rtn = get_pickle_data('RTN', connection, 'tub_mean', channel)
-
-    ar1, ar2, ar3 = get_variation(atl, 'mean')
-    cr1, cr2, cr3 = get_variation(climp, 'mean')
-    rr1, rr2, rr3 = get_variation(rtn, 'mean')
-
-    df = pd.DataFrame()
-
-
-    if channel == 'egfp':
-        ctrl = get_pickle_data('Control', connection, 'tub_mean', channel)
-        ctr1, ctr2, ctr3 = get_variation(ctrl, 'mean')
-
-        df['tub-mean'] = pd.Series(np.concatenate((ar1, ar2, ar3, cr1, cr2, cr3, rr1, rr2, rr3, ctr1, ctr2, ctr3)))
-
-        df['Group'] = pd.Series(np.concatenate((
-            ['ATL'] * len(ar1), ['ATL'] * len(ar2), ['ATL'] * len(ar3), ['Climp'] * len(cr1),
-            ['Climp'] * len(cr2), ['Climp'] * len(cr3), ['RTN'] * len(rr1),
-            ['RTN'] * len(rr2), ['RTN'] * len(rr3), ['Control'] * len(ctr1),
-            ['Control'] * len(ctr2), ['Control'] * len(ctr3))))
-
-        df['Replicate'] = pd.Series(
-            np.concatenate((['R1'] * len(ar1), ['R2'] * len(ar2), ['R3'] * len(ar3), ['R1'] * len(cr1),
-                            ['R2'] * len(cr2), ['R3'] * len(cr3), ['R1'] * len(rr1), ['R2'] * len(rr2),
-                            ['R3'] * len(rr3), ['R1'] * len(ctr1), ['R2'] * len(ctr2),
-                            ['R3'] * len(ctr3))))
-
-    else:
-        df['tub-mean'] = pd.Series(np.concatenate((ar1, ar2, ar3, cr1, cr2, cr3, rr1, rr2, rr3)))
-
-        df['Group'] = pd.Series(np.concatenate((
-            ['ATL'] * len(ar1), ['ATL'] * len(ar2), ['ATL'] * len(ar3), ['Climp'] * len(cr1),
-            ['Climp'] * len(cr2), ['Climp'] * len(cr3), ['RTN'] * len(rr1),
-            ['RTN'] * len(rr2), ['RTN'] * len(rr3))))
-
-        df['Replicate'] = pd.Series(
-            np.concatenate((['R1'] * len(ar1), ['R2'] * len(ar2), ['R3'] * len(ar3), ['R1'] * len(cr1),
-                            ['R2'] * len(cr2), ['R3'] * len(cr3), ['R1'] * len(rr1), ['R2'] * len(rr2),
-                            ['R3'] * len(rr3))))
-
-    ax = sns.boxenplot(data=df, x='Replicate', y='tub-mean', hue='Group', dodge=True)
-    # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
-
-    # plt.yscale('log')
-
-    box_pairs = get_box_pairs(channel)
-
-    statannot.add_stat_annotation(ax, x='Replicate', y='tub-mean', hue='Group', data=df, box_pairs=box_pairs,
-                                  test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
-
-    ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
-
-    if variation == 'std':
-        plt.title(f'Standard deviation of sequence for tubule intensity mean ({ch_name}) in {connection} edges',
-                  fontsize=18)
-    else:
-        plt.title(f'Mean of sequence for tubule intensity mean ({ch_name}) in {connection} edges',
-                  fontsize=18)
-    # plt.suptitle(f'{region_name} CC area across conditions', fontsize=20)
-    # plt.title('CC area denotes the total movement of each junction', fontsize=18)
-    plt.grid(True)
-    plt.xlabel('Replicate', fontsize=18)
-    # plt.ylabel(f'Tubular {variation}, log scale', fontsize=18)
-    plt.ylabel(f'Tubular {variation}', fontsize=18)
-    plt.show()
-
-
-
-# get_egfp_plots('fuz-fuz', 'mch', 'std')
-
-# exit()
-
-
-
-# def get_edge_length():
-def get_edge_length(group, connection, measure, channel):
-
-    tubule_data = get_pickle_data(group, connection, measure, channel)
-
-    # len(tubule[0]) < 61 and
-    def get_length_per_tubule(data):
-        all_tubules = []
-        data = filter_data(data)
-        for series in data:
-            lengths = [len(tubule[0]) for tubule in series if len(tubule[0]) > 3]
-            all_tubules.extend(lengths)
-        return all_tubules
-
-    def get_mean_length_per_series(data):
-        mean_lengths = []
-        data = filter_data(data)
-        for series in data:
-            lengths = [len(tubule[0]) for tubule in series]
-            mean_lengths.append(np.mean(lengths))
-        return mean_lengths
-
-    # r1_mean_lengths = get_mean_length_per_series(tubule_data[:10])
-    # r2_mean_lengths = get_mean_length_per_series(tubule_data[10:20])
-    # r3_mean_lengths = get_mean_length_per_series(tubule_data[20:])
-
-    # return r1_mean_lengths, r2_mean_lengths, r3_mean_lengths
-    r1_length = get_length_per_tubule(tubule_data[:10])
-    r2_length = get_length_per_tubule(tubule_data[10:20])
-    r3_length = get_length_per_tubule(tubule_data[20:])
-
-    return r1_length, r2_length, r3_length
-
-
-# ar1_ii, ar2_ii, ar3_ii = get_edge_length('ATL', 'iso-iso', 'tubules', 'egfp')
-# cr1_ii, cr2_ii, cr3_ii = get_edge_length('Climp', 'iso-iso', 'tubules', 'egfp')
-# rr1_ii, rr2_ii, rr3_ii = get_edge_length('RTN', 'iso-iso', 'tubules', 'egfp')
-# ctr1_ii, ctr2_ii, ctr3_ii = get_edge_length('Control', 'iso-iso', 'tubules', 'egfp')
-#
-# ar1_if, ar2_if, ar3_if = get_edge_length('ATL', 'iso-fuz', 'tubules', 'egfp')
-# cr1_if, cr2_if, cr3_if = get_edge_length('Climp', 'iso-fuz', 'tubules', 'egfp')
-# rr1_if, rr2_if, rr3_if = get_edge_length('RTN', 'iso-fuz', 'tubules', 'egfp')
-# ctr1_if, ctr2_if, ctr3_if = get_edge_length('Control', 'iso-fuz', 'tubules', 'egfp')
-#
-# ar1_ff, ar2_ff, ar3_ff = get_edge_length('ATL', 'fuz-fuz', 'tubules', 'egfp')
-# cr1_ff, cr2_ff, cr3_ff = get_edge_length('Climp', 'fuz-fuz', 'tubules', 'egfp')
-# rr1_ff, rr2_ff, rr3_ff = get_edge_length('RTN', 'fuz-fuz', 'tubules', 'egfp')
-# ctr1_ff, ctr2_ff, ctr3_ff = get_edge_length('Control', 'fuz-fuz', 'tubules', 'egfp')
-
-# ar1 = ar1_ii + ar1_if + ar1_ff
-# cr1 = cr1_ii + cr1_if + cr1_ff
-# rr1 = rr1_ii + rr1_if + rr1_ff
-# ctr1 = ctr1_ii + ctr1_if + ctr1_ff
-#
-# ar2 = ar2_ii + ar2_if + ar2_ff
-# cr2 = cr2_ii + cr2_if + cr2_ff
-# rr2 = rr2_ii + rr2_if + rr2_ff
-# ctr2 = ctr2_ii + ctr2_if + ctr2_ff
-#
-# ar3 = ar3_ii + ar3_if + ar3_ff
-# cr3 = cr3_ii + cr3_if + cr3_ff
-# rr3 = rr3_ii + rr3_if + rr3_ff
-# ctr3 = ctr3_ii + ctr3_if + ctr3_ff
-
-def compare_groups(connection, plottype):
-
-    ar1, ar2, ar3 = get_edge_length('ATL', connection, 'tubules', 'egfp')
-    cr1, cr2, cr3 = get_edge_length('Climp', connection, 'tubules', 'egfp')
-    rr1, rr2, rr3 = get_edge_length('RTN', connection, 'tubules', 'egfp')
-    ctr1, ctr2, ctr3 = get_edge_length('Control', connection, 'tubules', 'egfp')
-
-    df = pd.DataFrame()
-
-    if plottype == 'group':
-        a1 = ar1 + ar2 + ar3
-        c1 = cr1 + cr2 + cr3
-        r1 = rr1 + rr2 + rr3
-        ct1 = ctr1 + ctr2 + ctr3
-
-        df['tub-mean'] = pd.Series(np.concatenate((a1, c1, r1, ct1)))
-        df['Group'] = pd.Series(np.concatenate((
-            ['ATL'] * len(a1), ['Climp'] * len(c1), ['RTN'] * len(r1), ['Control'] * len(ct1))))
-
-        ax = sns.boxenplot(data=df, x='Group', y='tub-mean')
-
-        box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')]
-
-        statannot.add_stat_annotation(ax, x='Group', y='tub-mean', data=df, box_pairs=box_pairs,
-                                      test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
-        plt.xlabel('Group', fontsize=18)
-
-    else:
-        df['tub-mean'] = pd.Series(np.concatenate((ar1, ar2, ar3, cr1, cr2, cr3, rr1, rr2, rr3, ctr1, ctr2, ctr3)))
-
-        df['Group'] = pd.Series(np.concatenate((
-        ['ATL'] * len(ar1), ['ATL'] * len(ar2), ['ATL'] * len(ar3), ['Climp'] * len(cr1),
-        ['Climp'] * len(cr2), ['Climp'] * len(cr3), ['RTN'] * len(rr1),
-        ['RTN'] * len(rr2), ['RTN'] * len(rr3), ['Control'] * len(ctr1),
-        ['Control'] * len(ctr2), ['Control'] * len(ctr3))))
-
-        df['Replicate'] = pd.Series(np.concatenate((['R1'] * len(ar1), ['R2'] * len(ar2), ['R3'] * len(ar3), ['R1'] * len(cr1), ['R2'] * len(cr2), ['R3'] * len(cr3), ['R1'] * len(rr1), ['R2'] * len(rr2), ['R3'] * len(rr3), ['R1'] * len(ctr1), ['R2'] * len(ctr2), ['R3'] * len(ctr3))))
-
-        ax = sns.boxenplot(data=df, x='Replicate', y='tub-mean', hue='Group', dodge=True)
-
-        box_pairs = get_box_pairs('egfp')
-
-        statannot.add_stat_annotation(ax, x='Replicate', y='tub-mean', hue='Group', data=df, box_pairs=box_pairs,
-                                  test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
-
-        plt.xlabel('Replicates', fontsize=18)
-
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
-    plt.title(f'Tubule length in {connection} connections for all sequences', fontsize=18)
-    plt.grid(True)
-    plt.ylabel('Tubule length (pixels)', fontsize=18)
-    plt.show()
-
-compare_groups('iso-iso', 'group')
-
-exit()
-
 
 
 def get_group_data(group):
