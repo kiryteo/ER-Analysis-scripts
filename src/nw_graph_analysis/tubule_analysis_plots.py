@@ -138,6 +138,101 @@ def get_per_pixel_variation_over_sequence(group, connection, channel, variation)
 # get_per_pixel_mean_over_sequence('ATL', 'iso-fuz', 'egfp')
 # exit()
 
+def per_pixel_correlation(egfp_data, mch_data):
+    egfp = filter_data(egfp_data)
+    mch = filter_data(mch_data)
+
+    corr_vals = []
+
+    for s1, s2 in zip(egfp, mch):
+        for t1, t2 in zip(s1, s2):
+            transposed_egfp = list(map(list, zip(*t1)))
+            transposed_mch = list(map(list, zip(*t2)))
+            corr_vals.extend(np.corrcoef(e1, e2)[0, 1] for e1, e2 in zip(transposed_egfp, transposed_mch))
+
+    return corr_vals
+
+
+def get_group_correlation_data(group, connection):
+    egfp = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/{group.lower()}_{connection}_tubules_egfp.pkl', 'rb'))
+    mch = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/{group.lower()}_{connection}_tubules_mch.pkl', 'rb'))
+
+    return egfp, mch
+
+
+def get_replicate_data(egfp, mch):
+    r1e, r1m = egfp[:10], mch[:10]
+    r2e, r2m = egfp[10:20], mch[10:20]
+    r3e, r3m = egfp[20:], mch[20:]
+
+    r1 = per_pixel_correlation(r1e, r1m)
+    r2 = per_pixel_correlation(r2e, r2m)
+    r3 = per_pixel_correlation(r3e, r3m)
+
+    return r1, r2, r3
+
+
+def plot_per_pixel_correlation(connection, plottype):
+    # Get data for each group
+    atl_egfp, atl_mch = get_group_correlation_data('ATL', connection)
+    climp_egfp, climp_mch = get_group_correlation_data('Climp', connection)
+    rtn_egfp, rtn_mch = get_group_correlation_data('RTN', connection)
+
+    df = pd.DataFrame()
+
+    if plottype == 'all':
+        atl = per_pixel_correlation(atl_egfp, atl_mch)
+        climp = per_pixel_correlation(climp_egfp, climp_mch)
+        rtn = per_pixel_correlation(rtn_egfp, rtn_mch)
+
+        per_pixel_data = np.concatenate((atl, climp, rtn))
+        group_labels = np.concatenate((['ATL'] * len(atl), ['Climp'] * len(climp), ['RTN'] * len(rtn)))
+
+        df['Per-pixel-mean'] = pd.Series(per_pixel_data)
+        df['Group'] = pd.Series(group_labels)
+
+        box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
+
+        ax = sns.boxenplot(data=df, x='Group', y='Per-pixel-mean')
+
+        statannot.add_stat_annotation(ax, x='Group', y='Per-pixel-mean', data=df, box_pairs=box_pairs,
+                                      test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+
+    else:
+        ar1, ar2, ar3 = get_replicate_data(atl_egfp, atl_mch)
+        cr1, cr2, cr3 = get_replicate_data(climp_egfp, climp_mch)
+        rr1, rr2, rr3 = get_replicate_data(rtn_egfp, rtn_mch)
+
+        df['Per-pixel-mean'] = pd.Series(np.concatenate((ar1, ar2, ar3, cr1, cr2, cr3, rr1, rr2, rr3)))
+
+        df['Group'] = pd.Series(np.concatenate((
+            ['ATL'] * len(ar1), ['ATL'] * len(ar2), ['ATL'] * len(ar3), ['Climp'] * len(cr1), ['Climp'] * len(cr2),
+            ['Climp'] * len(cr3), ['RTN'] * len(rr1), ['RTN'] * len(rr2), ['RTN'] * len(rr3))))
+
+        df['Replicate'] = pd.Series(np.concatenate((['R1'] * len(ar1), ['R2'] * len(ar2), ['R3'] * len(ar3), ['R1'] * len(cr1),
+                                                    ['R2'] * len(cr2), ['R3'] * len(cr3), ['R1'] * len(rr1), ['R2'] * len(rr2),
+                                                    ['R3'] * len(rr3))))
+
+        ax = sns.boxenplot(data=df, x='Replicate', y='Per-pixel-mean', hue='Group', dodge=True)
+
+        box_pairs = get_box_pairs('mch')
+
+        statannot.add_stat_annotation(ax, x='Replicate', y='Per-pixel-mean', hue='Group', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
+
+    plt.grid(True)
+    plt.xlabel('Replicates', fontsize=18)
+    plt.ylabel('Cross-correlation values', fontsize=18)
+
+    plt.title(f'Per pixel cross-correlation over 100 frames between ERmoxGFP and mCherry in each {connection} connection tubule', fontsize=18)
+
+    plt.show()
+
+
+plot_per_pixel_correlation('fuz-fuz', 'replicate')
+exit()
+
 def plot_per_pixel_variation(connection, channel, variation):
     atl = get_per_pixel_variation_over_sequence('ATL', connection, channel, variation)
     climp = get_per_pixel_variation_over_sequence('Climp', connection, channel, variation)
@@ -222,9 +317,9 @@ import itertools
 # for each, i, j in itertools.product(conns, ch, ms):
 #     plot_per_pixel_variation(each, i, j)
 
-plot_per_pixel_variation('iso-iso', 'mch', 'mean')
+# plot_per_pixel_variation('iso-iso', 'mch', 'mean')
 
-exit()
+# exit()
 
 
 def get_egfp_plots(connection, channel, variation):
