@@ -74,6 +74,44 @@ def get_junctions(er_input_path, mean_img):
     return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
 
 
+def get_all_junc(self, group, num_series):
+    """
+
+    @param group: group to be analyzed
+    @param num_series: sequence number
+    @return: nps (list) - provides all junctions with degree > 2 from the mean projection proc skeleton, per_frame_junctions (list) - provides all junctions per skel frame
+    """
+
+    group_pref = {'ATL':'A', 'Climp':'C', 'Control':'Ct', 'RTN':'R'}
+
+    mean_er = f'{self.confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{num_series}_er_mean.png'
+
+    mean_skel = f'{self.confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
+
+    # Get junction coordinates from projection frame
+    graph = self.skel_to_graph(mean_skel)
+
+    ref_junctions = self.get_junctions(graph)
+
+    ref_junctions = [[each[0], each[1]] for each in ref_junctions]
+
+    per_frame_junctions = []
+    for frame in range(100):
+
+        er_path = f'{confocal_data_path}{group}/new_op_jul/std_egfp/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_std.png'
+
+        skeleton_path = f'{confocal_data_path}{group}/new_op_jul/skel/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
+
+        graph = self.skel_to_graph(skeleton_path)
+        # graph = node_connector(er_path, skeleton_path)
+        junctions = self.get_junctions(graph)
+
+        junc_array = [[junc[0], junc[1]] for junc in junctions]
+        # sk_nps = np.array(sk_nps)
+        per_frame_junctions.extend(junc_array)
+
+    return ref_junctions, per_frame_junctions
+
 def get_all_junc(group, num_series):
     """
 
@@ -118,6 +156,9 @@ def get_all_junc(group, num_series):
 
 
 def label_junctions(group, series_num):
+    """
+    Creates the connected component for junctions
+    """
     ref_junctions, per_frame_junctions = get_all_junc(group, series_num)
 
     ref_junctions = np.array(ref_junctions)
@@ -177,6 +218,9 @@ def get_junction_types(reference_junctions, connected_components):
 
 
 def get_uncertain_junctions(labelled_img, per_frame_junctions, num_components, assigned_components):
+    """
+
+    """
     unassigned_components = [x for x in num_components if x not in assigned_components]
 
     unassigned_cc_dict = {}
@@ -220,13 +264,20 @@ def get_junction_areas(label_ids, unassigned_cc_dict):
     isolated_junctions = np.array(isolated_junctions)
 
     fuzzy_junctions = list(itertools.chain.from_iterable(fuzzy_junctions))
-    fuz = np.array(fuzzy_junctions)
+    fuzzy_junctions = np.array(fuzzy_junctions)
 
     unknown_junctions = list(itertools.chain.from_iterable(unknown_junctions))
     unknown_junctions = np.array(unknown_junctions)
 
     return isolated_junctions, fuzzy_junctions, unknown_junctions
 
+
+ref_junctions, per_frame_junctions, labelled_img = label_junctions('ATL', 1)
+label_ids, unassigned_cc_dict = separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
+iso, fuz, unk = get_junction_areas(label_ids, unassigned_cc_dict)
+
+print(fuz)
+exit()
 
 def get_region_cc(group, series_num, region):
     ref_junctions, per_frame_junctions, labelled_img = label_junctions(group, series_num)
