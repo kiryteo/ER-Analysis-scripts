@@ -87,31 +87,92 @@ def filter_data(data):
 # print(data[0][0][0])
 # print(data_mch[0][0][0])
 
-egfp = pkl.load(open('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/atl_iso-iso_tubules_egfp.pkl', 'rb'))
-mch = pkl.load(open('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/atl_iso-iso_tubules_mch.pkl', 'rb'))
+
+# atl_mch = pkl.load(open('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/atl_fuz-fuz_tubules_mch.pkl', 'rb'))
+# atl_egfp = pkl.load(open('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/atl_fuz-fuz_tubules_egfp.pkl', 'rb'))
+# rtn_egfp = pkl.load(open('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/rtn_fuz-fuz_tubules_egfp.pkl', 'rb'))
 
 
-l_mean = []
-l_std = []
-for series in egfp:
-    for tubule in series:
-        transposed_list = list(map(list, zip(*tubule)))
-        for each in transposed_list:
-            l_mean.append(np.mean(each))
-            # l_std.append(np.std(each))
-
-l_mean_mch = []
-for series in mch:
-    for tubule in series:
-        transposed_list = list(map(list, zip(*tubule)))
-        for each in transposed_list:
-            l_mean_mch.append(np.mean(each))
-            # l_std.append(np.std(each))
+# def load_data(group, connection):
+#     data_egfp = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/{group.lower()}_{connection}_tubules_egfp.pkl', 'rb'))
+#     data_mch = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/{group.lower()}_{connection}_tubules_mch.pkl', 'rb'))
+#     return data_egfp, data_mch
 
 
-sns.distplot(l_mean, hist=False, label='egfp')
-sns.distplot(l_mean_mch, hist=False, label='mch')
-plt.legend()
+# def get_per_pixel_mean_over_sequence(egfp, mch):
+#     e_mean = []
+#     m_mean = []
+#     # l_std = []
+#     for e_series, m_series in zip(egfp, mch):
+#         for e_tubule, m_tubule in zip(e_series, m_series):
+#             e_transposed_list = list(map(list, zip(*e_tubule)))
+#             m_transposed_list = list(map(list, zip(*m_tubule)))
+#             for e, m in zip(e_transposed_list, m_transposed_list):
+#                 e_mean.append(np.mean(e))
+#                 m_mean.append(np.mean(m))
+#     return e_mean, m_mean
+
+
+def get_per_pixel_mean_over_sequence(group, connection, channel):
+    data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/{group.lower()}_{connection}_tubules_{channel}.pkl', 'rb'))
+    mean_vals = []
+    for series in data:
+        for tubule in series:
+            transposed_list = list(map(list, zip(*e_tubule)))
+            for each in transposed_list:
+                mean_vals.append(np.mean(each))
+    return mean_vals
+
+
+atl_egfp, atl_mch = load_data('ATL', 'iso-iso')
+climp_egfp, climp_mch = load_data('Climp', 'iso-iso')
+rtn_egfp, rtn_mch = load_data('RTN', 'iso-iso')
+# ctrl_egfp, ctrl_mch = load_data('Control', 'iso-iso')
+
+am_egfp, am_mch = get_per_pixel_mean_over_sequence(atl_egfp, atl_mch)
+cm_egfp, cm_mch = get_per_pixel_mean_over_sequence(climp_egfp, climp_mch)
+rm_egfp, rm_mch = get_per_pixel_mean_over_sequence(rtn_egfp, rtn_mch)
+# ct_egfp, ct_mch = get_per_pixel_mean_over_sequence()
+
+df = pd.DataFrame()
+df['Per-pixel-mean'] = pd.Series(np.concatenate((am_egfp, am_mch, cm_egfp, cm_mch, rm_egfp, rm_mch)))#, ctrl_egfp, ctrl_mch)))
+
+df['Group'] = pd.Series(np.concatenate((['ATL']*len(am_egfp), ['ATL']*len(am_mch), ['Climp']*len(cm_egfp), ['Climp']*len(cm_mch), ['RTN']*len(rm_egfp), ['RTN']*len(rm_mch))))#, ['Control']*len(ctrl_egfp), ['Control']*len(ctrl_mch))))
+
+df['Channel'] = pd.Series(
+    np.concatenate((['EGFP'] * len(am_egfp), ['mCherry'] * len(am_mch), ['EGFP'] * len(cm_egfp), ['mCherry'] * len(cm_mch),
+                    ['EGFP'] * len(rm_egfp), ['mCherry'] * len(rm_mch))))#, ['EGFP'] * len(ctrl_egfp), ['mCherry'] * len(ctrl_mch))))
+
+
+ax = sns.boxenplot(data=df, x='Channel', y='Per-pixel-mean', hue='Group', dodge=True)
+ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
+
+# plt.yscale('log')
+
+# box_pairs = get_box_pairs(channel)
+
+# box_pairs = [(('ATL', 'EGFP'), ('ATL', 'mCherry')), (('Climp', 'EGFP'), ('Climp', 'mCherry')), (('RTN', 'EGFP'), ('RTN', 'mCherry')), (('ATL', 'EGFP'), ('Climp', 'EGFP')), (('ATL', 'EGFP'), ('RTN', 'EGFP')), (('RTN', 'EGFP'), ('Climp', 'EGFP')), (('ATL', 'mCherry'), ('Climp', 'mCherry')), (('ATL', 'mCherry'), ('RTN', 'mCherry')), (('RTN', 'mCherry'), ('Climp', 'mCherry'))]
+
+box_pairs = [(('ATL', 'EGFP'), ('ATL', 'mCherry')), (('Climp', 'EGFP'), ('Climp', 'mCherry')), (('RTN', 'EGFP'), ('RTN', 'mCherry'))]
+
+statannot.add_stat_annotation(ax, x='Channel', y='Per-pixel-mean', hue='Group', data=df, box_pairs=box_pairs,
+                              test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+
+# ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
+
+# if variation == 'std':
+#     plt.title(f'Standard deviation of sequence for tubule intensity mean ({ch_name}) in {connection} edges',
+#               fontsize=18)
+# else:
+#     plt.title(f'Mean of sequence for tubule intensity mean ({ch_name}) in {connection} edges',
+#               fontsize=18)
+# plt.suptitle(f'{region_name} CC area across conditions', fontsize=20)
+# plt.title('CC area denotes the total movement of each junction', fontsize=18)
+plt.grid(True)
+plt.xlabel('Channel', fontsize=18)
+# plt.ylabel(f'Tubular {variation}, log scale', fontsize=18)
+# plt.ylabel(f'Tubular {variation}', fontsize=18)
+plt.ylabel('Per-pixel mean over sequence for tubules')
 plt.show()
 
 exit()

@@ -35,11 +35,6 @@ def get_std_img(path):
     return (img - img.min()) / (img.max() - img.min())
 
 
-# def get_std_img(path):
-#    img = imageio.imread(path)
-#    return ((img - img.mean()) / (img.std()))
-
-
 def skel_to_graph(skel):
     g = sknw.build_sknw(skel, iso=False)
     G = nx.Graph()
@@ -55,7 +50,6 @@ def skel_to_graph(skel):
 
 
 def get_junctions(er_input_path, mean_img):
-    # def get_junctions(mean_img):
     """
 
     @param mean_img: Input mean projection skel image (ndarray, binary)
@@ -124,7 +118,6 @@ def get_all_junc(group, num_series):
 
 
 def label_junctions(group, series_num):
-    # fig, ax = plt.subplots()
     ref_junctions, per_frame_junctions = get_all_junc(group, series_num)
 
     ref_junctions = np.array(ref_junctions)
@@ -934,7 +927,32 @@ groups = {'ATL': 26, 'Climp': 31, 'Control': 31, 'RTN': 29}
 connections = ['iso-iso', 'iso-fuz', 'fuz-fuz']
 channels = ['egfp', 'mch']
 
+create_tub_data_pickles('ATL', 26, 'iso-iso', 'egfp', 'tubules')
+create_tub_data_pickles('ATL', 26, 'iso-iso', 'mch', 'tubules')
+create_tub_data_pickles('ATL', 26, 'iso-fuz', 'egfp', 'tubules')
+create_tub_data_pickles('ATL', 26, 'iso-fuz', 'mch', 'tubules')
+create_tub_data_pickles('ATL', 26, 'fuz-fuz', 'egfp', 'tubules')
+create_tub_data_pickles('ATL', 26, 'fuz-fuz', 'mch', 'tubules')
 
+create_tub_data_pickles('Climp', 31, 'iso-iso', 'egfp', 'tubules')
+create_tub_data_pickles('Climp', 31, 'iso-iso', 'mch', 'tubules')
+create_tub_data_pickles('Climp', 31, 'iso-fuz', 'egfp', 'tubules')
+create_tub_data_pickles('Climp', 31, 'iso-fuz', 'mch', 'tubules')
+create_tub_data_pickles('Climp', 31, 'fuz-fuz', 'egfp', 'tubules')
+create_tub_data_pickles('Climp', 31, 'fuz-fuz', 'mch', 'tubules')
+
+create_tub_data_pickles('RTN', 29, 'iso-iso', 'egfp', 'tubules')
+create_tub_data_pickles('RTN', 29, 'iso-iso', 'mch', 'tubules')
+create_tub_data_pickles('RTN', 29, 'iso-fuz', 'egfp', 'tubules')
+create_tub_data_pickles('RTN', 29, 'iso-fuz', 'mch', 'tubules')
+create_tub_data_pickles('RTN', 29, 'fuz-fuz', 'egfp', 'tubules')
+create_tub_data_pickles('RTN', 29, 'fuz-fuz', 'mch', 'tubules')
+
+create_tub_data_pickles('Control', 31, 'iso-iso', 'egfp', 'tubules')
+create_tub_data_pickles('Control', 31, 'iso-fuz', 'egfp', 'tubules')
+create_tub_data_pickles('Control', 31, 'fuz-fuz', 'egfp', 'tubules')
+
+exit()
 
 
 def create_pickles(groups: dict, connections: list, channels: list, measure: list) -> None:
