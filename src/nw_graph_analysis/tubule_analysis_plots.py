@@ -113,67 +113,116 @@ def filter_data(data):
 #     return e_mean, m_mean
 
 
-def get_per_pixel_mean_over_sequence(group, connection, channel):
+def get_per_pixel_variation_over_sequence(group, connection, channel, variation):
+    # data: All tubule intensity data over 100 frames for all movies in the group.
+
     data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/{group.lower()}_{connection}_tubules_{channel}.pkl', 'rb'))
-    mean_vals = []
+    data = filter_data(data)
+    # print(len(data))
+    # print(data[21].shape)
+    # print(data[21][53])
+    # print(data[21][53][1].shape)
+    # exit()
+    variation_vals = []
     for series in data:
         for tubule in series:
-            transposed_list = list(map(list, zip(*e_tubule)))
+            transposed_list = list(map(list, zip(*tubule)))
             for each in transposed_list:
-                mean_vals.append(np.mean(each))
-    return mean_vals
+                if variation == 'mean':
+                    variation_vals.append(np.mean(each))
+                else:
+                    variation_vals.append(np.std(each))
+    return variation_vals
 
 
-atl_egfp, atl_mch = load_data('ATL', 'iso-iso')
-climp_egfp, climp_mch = load_data('Climp', 'iso-iso')
-rtn_egfp, rtn_mch = load_data('RTN', 'iso-iso')
-# ctrl_egfp, ctrl_mch = load_data('Control', 'iso-iso')
+# get_per_pixel_mean_over_sequence('ATL', 'iso-fuz', 'egfp')
+# exit()
 
-am_egfp, am_mch = get_per_pixel_mean_over_sequence(atl_egfp, atl_mch)
-cm_egfp, cm_mch = get_per_pixel_mean_over_sequence(climp_egfp, climp_mch)
-rm_egfp, rm_mch = get_per_pixel_mean_over_sequence(rtn_egfp, rtn_mch)
-# ct_egfp, ct_mch = get_per_pixel_mean_over_sequence()
+def plot_per_pixel_variation(connection, channel, variation):
+    atl = get_per_pixel_variation_over_sequence('ATL', connection, channel, variation)
+    climp = get_per_pixel_variation_over_sequence('Climp', connection, channel, variation)
+    rtn = get_per_pixel_variation_over_sequence('RTN', connection, channel, variation)
 
-df = pd.DataFrame()
-df['Per-pixel-mean'] = pd.Series(np.concatenate((am_egfp, am_mch, cm_egfp, cm_mch, rm_egfp, rm_mch)))#, ctrl_egfp, ctrl_mch)))
+    # ar1, ar2, ar3 = atl[:10], atl[10:20], atl[20:]
+    # cr1, cr2, cr3 = climp[:10], climp[10:20], climp[20:]
+    # rr1, rr2, rr3 = rtn[:10], rtn[10:20], rtn[20:]
 
-df['Group'] = pd.Series(np.concatenate((['ATL']*len(am_egfp), ['ATL']*len(am_mch), ['Climp']*len(cm_egfp), ['Climp']*len(cm_mch), ['RTN']*len(rm_egfp), ['RTN']*len(rm_mch))))#, ['Control']*len(ctrl_egfp), ['Control']*len(ctrl_mch))))
+    df = pd.DataFrame()
 
-df['Channel'] = pd.Series(
-    np.concatenate((['EGFP'] * len(am_egfp), ['mCherry'] * len(am_mch), ['EGFP'] * len(cm_egfp), ['mCherry'] * len(cm_mch),
-                    ['EGFP'] * len(rm_egfp), ['mCherry'] * len(rm_mch))))#, ['EGFP'] * len(ctrl_egfp), ['mCherry'] * len(ctrl_mch))))
+    if channel == 'egfp':
+        ctrl = get_per_pixel_variation_over_sequence('Control', connection, channel, variation)
+        # ctr1, ctr2, ctr3 = ctrl[:10], ctrl[10:20], ctrl[20:]
+
+        # df['Per-pixel-mean'] = pd.Series(np.concatenate((ar1, ar2, ar3, cr1, cr2, cr3, rr1, rr2, rr3, ctr1, ctr2, ctr3)))
+
+        df['Per-pixel-mean'] = pd.Series(np.concatenate((atl, climp, rtn, ctrl)))
+
+        # df['Group'] = pd.Series(np.concatenate((
+        #     ['ATL'] * len(ar1), ['ATL'] * len(ar2), ['ATL'] * len(ar3), ['Climp'] * len(cr1), ['Climp'] * len(cr2),
+        #     ['Climp'] * len(cr3), ['RTN'] * len(rr1), ['RTN'] * len(rr2), ['RTN'] * len(rr3), ['Control']*len(ctr1), ['Control']*len(ctr2), ['Control']*len(ctr3))))
+
+        df['Group'] = pd.Series(np.concatenate((['ATL']*len(atl), ['Climp']*len(climp), ['RTN']*len(rtn), ['Control']*len(ctrl))))
+
+        # df['Replicate'] = pd.Series(np.concatenate((['R1'] * len(ar1), ['R2'] * len(ar2), ['R3'] * len(ar3), ['R1'] * len(cr1),
+        #                                             ['R2'] * len(cr2), ['R3'] * len(cr3), ['R1'] * len(rr1), ['R2'] * len(rr2),
+        #                                             ['R3'] * len(rr3), ['R1'] * len(ctr1), ['R2'] * len(ctr2), ['R3'] * len(ctr3))))
+        box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'Control'), ('Climp', 'RTN'),
+                     ('Control', 'RTN')]
+
+    else:
+        # df['Per-pixel-mean'] = pd.Series(np.concatenate((ar1, ar2, ar3, cr1, cr2, cr3, rr1, rr2, rr3)))
+        df['Per-pixel-mean'] = pd.Series(np.concatenate((atl, climp, rtn)))
+
+        # df['Group'] = pd.Series(np.concatenate((
+        #     ['ATL'] * len(ar1), ['ATL'] * len(ar2), ['ATL'] * len(ar3), ['Climp'] * len(cr1), ['Climp'] * len(cr2),
+        #     ['Climp'] * len(cr3), ['RTN'] * len(rr1), ['RTN'] * len(rr2), ['RTN'] * len(rr3))))
+
+        df['Group'] = pd.Series(np.concatenate((['ATL']*len(atl), ['Climp']*len(climp), ['RTN']*len(rtn))))
+
+        # df['Replicate'] = pd.Series(np.concatenate((['R1'] * len(ar1), ['R2'] * len(ar2), ['R3'] * len(ar3), ['R1'] * len(cr1),
+        #                                             ['R2'] * len(cr2), ['R3'] * len(cr3), ['R1'] * len(rr1), ['R2'] * len(rr2),
+        #                                             ['R3'] * len(rr3))))
+        box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
+
+    # ax = sns.boxenplot(data=df, x='Replicate', y='Per-pixel-mean', hue='Group', dodge=True)
+    ax = sns.boxenplot(data=df, x='Group', y='Per-pixel-mean')
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
+
+    # plt.yscale('log')
+
+    # box_pairs = get_box_pairs(channel)
+    # box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'Control'), ('Climp', 'RTN'),
+    #                  ('Control', 'RTN')]
 
 
-ax = sns.boxenplot(data=df, x='Channel', y='Per-pixel-mean', hue='Group', dodge=True)
-ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
+    # statannot.add_stat_annotation(ax, x='Replicate', y='Per-pixel-mean', hue='Group', data=df, box_pairs=box_pairs,
+    #                               test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
 
-# plt.yscale('log')
+    statannot.add_stat_annotation(ax, x='Group', y='Per-pixel-mean', data=df, box_pairs=box_pairs,
+                                      test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
 
-# box_pairs = get_box_pairs(channel)
+    ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
+    variation_name = 'standard deviation' if variation == 'std' else 'Mean'
 
-# box_pairs = [(('ATL', 'EGFP'), ('ATL', 'mCherry')), (('Climp', 'EGFP'), ('Climp', 'mCherry')), (('RTN', 'EGFP'), ('RTN', 'mCherry')), (('ATL', 'EGFP'), ('Climp', 'EGFP')), (('ATL', 'EGFP'), ('RTN', 'EGFP')), (('RTN', 'EGFP'), ('Climp', 'EGFP')), (('ATL', 'mCherry'), ('Climp', 'mCherry')), (('ATL', 'mCherry'), ('RTN', 'mCherry')), (('RTN', 'mCherry'), ('Climp', 'mCherry'))]
+    plt.title(f'Per-pixel {variation_name} over sequence for {connection} tubules in {ch_name}', fontsize=20)
 
-box_pairs = [(('ATL', 'EGFP'), ('ATL', 'mCherry')), (('Climp', 'EGFP'), ('Climp', 'mCherry')), (('RTN', 'EGFP'), ('RTN', 'mCherry'))]
+    plt.grid(True)
+    plt.xlabel('Group', fontsize=18)
+    # plt.ylabel(f'Tubular {variation}, log scale', fontsize=18)
+    # plt.ylabel(f'Tubular {variation}', fontsize=18)
+    plt.ylabel(f'Per pixel {variation_name} over 100 frames in each tubule', fontsize=18)
+    plt.show()
 
-statannot.add_stat_annotation(ax, x='Channel', y='Per-pixel-mean', hue='Group', data=df, box_pairs=box_pairs,
-                              test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+import itertools
+# conns = ['iso-iso', 'iso-fuz', 'fuz-fuz']
+# ch = ['egfp', 'mch']
+# ms = ['mean', 'std']
+#
+#
+# for each, i, j in itertools.product(conns, ch, ms):
+#     plot_per_pixel_variation(each, i, j)
 
-# ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
-
-# if variation == 'std':
-#     plt.title(f'Standard deviation of sequence for tubule intensity mean ({ch_name}) in {connection} edges',
-#               fontsize=18)
-# else:
-#     plt.title(f'Mean of sequence for tubule intensity mean ({ch_name}) in {connection} edges',
-#               fontsize=18)
-# plt.suptitle(f'{region_name} CC area across conditions', fontsize=20)
-# plt.title('CC area denotes the total movement of each junction', fontsize=18)
-plt.grid(True)
-plt.xlabel('Channel', fontsize=18)
-# plt.ylabel(f'Tubular {variation}, log scale', fontsize=18)
-# plt.ylabel(f'Tubular {variation}', fontsize=18)
-plt.ylabel('Per-pixel mean over sequence for tubules')
-plt.show()
+plot_per_pixel_variation('iso-iso', 'mch', 'mean')
 
 exit()
 

@@ -889,6 +889,7 @@ def tubule_sequence_data(group, series_num, connection, channel, measure):
     if not edges:
         return None
 
+    # get coordinates for edges
     edge_pts = [conn_graph[u][v][0]['pts'] for (u, v) in edges]
 
     seq_data = []
