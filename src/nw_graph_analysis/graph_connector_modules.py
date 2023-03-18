@@ -16,7 +16,7 @@ def get_connected_graph(skel_img_path):
 
 def get_nbrs(nodes_array):
     """
-
+    Get the nearest neighbors per node
     @param nodes_array: np array with nodes are [x, y] lists
     """
 

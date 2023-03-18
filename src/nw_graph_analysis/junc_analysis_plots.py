@@ -193,7 +193,7 @@ def get_cc_ids(labelled_img, region):
     return [i for i, num in enumerate(dt_vals) if i > 0 and len(num) != 0]
 
 
-def get_junction_types(reference_junctions, connected_components):
+def get_ref_junc_per_CC_id(reference_junctions, connected_components):
     """
     Return the reference junctions per connected component and the list of connected components with at least 1 reference
     junction.
@@ -237,7 +237,7 @@ def get_uncertain_junctions(labelled_img, per_frame_junctions, num_components, a
 def separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img):
     num_components = np.unique(labelled_img)
 
-    label_ids, assigned_components = get_junction_types(ref_junctions, labelled_img)
+    label_ids, assigned_components = get_ref_junc_per_CC_id(ref_junctions, labelled_img)
     # print(label_vals)
 
     unassigned_cc_dict = get_uncertain_junctions(labelled_img, per_frame_junctions, num_components, assigned_components)

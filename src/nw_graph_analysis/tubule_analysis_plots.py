@@ -252,9 +252,7 @@ def plot_per_pixel_variation(connection, channel, variation, plottype):
             df['Per-pixel-mean'] = pd.Series(np.concatenate((atl, climp, rtn, ctrl)))
 
             df['Group'] = pd.Series(np.concatenate((['ATL']*len(atl), ['Climp']*len(climp), ['RTN']*len(rtn), ['Control']*len(ctrl))))
-            ax = sns.boxenplot(data=df, x='Group', y='Per-pixel-mean')
-            statannot.add_stat_annotation(ax, x='Group', y='Per-pixel-mean', data=df, box_pairs=box_pairs,
-                                          test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+
         else:
             ctr1, ctr2, ctr3 = ctrl[:10], ctrl[10:20], ctrl[20:]
             df['Per-pixel-mean'] = pd.Series(np.concatenate((ar1, ar2, ar3, cr1, cr2, cr3, rr1, rr2, rr3, ctr1, ctr2, ctr3)))
@@ -272,6 +270,7 @@ def plot_per_pixel_variation(connection, channel, variation, plottype):
             df['Per-pixel-mean'] = pd.Series(np.concatenate((atl, climp, rtn)))
 
             df['Group'] = pd.Series(np.concatenate((['ATL']*len(atl), ['Climp']*len(climp), ['RTN']*len(rtn))))
+
         else:
             df['Per-pixel-mean'] = pd.Series(np.concatenate((ar1, ar2, ar3, cr1, cr2, cr3, rr1, rr2, rr3)))
 

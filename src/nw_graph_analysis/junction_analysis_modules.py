@@ -21,6 +21,7 @@ class JunctionAnalysis:
         return sknw.build_sknw(imageio.imread(skel_img_path), multi=True, iso=False)
 
     def get_junctions(self, graph):
+        # given input graph, get nodes from it.
         """
 
         @param graph: Input graph to obtain the junctions
@@ -32,6 +33,7 @@ class JunctionAnalysis:
         return [node_coords[node_num] for node_num, degree_val in enumerate(graph.degree) if degree_val[1] > 2]
 
     def get_all_junc(self, group, num_series):
+        # get reference junctions based on mean projection frame and per frame junctions for each series, all groups
         """
 
         @param group: group to be analyzed
@@ -93,7 +95,8 @@ class JunctionAnalysis:
 
         return ref_junctions, per_frame_junctions, labelled_img
 
-    def get_junction_types(self, reference_junctions, connected_components):
+    def get_ref_junc_per_CC_id(self, reference_junctions, connected_components):
+        # get CC_id and corresponding junctions, get CC_ids with at
         """
         Return the reference junctions per connected component and the list of connected components with at least 1 reference
         junction.
@@ -117,10 +120,21 @@ class JunctionAnalysis:
         return label_ids, assigned_components
 
     def get_uncertain_junctions(self, labelled_img, per_frame_junctions, num_components, assigned_components):
+        """
+        Return junction CCs without a reference junction
+
+        :param labelled_img: (ndarray) Image with all labelled CCs
+        :param per_frame_junctions: (ndarray) junction per frame
+        :param num_components: (int) number of unique CCs
+        :param assigned_components: (list) CCs with at least 1 ref junction
+        :return: unassigned_cc_dict (dict), CC label id and per frame junctions for CCs without reference junction
+        """
+        # list of CCs without a ref junction
         unassigned_components = [x for x in num_components if x not in assigned_components]
 
         unassigned_cc_dict = {}
 
+        # Get junctions per frame for CCs without ref junction
         for each in per_frame_junctions:
             cc_label = labelled_img[each[0], each[1]]
             if cc_label != 0 and cc_label in unassigned_components:
@@ -130,6 +144,10 @@ class JunctionAnalysis:
         return unassigned_cc_dict
 
     def separate_junc_cc(self, ref_junctions, per_frame_junctions, labelled_img):
+        """
+        Return ref junctions per CC and CCs without reference junction dicts.
+
+        """
         regions = regionprops(labelled_img)
 
         # cc_list = []
@@ -142,9 +160,8 @@ class JunctionAnalysis:
         # cc_area_dict[idx] = [props.area, props.axis_major_length]
 
         num_components = np.unique(labelled_img)
-        # print(num_components)
 
-        label_ids, assigned_components = self.get_junction_types(ref_junctions, labelled_img)
+        label_ids, assigned_components = self.get_ref_junc_per_CC_id(ref_junctions, labelled_img)
         # print(label_vals)
 
         unassigned_cc_dict = self.get_uncertain_junctions(labelled_img, per_frame_junctions, num_components, assigned_components)
@@ -153,6 +170,10 @@ class JunctionAnalysis:
         return label_ids, unassigned_cc_dict
 
     def get_junction_areas(self, label_ids, unassigned_cc_dict):
+        """
+        Returns junctions arrays for iso, fuz and unknown classes
+        """
+
         isolated_junctions = []
         fuzzy_junctions = []
         unknown_junctions = []
@@ -170,7 +191,7 @@ class JunctionAnalysis:
         isolated_junctions = np.array(isolated_junctions)
 
         fuzzy_junctions = list(itertools.chain.from_iterable(fuzzy_junctions))
-        fuz = np.array(fuzzy_junctions)
+        fuzzy_junctions = np.array(fuzzy_junctions)
 
         unknown_junctions = list(itertools.chain.from_iterable(unknown_junctions))
         unknown_junctions = np.array(unknown_junctions)
