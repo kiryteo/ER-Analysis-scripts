@@ -172,6 +172,7 @@ def get_replicate_data(egfp, mch):
     return r1, r2, r3
 
 
+
 def plot_per_pixel_correlation(connection, plottype):
     # Get data for each group
     atl_egfp, atl_mch = get_group_correlation_data('ATL', connection)
@@ -233,68 +234,67 @@ def plot_per_pixel_correlation(connection, plottype):
 plot_per_pixel_correlation('fuz-fuz', 'replicate')
 exit()
 
-def plot_per_pixel_variation(connection, channel, variation):
+def plot_per_pixel_variation(connection, channel, variation, plottype):
     atl = get_per_pixel_variation_over_sequence('ATL', connection, channel, variation)
     climp = get_per_pixel_variation_over_sequence('Climp', connection, channel, variation)
     rtn = get_per_pixel_variation_over_sequence('RTN', connection, channel, variation)
 
-    # ar1, ar2, ar3 = atl[:10], atl[10:20], atl[20:]
-    # cr1, cr2, cr3 = climp[:10], climp[10:20], climp[20:]
-    # rr1, rr2, rr3 = rtn[:10], rtn[10:20], rtn[20:]
-
     df = pd.DataFrame()
+
+    ar1, ar2, ar3 = atl[:10], atl[10:20], atl[20:]
+    cr1, cr2, cr3 = climp[:10], climp[10:20], climp[20:]
+    rr1, rr2, rr3 = rtn[:10], rtn[10:20], rtn[20:]
 
     if channel == 'egfp':
         ctrl = get_per_pixel_variation_over_sequence('Control', connection, channel, variation)
-        # ctr1, ctr2, ctr3 = ctrl[:10], ctrl[10:20], ctrl[20:]
+        if plottype == 'all':
 
-        # df['Per-pixel-mean'] = pd.Series(np.concatenate((ar1, ar2, ar3, cr1, cr2, cr3, rr1, rr2, rr3, ctr1, ctr2, ctr3)))
+            df['Per-pixel-mean'] = pd.Series(np.concatenate((atl, climp, rtn, ctrl)))
 
-        df['Per-pixel-mean'] = pd.Series(np.concatenate((atl, climp, rtn, ctrl)))
+            df['Group'] = pd.Series(np.concatenate((['ATL']*len(atl), ['Climp']*len(climp), ['RTN']*len(rtn), ['Control']*len(ctrl))))
+            ax = sns.boxenplot(data=df, x='Group', y='Per-pixel-mean')
+            statannot.add_stat_annotation(ax, x='Group', y='Per-pixel-mean', data=df, box_pairs=box_pairs,
+                                          test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+        else:
+            ctr1, ctr2, ctr3 = ctrl[:10], ctrl[10:20], ctrl[20:]
+            df['Per-pixel-mean'] = pd.Series(np.concatenate((ar1, ar2, ar3, cr1, cr2, cr3, rr1, rr2, rr3, ctr1, ctr2, ctr3)))
 
-        # df['Group'] = pd.Series(np.concatenate((
-        #     ['ATL'] * len(ar1), ['ATL'] * len(ar2), ['ATL'] * len(ar3), ['Climp'] * len(cr1), ['Climp'] * len(cr2),
-        #     ['Climp'] * len(cr3), ['RTN'] * len(rr1), ['RTN'] * len(rr2), ['RTN'] * len(rr3), ['Control']*len(ctr1), ['Control']*len(ctr2), ['Control']*len(ctr3))))
+            df['Group'] = pd.Series(np.concatenate((
+                ['ATL'] * len(ar1), ['ATL'] * len(ar2), ['ATL'] * len(ar3), ['Climp'] * len(cr1), ['Climp'] * len(cr2),
+                ['Climp'] * len(cr3), ['RTN'] * len(rr1), ['RTN'] * len(rr2), ['RTN'] * len(rr3), ['Control']*len(ctr1), ['Control']*len(ctr2), ['Control']*len(ctr3))))
 
-        df['Group'] = pd.Series(np.concatenate((['ATL']*len(atl), ['Climp']*len(climp), ['RTN']*len(rtn), ['Control']*len(ctrl))))
-
-        # df['Replicate'] = pd.Series(np.concatenate((['R1'] * len(ar1), ['R2'] * len(ar2), ['R3'] * len(ar3), ['R1'] * len(cr1),
-        #                                             ['R2'] * len(cr2), ['R3'] * len(cr3), ['R1'] * len(rr1), ['R2'] * len(rr2),
-        #                                             ['R3'] * len(rr3), ['R1'] * len(ctr1), ['R2'] * len(ctr2), ['R3'] * len(ctr3))))
-        box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'Control'), ('Climp', 'RTN'),
-                     ('Control', 'RTN')]
+            df['Replicate'] = pd.Series(np.concatenate((['R1'] * len(ar1), ['R2'] * len(ar2), ['R3'] * len(ar3), ['R1'] * len(cr1),
+                                                        ['R2'] * len(cr2), ['R3'] * len(cr3), ['R1'] * len(rr1), ['R2'] * len(rr2),
+                                                        ['R3'] * len(rr3), ['R1'] * len(ctr1), ['R2'] * len(ctr2), ['R3'] * len(ctr3))))
 
     else:
-        # df['Per-pixel-mean'] = pd.Series(np.concatenate((ar1, ar2, ar3, cr1, cr2, cr3, rr1, rr2, rr3)))
-        df['Per-pixel-mean'] = pd.Series(np.concatenate((atl, climp, rtn)))
+        if plottype == 'all':
+            df['Per-pixel-mean'] = pd.Series(np.concatenate((atl, climp, rtn)))
 
-        # df['Group'] = pd.Series(np.concatenate((
-        #     ['ATL'] * len(ar1), ['ATL'] * len(ar2), ['ATL'] * len(ar3), ['Climp'] * len(cr1), ['Climp'] * len(cr2),
-        #     ['Climp'] * len(cr3), ['RTN'] * len(rr1), ['RTN'] * len(rr2), ['RTN'] * len(rr3))))
+            df['Group'] = pd.Series(np.concatenate((['ATL']*len(atl), ['Climp']*len(climp), ['RTN']*len(rtn))))
+        else:
+            df['Per-pixel-mean'] = pd.Series(np.concatenate((ar1, ar2, ar3, cr1, cr2, cr3, rr1, rr2, rr3)))
 
-        df['Group'] = pd.Series(np.concatenate((['ATL']*len(atl), ['Climp']*len(climp), ['RTN']*len(rtn))))
+            df['Group'] = pd.Series(np.concatenate((['ATL'] * len(ar1), ['ATL'] * len(ar2), ['ATL'] * len(ar3), ['Climp'] * len(cr1), ['Climp'] * len(cr2), ['Climp'] * len(cr3), ['RTN'] * len(rr1), ['RTN'] * len(rr2), ['RTN'] * len(rr3))))
 
-        # df['Replicate'] = pd.Series(np.concatenate((['R1'] * len(ar1), ['R2'] * len(ar2), ['R3'] * len(ar3), ['R1'] * len(cr1),
-        #                                             ['R2'] * len(cr2), ['R3'] * len(cr3), ['R1'] * len(rr1), ['R2'] * len(rr2),
-        #                                             ['R3'] * len(rr3))))
-        box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
+            df['Replicate'] = pd.Series(np.concatenate((['R1'] * len(ar1), ['R2'] * len(ar2), ['R3'] * len(ar3), ['R1'] * len(cr1), ['R2'] * len(cr2), ['R3'] * len(cr3), ['R1'] * len(rr1), ['R2'] * len(rr2), ['R3'] * len(rr3))))
 
-    # ax = sns.boxenplot(data=df, x='Replicate', y='Per-pixel-mean', hue='Group', dodge=True)
-    ax = sns.boxenplot(data=df, x='Group', y='Per-pixel-mean')
+    if plottype == 'all':
+        ax = sns.boxenplot(data=df, x='Group', y='Per-pixel-mean')
+        box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'Control'), ('Climp', 'RTN'),
+                                 ('Control', 'RTN')] if channel == 'egfp' else [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
+        statannot.add_stat_annotation(ax, x='Group', y='Per-pixel-mean', data=df, box_pairs=box_pairs,
+                                      test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+    else:
+        ax = sns.boxenplot(data=df, x='Replicate', y='Per-pixel-mean', hue='Group', dodge=True)
+        box_pairs = get_box_pairs(channel)
+        statannot.add_stat_annotation(ax, x='Replicate', y='Per-pixel-mean', hue='Group', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+
+
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
 
     # plt.yscale('log')
 
-    # box_pairs = get_box_pairs(channel)
-    # box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'Control'), ('Climp', 'RTN'),
-    #                  ('Control', 'RTN')]
-
-
-    # statannot.add_stat_annotation(ax, x='Replicate', y='Per-pixel-mean', hue='Group', data=df, box_pairs=box_pairs,
-    #                               test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
-
-    statannot.add_stat_annotation(ax, x='Group', y='Per-pixel-mean', data=df, box_pairs=box_pairs,
-                                      test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
 
     ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
     variation_name = 'standard deviation' if variation == 'std' else 'Mean'
@@ -307,19 +307,6 @@ def plot_per_pixel_variation(connection, channel, variation):
     # plt.ylabel(f'Tubular {variation}', fontsize=18)
     plt.ylabel(f'Per pixel {variation_name} over 100 frames in each tubule', fontsize=18)
     plt.show()
-
-import itertools
-# conns = ['iso-iso', 'iso-fuz', 'fuz-fuz']
-# ch = ['egfp', 'mch']
-# ms = ['mean', 'std']
-#
-#
-# for each, i, j in itertools.product(conns, ch, ms):
-#     plot_per_pixel_variation(each, i, j)
-
-# plot_per_pixel_variation('iso-iso', 'mch', 'mean')
-
-# exit()
 
 
 def get_egfp_plots(connection, channel, variation):
