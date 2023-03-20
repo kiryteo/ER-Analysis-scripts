@@ -132,10 +132,10 @@ def get_all_junc(group, num_series):
     # node_coords = np.array([node_set[node]['o'] for node in node_set])
     #
     # newps = [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
-    newps = get_junctions(er_mean_img, skel_mean_img)
+    ref_junctions = get_junctions(er_mean_img, skel_mean_img)
 
-    nps = [[each[0], each[1]] for each in newps]
-    skdata = []
+    ref_junctions = [[each[0], each[1]] for each in ref_junctions]
+    per_frame_junctions = []
 
     ### Get junction coordinates from projection frame
     # newps = get_junctions(er_mean_img, skel_mean_img)
@@ -145,14 +145,14 @@ def get_all_junc(group, num_series):
         er_img = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_egfp/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_std.png'
         sk_img = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
 
-        sk_newps = get_junctions(er_img, sk_img)
+        junctions = get_junctions(er_img, sk_img)
         # sk_newps = get_junctions(sk_img)
 
-        sk_nps = [[each[0], each[1]] for each in sk_newps]
+        junctions = [[each[0], each[1]] for each in junctions]
         # sk_nps = np.array(sk_nps)
-        skdata.extend(sk_nps)
+        per_frame_junctions.extend(junctions)
 
-    return nps, skdata
+    return ref_junctions, per_frame_junctions
 
 
 def label_junctions(group, series_num):
@@ -272,11 +272,83 @@ def get_junction_areas(label_ids, unassigned_cc_dict):
     return isolated_junctions, fuzzy_junctions, unknown_junctions
 
 
-ref_junctions, per_frame_junctions, labelled_img = label_junctions('ATL', 1)
-label_ids, unassigned_cc_dict = separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
-iso, fuz, unk = get_junction_areas(label_ids, unassigned_cc_dict)
+def get_label_per_junc(per_frame_junctions, labelled_img):
+    junction_labels = {}
+    for junction in per_frame_junctions:
+        id = labelled_img[tuple(junction)]
+        junction_labels.setdefault(id, set()).add(tuple(junction))
 
-print(fuz)
+    return junction_labels
+
+
+def get_region_areas(label_ids, junction_labels, region):
+    areas = []
+
+    for label_id, junctions in label_ids.items():
+        if region == 'iso' and len(junctions) != 1:
+            continue
+        areas.append(len(junction_labels[label_id]))
+
+    return areas
+
+
+def plot_region_areas(group, num_series, region):
+    iso_areas = []
+    for num in range(1, num_series + 1):
+        ref_junctions, per_frame_junctions, labelled_img = label_junctions(group, num)
+        junction_labels = get_label_per_junc(per_frame_junctions, labelled_img)
+        label_ids, unassigned_cc_dict = separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
+        areas = get_region_areas(label_ids, junction_labels, region)
+        iso_areas.extend(areas)
+
+    return iso_areas
+
+
+atl = plot_region_areas('ATL', 26, 'iso')
+a1, a2, a3 = atl[:10], atl[10:20], atl[20:]
+climp = plot_region_areas('Climp', 31, 'iso')
+c1, c2, c3 = climp[:10], climp[10:20], climp[20:]
+rtn = plot_region_areas('RTN', 29, 'iso')
+r1, r2, r3 = rtn[:10], rtn[10:20], rtn[20:]
+ctrl = plot_region_areas('Control', 31, 'iso')
+ct1, ct2, ct3 = ctrl[:10], ctrl[10:20], ctrl[20:]
+
+df = pd.DataFrame()
+
+# df['data_tubule_mean'] = pd.Series(np.concatenate((atl, climp, rtn)))
+df['data_tubule_mean'] = pd.Series(np.concatenate((a1, a2, a3, c1, c2, c3, r1, r2, r3, ct1, ct2, ct3)))
+
+df['Replicate'] = pd.Series(np.concatenate((['R1'] * len(a1), ['R2'] * len(a2), ['R3'] * len(a3), ['R1'] * len(c1),
+                                            ['R2'] * len(c2), ['R3'] * len(c3), ['R1'] * len(r1), ['R2'] * len(r2),
+                                            ['R3'] * len(r3), ['R1'] * len(ct1), ['R2'] * len(ct2),
+                                            ['R3'] * len(ct3))))
+
+df['Group'] = pd.Series(np.concatenate((
+    ['ATL'] * len(a1), ['ATL'] * len(a2), ['ATL'] * len(a3), ['Climp'] * len(c1), ['Climp'] * len(c2),
+    ['Climp'] * len(c3), ['RTN'] * len(r1), ['RTN'] * len(r2), ['RTN'] * len(r3), ['Control'] * len(ct1), ['Control'] * len(ct2), ['Control'] * len(ct3))))
+
+# ax = sns.boxenplot(data=df, x='Group', y='data_tubule_mean')
+ax = sns.boxenplot(data=df, x='Replicate', y='data_tubule_mean', hue='Group', dodge=True)  # , yscale='log')
+ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
+
+# egfp
+box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'RTN')), (('R1', 'ATL'), ('R1', 'Control')), (('R1', 'Climp'), ('R1', 'Control')), (('R1', 'RTN'), ('R1', 'Control')), (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'RTN')), (('R2', 'ATL'), ('R2', 'Control')), (('R2', 'Climp'), ('R2', 'Control')), (('R2', 'RTN'), ('R2', 'Control')), (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'RTN')), (('R3', 'ATL'), ('R3', 'Control')), (('R3', 'Climp'), ('R3', 'Control')), (('R3', 'RTN'), ('R3', 'Control'))]
+
+statannot.add_stat_annotation(ax, x='Replicate', y='data_tubule_mean', hue='Group', data=df, box_pairs=box_pairs,
+                              test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+
+# statannot.add_stat_annotation(ax, x='Group', y='data_tubule_mean', data=df, box_pairs=box_pairs,
+#                               test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+
+# plt.title('Cross-correlation between ERmoxGFP and mCherry over sequence for tubule intensity mean in all tubules',
+#           fontsize=18)
+plt.title('CC area for Isolated CCs across conditions', fontsize=20)
+plt.grid(True)
+plt.xlabel('Replicate', fontsize=20)
+plt.ylabel('Isolated CCs area', fontsize=18)
+
+plt.show()
+
 exit()
 
 def get_region_cc(group, series_num, region):
@@ -975,36 +1047,36 @@ def create_tub_data_pickles(group, total_series, connection, channel, measure):
         pkl.dump(group_data, fl)
 
 
-groups = {'ATL': 26, 'Climp': 31, 'Control': 31, 'RTN': 29}
-connections = ['iso-iso', 'iso-fuz', 'fuz-fuz']
-channels = ['egfp', 'mch']
-
-create_tub_data_pickles('ATL', 26, 'iso-iso', 'egfp', 'tubules')
-create_tub_data_pickles('ATL', 26, 'iso-iso', 'mch', 'tubules')
-create_tub_data_pickles('ATL', 26, 'iso-fuz', 'egfp', 'tubules')
-create_tub_data_pickles('ATL', 26, 'iso-fuz', 'mch', 'tubules')
-create_tub_data_pickles('ATL', 26, 'fuz-fuz', 'egfp', 'tubules')
-create_tub_data_pickles('ATL', 26, 'fuz-fuz', 'mch', 'tubules')
-
-create_tub_data_pickles('Climp', 31, 'iso-iso', 'egfp', 'tubules')
-create_tub_data_pickles('Climp', 31, 'iso-iso', 'mch', 'tubules')
-create_tub_data_pickles('Climp', 31, 'iso-fuz', 'egfp', 'tubules')
-create_tub_data_pickles('Climp', 31, 'iso-fuz', 'mch', 'tubules')
-create_tub_data_pickles('Climp', 31, 'fuz-fuz', 'egfp', 'tubules')
-create_tub_data_pickles('Climp', 31, 'fuz-fuz', 'mch', 'tubules')
-
-create_tub_data_pickles('RTN', 29, 'iso-iso', 'egfp', 'tubules')
-create_tub_data_pickles('RTN', 29, 'iso-iso', 'mch', 'tubules')
-create_tub_data_pickles('RTN', 29, 'iso-fuz', 'egfp', 'tubules')
-create_tub_data_pickles('RTN', 29, 'iso-fuz', 'mch', 'tubules')
-create_tub_data_pickles('RTN', 29, 'fuz-fuz', 'egfp', 'tubules')
-create_tub_data_pickles('RTN', 29, 'fuz-fuz', 'mch', 'tubules')
-
-create_tub_data_pickles('Control', 31, 'iso-iso', 'egfp', 'tubules')
-create_tub_data_pickles('Control', 31, 'iso-fuz', 'egfp', 'tubules')
-create_tub_data_pickles('Control', 31, 'fuz-fuz', 'egfp', 'tubules')
-
-exit()
+# groups = {'ATL': 26, 'Climp': 31, 'Control': 31, 'RTN': 29}
+# connections = ['iso-iso', 'iso-fuz', 'fuz-fuz']
+# channels = ['egfp', 'mch']
+#
+# create_tub_data_pickles('ATL', 26, 'iso-iso', 'egfp', 'tubules')
+# create_tub_data_pickles('ATL', 26, 'iso-iso', 'mch', 'tubules')
+# create_tub_data_pickles('ATL', 26, 'iso-fuz', 'egfp', 'tubules')
+# create_tub_data_pickles('ATL', 26, 'iso-fuz', 'mch', 'tubules')
+# create_tub_data_pickles('ATL', 26, 'fuz-fuz', 'egfp', 'tubules')
+# create_tub_data_pickles('ATL', 26, 'fuz-fuz', 'mch', 'tubules')
+#
+# create_tub_data_pickles('Climp', 31, 'iso-iso', 'egfp', 'tubules')
+# create_tub_data_pickles('Climp', 31, 'iso-iso', 'mch', 'tubules')
+# create_tub_data_pickles('Climp', 31, 'iso-fuz', 'egfp', 'tubules')
+# create_tub_data_pickles('Climp', 31, 'iso-fuz', 'mch', 'tubules')
+# create_tub_data_pickles('Climp', 31, 'fuz-fuz', 'egfp', 'tubules')
+# create_tub_data_pickles('Climp', 31, 'fuz-fuz', 'mch', 'tubules')
+#
+# create_tub_data_pickles('RTN', 29, 'iso-iso', 'egfp', 'tubules')
+# create_tub_data_pickles('RTN', 29, 'iso-iso', 'mch', 'tubules')
+# create_tub_data_pickles('RTN', 29, 'iso-fuz', 'egfp', 'tubules')
+# create_tub_data_pickles('RTN', 29, 'iso-fuz', 'mch', 'tubules')
+# create_tub_data_pickles('RTN', 29, 'fuz-fuz', 'egfp', 'tubules')
+# create_tub_data_pickles('RTN', 29, 'fuz-fuz', 'mch', 'tubules')
+#
+# create_tub_data_pickles('Control', 31, 'iso-iso', 'egfp', 'tubules')
+# create_tub_data_pickles('Control', 31, 'iso-fuz', 'egfp', 'tubules')
+# create_tub_data_pickles('Control', 31, 'fuz-fuz', 'egfp', 'tubules')
+#
+# exit()
 
 
 def create_pickles(groups: dict, connections: list, channels: list, measure: list) -> None:
