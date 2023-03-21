@@ -20,6 +20,13 @@ class JunctionAnalysis:
         """
         return sknw.build_sknw(imageio.imread(skel_img_path), multi=True, iso=False)
 
+    # def get_junctions(self, graph):
+
+    #     # get all the nodes from the graph
+    #     node_coords = np.array([graph.nodes[node]['o'] for node in graph.nodes()])
+    #
+    #     return [node_coords[node_num] for node_num, degree_val in enumerate(graph.degree) if degree_val[1] > 2]
+
     def get_junctions(self, graph):
         # given input graph, get nodes from it.
         """
@@ -27,10 +34,8 @@ class JunctionAnalysis:
         @param graph: Input graph to obtain the junctions
         @return: nodes (junctions) with degree > 2
         """
-        # get all the nodes from the graph
-        node_coords = np.array([graph.nodes[node]['o'] for node in graph.nodes()])
+        return np.array([graph.nodes[node]['o'] for node in graph.nodes() if graph.degree[node] > 2])
 
-        return [node_coords[node_num] for node_num, degree_val in enumerate(graph.degree) if degree_val[1] > 2]
 
     def get_all_junc(self, group, num_series):
         # get reference junctions based on mean projection frame and per frame junctions for each series, all groups
