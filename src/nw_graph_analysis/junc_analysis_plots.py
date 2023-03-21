@@ -38,7 +38,6 @@ def get_std_img(path):
 def skel_to_graph(skel):
     g = sknw.build_sknw(skel, iso=False)
     G = nx.Graph()
-
     node_set = g.nodes()
 
     G.add_nodes_from(node_set)
@@ -73,44 +72,6 @@ def get_junctions(er_input_path, mean_img):
 
     return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
 
-
-def get_all_junc(self, group, num_series):
-    """
-
-    @param group: group to be analyzed
-    @param num_series: sequence number
-    @return: nps (list) - provides all junctions with degree > 2 from the mean projection proc skeleton, per_frame_junctions (list) - provides all junctions per skel frame
-    """
-
-    group_pref = {'ATL':'A', 'Climp':'C', 'Control':'Ct', 'RTN':'R'}
-
-    mean_er = f'{self.confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{num_series}_er_mean.png'
-
-    mean_skel = f'{self.confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
-
-    # Get junction coordinates from projection frame
-    graph = self.skel_to_graph(mean_skel)
-
-    ref_junctions = self.get_junctions(graph)
-
-    ref_junctions = [[each[0], each[1]] for each in ref_junctions]
-
-    per_frame_junctions = []
-    for frame in range(100):
-
-        er_path = f'{confocal_data_path}{group}/new_op_jul/std_egfp/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_std.png'
-
-        skeleton_path = f'{confocal_data_path}{group}/new_op_jul/skel/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
-
-        graph = self.skel_to_graph(skeleton_path)
-        # graph = node_connector(er_path, skeleton_path)
-        junctions = self.get_junctions(graph)
-
-        junc_array = [[junc[0], junc[1]] for junc in junctions]
-        # sk_nps = np.array(sk_nps)
-        per_frame_junctions.extend(junc_array)
-
-    return ref_junctions, per_frame_junctions
 
 def get_all_junc(group, num_series):
     """
@@ -173,24 +134,52 @@ def label_junctions(group, series_num):
 
 
 def get_cc_ids(labelled_img, region):
+    # sourcery skip: inline-immediately-returned-variable
+    """
+    Returns a list of isolated or fuzzy region CC ids.
+
+    Args:
+    - labelled_img: numpy.ndarray, input with all CC areas
+    - region: list of tuples, iso or fuz
+
+    Returns:
+    - list of ints, CC ids for the specified region
     """
 
-    @param labelled_img: Input with all CC areas
-    @param region: (list) iso or fuz
-    @return: isolated or fuzzy region CC ids list
-    """
+    # Create a dictionary to store per component data
+    cc_data = {cc_id: [] for cc_id in np.unique(labelled_img)}
 
-    num_cc = np.unique(labelled_img)
-    # dict to store per component data
-    dt = {each: [] for each in num_cc}
+    # Populate the dictionary with locations for the specified region
     for loc in region:
-        locx, locy = loc[0], loc[1]
-        cc_id = labelled_img[locx, locy]
-        dt[cc_id] = loc
+        loc_x, loc_y = loc[0], loc[1]
+        cc_id = labelled_img[loc_x, loc_y]
+        cc_data[cc_id].append(loc)
 
-    dt_vals = dt.values()
+    # Extract CC ids for the specified region
+    cc_ids = [cc_id for cc_id, data in cc_data.items() if cc_id > 0 and len(data) > 0]
 
-    return [i for i, num in enumerate(dt_vals) if i > 0 and len(num) != 0]
+    return cc_ids
+
+
+# def get_cc_ids(labelled_img, region):
+#     """
+#
+#     @param labelled_img: Input with all CC areas
+#     @param region: (list) iso or fuz
+#     @return: isolated or fuzzy region CC ids list
+#     """
+#
+#     num_cc = np.unique(labelled_img)
+#     # dict to store per component data
+#     dt = {each: [] for each in num_cc}
+#     for loc in region:
+#         locx, locy = loc[0], loc[1]
+#         cc_id = labelled_img[locx, locy]
+#         dt[cc_id] = loc
+#
+#     dt_vals = dt.values()
+#
+#     return [i for i, num in enumerate(dt_vals) if i > 0 and len(num) != 0]
 
 
 def get_ref_junc_per_CC_id(reference_junctions, connected_components):
@@ -218,13 +207,8 @@ def get_ref_junc_per_CC_id(reference_junctions, connected_components):
 
 
 def get_uncertain_junctions(labelled_img, per_frame_junctions, num_components, assigned_components):
-    """
-
-    """
     unassigned_components = [x for x in num_components if x not in assigned_components]
-
     unassigned_cc_dict = {}
-
     for each in per_frame_junctions:
         cc_label = labelled_img[each[0], each[1]]
         if cc_label != 0 and cc_label in unassigned_components:
@@ -236,17 +220,9 @@ def get_uncertain_junctions(labelled_img, per_frame_junctions, num_components, a
 
 def separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img):
     num_components = np.unique(labelled_img)
-
     label_ids, assigned_components = get_ref_junc_per_CC_id(ref_junctions, labelled_img)
-    # print(label_vals)
-
     unassigned_cc_dict = get_uncertain_junctions(labelled_img, per_frame_junctions, num_components, assigned_components)
-
-    # return label_vals, cc_area_dict, unassigned_cc_dict
     return label_ids, unassigned_cc_dict
-
-
-
 
 
 def get_junction_areas(label_ids, unassigned_cc_dict):
@@ -277,22 +253,10 @@ def get_junction_areas(label_ids, unassigned_cc_dict):
 
 def get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, region):
 
-    # def get_region_cc_ids(label_ids, region):
-    #     ids = []
-    #     if region == 'iso':
-    #         ids.extend(id for id, junctions in label_ids.items() if id != 0 and len(junctions) == 1)
-    #
-    #     else:
-    #         ids.extend(id for id, junctions in label_ids.items() if id != 0 and len(junctions) > 1)
-    #
-    #     return ids
-
     if region == 'iso':
-        # ids = get_region_cc_ids(label_ids, 'iso')
         ids = [id for id, junctions in label_ids.items() if id!=0 and len(junctions) == 1]
     else:
         ids = [id for id, junctions in label_ids.items() if id != 0 and len(junctions) > 1]
-        # ids = get_region_cc_ids(label_ids, 'fuz')
 
     junction_labels = {}
     for junction in per_frame_junctions:
@@ -303,29 +267,11 @@ def get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, region
     return junction_labels
 
 
-# def get_label_per_junc(per_frame_junctions, labelled_img):
-#     junction_labels = {}
-#     for junction in per_frame_junctions:
-#         id = labelled_img[tuple(junction)]
-#         junction_labels.setdefault(id, set()).add(tuple(junction))
-#
-#     return junction_labels
-#
-#
-# def get_region_areas(label_ids, junction_labels, region):
-#     areas = []
-#
-#     for label_id, junctions in label_ids.items():
-#         if region == 'iso' and len(junctions) != 1:
-#             continue
-#         if len(junctions) < 550:
-#             areas.append(len(junctions))
-#
-#     return areas
 def get_region_areas(junction_labels):
     areas = []
     for id, juncs in junction_labels.items():
-        areas.append(len(juncs))
+        if len(juncs) < 500:
+            areas.append(len(juncs))
 
     return areas
 
@@ -334,12 +280,19 @@ def get_region_areas(junction_labels):
 # # junction_labels = get_label_per_junc(per_frame_junctions, labelled_img)
 # region = 'iso'
 # label_ids, unassigned_cc_dict = separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
-# junction_labels = get_junctions_per_cc_id(label_ids, region)
+# # junction_labels = get_junctions_per_cc_id(label_ids, region)
+# #
+# iso, fuz, unk = get_junction_areas(label_ids, unassigned_cc_dict)
+# i, f, u = get_junction_areas(ref_junctions, per_frame_junctions, labelled_img)
 #
-# areas = get_region_areas(label_ids, region)
-# sns.distplot(areas, hist=False)
-# plt.show()
 #
+# print(iso)
+# print(i)
+#
+# # areas = get_region_areas(label_ids, region)
+# # sns.distplot(areas, hist=False)
+# # plt.show()
+# #
 # exit()
 
 
