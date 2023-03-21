@@ -246,6 +246,9 @@ def separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img):
     return label_ids, unassigned_cc_dict
 
 
+
+
+
 def get_junction_areas(label_ids, unassigned_cc_dict):
     isolated_junctions = []
     fuzzy_junctions = []
@@ -272,45 +275,93 @@ def get_junction_areas(label_ids, unassigned_cc_dict):
     return isolated_junctions, fuzzy_junctions, unknown_junctions
 
 
-def get_label_per_junc(per_frame_junctions, labelled_img):
+def get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, region):
+
+    # def get_region_cc_ids(label_ids, region):
+    #     ids = []
+    #     if region == 'iso':
+    #         ids.extend(id for id, junctions in label_ids.items() if id != 0 and len(junctions) == 1)
+    #
+    #     else:
+    #         ids.extend(id for id, junctions in label_ids.items() if id != 0 and len(junctions) > 1)
+    #
+    #     return ids
+
+    if region == 'iso':
+        # ids = get_region_cc_ids(label_ids, 'iso')
+        ids = [id for id, junctions in label_ids.items() if id!=0 and len(junctions) == 1]
+    else:
+        ids = [id for id, junctions in label_ids.items() if id != 0 and len(junctions) > 1]
+        # ids = get_region_cc_ids(label_ids, 'fuz')
+
     junction_labels = {}
     for junction in per_frame_junctions:
         id = labelled_img[tuple(junction)]
-        junction_labels.setdefault(id, set()).add(tuple(junction))
+        if id in ids:
+            junction_labels.setdefault(id, set()).add(tuple(junction))
 
     return junction_labels
 
 
-def get_region_areas(label_ids, junction_labels, region):
+# def get_label_per_junc(per_frame_junctions, labelled_img):
+#     junction_labels = {}
+#     for junction in per_frame_junctions:
+#         id = labelled_img[tuple(junction)]
+#         junction_labels.setdefault(id, set()).add(tuple(junction))
+#
+#     return junction_labels
+#
+#
+# def get_region_areas(label_ids, junction_labels, region):
+#     areas = []
+#
+#     for label_id, junctions in label_ids.items():
+#         if region == 'iso' and len(junctions) != 1:
+#             continue
+#         if len(junctions) < 550:
+#             areas.append(len(junctions))
+#
+#     return areas
+def get_region_areas(junction_labels):
     areas = []
-
-    for label_id, junctions in label_ids.items():
-        if region == 'iso' and len(junctions) != 1:
-            continue
-        areas.append(len(junction_labels[label_id]))
+    for id, juncs in junction_labels.items():
+        areas.append(len(juncs))
 
     return areas
+
+
+# ref_junctions, per_frame_junctions, labelled_img = label_junctions('Climp', 13)
+# # junction_labels = get_label_per_junc(per_frame_junctions, labelled_img)
+# region = 'iso'
+# label_ids, unassigned_cc_dict = separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
+# junction_labels = get_junctions_per_cc_id(label_ids, region)
+#
+# areas = get_region_areas(label_ids, region)
+# sns.distplot(areas, hist=False)
+# plt.show()
+#
+# exit()
 
 
 def plot_region_areas(group, num_series, region):
     iso_areas = []
     for num in range(1, num_series + 1):
         ref_junctions, per_frame_junctions, labelled_img = label_junctions(group, num)
-        junction_labels = get_label_per_junc(per_frame_junctions, labelled_img)
         label_ids, unassigned_cc_dict = separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
-        areas = get_region_areas(label_ids, junction_labels, region)
+        junction_labels = get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, region)
+        areas = get_region_areas(junction_labels)
         iso_areas.extend(areas)
 
     return iso_areas
 
 
-atl = plot_region_areas('ATL', 26, 'iso')
+atl = plot_region_areas('ATL', 26, 'fuz')
 a1, a2, a3 = atl[:10], atl[10:20], atl[20:]
-climp = plot_region_areas('Climp', 31, 'iso')
+climp = plot_region_areas('Climp', 31, 'fuz')
 c1, c2, c3 = climp[:10], climp[10:20], climp[20:]
-rtn = plot_region_areas('RTN', 29, 'iso')
+rtn = plot_region_areas('RTN', 29, 'fuz')
 r1, r2, r3 = rtn[:10], rtn[10:20], rtn[20:]
-ctrl = plot_region_areas('Control', 31, 'iso')
+ctrl = plot_region_areas('Control', 31, 'fuz')
 ct1, ct2, ct3 = ctrl[:10], ctrl[10:20], ctrl[20:]
 
 df = pd.DataFrame()
@@ -342,10 +393,10 @@ statannot.add_stat_annotation(ax, x='Replicate', y='data_tubule_mean', hue='Grou
 
 # plt.title('Cross-correlation between ERmoxGFP and mCherry over sequence for tubule intensity mean in all tubules',
 #           fontsize=18)
-plt.title('CC area for Isolated CCs across conditions', fontsize=20)
+plt.title('CC area for Fuzzy CCs across conditions', fontsize=20)
 plt.grid(True)
 plt.xlabel('Replicate', fontsize=20)
-plt.ylabel('Isolated CCs area', fontsize=18)
+plt.ylabel('Fuzzy CCs area', fontsize=18)
 
 plt.show()
 
