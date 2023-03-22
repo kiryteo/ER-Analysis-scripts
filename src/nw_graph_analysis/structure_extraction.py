@@ -888,31 +888,3 @@ def rel_edge_count():
     plt.show()
 
 
-# rel_edge_count()
-# exit()
-
-
-# atl_std = rel_edge_intensity('ATL', 1, 26)
-# cl_std = rel_edge_intensity('Climp', 1, 31)
-# rt_std = rel_edge_intensity('RTN', 1, 29)
-# ct_std = rel_edge_intensity('Control', 1, 31)
-#
-# df = pd.DataFrame()
-#
-# df['Tubule_intensity_std'] = pd.Series(np.concatenate((atl_std, cl_std, rt_std, ct_std)))
-# df['Group'] = pd.Series(
-#     np.concatenate((['ATL'] * len(atl_std), ['Climp'] * len(cl_std), ['RTN'] * len(rt_std), ['Control'] * len(ct_std))))
-#
-# # sns.distplot(atl_mean, hist=False, label='atl')
-# # sns.distplot(cl_mean, hist=False, label='cl')
-# # sns.distplot(rt_mean, hist=False, label='rtn')
-# # sns.distplot(ct_mean, hist=False, label='ctrl')
-# sns.violinplot(data=df, y='Group', x='Tubule_intensity_std')
-# plt.title('Standard deviation per tubule intensity for tubules (edges) corresponding to nodes with degree greater '
-#           'than two', fontsize=20)
-# plt.xlabel('Intensity standard deviation', fontsize=18)
-# plt.ylabel('Group', fontsize=18)
-# # plt.legend()
-# plt.show()
-#
-# exit()

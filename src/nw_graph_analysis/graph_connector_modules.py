@@ -4,14 +4,15 @@ import networkx as nx
 from collections import OrderedDict
 from skimage.graph import route_through_array
 from sklearn.neighbors import NearestNeighbors
-from er_graph_extraction import get_skel, get_graph_from_skel
+import sknw
+import imageio
 
 
 def get_connected_graph(skel_img_path):
     """
     Connect the graph based on missing near-node connections
     """
-    graph = get_graph_from_skel(skel_img_path)
+    return sknw.build_sknw(imageio.imread(skel_img_path), multi=True, iso=False)
 
 
 def get_nbrs(nodes_array):
@@ -27,7 +28,6 @@ def get_nbrs(nodes_array):
     distances, indices = nbrs.kneighbors(nodes_array)
 
     # Print the indices of the nearest neighbors for each element
-    # print(indices[:,1])
     return distances[:, 1], indices[:, 1]
 
 

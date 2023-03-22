@@ -10,6 +10,7 @@ from scipy.stats import f_oneway
 from numpy.polynomial.polynomial import polyfit
 import pandas as pd
 import scipy
+import os
 from scipy.stats import pearsonr
 import statannot
 from statsmodels.stats.multicomp import MultiComparison
@@ -19,7 +20,7 @@ import pickle as pkl
 from structure_extraction import node_connector, get_updated_degree_nodes
 from junction_analysis_modules import JunctionAnalysis as JA
 
-confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
+confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies'
 
 GROUP_PREF = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
 VALID_GROUPS = ['ATL', 'Climp', 'RTN', 'Control']
@@ -83,8 +84,11 @@ def get_all_junc(group, num_series):
 
     group_pref = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
 
-    er_mean_img = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{num_series}_er_mean.png'
-    skel_mean_img = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
+    er_mean_img_name = f'{group.lower()}{num_series}_er_mean.png'
+    er_mean_img = os.path.join(confocal_data_path, group, 'new_op_jul', 'er_mean', er_mean_img_name)
+
+    skel_mean_img_name = f'{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
+    skel_mean_img = os.path.join(confocal_data_path, group, 'new_op_jul', 'er_mean_proc', skel_mean_img_name)
 
     # conn_graph = node_connector(er_mean_img, skel_mean_img)
     # #
@@ -103,8 +107,8 @@ def get_all_junc(group, num_series):
     # newps = get_junctions(skel_mean_img)
 
     for frame in range(100):
-        er_img = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_egfp/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_std.png'
-        sk_img = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
+        er_img = f'{confocal_data_path}/{group}/new_op_jul/std_egfp/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_std.png'
+        sk_img = f'{confocal_data_path}/{group}/new_op_jul/skel/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
 
         junctions = get_junctions(er_img, sk_img)
         # sk_newps = get_junctions(sk_img)
@@ -160,26 +164,6 @@ def get_cc_ids(labelled_img, region):
 
     return cc_ids
 
-
-# def get_cc_ids(labelled_img, region):
-#     """
-#
-#     @param labelled_img: Input with all CC areas
-#     @param region: (list) iso or fuz
-#     @return: isolated or fuzzy region CC ids list
-#     """
-#
-#     num_cc = np.unique(labelled_img)
-#     # dict to store per component data
-#     dt = {each: [] for each in num_cc}
-#     for loc in region:
-#         locx, locy = loc[0], loc[1]
-#         cc_id = labelled_img[locx, locy]
-#         dt[cc_id] = loc
-#
-#     dt_vals = dt.values()
-#
-#     return [i for i, num in enumerate(dt_vals) if i > 0 and len(num) != 0]
 
 
 def get_ref_junc_per_CC_id(reference_junctions, connected_components):
@@ -267,6 +251,43 @@ def get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, region
     return label_id_junctions
 
 
+def get_per_CC_pixel_data(group, num_series, channel):
+    """
+    Variation for each pixel in a CC over 100 frames
+    """
+
+    group_prefixes = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
+    dir_name = 'std_egfp' if channel == 'egfp' else 'std_mch'
+    ch = 0 if channel == 'egfp' else 1
+    group_data = []
+
+    for num in range(1, num_series+1):
+        ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions(group, num)
+        label_ids, assigned_components = get_ref_junc_per_CC_id(ref_junctions, labelled_img)
+        label_id_junctions = get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, 'iso')
+
+        sequence_data = []
+        for id, junctions in label_id_junctions.items():
+            junctions = list(junctions)
+            for junc in junctions:
+                pixel_data = []
+                for i in range(100):
+                    file_name = f'{group_prefixes[group]}{num}_decon_t0{i:02d}_ch{ch:02d}_std.png'
+                    file_path = os.path.join(confocal_data_path, group, 'new_op_jul', dir_name, file_name)
+
+                    input = imageio.imread(file_path)
+                    pixel_data.append(input[junc])
+                sequence_data.append(pixel_data)
+        group_data.append(sequence_data)
+    return group_data
+
+
+atl = get_per_CC_pixel_data('ATL', 2, 'egfp')
+print(atl[0])
+exit()
+
+
+
 def get_region_areas(label_id_junctions):
     areas = []
     for id, juncs in label_id_junctions.items():
@@ -276,29 +297,10 @@ def get_region_areas(label_id_junctions):
     return areas
 
 
-# ref_junctions, per_frame_junctions, labelled_img = label_junctions('Climp', 13)
-# # label_id_junctions = get_label_per_junc(per_frame_junctions, labelled_img)
-# region = 'iso'
-# label_ids, unassigned_cc_dict = separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
-# # label_id_junctions = get_junctions_per_cc_id(label_ids, region)
-# #
-# iso, fuz, unk = get_junction_areas(label_ids, unassigned_cc_dict)
-# i, f, u = get_junction_areas(ref_junctions, per_frame_junctions, labelled_img)
-#
-#
-# print(iso)
-# print(i)
-#
-# # areas = get_region_areas(label_ids, region)
-# # sns.distplot(areas, hist=False)
-# # plt.show()
-# #
-# exit()
-
 def get_region_areas_per_group(group, num_series, region):
     area_data = []
     for num in range(1, num_series + 1):
-        ref_junctions, per_frame_junctions, labelled_img = label_junctions(group, num)
+        ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions(group, num)
         label_ids, unassigned_cc_dict = separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
         label_id_junctions = get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, region)
         # print(label_id_junctions)
@@ -355,35 +357,6 @@ def plot_region_areas():
 
     plt.show()
 
-# plot_region_areas()
-# exit()
-
-
-def pixel_variation_per_CC():
-    # get per CC data for 100 frames per channel
-    ref_junctions, per_frame_junctions, labelled_img = label_junctions('ATL', 3)
-
-    label_ids, unassigned_cc_dict = separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
-    iso, fuz, unk = get_junction_areas(label_ids, unassigned_cc_dict)
-
-    data = []
-    for each in iso:
-        junc_signal_vals = []
-        for i in range(100):
-            egfp_input = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/std_egfp/A1_decon_t0{i:02d}_ch00_std.png')
-            junc_signal_vals.append(egfp_input[each[0], each[1]])
-        data.append(junc_signal_vals)
-
-    data = np.array(data)
-    # print(data.shape)
-    for d in data:
-        print(d)
-
-    exit()
-
-# pixel_variation_per_CC()
-# exit()
-
 
 def ref_junc_data_per_group(group, num_series, channel):
     group_data = []
@@ -393,7 +366,7 @@ def ref_junc_data_per_group(group, num_series, channel):
     group_pref = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
 
     for num in range(1, num_series+1):
-        ref_junctions, per_frame_junctions, labelled_img = label_junctions(group, num)
+        ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions(group, num)
         label_ids, unassigned_cc_dict = separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
         iso, fuz, unk = get_junction_areas(label_ids, unassigned_cc_dict)
 
@@ -405,9 +378,7 @@ def ref_junc_data_per_group(group, num_series, channel):
             # junc_sig_egfp = []
             # junc_sig_mch = []
             for i in range(100):
-                input = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/{dirname}/{group_pref[group]}{num}_decon_t0{i:02d}_ch{ch:02d}_std.png')
-                # input_egfp = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_egfp/{group_pref[group]}{num}_decon_t0{i:02d}_ch00_std.png')
-                # input_mch = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_mch/{group_pref[group]}{num}_decon_t0{i:02d}_ch01_std.png')
+                input = imageio.imread(f'{confocal_data_path}/{group}/new_op_jul/{dirname}/{group_pref[group]}{num}_decon_t0{i:02d}_ch{ch:02d}_std.png')
                 junc_signal_vals.append(input[each[0], each[1]])
             data.append(junc_signal_vals)
 
@@ -573,7 +544,7 @@ exit()
 
 
 def get_region_cc(group, series_num, region):
-    ref_junctions, per_frame_junctions, labelled_img = label_junctions(group, series_num)
+    ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions(group, series_num)
 
     # dict with ids as key and (x, y) as value
     label_ids, unassigned_cc_dict = separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
@@ -605,9 +576,9 @@ def calc_egfp_deposit(group, channel, num_series, region):
         series_values = []
         for i in range(100):
             if group == 'Control':
-                path = f'{confocal_data_path}Control/files/img_{series_num}_decon_t0{i:02d}.tif'
+                path = f'{confocal_data_path}/Control/files/img_{series_num}_decon_t0{i:02d}.tif'
             else:
-                path = f'{confocal_data_path}{group}/files/{group[0]}{series_num}_decon_t0{i:02d}_ch0{channel_idx}.tif'
+                path = f'{confocal_data_path}/{group}/files/{group[0]}{series_num}_decon_t0{i:02d}_ch0{channel_idx}.tif'
             img = get_std_img(path)
             region_means = [np.mean(img[coords]) for coords in region_cc_coords.values()]
             series_values.extend(region_means)
@@ -846,11 +817,11 @@ def calc_deposit(num_series, group, region):
 
         for i in range(30):
             if group == 'Control':
-                path_EGFP = f'{confocal_data_path}Control/files/img_{num}_decon_t0{i:02d}.tif'
+                path_EGFP = f'{confocal_data_path}/Control/files/img_{num}_decon_t0{i:02d}.tif'
                 path_mch = None
             else:
-                path_EGFP = f'{confocal_data_path}{group}/files/{group[0]}{num}_decon_t0{i:02d}_ch00.tif'
-                path_mch = f'{confocal_data_path}{group}/files/{group[0]}{num}_decon_t0{i:02d}_ch01.tif'
+                path_EGFP = f'{confocal_data_path}/{group}/files/{group[0]}{num}_decon_t0{i:02d}_ch00.tif'
+                path_mch = f'{confocal_data_path}/{group}/files/{group[0]}{num}_decon_t0{i:02d}_ch01.tif'
 
             img_egfp = get_std_img(path_EGFP)
             frame_data_egfp = [np.mean(img_egfp[v]) for v in region_cc_coords.values()]
@@ -892,18 +863,18 @@ def calc_deposit_net_norm(num_series, group, region):
         # mnmx_mch = []
 
         if group == 'Control':
-            path_skel = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel_max_proj/Ct{num}_max.png'
+            path_skel = f'{confocal_data_path}/{group}/new_op_jul/skel_max_proj/Ct{num}_max.png'
         else:
-            path_skel = f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel_max_proj/{group[0]}{num}_max.png'
+            path_skel = f'{confocal_data_path}/{group}/new_op_jul/skel_max_proj/{group[0]}{num}_max.png'
 
         for i in range(100):
             if group == 'Control':
-                path_EGFP = f'{confocal_data_path}Control/files/img_{num}_decon_t0{i:02d}.tif'
+                path_EGFP = f'{confocal_data_path}/Control/files/img_{num}_decon_t0{i:02d}.tif'
                 path_mch = None
             else:
-                path_EGFP = f'{confocal_data_path}{group}/files/{group[0]}{num}_decon_t0{i:02d}_ch00.tif'
-                path_mch = f'{confocal_data_path}{group}/files/{group[0]}{num}_decon_t0{i:02d}_ch01.tif'
-                # path_skel = f'{confocal_data_path}{group}/new_op_jul/skel/{group[0]}{num}/{group[0]}{num}_decon_t0{i:02d}_ch00_skel.png'
+                path_EGFP = f'{confocal_data_path}/{group}/files/{group[0]}{num}_decon_t0{i:02d}_ch00.tif'
+                path_mch = f'{confocal_data_path}/{group}/files/{group[0]}{num}_decon_t0{i:02d}_ch01.tif'
+                # path_skel = f'{confocal_data_path}/{group}/new_op_jul/skel/{group[0]}{num}/{group[0]}{num}_decon_t0{i:02d}_ch00_skel.png'
 
             img_egfp = imageio.imread(path_EGFP)
             skel = imageio.imread(path_skel)
@@ -982,11 +953,11 @@ def calc_deposit_cc_norm(num_series, group, region):
 
         for i in range(100):
             if group == 'Control':
-                path_EGFP = f'{confocal_data_path}Control/files/img_{num}_decon_t0{i:02d}.tif'
+                path_EGFP = f'{confocal_data_path}/Control/files/img_{num}_decon_t0{i:02d}.tif'
                 path_mch = None
             else:
-                path_EGFP = f'{confocal_data_path}{group}/files/{group[0]}{num}_decon_t0{i:02d}_ch00.tif'
-                path_mch = f'{confocal_data_path}{group}/files/{group[0]}{num}_decon_t0{i:02d}_ch01.tif'
+                path_EGFP = f'{confocal_data_path}/{group}/files/{group[0]}{num}_decon_t0{i:02d}_ch00.tif'
+                path_mch = f'{confocal_data_path}/{group}/files/{group[0]}{num}_decon_t0{i:02d}_ch01.tif'
 
             img_egfp = imageio.imread(path_EGFP)
 
@@ -1115,8 +1086,8 @@ def get_tubule_data(group, series_num, connection):
     group_pref = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
 
     # sourcery skip: inline-immediately-returned-variable
-    er_input_path = f'{confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{series_num}_er_mean.png'
-    skel_path = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series_num}_er_mean_proc_enhance_skel.png'
+    er_input_path = f'{confocal_data_path}/{group}/new_op_jul/er_mean/{group.lower()}{series_num}_er_mean.png'
+    skel_path = f'{confocal_data_path}/{group}/new_op_jul/er_mean_proc/{group.lower()}{series_num}_er_mean_proc_enhance_skel.png'
 
     conn_graph = node_connector(er_input_path, skel_path)
 
@@ -1129,8 +1100,8 @@ def get_tubule_data(group, series_num, connection):
 
     per_frame_junctions = []
     for frame in range(100):
-        er_path = f'{confocal_data_path}{group}/new_op_jul/std_egfp/{group_pref[group]}{series_num}_decon_t0{frame:02d}_ch00_std.png'
-        skeleton_path = f'{confocal_data_path}{group}/new_op_jul/skel/{group_pref[group]}{series_num}/{group_pref[group]}{series_num}_decon_t0{frame:02d}_ch00_skel.png'
+        er_path = f'{confocal_data_path}/{group}/new_op_jul/std_egfp/{group_pref[group]}{series_num}_decon_t0{frame:02d}_ch00_std.png'
+        skeleton_path = f'{confocal_data_path}/{group}/new_op_jul/skel/{group_pref[group]}{series_num}/{group_pref[group]}{series_num}_decon_t0{frame:02d}_ch00_skel.png'
 
         graph = node_connector(er_path, skeleton_path)
 
@@ -1223,7 +1194,7 @@ def tubule_sequence_data(group, series_num, connection, channel, measure):
     group_pref = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
 
     def get_er_input(num, group, channel, series_num, ch_id):
-        er_input_path = f'{confocal_data_path}{group}/new_op_jul/std_{channel}/{group_pref[group]}{series_num}_decon_t0{num:02d}_ch0{ch_id}_std.png'
+        er_input_path = f'{confocal_data_path}/{group}/new_op_jul/std_{channel}/{group_pref[group]}{series_num}_decon_t0{num:02d}_ch0{ch_id}_std.png'
         er = imageio.imread(er_input_path)
         # er = (er - er.min()) / (er.max() - er.min())
         return er / 255

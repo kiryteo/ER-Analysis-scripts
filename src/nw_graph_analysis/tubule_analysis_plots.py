@@ -5,6 +5,7 @@ import seaborn as sns
 import statannot
 import matplotlib.pyplot as plt
 
+confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies'
 
 def get_correlation_data_per_replicate(data_egfp, data_mch) -> object:
     correlation_data_r1 = []
