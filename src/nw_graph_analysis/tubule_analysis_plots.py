@@ -162,12 +162,17 @@ def get_group_correlation_data(group, connection):
 
 def get_replicate_data(egfp, mch):
     r1e, r1m = egfp[:10], mch[:10]
+    print(r1e)
+    exit()
     r2e, r2m = egfp[10:20], mch[10:20]
     r3e, r3m = egfp[20:], mch[20:]
 
     r1 = per_pixel_correlation(r1e, r1m)
     r2 = per_pixel_correlation(r2e, r2m)
     r3 = per_pixel_correlation(r3e, r3m)
+
+    print(r1)
+    exit()
 
     return r1, r2, r3
 
@@ -201,6 +206,8 @@ def plot_per_pixel_correlation(connection, plottype):
 
     else:
         ar1, ar2, ar3 = get_replicate_data(atl_egfp, atl_mch)
+        print(len(ar1))
+        exit()
         cr1, cr2, cr3 = get_replicate_data(climp_egfp, climp_mch)
         rr1, rr2, rr3 = get_replicate_data(rtn_egfp, rtn_mch)
 
