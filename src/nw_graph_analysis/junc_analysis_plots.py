@@ -311,15 +311,17 @@ def get_region_areas_per_group(group, num_series, region):
     return area_data
 
 
-def plot_region_areas():
+def plot_region_areas(channel):
     atl = get_region_areas_per_group('ATL', 26, 'fuz')
     a1, a2, a3 = atl[:10], atl[10:20], atl[20:]
     climp = get_region_areas_per_group('Climp', 31, 'fuz')
     c1, c2, c3 = climp[:10], climp[10:20], climp[20:]
     rtn = get_region_areas_per_group('RTN', 29, 'fuz')
     r1, r2, r3 = rtn[:10], rtn[10:20], rtn[20:]
-    ctrl = get_region_areas_per_group('Control', 31, 'fuz')
-    ct1, ct2, ct3 = ctrl[:10], ctrl[10:20], ctrl[20:]
+
+    if channel == 'egfp':
+        ctrl = get_region_areas_per_group('Control', 31, 'fuz')
+        ct1, ct2, ct3 = ctrl[:10], ctrl[10:20], ctrl[20:]
 
     df = pd.DataFrame()
 
@@ -340,7 +342,15 @@ def plot_region_areas():
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
 
     # egfp
-    box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'RTN')), (('R1', 'ATL'), ('R1', 'Control')), (('R1', 'Climp'), ('R1', 'Control')), (('R1', 'RTN'), ('R1', 'Control')), (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'RTN')), (('R2', 'ATL'), ('R2', 'Control')), (('R2', 'Climp'), ('R2', 'Control')), (('R2', 'RTN'), ('R2', 'Control')), (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'RTN')), (('R3', 'ATL'), ('R3', 'Control')), (('R3', 'Climp'), ('R3', 'Control')), (('R3', 'RTN'), ('R3', 'Control'))]
+    replicates = ['R1', 'R2', 'R3']
+
+    if channel == 'egfp':
+        groups = ['ATL', 'Climp', 'RTN', 'Control']
+    else:
+        groups = ['ATL', 'Climp', 'RTN']
+    box_pairs = [((x, y), (x, z)) for i, x in enumerate(replicates) for j, y in enumerate(groups) for z in groups[j + 1 :]]
+
+    # box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'RTN')), (('R1', 'ATL'), ('R1', 'Control')), (('R1', 'Climp'), ('R1', 'Control')), (('R1', 'RTN'), ('R1', 'Control')), (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'RTN')), (('R2', 'ATL'), ('R2', 'Control')), (('R2', 'Climp'), ('R2', 'Control')), (('R2', 'RTN'), ('R2', 'Control')), (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'RTN')), (('R3', 'ATL'), ('R3', 'Control')), (('R3', 'Climp'), ('R3', 'Control')), (('R3', 'RTN'), ('R3', 'Control'))]
 
     statannot.add_stat_annotation(ax, x='Replicate', y='data_tubule_mean', hue='Group', data=df, box_pairs=box_pairs,
                                   test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
@@ -705,15 +715,16 @@ def plot_cc_area(a1, a2, a3, c1, c2, c3, r1, r2, r3, ct1, ct2, ct3, region):
 
     plt.yscale('log')
 
-    box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')),
-                 (('R1', 'ATL'), ('R1', 'Control')), (('R1', 'Climp'), ('R1', 'RTN')),
-                 (('R1', 'Climp'), ('R1', 'Control')), (('R1', 'RTN'), ('R1', 'Control')),
-                 (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')),
-                 (('R2', 'ATL'), ('R2', 'Control')), (('R2', 'Climp'), ('R2', 'RTN')),
-                 (('R2', 'Climp'), ('R2', 'Control')), (('R2', 'RTN'), ('R2', 'Control')),
-                 (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')),
-                 (('R3', 'ATL'), ('R3', 'Control')), (('R3', 'Climp'), ('R3', 'RTN')),
-                 (('R3', 'Climp'), ('R3', 'Control')), (('R3', 'RTN'), ('R3', 'Control'))]
+    channel = 'egfp'
+
+    replicates = ['R1', 'R2', 'R3']
+    groups = ['ATL', 'Climp', 'RTN', 'Control']
+
+    if channel == 'egfp':
+        box_pairs = [(tuple([x, y]), tuple([x, z])) for i, x in enumerate(replicates) for j, y in enumerate(groups) for z in groups[j+1:]]
+    else:
+        groups = ['ATL', 'Climp', 'RTN']
+        box_pairs = [(tuple([x, y]), tuple([x, z])) for i, x in enumerate(replicates) for j, y in enumerate(groups) for z in groups[j+1:]]
 
     statannot.add_stat_annotation(ax, x='Replicate', y='CC_area', hue='Group', data=df, box_pairs=box_pairs,
                                   test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
@@ -1364,9 +1375,19 @@ ax = sns.boxenplot(data=df, x='Replicate', y='data_tubule_mean', hue='Group', do
 ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
 
 # egfp
-box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'RTN')),
-             (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'RTN')),
-             (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'RTN'))]
+channel = 'egfp'
+replicates = ['R1', 'R2', 'R3']
+
+if channel == 'egfp':
+    groups = ['ATL', 'Climp', 'RTN', 'Control']
+else:
+    groups = ['ATL', 'Climp', 'RTN']
+
+box_pairs = [((x, y), (x, z)) for i, x in enumerate(replicates) for j, y in enumerate(groups) for z in groups[j + 1 :]]
+
+# box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'RTN')),
+#              (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'RTN')),
+#              (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'RTN'))]
 
 statannot.add_stat_annotation(ax, x='Replicate', y='data_tubule_mean', hue='Group', data=df, box_pairs=box_pairs,
                               test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
@@ -1454,8 +1475,11 @@ ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
 # box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
 
 # egfp
-box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'Control'), ('Climp', 'RTN'),
-             ('Control', 'RTN')]
+groups = ['ATL', 'Climp', 'RTN', 'Control']
+box_pairs = [(x, y) for i, x in enumerate(groups) for j, y in enumerate(groups) if i < j and y not in groups[:i] + groups[i+1:j]]
+
+# box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'Control'), ('Climp', 'RTN'),
+#              ('Control', 'RTN')]
 
 # statannot.add_stat_annotation(ax, x='Replicate', y='data_tubule_mean', hue='Group', data=df, box_pairs=box_pairs,
 #                               test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
@@ -2134,9 +2158,16 @@ def full_data_variation_plots(region, measure, channel):
     # sns.boxplot(data=df, x='Group', y='CC_area', hue='replicate', color='white', dodge=True)
     # hue_order = ['ATL', 'Climp', 'RTN', 'Control']
     # box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'ATL'), ('R1', 'Control')), (('R1', 'Climp'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'Control')), (('R1', 'RTN'), ('R1', 'Control')), (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'ATL'), ('R2', 'Control')), (('R2', 'Climp'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'Control')), (('R2', 'RTN'), ('R2', 'Control')), (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'ATL'), ('R3', 'Control')), (('R3', 'Climp'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'Control')), (('R3', 'RTN'), ('R3', 'Control'))]
-    box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'RTN')),
-                 (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'RTN')),
-                 (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'RTN'))]
+
+    replicates = ['R1', 'R2', 'R3']
+    groups = ['ATL', 'Climp', 'RTN', 'Control']
+
+    box_pairs = [((x, y), (x, z)) for i, x in enumerate(replicates) for j, y in enumerate(groups) for z in groups[j + 1 :]]
+
+
+    # box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'RTN')),
+    #              (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'RTN')),
+    #              (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'RTN'))]
     statannot.add_stat_annotation(ax, x='Replicate', y='data_junc_CC_mean', hue='Group', data=df, box_pairs=box_pairs,
                                   test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
 

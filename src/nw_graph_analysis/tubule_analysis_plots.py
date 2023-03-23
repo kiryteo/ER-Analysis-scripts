@@ -207,8 +207,6 @@ def plot_per_pixel_correlation(connection, plottype):
 
     else:
         ar1, ar2, ar3 = get_replicate_data(atl_egfp, atl_mch)
-        print(len(ar1))
-        exit()
         cr1, cr2, cr3 = get_replicate_data(climp_egfp, climp_mch)
         rr1, rr2, rr3 = get_replicate_data(rtn_egfp, rtn_mch)
 
