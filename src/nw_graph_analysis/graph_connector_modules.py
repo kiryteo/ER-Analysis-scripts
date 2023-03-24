@@ -8,13 +8,6 @@ import sknw
 import imageio
 
 
-def get_connected_graph(skel_img_path):
-    """
-    Connect the graph based on missing near-node connections
-    """
-    return sknw.build_sknw(imageio.imread(skel_img_path), multi=True, iso=False)
-
-
 def get_nbrs(nodes_array):
     """
     Get the nearest neighbors per node
@@ -27,7 +20,7 @@ def get_nbrs(nodes_array):
     # Get the distances and indices of the nearest neighbors
     distances, indices = nbrs.kneighbors(nodes_array)
 
-    # Print the indices of the nearest neighbors for each element
+    # Return the indices of the nearest neighbors for each element
     return distances[:, 1], indices[:, 1]
 
 
@@ -49,7 +42,8 @@ def get_closest_from_nbr(graph, node):
     distances = [graph.edges[node, neighbor, 0]['weight'] for neighbor in neighbors]
 
     # Find the index of the closest neighbor in the list of neighbors
-    closest_neighbor_index = distances.index(min(distances))
+    # closest_neighbor_index = distances.index(min(distances))
+    closest_neighbor_index = np.argmin(distances)
 
     # Return the closest neighbor and its distance to the node
     return neighbors[closest_neighbor_index], min(distances)
@@ -63,6 +57,7 @@ def get_path_coords(er_input, cost_arr, g_nodes_array, node, fin_dict):
     # Find the path coordinates using the `route_through_array()` function
     path_coords, _ = route_through_array(cost_arr, start=start_coord, end=end_coord, fully_connected=True)
 
+    # locations without signal in the path
     zero_signal_coords = sum(er_input[each] == 0 for each in path_coords)
 
     signal_coords = len(path_coords) - zero_signal_coords
@@ -75,10 +70,14 @@ def get_path_coords(er_input, cost_arr, g_nodes_array, node, fin_dict):
 
 
 def connect_low_degree_nodes(temp_graph, node, fin_dict, path_coords):
+    # add edge between the close nodes and get length of edge (distance)
     temp_graph.add_edge(node, fin_dict[node][0])
+    # total_distance = np.sum(np.linalg.norm(np.diff(path_coords, axis=0), axis=1))
+
     total_distance = sum(
         math.sqrt((path_coords[i + 1][0] - path_coords[i][0]) ** 2 + (path_coords[i + 1][1] - path_coords[i][1]) ** 2)
         for i in range(len(path_coords) - 1))
+
     return {(node, fin_dict[node][0], 0): {'pts': path_coords, 'weight': total_distance}}
 
 

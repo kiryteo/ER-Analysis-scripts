@@ -3,6 +3,9 @@ from skimage.measure import label, regionprops
 import itertools
 import sknw
 import imageio
+import copy
+import graph_connector_modules as gcm
+from gcm import *
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 
@@ -27,15 +30,14 @@ class JunctionAnalysis:
     #
     #     return [node_coords[node_num] for node_num, degree_val in enumerate(graph.degree) if degree_val[1] > 2]
 
-    def get_junctions(self, graph):
-        # given input graph, get nodes from it.
-        """
-
-        @param graph: Input graph to obtain the junctions
-        @return: nodes (junctions) with degree > 2
-        """
-        return np.array([graph.nodes[node]['o'] for node in graph.nodes() if graph.degree[node] > 2])
-
+    # def get_junctions(self, graph):
+    #     # given input graph, get nodes from it.
+    #     """
+    #
+    #     @param graph: Input graph to obtain the junctions
+    #     @return: nodes (junctions) with degree > 2
+    #     """
+    #     return np.array([graph.nodes[node]['o'] for node in graph.nodes() if graph.degree[node] > 2])
 
     def get_all_junc(self, group, num_series):
         # get reference junctions based on mean projection frame and per frame junctions for each series, all groups
@@ -53,9 +55,9 @@ class JunctionAnalysis:
         mean_skel = f'{self.confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
 
         # Get junction coordinates from projection frame
-        graph = self.skel_to_graph(mean_skel)
+        # graph = self.skel_to_graph(mean_skel)
 
-        ref_junctions = self.get_junctions(graph)
+        ref_junctions = self.get_junctions(mean_er, mean_skel)
 
         ref_junctions = [[each[0], each[1]] for each in ref_junctions]
 
@@ -66,15 +68,52 @@ class JunctionAnalysis:
 
             skeleton_path = f'{confocal_data_path}{group}/new_op_jul/skel/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
 
-            graph = self.skel_to_graph(skeleton_path)
+            # graph = self.skel_to_graph(skeleton_path)
             # graph = node_connector(er_path, skeleton_path)
-            junctions = self.get_junctions(graph)
+            junctions = self.get_junctions(er_path, skeleton_path)
 
             junc_array = [[junc[0], junc[1]] for junc in junctions]
             # sk_nps = np.array(sk_nps)
             per_frame_junctions.extend(junc_array)
 
         return ref_junctions, per_frame_junctions
+
+    # def process_node_runner(self, graph):
+    #     temp_graph = copy.deepcopy(graph)
+    #     for node in graph.nodes():
+    #         gcm.process_node(temp_graph, node)
+
+    # node_connector
+    def get_junctions(self, path_er, path_skel):
+        graph = self.skel_to_graph(path_skel)
+
+        fin_dict, g_nodes_array = gcm.get_updated_neighbor_dict(graph)
+
+        temp_graph = copy.deepcopy(graph)
+
+        er_input = imageio.imread(path_er)
+        cost_arr = np.ones((128, 128))
+        # cost_arr[er_proc_bg] = 0
+
+        for node in dict(graph.degree()):
+            # access the first element of graph.neighbors
+            neighbor = next(iter(graph.neighbors(node)))
+
+            gcm.connect_nodes(er_input, temp_graph, node, neighbor, fin_dict, cost_arr, g_nodes_array)
+
+        tgraph = copy.deepcopy(temp_graph)
+        for node in temp_graph.nodes():
+            gcm.process_node(tgraph, node)
+
+        tgraph2 = copy.deepcopy(tgraph)
+        for node in tgraph.nodes():
+            gcm.process_node(tgraph2, node)
+
+        node_set, degree_list = tgraph2.nodes, tgraph2.degree
+
+        node_coords = np.array([node_set[node]['o'] for node in node_set])
+
+        return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
 
     def label_junctions(self, group, series_num):
 

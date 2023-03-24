@@ -5,9 +5,12 @@ import pickle as pkl
 import seaborn as sns
 import statannot
 import matplotlib.pyplot as plt
-
+from junction_analysis_modules import JunctionAnalysis as JA
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies'
+
+junc_analysis = JA(confocal_data_path)
+
 
 def ref_junc_data_per_group(group, num_series, channel):
     group_data = []
@@ -18,8 +21,8 @@ def ref_junc_data_per_group(group, num_series, channel):
 
     for num in range(1, num_series+1):
         ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions(group, num)
-        label_ids, unassigned_cc_dict = separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
-        iso, fuz, unk = get_junction_areas(label_ids, unassigned_cc_dict)
+        label_ids, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
+        iso, fuz, unk = junc_analysis.get_junction_areas(label_ids, unassigned_cc_dict)
 
         # store per movie list of per ref junc list with 100 values
         data = []

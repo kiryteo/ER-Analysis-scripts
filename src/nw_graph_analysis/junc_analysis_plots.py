@@ -35,104 +35,6 @@ def get_std_img(path):
     img = imageio.imread(path)
     return (img - img.min()) / (img.max() - img.min())
 
-
-def skel_to_graph(skel):
-    g = sknw.build_sknw(skel, iso=False)
-    G = nx.Graph()
-    node_set = g.nodes()
-
-    G.add_nodes_from(node_set)
-    G.add_edges_from(g.edges)
-
-    degree_list = G.degree
-
-    return node_set, degree_list
-
-
-def get_connected_junctions(er_input_path, mean_img):
-    """
-
-    @param mean_img: Input mean projection skel image (ndarray, binary)
-    @return: list of Nodes with degree > 2
-    """
-
-    conn_graph = node_connector(er_input_path, mean_img)
-
-    node_set, degree_list = conn_graph.nodes, conn_graph.degree
-
-    # skel = imageio.imread(mean_img)
-    #
-    # sk_graph = sknw.build_sknw(skel, multi=True, iso=False)
-    #
-    # # Build graph from the skeleton
-    # # node_set, degree_list = skel_to_graph(skel)
-    #
-    # node_set, degree_list = sk_graph.nodes, sk_graph.degree
-
-    node_coords = np.array([node_set[node]['o'] for node in node_set])
-
-    return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
-
-
-def get_all_junc(group, num_series):
-    """
-
-    @param group: group to be analyzed
-    @param num_series: sequence number
-    @return: nps (list) - provides all junctions with degree > 2 from the mean projection proc skeleton, skdata (list) - provides all junctions per skel frame
-    """
-
-    group_pref = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
-
-    er_mean_img_name = f'{group.lower()}{num_series}_er_mean.png'
-    er_mean_img = os.path.join(confocal_data_path, group, 'new_op_jul', 'er_mean', er_mean_img_name)
-
-    skel_mean_img_name = f'{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
-    skel_mean_img = os.path.join(confocal_data_path, group, 'new_op_jul', 'er_mean_proc', skel_mean_img_name)
-
-    # conn_graph = node_connector(er_mean_img, skel_mean_img)
-    # #
-    # node_set, degree_list = conn_graph.nodes, conn_graph.degree
-    #
-    # node_coords = np.array([node_set[node]['o'] for node in node_set])
-    #
-    # newps = [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
-    ref_junctions = get_connected_junctions(er_mean_img, skel_mean_img)
-
-    ref_junctions = [[each[0], each[1]] for each in ref_junctions]
-    per_frame_junctions = []
-
-    for frame in range(100):
-        er_img = f'{confocal_data_path}/{group}/new_op_jul/std_egfp/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_std.png'
-        sk_img = f'{confocal_data_path}/{group}/new_op_jul/skel/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
-
-        junctions = get_connected_junctions(er_img, sk_img)
-        # sk_newps = get_connected_junctions(sk_img)
-
-        junctions = [[each[0], each[1]] for each in junctions]
-        # sk_nps = np.array(sk_nps)
-        per_frame_junctions.extend(junctions)
-
-    return ref_junctions, per_frame_junctions
-
-
-def label_junctions(group, series_num):
-    """
-    Creates the connected component for junctions
-    """
-    ref_junctions, per_frame_junctions = get_all_junc(group, series_num)
-
-    ref_junctions = np.array(ref_junctions)
-    per_frame_junctions = np.array(per_frame_junctions)
-
-    spread_img = np.zeros((128, 128))
-    for each in per_frame_junctions:
-        spread_img[each[0], each[1]] = 255.
-
-    labelled_img = label(spread_img, connectivity=2)
-    return ref_junctions, per_frame_junctions, labelled_img
-
-
 def get_cc_ids(labelled_img, region):
     # sourcery skip: inline-immediately-returned-variable
     """
@@ -159,7 +61,6 @@ def get_cc_ids(labelled_img, region):
     cc_ids = [cc_id for cc_id, data in cc_data.items() if cc_id > 0 and len(data) > 0]
 
     return cc_ids
-
 
 
 def get_ref_junc_per_CC_id(reference_junctions, connected_components):
