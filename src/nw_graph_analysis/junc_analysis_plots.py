@@ -49,7 +49,7 @@ def skel_to_graph(skel):
     return node_set, degree_list
 
 
-def get_junctions(er_input_path, mean_img):
+def get_connected_junctions(er_input_path, mean_img):
     """
 
     @param mean_img: Input mean projection skel image (ndarray, binary)
@@ -97,21 +97,17 @@ def get_all_junc(group, num_series):
     # node_coords = np.array([node_set[node]['o'] for node in node_set])
     #
     # newps = [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
-    ref_junctions = get_junctions(er_mean_img, skel_mean_img)
+    ref_junctions = get_connected_junctions(er_mean_img, skel_mean_img)
 
     ref_junctions = [[each[0], each[1]] for each in ref_junctions]
     per_frame_junctions = []
-
-    ### Get junction coordinates from projection frame
-    # newps = get_junctions(er_mean_img, skel_mean_img)
-    # newps = get_junctions(skel_mean_img)
 
     for frame in range(100):
         er_img = f'{confocal_data_path}/{group}/new_op_jul/std_egfp/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_std.png'
         sk_img = f'{confocal_data_path}/{group}/new_op_jul/skel/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
 
-        junctions = get_junctions(er_img, sk_img)
-        # sk_newps = get_junctions(sk_img)
+        junctions = get_connected_junctions(er_img, sk_img)
+        # sk_newps = get_connected_junctions(sk_img)
 
         junctions = [[each[0], each[1]] for each in junctions]
         # sk_nps = np.array(sk_nps)
@@ -319,23 +315,30 @@ def plot_region_areas(channel):
     rtn = get_region_areas_per_group('RTN', 29, 'fuz')
     r1, r2, r3 = rtn[:10], rtn[10:20], rtn[20:]
 
-    if channel == 'egfp':
-        ctrl = get_region_areas_per_group('Control', 31, 'fuz')
-        ct1, ct2, ct3 = ctrl[:10], ctrl[10:20], ctrl[20:]
-
     df = pd.DataFrame()
 
     # df['data_tubule_mean'] = pd.Series(np.concatenate((atl, climp, rtn)))
-    df['data_tubule_mean'] = pd.Series(np.concatenate((a1, a2, a3, c1, c2, c3, r1, r2, r3, ct1, ct2, ct3)))
 
-    df['Replicate'] = pd.Series(np.concatenate((['R1'] * len(a1), ['R2'] * len(a2), ['R3'] * len(a3), ['R1'] * len(c1),
-                                                ['R2'] * len(c2), ['R3'] * len(c3), ['R1'] * len(r1), ['R2'] * len(r2),
-                                                ['R3'] * len(r3), ['R1'] * len(ct1), ['R2'] * len(ct2),
-                                                ['R3'] * len(ct3))))
+    if channel == 'egfp':
+        ctrl = get_region_areas_per_group('Control', 31, 'fuz')
+        ct1, ct2, ct3 = ctrl[:10], ctrl[10:20], ctrl[20:]
+        df['data_tubule_mean'] = pd.Series(np.concatenate((a1, a2, a3, c1, c2, c3, r1, r2, r3, ct1, ct2, ct3)))
+        df['Replicate'] = pd.Series(np.concatenate((['R1'] * len(a1), ['R2'] * len(a2), ['R3'] * len(a3), ['R1'] * len(c1),
+                                                    ['R2'] * len(c2), ['R3'] * len(c3), ['R1'] * len(r1), ['R2'] * len(r2),
+                                                    ['R3'] * len(r3), ['R1'] * len(ct1), ['R2'] * len(ct2),
+                                                    ['R3'] * len(ct3))))
+        df['Group'] = pd.Series(np.concatenate((
+            ['ATL'] * len(a1), ['ATL'] * len(a2), ['ATL'] * len(a3), ['Climp'] * len(c1), ['Climp'] * len(c2),
+            ['Climp'] * len(c3), ['RTN'] * len(r1), ['RTN'] * len(r2), ['RTN'] * len(r3), ['Control'] * len(ct1), ['Control'] * len(ct2), ['Control'] * len(ct3))))
+    else:
+        df['data_tubule_mean'] = pd.Series(np.concatenate((a1, a2, a3, c1, c2, c3, r1, r2, r3)))
+        df['Replicate'] = pd.Series(np.concatenate((['R1'] * len(a1), ['R2'] * len(a2), ['R3'] * len(a3), ['R1'] * len(c1),
+                                                    ['R2'] * len(c2), ['R3'] * len(c3), ['R1'] * len(r1), ['R2'] * len(r2),
+                                                    ['R3'] * len(r3))))
+        df['Group'] = pd.Series(np.concatenate((
+            ['ATL'] * len(a1), ['ATL'] * len(a2), ['ATL'] * len(a3), ['Climp'] * len(c1), ['Climp'] * len(c2),
+            ['Climp'] * len(c3), ['RTN'] * len(r1), ['RTN'] * len(r2), ['RTN'] * len(r3))))
 
-    df['Group'] = pd.Series(np.concatenate((
-        ['ATL'] * len(a1), ['ATL'] * len(a2), ['ATL'] * len(a3), ['Climp'] * len(c1), ['Climp'] * len(c2),
-        ['Climp'] * len(c3), ['RTN'] * len(r1), ['RTN'] * len(r2), ['RTN'] * len(r3), ['Control'] * len(ct1), ['Control'] * len(ct2), ['Control'] * len(ct3))))
 
     # ax = sns.boxenplot(data=df, x='Group', y='data_tubule_mean')
     ax = sns.boxenplot(data=df, x='Replicate', y='data_tubule_mean', hue='Group', dodge=True)  # , yscale='log')
@@ -349,8 +352,6 @@ def plot_region_areas(channel):
     else:
         groups = ['ATL', 'Climp', 'RTN']
     box_pairs = [((x, y), (x, z)) for i, x in enumerate(replicates) for j, y in enumerate(groups) for z in groups[j + 1 :]]
-
-    # box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'RTN')), (('R1', 'ATL'), ('R1', 'Control')), (('R1', 'Climp'), ('R1', 'Control')), (('R1', 'RTN'), ('R1', 'Control')), (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'RTN')), (('R2', 'ATL'), ('R2', 'Control')), (('R2', 'Climp'), ('R2', 'Control')), (('R2', 'RTN'), ('R2', 'Control')), (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'RTN')), (('R3', 'ATL'), ('R3', 'Control')), (('R3', 'Climp'), ('R3', 'Control')), (('R3', 'RTN'), ('R3', 'Control'))]
 
     statannot.add_stat_annotation(ax, x='Replicate', y='data_tubule_mean', hue='Group', data=df, box_pairs=box_pairs,
                                   test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
@@ -367,164 +368,6 @@ def plot_region_areas(channel):
 
     plt.show()
 
-
-def ref_junc_data_per_group(group, num_series, channel):
-    group_data = []
-    # grp_data_egfp, grp_data_mch = [], []
-
-    dirname, ch = ('std_egfp', 0) if channel == 'egfp' else ('std_mch', 1)
-    group_pref = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
-
-    for num in range(1, num_series+1):
-        ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions(group, num)
-        label_ids, unassigned_cc_dict = separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
-        iso, fuz, unk = get_junction_areas(label_ids, unassigned_cc_dict)
-
-        # store per movie list of per ref junc list with 100 values
-        data = []
-        for each in iso:
-            # store 100 values per ref junc
-            junc_signal_vals = []
-            # junc_sig_egfp = []
-            # junc_sig_mch = []
-            for i in range(100):
-                input = imageio.imread(f'{confocal_data_path}/{group}/new_op_jul/{dirname}/{group_pref[group]}{num}_decon_t0{i:02d}_ch{ch:02d}_std.png')
-                junc_signal_vals.append(input[each[0], each[1]])
-            data.append(junc_signal_vals)
-
-        # store list of per movie data list
-        group_data.append(data)
-
-    return group_data
-
-
-# def create_junc_data_pickles():
-#     atl_e = ref_junc_data_per_group('ATL', 26, 'egfp')
-#     atl_m = ref_junc_data_per_group('ATL', 26, 'mcherry')
-#     climp_e = ref_junc_data_per_group('Climp', 31, 'egfp')
-#     climp_m = ref_junc_data_per_group('Climp', 31, 'mcherry')
-#     rtn_e = ref_junc_data_per_group('RTN', 29, 'egfp')
-#     rtn_m = ref_junc_data_per_group('RTN', 29, 'mcherry')
-#     ctrl_e = ref_junc_data_per_group('Control', 31, 'egfp')
-#
-#     # with open('atl_ref_junc_egfp.pkl', 'wb') as fl:
-#     #     pkl.dump(group_data, fl)
-
-
-def ref_junc_variation(data, measure):
-    measure_vals = []
-    if measure == 'mean':
-        for each in data:
-            # l = []
-            for junc in each:
-                junc = np.array(junc) / 255
-                # l.append(np.mean(junc))
-                # measure_vals.append(l)
-                measure_vals.append(np.mean(junc))
-    elif measure == 'std':
-        for each in data:
-            # l = []
-            for junc in each:
-                junc = np.array(junc) / 255
-                # l.append(np.std(junc))
-            # measure_vals.append(l)
-                measure_vals.append(np.std(junc))
-    return measure_vals
-
-
-def write_pickle(group, channel, data):
-    with open(f'{group.lower()}_ref_junc_{channel}.pkl', 'wb') as fl:
-        pkl.dump(data, fl)
-
-
-def plot_ref_junc_variation():
-
-    atl_data = pkl.load(open('atl_ref_junc_mch.pkl', 'rb'))
-    # atl_data = ref_junc_data_per_group('ATL', 26, 'mch')
-    # write_pickle('ATL', 'mch', atl_data)
-    # a1, a2, a3 = atl_data[:10], atl_data[10:20], atl_data[20:]
-    # a1, a2, a3 = ref_junc_variation(a1, 'std'), ref_junc_variation(a2, 'std'), ref_junc_variation(a3, 'std')
-
-    atl = ref_junc_variation(atl_data, 'mean')
-
-    # climp_data = ref_junc_data_per_group('Climp', 31, 'mch')
-    # write_pickle('Climp', 'mch', climp_data)
-    climp_data = pkl.load(open('climp_ref_junc_mch.pkl', 'rb'))
-    # c1, c2, c3 = climp_data[:10], climp_data[10:20], climp_data[20:]
-    # c1, c2, c3 = ref_junc_variation(c1, 'std'), ref_junc_variation(c2, 'std'), ref_junc_variation(c3, 'std')
-    climp = ref_junc_variation(climp_data, 'mean')
-
-    # rtn_data = ref_junc_data_per_group('RTN', 29, 'mch')
-    # write_pickle('RTN', 'mch', rtn_data)
-    rtn_data = pkl.load(open('rtn_ref_junc_mch.pkl', 'rb'))
-    # r1, r2, r3 = rtn_data[:10], rtn_data[10:20], rtn_data[20:]
-    # r1, r2, r3 = ref_junc_variation(r1, 'std'), ref_junc_variation(r2, 'std'), ref_junc_variation(r3, 'std')
-    rtn = ref_junc_variation(rtn_data, 'mean')
-
-    # ctrl_data = get_region_areas_per_group('Control', 31, 'mch')
-    # write_pickle('Control', 'mch', ctrl_data)
-
-    # ctrl_data = pkl.load(open('control_ref_junc_egfp.pkl', 'rb'))
-    # ct1, ct2, ct3 = ctrl_data[:10], ctrl_data[10:20], ctrl_data[20:]
-    # ct1, ct2, ct3 = ref_junc_variation(ct1, 'mean'), ref_junc_variation(ct2, 'std'), ref_junc_variation(ct3, 'std')
-    # ctrl = ref_junc_variation(ctrl_data, 'mean')
-
-    # print(ct1)
-    # exit()
-    df = pd.DataFrame()
-
-    df['data_tubule_mean'] = pd.Series(np.concatenate((atl, climp, rtn)))
-
-    # df['data_tubule_mean'] = pd.Series(np.concatenate((a1, a2, a3, c1, c2, c3, r1, r2, r3, ct1, ct2, ct3)))
-    # df['data_tubule_mean'] = pd.Series(np.concatenate((a1, a2, a3, c1, c2, c3, r1, r2, r3)))
-
-    # df['Replicate'] = pd.Series(np.concatenate((['R1'] * len(a1), ['R2'] * len(a2), ['R3'] * len(a3), ['R1'] * len(c1),
-    #                                             ['R2'] * len(c2), ['R3'] * len(c3), ['R1'] * len(r1), ['R2'] * len(r2),
-    #                                             ['R3'] * len(r3), ['R1'] * len(ct1), ['R2'] * len(ct2),
-    #                                             ['R3'] * len(ct3))))
-
-    # df['Replicate'] = pd.Series(np.concatenate((['R1'] * len(a1), ['R2'] * len(a2), ['R3'] * len(a3), ['R1'] * len(c1),
-    #                                                                                         ['R2'] * len(c2), ['R3'] * len(c3), ['R1'] * len(r1), ['R2'] * len(r2),
-    #                                                                                         ['R3'] * len(r3))))
-
-    df['Group'] = pd.Series(np.concatenate((['ATL']*len(atl), ['Climp']*len(climp), ['RTN']*len(rtn))))
-
-    # df['Group'] = pd.Series(np.concatenate((
-    #     ['ATL'] * len(a1), ['ATL'] * len(a2), ['ATL'] * len(a3), ['Climp'] * len(c1), ['Climp'] * len(c2),
-    #     ['Climp'] * len(c3), ['RTN'] * len(r1), ['RTN'] * len(r2), ['RTN'] * len(r3), ['Control'] * len(ct1), ['Control'] * len(ct2), ['Control'] * len(ct3))))
-    #
-
-    # df['Group'] = pd.Series(np.concatenate((
-    #     ['ATL'] * len(a1), ['ATL'] * len(a2), ['ATL'] * len(a3), ['Climp'] * len(c1), ['Climp'] * len(c2),
-    #     ['Climp'] * len(c3), ['RTN'] * len(r1), ['RTN'] * len(r2), ['RTN'] * len(r3))))
-
-    ax = sns.boxenplot(data=df, x='Group', y='data_tubule_mean')
-    # ax = sns.boxenplot(data=df, x='Replicate', y='data_tubule_mean', hue='Group', dodge=True)  # , yscale='log')
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
-
-    box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
-
-    # egfp
-    # box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'RTN')), (('R1', 'ATL'), ('R1', 'Control')), (('R1', 'Climp'), ('R1', 'Control')), (('R1', 'RTN'), ('R1', 'Control')), (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'RTN')), (('R2', 'ATL'), ('R2', 'Control')), (('R2', 'Climp'), ('R2', 'Control')), (('R2', 'RTN'), ('R2', 'Control')), (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'RTN')), (('R3', 'ATL'), ('R3', 'Control')), (('R3', 'Climp'), ('R3', 'Control')), (('R3', 'RTN'), ('R3', 'Control'))]
-
-    # box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'RTN')), (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'RTN')), (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'RTN'))]
-
-    # statannot.add_stat_annotation(ax, x='Replicate', y='data_tubule_mean', hue='Group', data=df, box_pairs=box_pairs,
-    #                               test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
-
-    statannot.add_stat_annotation(ax, x='Group', y='data_tubule_mean', data=df, box_pairs=box_pairs,
-                                  test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
-
-    # plt.title('Cross-correlation between ERmoxGFP and mCherry over sequence for tubule intensity mean in all tubules',
-    #           fontsize=18)
-    # plt.title('CC area for Fuzzy CCs across conditions', fontsize=20)
-    plt.title('Reference junction mean over sequence for isolated CCs in mCherry channel', fontsize=20)
-    plt.grid(True)
-    # plt.xlabel('Replicate', fontsize=20)
-    plt.xlabel('Group', fontsize=20)
-    plt.ylabel('Mean over sequence per reference junction', fontsize=18)
-
-    plt.show()
 
 # atl_e = ref_junc_data_per_group('ATL', 10, 'egfp')
 # atl_mean = ref_junc_variation(atl_e, 'mean')
@@ -717,14 +560,14 @@ def plot_cc_area(a1, a2, a3, c1, c2, c3, r1, r2, r3, ct1, ct2, ct3, region):
 
     channel = 'egfp'
 
+
     replicates = ['R1', 'R2', 'R3']
-    groups = ['ATL', 'Climp', 'RTN', 'Control']
 
     if channel == 'egfp':
-        box_pairs = [(tuple([x, y]), tuple([x, z])) for i, x in enumerate(replicates) for j, y in enumerate(groups) for z in groups[j+1:]]
+        groups = ['ATL', 'Climp', 'RTN', 'Control']
     else:
         groups = ['ATL', 'Climp', 'RTN']
-        box_pairs = [(tuple([x, y]), tuple([x, z])) for i, x in enumerate(replicates) for j, y in enumerate(groups) for z in groups[j+1:]]
+    box_pairs = [((x, y), (x, z)) for i, x in enumerate(replicates) for j, y in enumerate(groups) for z in groups[j + 1 :]]
 
     statannot.add_stat_annotation(ax, x='Replicate', y='CC_area', hue='Group', data=df, box_pairs=box_pairs,
                                   test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
@@ -1220,11 +1063,7 @@ def tubule_sequence_data(group, series_num, connection, channel, measure):
 
     seq_data = []
 
-    # ch_id = 0 if channel == 'egfp' else 1
-    if channel == 'egfp':
-        ch_id = 0
-    else:
-        ch_id = 1
+    ch_id = 0 if channel == 'egfp' else 1
 
     for each in edge_pts:
         edge_data = []
@@ -1303,9 +1142,6 @@ def create_pickles(groups: dict, connections: list, channels: list, measure: lis
                     create_tub_data_pickles(group, num_series, connection, channel, measure)
             else:
                 create_tub_data_pickles(group, num_series, connection, 'egfp', measure)
-
-
-
 
 
 def pickle_creation_runner():
