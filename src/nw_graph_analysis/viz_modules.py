@@ -2,10 +2,54 @@ import imageio
 import sknw
 import matplotlib.pyplot as plt
 import numpy as np
+import copy
+from PIL import Image
 
 
 def get_graph(skel):
     return sknw.build_sknw(skel, iso=False, multi=True)
+
+
+def create_junc_crop_sequence():
+    l = []
+    for i in range(100):
+        img = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/junction_crops/S13_j10_cc_area_v2/R13_decon_t0{i:02d}_ch01.png')
+        img = img[:,:,:3]
+        l.append(img)
+
+    def seq_with_plt():
+        img = np.concatenate(l, axis=1)
+
+        print(img.shape)
+
+        fig = plt.gca()
+
+        plt.axis('off')
+        plt.imshow(img, interpolation=None)
+
+        fig = plt.gcf()
+        fig.set_size_inches(24, 246, forward=True)
+
+        # fig.savefig('R13_j10_mch.tif', bbox_inches='tight', pad_inches=0)
+        plt.show()
+
+    def seq_with_pil():
+        images = list(map(Image.open, l))
+        # images = list(map(Image.fromarray, l))
+        w, h = zip(*(i.size for i in images))
+
+        tw = sum(w)
+        mxh = max(h)
+
+        new_im = Image.new('RGB', (tw, mxh))
+
+        x_offset = 0
+        for im in images:
+            new_im.paste(im, (x_offset, 0))
+            x_offset += im.size[0]
+
+        new_im.save('A1_j15_sequence_mCherry.png')
+
 
 def plot_nodes_on_er_input(attribute):
     # input = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/er_mean/climp12_er_mean.png')

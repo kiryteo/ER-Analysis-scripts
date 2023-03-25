@@ -1,3 +1,8 @@
+import ...
+
+
+
+
 def get_egfp_plots(connection, channel, variation):
 
     def filter_data(data):

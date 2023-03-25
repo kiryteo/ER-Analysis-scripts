@@ -23,22 +23,6 @@ class JunctionAnalysis:
         """
         return sknw.build_sknw(imageio.imread(skel_img_path), multi=True, iso=False)
 
-    # def get_junctions(self, graph):
-
-    #     # get all the nodes from the graph
-    #     node_coords = np.array([graph.nodes[node]['o'] for node in graph.nodes()])
-    #
-    #     return [node_coords[node_num] for node_num, degree_val in enumerate(graph.degree) if degree_val[1] > 2]
-
-    # def get_junctions(self, graph):
-    #     # given input graph, get nodes from it.
-    #     """
-    #
-    #     @param graph: Input graph to obtain the junctions
-    #     @return: nodes (junctions) with degree > 2
-    #     """
-    #     return np.array([graph.nodes[node]['o'] for node in graph.nodes() if graph.degree[node] > 2])
-
     def get_all_junc(self, group, num_series):
         # get reference junctions based on mean projection frame and per frame junctions for each series, all groups
         """
@@ -55,8 +39,6 @@ class JunctionAnalysis:
         mean_skel = f'{self.confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
 
         # Get junction coordinates from projection frame
-        # graph = self.skel_to_graph(mean_skel)
-
         ref_junctions = self.get_junctions(mean_er, mean_skel)
 
         ref_junctions = [[each[0], each[1]] for each in ref_junctions]
@@ -68,12 +50,9 @@ class JunctionAnalysis:
 
             skeleton_path = f'{confocal_data_path}{group}/new_op_jul/skel/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
 
-            # graph = self.skel_to_graph(skeleton_path)
-            # graph = node_connector(er_path, skeleton_path)
             junctions = self.get_junctions(er_path, skeleton_path)
 
             junc_array = [[junc[0], junc[1]] for junc in junctions]
-            # sk_nps = np.array(sk_nps)
             per_frame_junctions.extend(junc_array)
 
         return ref_junctions, per_frame_junctions
@@ -93,7 +72,6 @@ class JunctionAnalysis:
 
         er_input = imageio.imread(path_er)
         cost_arr = np.ones((128, 128))
-        # cost_arr[er_proc_bg] = 0
 
         for node in dict(graph.degree()):
             # access the first element of graph.neighbors
@@ -226,6 +204,7 @@ class JunctionAnalysis:
             if cc_id != 0:
                 if len(junctions) == 1:
                     isolated_junctions.append(junctions[0])
+                    #isolated_junc_area.append(cc_area_dict[k])
                 else:
                     fuzzy_junctions.append(junctions)
 
