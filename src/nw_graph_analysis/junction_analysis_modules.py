@@ -5,7 +5,6 @@ import sknw
 import imageio
 import copy
 import graph_connector_modules as gcm
-from gcm import *
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 
