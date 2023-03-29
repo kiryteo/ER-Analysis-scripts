@@ -119,11 +119,7 @@ def get_per_pixel_variation_over_sequence(group, connection, channel, variation)
 
     data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/{group.lower()}_{connection}_tubules_{channel}.pkl', 'rb'))
     data = filter_data(data)
-    # print(len(data))
-    # print(data[21].shape)
-    # print(data[21][53])
-    # print(data[21][53][1].shape)
-    # exit()
+
     variation_vals = []
     for series in data:
         for tubule in series:
@@ -163,17 +159,13 @@ def get_group_correlation_data(group, connection):
 
 def get_replicate_data(egfp, mch):
     r1e, r1m = egfp[:10], mch[:10]
-    print(r1e)
-    exit()
+
     r2e, r2m = egfp[10:20], mch[10:20]
     r3e, r3m = egfp[20:], mch[20:]
 
     r1 = per_pixel_correlation(r1e, r1m)
     r2 = per_pixel_correlation(r2e, r2m)
     r3 = per_pixel_correlation(r3e, r3m)
-
-    print(r1)
-    exit()
 
     return r1, r2, r3
 
