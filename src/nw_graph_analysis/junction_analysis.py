@@ -22,7 +22,14 @@ confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 junc_analysis = JA(confocal_data_path)
 
 
+# add comment per function
+
 def get_std_img(path):
+    """
+    Get standardised image
+    @param path: path to image
+    @return: standardised image
+    """
     img = imageio.imread(path)
     return (img - img.min()) / (img.max() - img.min())
 
@@ -30,6 +37,14 @@ def get_std_img(path):
 # patch1_vals -> list of intensity values per patch
 
 def get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, region):
+    """
+    Get junctions per CC id
+    @param label_ids: dict of CC ids and junctions
+    @param per_frame_junctions: list of junctions per frame
+    @param labelled_img: labelled image
+    @param region: 'iso' or 'non-iso'
+    @return: dict of CC ids and junctions
+    """
     if region == 'iso':
         ids = [id for id, junctions in label_ids.items() if id != 0 and len(junctions) == 1]
     else:
@@ -46,7 +61,11 @@ def get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, region
 
 def get_per_CC_pixel_data(group, num_series, channel):
     """
-    Variation for each pixel in a CC over 100 frames
+    Get pixel data per CC id
+    @param group: 'ATL', 'Climp', 'Control', 'RTN'
+    @param num_series: number of series
+    @param channel: 'egfp' or 'mch'
+    @return: list of lists of lists of lists of pixel values
     """
 
     group_prefixes = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
@@ -80,6 +99,11 @@ def get_per_CC_pixel_data(group, num_series, channel):
 # exit()
 
 def get_region_areas(label_id_junctions):
+    """
+    Get areas of regions
+    @param label_id_junctions: dict of CC ids and junctions
+    @return: list of areas
+    """
     areas = []
     for id, juncs in label_id_junctions.items():
         if len(juncs) < 500:
@@ -89,16 +113,11 @@ def get_region_areas(label_id_junctions):
 
 
 def get_cc_ids(labelled_img, region):
-    # sourcery skip: inline-immediately-returned-variable
     """
-    Returns a list of isolated or fuzzy region CC ids.
-
-    Args:
-    - labelled_img: numpy.ndarray, input with all CC areas
-    - region: list of tuples, iso or fuz
-
-    Returns:
-    - list of ints, CC ids for the specified region
+    Get CC ids for the specified region
+    @param labelled_img: labelled image
+    @param region: region
+    @return: list of CC ids
     """
 
     # Create a dictionary to store per component data
@@ -117,6 +136,13 @@ def get_cc_ids(labelled_img, region):
 
 
 def get_region_cc(group, series_num, region):
+    """
+    Get CC ids for the specified region
+    @param group: 'ATL', 'Climp', 'Control', 'RTN'
+    @param series_num: series number
+    @param region: 'iso' or 'non-iso'
+    @return: list of CC ids
+    """
     ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions(group, series_num)
 
     # dict with ids as key and (x, y) as value
@@ -132,6 +158,13 @@ def get_region_cc(group, series_num, region):
 
 
 def get_region_areas_per_group(group, num_series, region):
+    """
+    Get areas of regions per group
+    @param group: 'ATL', 'Climp', 'Control', 'RTN'
+    @param num_series: number of series
+    @param region: 'iso' or 'non-iso'
+    @return: list of lists of areas
+    """
     area_data = []
     for num in range(1, num_series + 1):
         ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions(group, num)
@@ -146,6 +179,13 @@ def get_region_areas_per_group(group, num_series, region):
 
 
 def calc_deposit(num_series, group, region):
+    """
+    Calculate deposit
+    @param num_series: number of series
+    @param group: 'ATL', 'Climp', 'Control', 'RTN'
+    @param region: 'iso' or 'non-iso'
+    @return: list of lists of deposits
+    """
     for num in range(num_series, num_series + 1):
 
         region_cc, labelled_img = get_region_cc(group, num, region)
@@ -188,6 +228,14 @@ def calc_deposit(num_series, group, region):
 
 
 def calc_deposit_net_norm(num_series, group, region):
+    """
+    Calculate deposit
+    @param num_series: number of series
+    @param group: 'ATL', 'Climp', 'Control', 'RTN'
+    @param region: 'iso' or 'non-iso'
+    @return: list of lists of deposits
+    """
+
     global ln_egfp, region_cc_coords, op_egfp, op_mch
     global ln_mch
 
@@ -278,8 +326,13 @@ def calc_deposit_net_norm(num_series, group, region):
 
 
 def calc_deposit_cc_norm(num_series, group, region):
-    # ch = 1 if channel=='mCherry' else 0
-    # global ln
+    """
+    Calculate deposit
+    @param num_series: number of series
+    @param group: 'ATL', 'Climp', 'Control', 'RTN'
+    @param region: 'iso' or 'non-iso'
+    @return: list of lists of deposits
+    """
     global ln_egfp, region_cc_coords, op_egfp, op_mch
     global ln_mch
     # sl = []
@@ -369,6 +422,15 @@ def calc_deposit_cc_norm(num_series, group, region):
 
 
 def calc_egfp_deposit(group, channel, num_series, region):
+    """
+    Calculate EGFP deposit
+    @param group: 'ATL', 'Climp', 'Control', 'RTN'
+    @param channel: 'EGFP' or 'mCherry'
+    @param num_series: number of series
+    @param region: 'iso' or 'non-iso'
+    @return: list of lists of deposits
+    """
+
     channel_idx = 1 if channel == 'mCherry' else 0
     series_data = []
 
@@ -392,6 +454,15 @@ def calc_egfp_deposit(group, channel, num_series, region):
 
 
 def cc_area_measure(group, region, rstart, rend):
+    """
+    Calculate the area of each connected component
+    @param group: 'ATL', 'Climp', 'Control', 'RTN'
+    @param region: 'iso' or 'non-iso'
+    @param rstart: start series number
+    @param rend: end series number
+    @return: list of areas
+    """
+
     cc_area_list = []
 
     for series_num in range(rstart, rend + 1):
@@ -408,6 +479,14 @@ def cc_area_measure(group, region, rstart, rend):
 
 
 def stat_analysis(cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl):
+    """
+    Perform statistical analysis
+    @param cc_area_atl: list of areas of ATL
+    @param cc_area_climp: list of areas of Climp
+    @param cc_area_rtn: list of areas of RTN
+    @param cc_area_ctrl: list of areas of Control
+    @return: None
+    """
     f_stat, p_val = f_oneway(cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl)
 
     mc = MultiComparison(pd.concat([cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl]), pd.Series(
@@ -429,10 +508,10 @@ def stat_analysis(cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl):
 
 def get_junc_patches(newps, img):
     """
-
-    @param newps: List of nodes
-    @param img: ER input sample
-    @return: junction neighbourhood patch (3x3)
+    Get patches around junctions
+    @param newps: list of junction coordinates
+    @param img: image
+    @return: list of patches
     """
     img_patches = []
     for x, y in newps:
@@ -451,10 +530,10 @@ def get_junc_patches(newps, img):
 
 def junc_patch_mean(newps, img):
     """
-
-    @param newps: List of nodes
-    @param img: ER input sample
-    @return: mean value of the junction neighbourhood patch (3x3)
+    Get mean of patches around junctions
+    @param newps: list of junction coordinates
+    @param img: image
+    @return: list of patch means
     """
     junc_patches = []
     dt = {}
@@ -473,11 +552,12 @@ def junc_patch_mean(newps, img):
 
 def per_patch_variation(group, channel):
     """
-
-    @param group: Select the condition for analysis
-    @param channel: Select the protein channel for analysis
-    @return: Metric output for variation over time
+    Get variation in patch means
+    @param group: group name
+    @param channel: channel number
+    @return: None
     """
+
     for num_series in range(1, 2):
         er_img = ''
         mean_img = confocal_data_path + f'{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
@@ -511,6 +591,11 @@ def per_patch_variation(group, channel):
 
 
 def patch_variation_viz():
+    """
+    Visualize variation in patch means
+    @return: coord_dt: dictionary of patch means
+    """
+
     er_img = ''
     mean_img = f'{confocal_data_path}ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
 

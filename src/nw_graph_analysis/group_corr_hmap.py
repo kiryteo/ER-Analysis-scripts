@@ -12,6 +12,128 @@ from structure_extraction import node_connector, get_updated_degree_nodes
 
 import contextlib
 
+
+
+
+import cv2
+import numpy as np
+import networkx as nx
+
+# Step 1: Create a skeleton for the structure in the image
+def skeletonize(img):
+    skel = np.zeros(img.shape, np.uint8)
+    element = cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3))
+    while True:
+        eroded = cv2.erode(img, element)
+        temp = cv2.dilate(eroded, element)
+        temp = cv2.subtract(img, temp)
+        skel = cv2.bitwise_or(skel, temp)
+        img = eroded.copy()
+        if cv2.countNonZero(img) == 0:
+            break
+    return skel
+
+# Step 2: Create a binary mask of the input image and erode it to provide faithful prior for the skeleton
+def get_mask(img):
+    _, thresh = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    kernel = np.ones((3, 3), np.uint8)
+    mask = cv2.erode(thresh, kernel, iterations=1)
+    # return thresh
+    return mask
+
+def g_mask(img):
+    op = (img > 0).astype('int')
+    kernel = np.ones((3, 3), np.uint8)
+    mask = cv2.erode(op, kernel, iterations=1)
+    return mask
+
+# Step 3: Generate a graph from the skeleton
+def create_graph(skeleton):
+    graph = nx.Graph()
+    rows, cols = skeleton.shape
+    for r in range(rows):
+        for c in range(cols):
+            if skeleton[r, c] == 255:
+                if r > 0 and skeleton[r - 1, c] == 255:
+                    graph.add_edge((r, c), (r - 1, c), weight=1)
+                if c > 0 and skeleton[r, c - 1] == 255:
+                    graph.add_edge((r, c), (r, c - 1), weight=1)
+                if r > 0 and c > 0 and skeleton[r - 1, c - 1] == 255:
+                    graph.add_edge((r, c), (r - 1, c - 1), weight=np.sqrt(2))
+                if r > 0 and c < cols - 1 and skeleton[r - 1, c + 1] == 255:
+                    graph.add_edge((r, c), (r - 1, c + 1), weight=np.sqrt(2))
+    return graph
+
+# Step 4: Improve the graph connections based on the mask
+def improve_graph(graph, mask):
+    for u, v in graph.edges():
+        weight = graph[u][v]['weight']
+        if mask[u] == 0 or mask[v] == 0:
+            # Set weight to infinity for edges that connect to background pixels
+            graph[u][v]['weight'] = np.inf
+        else:
+            # Compute the average intensity along the edge
+            path = nx.shortest_path(graph, u, v, weight='weight')
+            intensity_sum = 0
+            for node in path:
+                intensity_sum += mask[node]
+            intensity_mean = intensity_sum / len(path)
+            # Update the weight based on the average intensity
+            graph[u][v]['weight'] = weight * np.exp(-intensity_mean)
+    return graph
+
+# Load the input grayscale image
+img = cv2.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/std_egfp/A1_decon_t000_ch00_std.png', cv2.IMREAD_GRAYSCALE)
+
+# Step 1: Create a skeleton for the structure in the image
+skeleton = skeletonize(img)
+
+# import matplotlib.pyplot as plt
+# plt.imshow(skeleton)
+# plt.show()
+# exit()
+
+# Step 2: Create a binary mask of the input image and erode it to provide a faithful prior for the skeleton
+mask = g_mask(img)
+plt.imshow(mask)
+plt.show()
+# Step
+
+
+
+
+
+
+
+exit()
+
+# b = ['ATL', 'Climp', 'RTN', 'Control']
+#
+# result = [(x, y) for i, x in enumerate(b) for j, y in enumerate(b) if i < j and y not in b[:i] + b[i+1:j]]
+#
+#
+# print(result)
+# exit()
+
+
+replicates = ['R1', 'R2', 'R3']
+groups = ['ATL', 'Climp', 'RTN', 'Control']
+
+box_pairs = [((x, y), (x, z)) for i, x in enumerate(replicates) for j, y in enumerate(groups) for z in groups[j + 1 :]]
+
+# result = [(tuple([x, y]), tuple([x, z])) for i, x in enumerate(a) for j, y in enumerate(b) for z in b[j+1:]]
+#
+# box_pairs = [((x, y), (x, z)) for i, x in enumerate(a) for j, y in enumerate(b) for z in b[j + 1 :]]# print(result)
+
+
+print(box_pairs)
+
+exit()
+
+[(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'ATL'), ('R1', 'Control')), (('R1', 'Climp'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'Control')), (('R1', 'RTN'), ('R1', 'Control')), (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'ATL'), ('R2', 'Control')), (('R2', 'Climp'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'Control')), (('R2', 'RTN'), ('R2', 'Control')), (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'ATL'), ('R3', 'Control')), (('R3', 'Climp'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'Control')), (('R3', 'RTN'), ('R3', 'Control'))]
+
+
+
 img1 = plt.imread('/localhome/asa420/Pictures/Screenshot_from_2023-03-13_16-16-11.png')
 img2 = plt.imread('/localhome/asa420/Pictures/Screenshot_from_2023-03-13_16-16-05.png')
 # img3 = plt.imread('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/graphs/connected/Control_8_edge_graph_projection_connected_nbrs_v2.png')
