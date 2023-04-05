@@ -941,21 +941,28 @@ def junction_crops_creator(group, ser_num, junc_id, channel):
 
 
 # junction_crops_creator('ATL', 1, 15, 'mCherry')
-junction_crops_creator('RTN', 13, 10, 'egfp')
-exit()
 
-nps, skdata, labelled_img = label_junctions('ATL', 8)
+# junction_crops_creator('RTN', 13, 10, 'egfp')
+# exit()
 
-label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
-iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
+###################################
 
-iso_cc = get_cc_ids(labelled_img, iso)
-fuz_cc = get_cc_ids(labelled_img, fuz)
-unk_cc = get_cc_ids(labelled_img, unk)
 
-iso_cc_coords = {each: np.where(labelled_img == each) for each in iso_cc}
-fuz_cc_coords = {each: np.where(labelled_img == each) for each in fuz_cc}
-unk_cc_coords = {each: np.where(labelled_img == each) for each in unk_cc}
+# nps, skdata, labelled_img = label_junctions('ATL', 8)
+
+# label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
+# iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
+
+# iso_cc = get_cc_ids(labelled_img, iso)
+# fuz_cc = get_cc_ids(labelled_img, fuz)
+# unk_cc = get_cc_ids(labelled_img, unk)
+
+# iso_cc_coords = {each: np.where(labelled_img == each) for each in iso_cc}
+# fuz_cc_coords = {each: np.where(labelled_img == each) for each in fuz_cc}
+# unk_cc_coords = {each: np.where(labelled_img == each) for each in unk_cc}
+
+
+
 #
 #
 # iso_list = []
@@ -966,67 +973,70 @@ unk_cc_coords = {each: np.where(labelled_img == each) for each in unk_cc}
 # print(iso[55])
 
 
+
+
+
 # nps, skdata, labelled_img = label_junctions('ATL', 1)
-nps, skdata, labelled_img = label_junctions('Climp', 12)
+# nps, skdata, labelled_img = label_junctions('Climp', 12)
 # exit()
 
-label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
-iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
+# label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
+# iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
 
-# mp_frame = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png')
-mp_frame = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/er_mean/climp12_er_mean.png')
+# # mp_frame = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png')
+# mp_frame = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Climp/new_op_jul/er_mean/climp12_er_mean.png')
 
-plt.imshow(mp_frame, cmap='gray')
+# plt.imshow(mp_frame, cmap='gray')
 
-# plt.plot(iso[:, 1], iso[:, 0], 'x', markerfacecolor='None', markeredgecolor='red', mew=0.6)
+# # plt.plot(iso[:, 1], iso[:, 0], 'x', markerfacecolor='None', markeredgecolor='red', mew=0.6)
+
+# # exit()
+
+# g = sknw.build_sknw(mp_frame, iso=False)
+# G = nx.Graph()
+
+# G.add_nodes_from(g.nodes)
+# G.add_edges_from(g.edges)
+
+# ps = np.array([g.nodes[i]['o'] for i in g.nodes])
+# # print(ps)
+
+# # plt.plot(ps[:, 1], ps[:, 0], 'o', markerfacecolor='None', markeredgecolor='blue', mew=0.6)
+# #
+# # plt.show()
+# # exit()
+
+
+# iso_ps_ids = [i for i, val in enumerate(G.degree) if val[1] > 2]
+
+# # print(iso_ps_ids)
+# # exit()
+
+# # print(fuz)
+# print(len(G.nodes))
+# for each in iso_ps_ids:
+#     if g.nodes[each]['o'] in fuz:
+#         G.remove_node(each)
+#     # print(g.nodes[each]['o'])
+
+# gl = G.nodes
+# print(len(gl))
 
 # exit()
 
-g = sknw.build_sknw(mp_frame, iso=False)
-G = nx.Graph()
+# iso_ps = np.array([g.nodes[i]['o'] for i in gl])
+# # print(G.edges)
+# # G.remove_node()
+# # print(iso_ps)
 
-G.add_nodes_from(g.nodes)
-G.add_edges_from(g.edges)
-
-ps = np.array([g.nodes[i]['o'] for i in g.nodes])
-# print(ps)
-
-# plt.plot(ps[:, 1], ps[:, 0], 'o', markerfacecolor='None', markeredgecolor='blue', mew=0.6)
-#
+# plt.plot(iso_ps[:, 1], iso_ps[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue', mew=0.6)
 # plt.show()
 # exit()
 
+# nodes = g.nodes()
+# degree_list = G.degree
 
-iso_ps_ids = [i for i, val in enumerate(G.degree) if val[1] > 2]
-
-# print(iso_ps_ids)
 # exit()
-
-# print(fuz)
-print(len(G.nodes))
-for each in iso_ps_ids:
-    if g.nodes[each]['o'] in fuz:
-        G.remove_node(each)
-    # print(g.nodes[each]['o'])
-
-gl = G.nodes
-print(len(gl))
-
-exit()
-
-iso_ps = np.array([g.nodes[i]['o'] for i in gl])
-# print(G.edges)
-# G.remove_node()
-# print(iso_ps)
-
-plt.plot(iso_ps[:, 1], iso_ps[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue', mew=0.6)
-plt.show()
-exit()
-
-nodes = g.nodes()
-degree_list = G.degree
-
-exit()
 
 
 def per_frame_num_junctions(labelled_img, iso):
@@ -1466,12 +1476,12 @@ def fuz_isolated_junctions(group, series_num):
         # plt.close()
 
 
-fuz_isolated_junctions('Control', 13)
+# fuz_isolated_junctions('Control', 13)
 
 # for i in range(1, 27):
 #     fuz_isolated_junctions('ATL', i)
 
-exit()
+# exit()
 
 # for i in range(6, 32):
 #     fuz_isolated_junctions('Control', i)
@@ -1544,50 +1554,39 @@ exit()
 # print(np.var(ll))
 # exit()
 
-n1 = []
-n2 = []
-n3 = []
-n5 = []
-n6 = []
-for k, v in dt.items():
-    n1.append([k[0], k[1]])
-    n4 = []
-    for each in v:
-        n2.append([each[0][0], each[0][1]])
-        n4.append(each[2])
-    n5.append(np.var(n4))
-    n6.append(len(v))
-    n3.append([np.var(n4)] * len(v))
+# n1 = []
+# n2 = []
+# n3 = []
+# n5 = []
+# n6 = []
+# for k, v in dt.items():
+#     n1.append([k[0], k[1]])
+#     n4 = []
+#     for each in v:
+#         n2.append([each[0][0], each[0][1]])
+#         n4.append(each[2])
+#     n5.append(np.var(n4))
+#     n6.append(len(v))
+#     n3.append([np.var(n4)] * len(v))
 
-med = np.median(n5)
+# med = np.median(n5)
 
-n1 = np.array(n1)
-n2 = np.array(n2)
+# n1 = np.array(n1)
+# n2 = np.array(n2)
 
-n3arr = np.array(n3)
+# n3arr = np.array(n3)
 
-# print(n1)
-
-
-# print(vor.point_region)
-
-exit()
-
-import itertools
-
-n3val = list(itertools.chain.from_iterable(n3))
+# # print(n1)
 
 
-# med = np.median(n3val)
+# # print(vor.point_region)
 
-# print(n1)
-# print(n2)
+# exit()
 
-# print(np.median(n3val))
-# print(np.mean(n3val))
-# print(n3val)
-# sns.distplot(n3val)
-# plt.show()
+# import itertools
+
+# n3val = list(itertools.chain.from_iterable(n3))
+
 
 
 def plot_junc_spread(group, n1, n2, num_series):
@@ -1622,8 +1621,8 @@ def plot_junc_spread(group, n1, n2, num_series):
     plt.show()
 
 
-plot_junc_spread('Climp', n1, n2, 3)
-exit()
+# plot_junc_spread('Climp', n1, n2, 3)
+# exit()
 
 
 def junction_var_median():
@@ -1673,57 +1672,53 @@ def junction_var_median():
 # nps, dt_refined = refine_junc_dt(dt)
 # print(nps)
 
-l = list(dt_refined.keys())[20]
-# print(l)
 
-import statsmodels.api as sm
 
-X = []
-Y = []
-for each in dt_refined[l]:
-    X.append(each[0][0])
-    Y.append(each[0][1])
 
-minx = min(X)
-maxx = max(X)
 
-x = np.arange(minx, maxx, 1)
-y = 0.0378 * x
+# l = list(dt_refined.keys())[20]
+# # print(l)
 
-print(X)
-print(Y)
+# import statsmodels.api as sm
 
-plt.scatter(X, Y)
-# plt.plot(y, 'r')
-plt.show()
+# X = []
+# Y = []
+# for each in dt_refined[l]:
+#     X.append(each[0][0])
+#     Y.append(each[0][1])
 
-# X = sm.add_constant(X)
-#
-# res = sm.OLS(X, Y).fit()
-# print(res.summary())
+# minx = min(X)
+# maxx = max(X)
 
-exit()
+# x = np.arange(minx, maxx, 1)
+# y = 0.0378 * x
 
-l = list(dt_refined.keys())
-ll = [[each[0], each[1]] for each in l]
-ll = np.array(ll)
+# print(X)
+# print(Y)
 
-# print(nps[:, 1])
-# print(ll[:, 1])
-
-# print(np.array(dt_refined.keys())[0])
-# print(np.array(dt_refined.keys())[:, 1])
-
-plt.imshow(imageio.imread(confocal_data_path + 'ATL/new_op_jul/er_mean/atl1_er_mean.png'),
-           cmap='gray')
-plt.plot(nps[:, 1], nps[:, 0], 'r.')
-plt.plot(ll[:, 1], ll[:, 0], 'b.')
-plt.savefig('refined_atl1_er_junctions_50.png', bbox_inches='tight', pad_inches=0)
-plt.close()
+# plt.scatter(X, Y)
 # plt.show()
 
-# plt.plot(list(dt_refined.keys())[:, 1])
-exit()
+
+
+# exit()
+
+# l = list(dt_refined.keys())
+# ll = [[each[0], each[1]] for each in l]
+# ll = np.array(ll)
+
+
+
+# plt.imshow(imageio.imread(confocal_data_path + 'ATL/new_op_jul/er_mean/atl1_er_mean.png'),
+#            cmap='gray')
+# plt.plot(nps[:, 1], nps[:, 0], 'r.')
+# plt.plot(ll[:, 1], ll[:, 0], 'b.')
+# plt.savefig('refined_atl1_er_junctions_50.png', bbox_inches='tight', pad_inches=0)
+# plt.close()
+# # plt.show()
+
+# # plt.plot(list(dt_refined.keys())[:, 1])
+# exit()
 
 
 def get_mean_patch_intensity(er_input, a, b):
@@ -1996,9 +1991,9 @@ def per_patch_pixel_fourier(group, channel):
 
 
 # atl_egfp = per_patch_pixel_fourier('ATL', 0)
-per_patch_pixel_fourier('ATL', 0)
+# per_patch_pixel_fourier('ATL', 0)
 
-exit()
+# exit()
 
 
 # atl_mc = per_patch_pixel_fourier('ATL', 1)
@@ -2099,20 +2094,27 @@ def inter_channel_correlation_runner():
 # return grp_list
 
 
-atl_list = per_patch_pixel_fourier('ATL', 0)
-climp_list = per_patch_pixel_fourier('Climp', 0)
-ctrl_list = per_patch_pixel_fourier('Control', 0)
-rtn_list = per_patch_pixel_fourier('RTN', 0)
 
-# print(atl_list)
-import pandas as pd
 
-df = pd.DataFrame()
 
-df['patch_intensity_vals'] = pd.Series(atl_list + climp_list + ctrl_list + rtn_list)
-df['group'] = pd.Series()
+# atl_list = per_patch_pixel_fourier('ATL', 0)
+# climp_list = per_patch_pixel_fourier('Climp', 0)
+# ctrl_list = per_patch_pixel_fourier('Control', 0)
+# rtn_list = per_patch_pixel_fourier('RTN', 0)
 
-exit()
+# # print(atl_list)
+# import pandas as pd
+
+# df = pd.DataFrame()
+
+# df['patch_intensity_vals'] = pd.Series(atl_list + climp_list + ctrl_list + rtn_list)
+# df['group'] = pd.Series()
+
+# exit()
+
+
+
+
 
 
 # ATL_list = per_patch_pixel_fourier('ATL', 0)
@@ -2323,59 +2325,59 @@ def get_group_dif(group, metric):
     return grp_list
 
 
-rtn = get_group_dif('RTN', 'IF_corr')
-atl = get_group_dif('ATL', 'IF_corr')
-climp = get_group_dif('Climp', 'IF_corr')
-ctrl = get_group_dif('Control', 'IF_corr')
+# rtn = get_group_dif('RTN', 'IF_corr')
+# atl = get_group_dif('ATL', 'IF_corr')
+# climp = get_group_dif('Climp', 'IF_corr')
+# ctrl = get_group_dif('Control', 'IF_corr')
 
-import pandas as pd
+# import pandas as pd
 
-df = pd.DataFrame()
-df['IF_correlation_vals'] = pd.Series(np.concatenate((atl, climp, ctrl, rtn)))
-a = ['ATL'] * len(atl)
-cl = ['Climp'] * len(climp)
-ct = ['Control'] * len(ctrl)
-r = ['RTN'] * len(rtn)
-l2 = pd.Series(np.concatenate((a, cl, ct, r)))
-df['group'] = l2
+# df = pd.DataFrame()
+# df['IF_correlation_vals'] = pd.Series(np.concatenate((atl, climp, ctrl, rtn)))
+# a = ['ATL'] * len(atl)
+# cl = ['Climp'] * len(climp)
+# ct = ['Control'] * len(ctrl)
+# r = ['RTN'] * len(rtn)
+# l2 = pd.Series(np.concatenate((a, cl, ct, r)))
+# df['group'] = l2
 
-# sns.distplot(rtn, hist=False, label='RTN')
-# sns.distplot(atl, hist=False, label='ATL')
-# sns.distplot(climp, hist=False, label='Climp')
-# sns.distplot(ctrl, hist=False, label='Control')
+# # sns.distplot(rtn, hist=False, label='RTN')
+# # sns.distplot(atl, hist=False, label='ATL')
+# # sns.distplot(climp, hist=False, label='Climp')
+# # sns.distplot(ctrl, hist=False, label='Control')
 
-sns.violinplot(data=df, x='IF_correlation_vals', y='group')
+# sns.violinplot(data=df, x='IF_correlation_vals', y='group')
 
-# plt.legend()
-plt.title('Junction area (3x3 patch) intensity variation over time for all movies across groups')
-# plt.xlabel('Interframe correlation between consecutive frames')
+# # plt.legend()
+# plt.title('Junction area (3x3 patch) intensity variation over time for all movies across groups')
+# # plt.xlabel('Interframe correlation between consecutive frames')
 
-# atl = get_group_cos_sim('ATL')
-# climp = get_group_cos_sim('Climp')
-# sns.distplot(rtn)
-# sns.distplot(atl)
-# sns.distplot(climp)
-# plt.xlim((0,1))
-plt.show()
+# # atl = get_group_cos_sim('ATL')
+# # climp = get_group_cos_sim('Climp')
+# # sns.distplot(rtn)
+# # sns.distplot(atl)
+# # sns.distplot(climp)
+# # plt.xlim((0,1))
+# plt.show()
 
-exit()
+# exit()
 
-dt = atl_list[0] < np.quantile(atl_list[0], 0.95)
+# dt = atl_list[0] < np.quantile(atl_list[0], 0.95)
 
-# sns.distplot(atl_list[0], hist=False)
-# sns.distplot(atl_list[1], hist=False)
-# sns.distplot(atl_list[2], hist=False)
-# sns.distplot(atl_list[3], hist=False)
-# sns.distplot(atl_list[4], hist=False)
-# sns.distplot(atl_list[5], hist=False)
-# sns.distplot(atl_list[6], hist=False)
-# sns.distplot(atl_list[7], hist=False)
-# sns.distplot(atl_list[8], hist=False)
-sns.distplot(dt)
-plt.show()
+# # sns.distplot(atl_list[0], hist=False)
+# # sns.distplot(atl_list[1], hist=False)
+# # sns.distplot(atl_list[2], hist=False)
+# # sns.distplot(atl_list[3], hist=False)
+# # sns.distplot(atl_list[4], hist=False)
+# # sns.distplot(atl_list[5], hist=False)
+# # sns.distplot(atl_list[6], hist=False)
+# # sns.distplot(atl_list[7], hist=False)
+# # sns.distplot(atl_list[8], hist=False)
+# sns.distplot(dt)
+# plt.show()
 
-# valnum = np.corrcoef(img1, im2)
-# corr_vals.append(valnum[0, 1])
+# # valnum = np.corrcoef(img1, im2)
+# # corr_vals.append(valnum[0, 1])
 
 
-exit()
+# exit()

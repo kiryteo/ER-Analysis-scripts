@@ -19,6 +19,7 @@ import pickle as pkl
 
 from structure_extraction import node_connector, get_updated_degree_nodes
 from junction_analysis_modules import JunctionAnalysis as JA
+from junction_analysis import cc_area_measure
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies'
 
@@ -118,10 +119,10 @@ def plot_region_areas(channel):
 # exit()
 
 
-plot_ref_junc_variation()
+# plot_ref_junc_variation()
 
 
-exit()
+# exit()
 
 
 
@@ -248,6 +249,7 @@ def plot_cc_area(a1, a2, a3, c1, c2, c3, r1, r2, r3, ct1, ct2, ct3, region):
     plt.show()
 
 
+
 def plot_cc_area_all(a1, c1, r1, ct1, region):
     df = pd.DataFrame()
     # df['CC_area'] = pd.Series(np.concatenate((cc_area_atl, cc_area_climp, cc_area_rtn, cc_area_ctrl)))
@@ -288,13 +290,13 @@ def plot_cc_area_all(a1, c1, r1, ct1, region):
     plt.show()
 
 
-# a1 = pd.Series(cc_area_measure('ATL', 'fuz', 1, 26))
-# c1 = pd.Series(cc_area_measure('Climp', 'fuz', 1, 31))
-# r1 = pd.Series(cc_area_measure('RTN', 'fuz', 1, 29))
-# ct1 = pd.Series(cc_area_measure('Control', 'fuz', 1, 31))
-#
-# plot_cc_area_all(a1, c1, r1, ct1, 'fuz')
-# exit()
+a1 = pd.Series(cc_area_measure('ATL', 'fuz', 1, 26))
+c1 = pd.Series(cc_area_measure('Climp', 'fuz', 1, 31))
+r1 = pd.Series(cc_area_measure('RTN', 'fuz', 1, 29))
+ct1 = pd.Series(cc_area_measure('Control', 'fuz', 1, 31))
+
+plot_cc_area_all(a1, c1, r1, ct1, 'fuz')
+exit()
 
 
 def get_data_cc_area(region):

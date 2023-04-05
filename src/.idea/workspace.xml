@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="4cc9963e-5c62-4a5f-9bba-61b8e3a594fb" name="Default Changelist" comment="[WIP] Node connector deadlock resolved, merged get_junctions and get_connected_junctions in the junction_analysis_modules.py file">
-      <change beforePath="$PROJECT_DIR$/nw_graph_analysis/group_corr_hmap.py" beforeDir="false" afterPath="$PROJECT_DIR$/nw_graph_analysis/group_corr_hmap.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/nw_graph_analysis/junc_analysis_plots.py" beforeDir="false" afterPath="$PROJECT_DIR$/nw_graph_analysis/junc_analysis_plots.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/nw_graph_analysis/junction_analysis.py" beforeDir="false" afterPath="$PROJECT_DIR$/nw_graph_analysis/junction_analysis.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

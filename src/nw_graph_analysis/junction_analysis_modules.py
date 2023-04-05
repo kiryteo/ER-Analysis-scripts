@@ -9,7 +9,6 @@ import graph_connector_modules as gcm
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 
 
-
 class JunctionAnalysis:
 
     def __init__(self, confocal_data_path):
