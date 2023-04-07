@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from plantcv import plantcv as pcv
 import seaborn as sns
 import os
+from sklearn.feature_selection import f_oneway
 import sknw
 import networkx as nx
 import numpy as np
@@ -618,9 +619,6 @@ def patch_variation_viz():
                 coord_dt[k] = []
             coord_dt[k].append(v)
     return coord_dt
-
-
-
 
 
 def junc_area_locator(group, num_series):

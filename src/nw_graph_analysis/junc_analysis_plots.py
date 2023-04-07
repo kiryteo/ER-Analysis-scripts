@@ -290,13 +290,13 @@ def plot_cc_area_all(a1, c1, r1, ct1, region):
     plt.show()
 
 
-a1 = pd.Series(cc_area_measure('ATL', 'fuz', 1, 26))
-c1 = pd.Series(cc_area_measure('Climp', 'fuz', 1, 31))
-r1 = pd.Series(cc_area_measure('RTN', 'fuz', 1, 29))
-ct1 = pd.Series(cc_area_measure('Control', 'fuz', 1, 31))
+# a1 = pd.Series(cc_area_measure('ATL', 'fuz', 1, 26))
+# c1 = pd.Series(cc_area_measure('Climp', 'fuz', 1, 31))
+# r1 = pd.Series(cc_area_measure('RTN', 'fuz', 1, 29))
+# ct1 = pd.Series(cc_area_measure('Control', 'fuz', 1, 31))
 
-plot_cc_area_all(a1, c1, r1, ct1, 'fuz')
-exit()
+# plot_cc_area_all(a1, c1, r1, ct1, 'fuz')
+# exit()
 
 
 def get_data_cc_area(region):
@@ -422,63 +422,59 @@ def get_group_data(group):
     return corr_data_r1, corr_data_r2, corr_data_r3
 
 
-a1, a2, a3 = get_group_data('ATL')
-c1, c2, c3 = get_group_data('Climp')
-r1, r2, r3 = get_group_data('RTN')
-# control = get_group_data('Control')
+def plot_group_data():
+
+    a1, a2, a3 = get_group_data('ATL')
+    c1, c2, c3 = get_group_data('Climp')
+    r1, r2, r3 = get_group_data('RTN')
+    # control = get_group_data('Control')
 
 
-df = pd.DataFrame()
+    df = pd.DataFrame()
 
-# df['data_tubule_mean'] = pd.Series(np.concatenate((atl, climp, rtn)))
-df['data_tubule_mean'] = pd.Series(np.concatenate((a1, a2, a3, c1, c2, c3, r1, r2, r3)))
+    # df['data_tubule_mean'] = pd.Series(np.concatenate((atl, climp, rtn)))
+    df['data_tubule_mean'] = pd.Series(np.concatenate((a1, a2, a3, c1, c2, c3, r1, r2, r3)))
 
-df['Replicate'] = pd.Series(np.concatenate((['R1'] * len(a1), ['R2'] * len(a2), ['R3'] * len(a3), ['R1'] * len(c1),
-                                            ['R2'] * len(c2), ['R3'] * len(c3), ['R1'] * len(r1), ['R2'] * len(r2),
-                                            ['R3'] * len(r3))))
+    df['Replicate'] = pd.Series(np.concatenate((['R1'] * len(a1), ['R2'] * len(a2), ['R3'] * len(a3), ['R1'] * len(c1),
+                                                ['R2'] * len(c2), ['R3'] * len(c3), ['R1'] * len(r1), ['R2'] * len(r2),
+                                                ['R3'] * len(r3))))
 
-df['Group'] = pd.Series(np.concatenate((
-    ['ATL'] * len(a1), ['ATL'] * len(a2), ['ATL'] * len(a3), ['Climp'] * len(c1), ['Climp'] * len(c2),
-    ['Climp'] * len(c3), ['RTN'] * len(r1), ['RTN'] * len(r2), ['RTN'] * len(r3))))
+    df['Group'] = pd.Series(np.concatenate((
+        ['ATL'] * len(a1), ['ATL'] * len(a2), ['ATL'] * len(a3), ['Climp'] * len(c1), ['Climp'] * len(c2),
+        ['Climp'] * len(c3), ['RTN'] * len(r1), ['RTN'] * len(r2), ['RTN'] * len(r3))))
 
-# ax = sns.boxenplot(data=df, x='Group', y='data_tubule_mean')
-ax = sns.boxenplot(data=df, x='Replicate', y='data_tubule_mean', hue='Group', dodge=True)  # , yscale='log')
-ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
+    # ax = sns.boxenplot(data=df, x='Group', y='data_tubule_mean')
+    ax = sns.boxenplot(data=df, x='Replicate', y='data_tubule_mean', hue='Group', dodge=True)  # , yscale='log')
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
 
-# egfp
-channel = 'egfp'
-replicates = ['R1', 'R2', 'R3']
+    # egfp
+    channel = 'egfp'
+    replicates = ['R1', 'R2', 'R3']
 
-if channel == 'egfp':
-    groups = ['ATL', 'Climp', 'RTN', 'Control']
-else:
-    groups = ['ATL', 'Climp', 'RTN']
+    if channel == 'egfp':
+        groups = ['ATL', 'Climp', 'RTN', 'Control']
+    else:
+        groups = ['ATL', 'Climp', 'RTN']
 
-box_pairs = [((x, y), (x, z)) for i, x in enumerate(replicates) for j, y in enumerate(groups) for z in groups[j + 1 :]]
+    box_pairs = [((x, y), (x, z)) for i, x in enumerate(replicates) for j, y in enumerate(groups) for z in groups[j + 1 :]]
 
-# box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'RTN')),
-#              (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'RTN')),
-#              (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'RTN'))]
+    # box_pairs = [(('R1', 'ATL'), ('R1', 'Climp')), (('R1', 'ATL'), ('R1', 'RTN')), (('R1', 'Climp'), ('R1', 'RTN')),
+    #              (('R2', 'ATL'), ('R2', 'Climp')), (('R2', 'ATL'), ('R2', 'RTN')), (('R2', 'Climp'), ('R2', 'RTN')),
+    #              (('R3', 'ATL'), ('R3', 'Climp')), (('R3', 'ATL'), ('R3', 'RTN')), (('R3', 'Climp'), ('R3', 'RTN'))]
 
-statannot.add_stat_annotation(ax, x='Replicate', y='data_tubule_mean', hue='Group', data=df, box_pairs=box_pairs,
-                              test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+    statannot.add_stat_annotation(ax, x='Replicate', y='data_tubule_mean', hue='Group', data=df, box_pairs=box_pairs,
+                                test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
 
-# statannot.add_stat_annotation(ax, x='Group', y='data_tubule_mean', data=df, box_pairs=box_pairs,
-#                               test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+    # statannot.add_stat_annotation(ax, x='Group', y='data_tubule_mean', data=df, box_pairs=box_pairs,
+    #                               test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
 
-plt.title('Cross-correlation between ERmoxGFP and mCherry over sequence for tubule intensity mean in all tubules',
-          fontsize=18)
-plt.grid(True)
-plt.xlabel('Replicate', fontsize=20)
-plt.ylabel('Cross-correlation value', fontsize=18)
+    plt.title('Cross-correlation between ERmoxGFP and mCherry over sequence for tubule intensity mean in all tubules',
+            fontsize=18)
+    plt.grid(True)
+    plt.xlabel('Replicate', fontsize=20)
+    plt.ylabel('Cross-correlation value', fontsize=18)
 
-plt.show()
-
-exit()
-
-
-
-
+    plt.show()
 
 
 
@@ -489,47 +485,47 @@ exit()
 # exit()
 
 
-atl = []
-climp = []
-rtn = []
-ctrl = []
+# atl = []
+# climp = []
+# rtn = []
+# ctrl = []
 
-for i in range(1, 11):
-    vals = tubule_intensity_analysis('ATL', i, 'iso-iso', 'mean')
-    atl.extend(vals)
-    vals = tubule_intensity_analysis('Climp', i, 'iso-iso', 'mean')
-    climp.extend(vals)
-    vals = tubule_intensity_analysis('RTN', i, 'iso-iso', 'mean')
-    rtn.extend(vals)
-    vals = tubule_intensity_analysis('Control', i, 'iso-iso', 'mean')
-    ctrl.extend(vals)
+# for i in range(1, 11):
+#     vals = tubule_intensity_analysis('ATL', i, 'iso-iso', 'mean')
+#     atl.extend(vals)
+#     vals = tubule_intensity_analysis('Climp', i, 'iso-iso', 'mean')
+#     climp.extend(vals)
+#     vals = tubule_intensity_analysis('RTN', i, 'iso-iso', 'mean')
+#     rtn.extend(vals)
+#     vals = tubule_intensity_analysis('Control', i, 'iso-iso', 'mean')
+#     ctrl.extend(vals)
 
-df = pd.DataFrame()
+# df = pd.DataFrame()
 
-df['Tubule mean '] = pd.Series(np.concatenate((a1, a2, a3, c1, c2, c3, r1, r2, r3)))
+# df['Tubule mean '] = pd.Series(np.concatenate((a1, a2, a3, c1, c2, c3, r1, r2, r3)))
 
-sns.distplot(atl, hist=False, label='ATL')
-sns.distplot(climp, hist=False, label='Climp')
-sns.distplot(rtn, hist=False, label='RTN')
-sns.distplot(ctrl, hist=False, label='Control')
-plt.show()
-exit()
-
-
+# sns.distplot(atl, hist=False, label='ATL')
+# sns.distplot(climp, hist=False, label='Climp')
+# sns.distplot(rtn, hist=False, label='RTN')
+# sns.distplot(ctrl, hist=False, label='Control')
+# plt.show()
+# exit()
 
 
 
-atl1 = get_group_len_data('ATL', 'iso-iso')
-atl2 = get_group_len_data('ATL', 'iso-fuz')
-atl3 = get_group_len_data('ATL', 'fuz-fuz')
 
-climp1 = get_group_len_data('Climp', 'iso-iso')
-climp2 = get_group_len_data('Climp', 'iso-fuz')
-climp3 = get_group_len_data('Climp', 'fuz-fuz')
-# ctrl = get_group_len_data('Control', 'iso-iso')
-rtn1 = get_group_len_data('RTN', 'iso-iso')
-rtn2 = get_group_len_data('RTN', 'iso-fuz')
-rtn3 = get_group_len_data('RTN', 'fuz-fuz')
+
+# atl1 = get_group_len_data('ATL', 'iso-iso')
+# atl2 = get_group_len_data('ATL', 'iso-fuz')
+# atl3 = get_group_len_data('ATL', 'fuz-fuz')
+
+# climp1 = get_group_len_data('Climp', 'iso-iso')
+# climp2 = get_group_len_data('Climp', 'iso-fuz')
+# climp3 = get_group_len_data('Climp', 'fuz-fuz')
+# # ctrl = get_group_len_data('Control', 'iso-iso')
+# rtn1 = get_group_len_data('RTN', 'iso-iso')
+# rtn2 = get_group_len_data('RTN', 'iso-fuz')
+# rtn3 = get_group_len_data('RTN', 'fuz-fuz')
 
 
 # sns.distplot(atl1+atl2+atl3, hist=False, label='ATL')
@@ -1064,9 +1060,9 @@ def full_data_variation_plots(region, measure, channel):
     plt.show()
 
 
-# full_data_variation_plots('iso', 'std', 'mCherry')
+full_data_variation_plots('iso', 'std', 'mCherry')
 # total_data_variation_plots('Control', 'iso', 'std')
-# exit()
+exit()
 
 
 def junc_line_charts_norm(ser_num, group, junc_num):
