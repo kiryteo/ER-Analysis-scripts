@@ -19,7 +19,7 @@ import pickle as pkl
 
 from structure_extraction import node_connector, get_updated_degree_nodes
 from junction_analysis_modules import JunctionAnalysis as JA
-from junction_analysis import cc_area_measure
+from junction_analysis import cc_area_measure, calc_deposit_net_norm, get_per_CC_pixel_data
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies'
 
@@ -35,6 +35,16 @@ junc_analysis = JA(confocal_data_path)
 def get_std_img(path):
     img = imageio.imread(path)
     return (img - img.min()) / (img.max() - img.min())
+
+
+
+def per_CC_pixel_variation(group, num_series, channel, connection_type):
+    atl = get_per_CC_pixel_data('ATL', 26, 'fuz', 'egfp')
+    climp = get_per_CC_pixel_data('Climp', 31, 'fuz', 'egfp')
+    rtn = get_per_CC_pixel_data('RTN', 29, 'fuz', 'egfp')
+    ctrl = get_per_CC_pixel_data('Control', 31, 'fuz', 'egfp')
+
+    
 
 
 def plot_region_areas(channel):
@@ -855,12 +865,9 @@ def junc_line_mean_std(group, repl_start, repl_end, region, measure):
 
         ln_egfp, ln_mch, region_cc_coords = calc_deposit_net_norm(ser_num, group, region)
 
+
         ids = list(region_cc_coords.keys())
 
-        # for i, val in enumerate(ids):
-        #     if junc_num == val:
-        #         junc_id = i
-        #         break
         l_eg = []
         l_mc = []
 
@@ -1058,6 +1065,38 @@ def full_data_variation_plots(region, measure, channel):
     plt.xlabel('Replicate', fontsize=18)
     plt.ylabel(f'{measure_name} value per sequence', fontsize=18)
     plt.show()
+
+
+def full_data_variation_plots_all(region, measure, channel):
+    atl_egfp = junc_line_mean_std('ATL', 1, 27, region, measure)
+    climp_egfp = junc_line_mean_std('Climp', 1, 32, region, measure)
+    rtn_egfp = junc_line_mean_std('RTN', 1, 30, region, measure)
+    control_egfp = junc_line_mean_std('Control', 1, 32, region, measure)
+
+    df = pd.DataFrame()
+
+    df['data_junc_CC_mean'] = pd.Series(np.concatenate((
+        atl_egfp, climp_egfp, rtn_egfp, control_egfp)))
+    df['Group'] = pd.Series(np.concatenate((
+        ['ATL'] * len(atl_egfp),
+        ['Climp'] * len(climp_egfp), ['RTN'] * len(rtn_egfp), ['Control']*len(control_egfp))))
+    
+    ax = sns.boxplot(data=df, x='Group', y='data_junc_CC_mean', dodge=True)  # , yscale='log')
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
+
+    # plt.suptitle('Isolated CC area across conditions', fontsize=20)
+    # plt.title('Standard Deviation per sequence for junction CC mean intensity (isolated junctions)', fontsize=18)
+    measure_name = 'Standard deviation' if measure == 'std' else 'Mean'
+    region_name = 'isolated' if region == 'iso' else 'fuzzy'
+    plt.title(
+        f'{measure_name} per sequence for junction CC mean intensity ({region_name} junctions) - {channel} channel',
+        fontsize=18)
+    plt.grid(True)
+    plt.xlabel('Group', fontsize=18)
+    plt.ylabel(f'{measure_name} value per sequence', fontsize=18)
+    plt.show()
+
+
 
 
 full_data_variation_plots('iso', 'std', 'mCherry')

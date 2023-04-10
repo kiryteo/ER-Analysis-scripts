@@ -47,20 +47,27 @@ def get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, region
     @return: dict of CC ids and junctions
     """
     if region == 'iso':
-        ids = [id for id, junctions in label_ids.items() if id != 0 and len(junctions) == 1]
+        index_list = [idx for idx, junctions in label_ids.items() if idx != 0 and len(junctions) == 1]
     else:
-        ids = [id for id, junctions in label_ids.items() if id != 0 and len(junctions) > 1]
+        index_list = [idx for idx, junctions in label_ids.items() if idx != 0 and len(junctions) > 1]
 
     label_id_junctions = {}
     for junction in per_frame_junctions:
-        id = labelled_img[tuple(junction)]
-        if id in ids:
-            label_id_junctions.setdefault(id, set()).add(tuple(junction))
+        idx = labelled_img[tuple(junction)]
+        if idx in index_list:
+            label_id_junctions.setdefault(idx, set()).add(tuple(junction))
 
     return label_id_junctions
 
 
-def get_per_CC_pixel_data(group, num_series, channel):
+# ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions('ATL', 1)
+# label_ids, assigned_components = junc_analysis.get_ref_junc_per_CC_id(ref_junctions, labelled_img)
+# label_id_junctions = get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, 'fuz')
+
+
+#the function below is not really optim
+
+def get_per_CC_pixel_data(group, num_series, channel, region):
     """
     Get pixel data per CC id
     @param group: 'ATL', 'Climp', 'Control', 'RTN'
@@ -77,7 +84,7 @@ def get_per_CC_pixel_data(group, num_series, channel):
     for num in range(1, num_series + 1):
         ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions(group, num)
         label_ids, assigned_components = junc_analysis.get_ref_junc_per_CC_id(ref_junctions, labelled_img)
-        label_id_junctions = get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, 'iso')
+        label_id_junctions = get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, region)
 
         sequence_data = []
         for id, junctions in label_id_junctions.items():
@@ -88,11 +95,27 @@ def get_per_CC_pixel_data(group, num_series, channel):
                     file_name = f'{group_prefixes[group]}{num}_decon_t0{i:02d}_ch{ch:02d}_std.png'
                     file_path = os.path.join(confocal_data_path, group, 'new_op_jul', dir_name, file_name)
 
-                    input = imageio.imread(file_path)
-                    pixel_data.append(input[junc])
+                    input_img = imageio.imread(file_path)
+                    pixel_data.append(input_img[junc])
                 sequence_data.append(pixel_data)
         group_data.append(sequence_data)
     return group_data
+
+
+def create_per_CC_pixel_data_pickles(group, num_series, channel, region):
+    data = get_per_CC_pixel_data(group, num_series, channel, region)
+    mean_data = []
+    std_data = []
+
+    for seq_num in data:
+        for junction in seq_num:
+            mean_data.append(np.mean(junction))
+            std_data.append(np.std(junction))
+    
+    pickle.dump(mean_data, open(f'{group}_{channel}_{region}_mean_data.pkl', 'wb'))
+    pickle.dump(std_data, open(f'{group}_{channel}_{region}_std_data.pkl', 'wb'))
+
+
 
 
 # atl = get_per_CC_pixel_data('ATL', 2, 'egfp')
