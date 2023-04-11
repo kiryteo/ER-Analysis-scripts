@@ -10,7 +10,9 @@ import sknw
 import networkx as nx
 import numpy as np
 from skimage import metrics
+import pandas as pd
 import scipy
+import pickle
 from scipy import spatial
 from scipy import ndimage
 from skimage.measure import label, regionprops
@@ -65,29 +67,29 @@ def get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, region
 # label_id_junctions = get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, 'fuz')
 
 
-def get_CC_patch_data(junction, group, num, channel):
+def get_CC_patch_data(junction, group, num):
     group_prefixes = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
-    dir_name = 'std_egfp' if channel == 'egfp' else 'std_mch'
+    # dir_name = 'std_egfp' if channel == 'egfp' else 'std_mch'
     
     pixel_data_egfp = []
     pixel_data_mch = []
 
     for i in range(100):
         file_name_egfp = f'{group_prefixes[group]}{num}_decon_t0{i:02d}_ch00_std.png'
-        file_path_egfp = os.path.join(confocal_data_path, group, 'new_op_jul', dir_name, file_name_egfp)
+        file_path_egfp = os.path.join(confocal_data_path, group, 'new_op_jul', 'std_egfp', file_name_egfp)
         input_egfp = imageio.imread(file_path_egfp)
         pixel_data_egfp.append(input_egfp[junction])
 
         if group != 'Control':
             file_name_mch = f'{group_prefixes[group]}{num}_decon_t0{i:02d}_ch01_std.png'
-            file_path_mch = os.path.join(confocal_data_path, group, 'new_op_jul', dir_name, file_name_mch)
+            file_path_mch = os.path.join(confocal_data_path, group, 'new_op_jul', 'std_mch', file_name_mch)
             input_mch = imageio.imread(file_path_mch)
             pixel_data_mch.append(input_mch[junction])
 
     return pixel_data_egfp, pixel_data_mch
 
 
-def get_sequence_CC_pixel_data(label_id_junctions, group, num, channel):
+def get_sequence_CC_pixel_data(label_id_junctions, group, num):
     
     sequence_data_egfp = []
     sequence_data_mch = []
@@ -95,13 +97,14 @@ def get_sequence_CC_pixel_data(label_id_junctions, group, num, channel):
     for id, junctions in label_id_junctions.items():
         junctions = list(junctions)
         for junction in junctions:
-            pixel_data_egfp, pixel_data_mch = get_CC_patch_data(junction, group, num, channel)
+            pixel_data_egfp, pixel_data_mch = get_CC_patch_data(junction, group, num)
             sequence_data_egfp.append(pixel_data_egfp)
-            sequence_data_mch.append(pixel_data_mch)
+            if pixel_data_mch:
+                sequence_data_mch.append(pixel_data_mch)
     return sequence_data_egfp, sequence_data_mch
 
 
-def get_per_CC_pixel_data(group, num_series, channel, region):
+def get_per_CC_pixel_data(group, num_series, region):
     """
     Get pixel data per CC id
     @param group: 'ATL', 'Climp', 'Control', 'RTN'
@@ -118,9 +121,10 @@ def get_per_CC_pixel_data(group, num_series, channel, region):
         label_ids, assigned_components = junc_analysis.get_ref_junc_per_CC_id(ref_junctions, labelled_img)
         label_id_junctions = get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, region)
 
-        sequence_data_egfp, sequence_data_mch = get_sequence_CC_pixel_data(label_id_junctions, group, num, channel)
+        sequence_data_egfp, sequence_data_mch = get_sequence_CC_pixel_data(label_id_junctions, group, num)
         group_data_egfp.append(sequence_data_egfp)
-        group_data_mch.append(sequence_data_mch)
+        if sequence_data_mch:
+            group_data_mch.append(sequence_data_mch)
     return group_data_egfp, group_data_mch
 
 
@@ -129,40 +133,31 @@ def get_mean_std_per_CC_pixel_data(data):
         mean_data = []
         std_data = []
         for seq_num in data:
-            for junction in seq_num:
-                mean_data.append(np.mean(junction))
-                std_data.append(np.std(junction))
+            for junction_data in seq_num:
+                mean_data.append(np.mean(junction_data))
+                std_data.append(np.std(junction_data))
         return mean_data, std_data
+        # mean_data = []
+        # std_data = []
+        # for seq in data:
+        #     for junction_data in seq:
+        #         fr_data = []
+        #         for frame in junction_data:
+        #             frame = (frame - frame.min()) / (frame.max() - frame.min())
+        #             fr_data.append(frame)
+        #         mean_data.append(np.mean(fr_data))
+        #         std_data.append(np.std(fr_data))
+        # return mean_data, std_data
 
-import pickle
 
 def create_per_CC_pixel_data_pickles(group, num_series, region):
-    egfp_data = get_per_CC_pixel_data(group, num_series, 'egfp', region)
-    mch_data = get_per_CC_pixel_data(group, num_series, 'mch', region)
-
-    # mean_egfp, std_egfp = get_mean_std_per_CC_pixel_data(egfp_data)
-    # mean_mch, std_mch = get_mean_std_per_CC_pixel_data(mch_data)    
+    egfp_data, mch_data = get_per_CC_pixel_data(group, num_series, region)
     
     pickle.dump(egfp_data, open(f'{group}_egfp_{region}_data.pkl', 'wb'))
     if mch_data:
         pickle.dump(mch_data, open(f'{group}_mch_{region}_data.pkl', 'wb'))
-    # pickle.dump(mean_egfp, open(f'{group}_egfp_{region}_mean_data.pkl', 'wb'))
-    # pickle.dump(std_data, open(f'{group}_{channel}_{region}_std_data.pkl', 'wb'))
 
 
-create_per_CC_pixel_data_pickles('ATL', 26, 'iso')
-create_per_CC_pixel_data_pickles('ATL', 26, 'fuz')
-create_per_CC_pixel_data_pickles('Climp', 31, 'iso')
-create_per_CC_pixel_data_pickles('Climp', 31, 'fuz')
-create_per_CC_pixel_data_pickles('RTN', 29, 'iso')
-create_per_CC_pixel_data_pickles('RTN', 29, 'fuz')
-create_per_CC_pixel_data_pickles('Control', 31, 'iso')
-create_per_CC_pixel_data_pickles('Control', 31, 'fuz')
-
-exit()
-# atl = get_per_CC_pixel_data('ATL', 2, 'egfp')
-# print(atl[0])
-# exit()
 
 def get_region_areas(label_id_junctions):
     """

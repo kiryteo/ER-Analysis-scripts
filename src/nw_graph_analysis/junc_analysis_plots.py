@@ -44,7 +44,60 @@ def per_CC_pixel_variation(group, num_series, channel, connection_type):
     rtn = get_per_CC_pixel_data('RTN', 29, 'fuz', 'egfp')
     ctrl = get_per_CC_pixel_data('Control', 31, 'fuz', 'egfp')
 
+
+def get_CC_variation(channel, region, measure):
+    atl_data = pkl.load(open(f'ATL_{channel}_{region}_data.pkl', 'rb'))
+    climp_data = pkl.load(open(f'Climp_{channel}_{region}_data.pkl', 'rb'))
+    rtn_data = pkl.load(open(f'RTN_{channel}_{region}_data.pkl', 'rb'))
+    if channel == 'egfp':
+        control_data = pkl.load(open(f'Control_{channel}_{region}_data.pkl', 'rb'))
+        control_mean, control_std = get_mean_std_per_CC_pixel_data(control_data)
+
+    atl_mean, atl_std = get_mean_std_per_CC_pixel_data(atl_data)
+    climp_mean, climp_std = get_mean_std_per_CC_pixel_data(climp_data)
+    rtn_mean, rtn_std = get_mean_std_per_CC_pixel_data(rtn_data)
+
+    df = pd.DataFrame()
+    if channel == 'egfp':
+        df['data_tubule_mean'] = pd.Series(np.concatenate((atl_mean, climp_mean, rtn_mean, control_mean)))
+        df['Group'] = pd.Series(np.concatenate((
+            ['ATL'] * len(atl_std), ['Climp'] * len(climp_std), ['RTN'] * len(rtn_std), ['Control'] * len(control_std))))
+    else:
+        df['data_tubule_mean'] = pd.Series(np.concatenate((atl_std, climp_std, rtn_std)))
+        df['Group'] = pd.Series(np.concatenate((
+            ['ATL'] * len(atl_std), ['Climp'] * len(climp_std), ['RTN'] * len(rtn_std))))
     
+
+
+    ax = sns.boxenplot(data=df, x='Group', y='data_tubule_mean')
+    # ax = sns.boxenplot(data=df, x='Replicate', y='data_tubule_mean', hue='Group', dodge=True)  # , yscale='log')
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
+    # plt.show()
+    plt.yscale('log')
+
+    if channel == 'egfp':
+        box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')]
+    else:
+        box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
+
+    statannot.add_stat_annotation(ax, x='Group', y='data_tubule_mean', data=df, box_pairs=box_pairs,
+                                  test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+
+    region_name = 'Isolated' if region == 'iso' else 'Fuzzy'
+    measure_name = 'Mean' if measure == 'mean' else 'Standard Deviation'
+    ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
+
+    plt.suptitle(f'{region_name} CC, per junction {measure_name} across conditions ({ch_name})', fontsize=20)
+    plt.title(f'{measure_name} over 100 frames for each junction location within a CC', fontsize=18)
+    plt.grid(True)
+    plt.xlabel('Group', fontsize=18)
+    plt.ylabel(f'Junction Intensity {measure_name}, log scale', fontsize=18)
+    plt.show()
+
+
+get_CC_variation('mch', 'iso', 'std')
+exit()
+
 
 
 def plot_region_areas(channel):
