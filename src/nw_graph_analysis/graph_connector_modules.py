@@ -232,13 +232,13 @@ def get_updated_neighbor_dict(graph):
     #     if k in neighbor_id_dict:
     #         fin_dict[k] = neighbor_id_dict[k]
 
-    final_neighbor_dict = {}
+    updated_neighbor_dict = {}
 
     # Compare the closest neighbor to the nearest neighbor, and choose the closest one
     for node, neighbor in closest_neighbor_dict.items():
         if neighbor[1] < neighbor_dict[node][1]:
-            final_neighbor_dict[node] = closest_neighbor_dict[node]
+            updated_neighbor_dict[node] = closest_neighbor_dict[node]
         else:
-            final_neighbor_dict[node] = neighbor_dict[node]
+            updated_neighbor_dict[node] = neighbor_dict[node]
 
-    return final_neighbor_dict, graph_nodes_list
+    return updated_neighbor_dict, graph_nodes_list
