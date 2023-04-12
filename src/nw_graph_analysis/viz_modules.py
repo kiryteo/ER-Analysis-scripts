@@ -5,6 +5,74 @@ import numpy as np
 import copy
 from PIL import Image
 
+from junction_analysis_modules import JunctionAnalysis as JA
+
+confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
+junc_analysis = JA(confocal_data_path)
+
+def tubule_analysis_viz_figure(group, series_num):
+    nps, skdata, labelled_img = junc_analysis.label_junctions(group, series_num)
+
+    label_vals, unassigned_cc_dict = junc_analysis.separate_junc_cc(nps, skdata, labelled_img)
+    iso, fuz, unk = junc_analysis.get_junction_areas(label_vals, unassigned_cc_dict)
+
+
+    path = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series_num}_er_mean_proc_enhance_skel.png'
+    path_er = f'{confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{series_num}_er_mean.png'
+    # graph = junc_analysis.skel_to_graph(path)
+    junctions, tgraph2 = junc_analysis.get_junctions(path_er, path)
+
+
+
+    er_mean = imageio.imread(
+            f'{confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{series_num}_er_mean.png')
+    plt.imshow(er_mean, cmap='gray')
+
+    niso = [[j[0], j[1]] for j in iso]
+    nfuz = [[j[0], j[1]] for j in fuz]
+    njunctions = [[j[0], j[1]] for j in junctions]
+
+
+
+    for (start_node, end_node) in tgraph2.edges():
+        start_loc = tgraph2[start_node][end_node][0]['pts'][0]
+        start_loc = [start_loc[0], start_loc[1]]
+        end_loc = tgraph2[start_node][end_node][0]['pts'][-1]
+        end_loc = [end_loc[0], end_loc[1]]
+
+        if start_loc in niso and end_loc in niso:
+            ps = tgraph2[start_node][end_node][0]['pts']
+            plt.plot(ps[:, 1], ps[:, 0], 'green')
+        elif end_loc in niso and start_loc in niso:
+            ps = tgraph2[start_node][end_node][0]['pts']
+            plt.plot(ps[:, 1], ps[:, 0], 'green')
+        elif start_loc in nfuz and end_loc in nfuz:
+            ps = tgraph2[start_node][end_node][0]['pts']
+            plt.plot(ps[:, 1], ps[:, 0], 'red')
+        elif end_loc in nfuz and start_loc in nfuz:
+            ps = tgraph2[start_node][end_node][0]['pts']
+            plt.plot(ps[:, 1], ps[:, 0], 'red')
+        elif start_loc in niso and end_loc in nfuz:
+            ps = tgraph2[start_node][end_node][0]['pts']
+            plt.plot(ps[:, 1], ps[:, 0], 'magenta')
+        elif end_loc in niso and start_loc in nfuz:
+            ps = tgraph2[start_node][end_node][0]['pts']
+            plt.plot(ps[:, 1], ps[:, 0], 'magenta')
+
+
+
+    for junc in junctions:
+        if [junc[0], junc[1]] in niso:
+            plt.plot(junc[1], junc[0], 'o', markerfacecolor='None', markeredgecolor='yellow', mew=1, markersize=5)
+        elif [junc[0], junc[1]] in nfuz:
+            plt.plot(junc[1], junc[0], 'o', markerfacecolor='None', markeredgecolor='blue', mew=1, markersize=5)
+
+    # plt.show()
+
+    plt.axis('off')
+    plt.savefig(f'{group}_{series_num}_connections', bbox_inches='tight', pad_inches=0)
+    plt.close()
+
 
 def get_graph(skel):
     return sknw.build_sknw(skel, iso=False, multi=True)

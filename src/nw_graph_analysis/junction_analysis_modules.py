@@ -59,7 +59,8 @@ class JunctionAnalysis:
 
         node_coords = np.array([node_set[node]['o'] for node in node_set])
 
-        return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
+        # return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
+        return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2], tgraph2
 
     def get_all_junc(self, group, num_series):
         # get reference junctions based on mean projection frame and per frame junctions for each series, all groups
@@ -78,7 +79,7 @@ class JunctionAnalysis:
         mean_skel = f'{self.confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
 
         # Get junction coordinates from projection frame
-        ref_junctions = self.get_junctions(mean_er, mean_skel)
+        ref_junctions, tgraph2 = self.get_junctions(mean_er, mean_skel)
 
         ref_junctions = [[each[0], each[1]] for each in ref_junctions]
 
@@ -89,7 +90,7 @@ class JunctionAnalysis:
 
             skeleton_path = f'{confocal_data_path}{group}/new_op_jul/skel/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
 
-            junctions = self.get_junctions(er_path, skeleton_path)
+            junctions, tgraph2 = self.get_junctions(er_path, skeleton_path)
 
             junc_array = [[junc[0], junc[1]] for junc in junctions]
             per_frame_junctions.extend(junc_array)

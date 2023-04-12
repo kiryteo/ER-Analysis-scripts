@@ -19,6 +19,7 @@ from skimage.measure import label, regionprops
 from skimage import measure
 
 from junction_analysis_modules import JunctionAnalysis as JA
+import graph_connector_modules as gcm
 
 max_val = 999
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
@@ -734,6 +735,107 @@ def refine_junc_dt(dt, min_presence=50):
     return {k: v for k, v in dt.items() if len(v) > min_presence}
 
 
+def graph_node_connector(group, series):
+    global rel
+    pref = 'Ct' if group == 'Control' else group[0]
+
+    # projection frame analysis
+    # path = '{confocal_data_path}Climp/new_op_jul/er_mean_proc/climp16_er_mean_proc_enhance_skel.png'
+    path = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance_skel.png'
+
+    # path_frame = f'{confocal_data_path}{group}/new_op_jul/skel/{group[0]}{series}/{group[0]}{series}_decon_t006_ch00_skel.png'
+
+
+    path_proc_enh = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance.png'
+
+    path_er = f'{confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png'
+
+    path_er_proc = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc.png'
+
+    # all junction from the graph with degree > 2
+    junc_analysis = JA(confocal_data_path)
+    graph = junc_analysis.skel_to_graph(path)
+    junctions = junc_analysis.get_junctions(graph)
+
+    relevant_nodes = np.array(junctions)
+
+    fin_dict, g_nodes_array = gcm.get_updated_neighbor_dict(graph)
+
+    temp_graph = copy.deepcopy(graph)
+
+    # er_proc = imageio.imread(path_er_proc)
+    # er_proc_bg = np.where(er_proc==0)
+
+    er_input = imageio.imread(path_er)
+    cost_arr = np.ones((128, 128))
+    # cost_arr[er_proc_bg] = 0
+
+    for node in dict(graph.degree()):
+
+        # access the first element of graph.neighbors
+        neighbor = next(iter(graph.neighbors(node)))
+
+        gcm.connect_nodes(er_input, temp_graph, node, neighbor, fin_dict, cost_arr, g_nodes_array)
+
+    tgraph = copy.deepcopy(temp_graph)
+    for node in temp_graph.nodes():
+        gcm.process_node(tgraph, node)
+
+    tgraph2 = copy.deepcopy(tgraph)
+    for node in tgraph.nodes():
+        gcm.process_node(tgraph2, node)
+
+
+    # for (st, end) in tgraph2.edges():
+    #     print(st, end)
+    #
+    #
+    exclude_edges = []
+    for (node1, node2) in tgraph2.edges():
+        if tgraph2.degree(node1) == 1 or tgraph2.degree(node2) == 1:
+            exclude_edges.append((node1, node2))
+    #
+    # print(exclude_edges)
+    # exit()
+
+    ### Plotting the updated graph
+    deg_one_nodes, deg_two_nodes, high_deg_nodes = gcm.get_updated_degree_nodes(tgraph2)
+
+    er_mean = imageio.imread(
+        f'{confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png')
+    plt.imshow(er_mean, cmap='gray')
+
+    for (start_node, end_node) in tgraph2.edges():
+        if tgraph2[start_node][end_node][0]:
+            ps = tgraph2[start_node][end_node][0]['pts']
+            if (start_node, end_node) not in exclude_edges:
+                plt.plot(ps[:, 1], ps[:, 0], 'red')
+            else:
+                plt.plot(ps[:, 1], ps[:, 0], 'green')
+        # elif temp_graph[start_node][end_node][1]:
+        #     ps = tgraph2[start_node][end_node][1]['pts']
+        #     plt.plot(ps[:, 1], ps[:, 0], 'red')
+
+    if len(deg_one_nodes) != 0:
+        plt.plot(deg_one_nodes[:, 1], deg_one_nodes[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow',
+                 mew=0.5, markersize=3)
+
+    # if len(deg_two_nodes) != 0:
+    #     plt.plot(deg_two_nodes[:, 1], deg_two_nodes[:, 0], 'o', markerfacecolor='magenta', markeredgecolor='magenta',
+    #              mew=0.5, markersize=3)
+
+    if len(high_deg_nodes) != 0:
+        plt.plot(high_deg_nodes[:, 1], high_deg_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue',
+                 mew=0.5, markersize=3)
+
+    # plt.axis('off')
+    # plt.savefig(f'graphs/connected/repair/{group}_{series}_edge_graph_projection_connected_final_v2', bbox_inches='tight', pad_inches=0)
+    # plt.savefig(f'graphs/connected/{group}_{series}_v2-2', bbox_inches='tight', pad_inches=0)
+    # plt.close()
+    # #
+    plt.show()
+
+
 def plot_junc_areas_og(group, series_num, labelled_img, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords, unk_cc_coords):
     for i in range(1):
         plt.axis('off')
@@ -804,6 +906,7 @@ def plot_junc_areas_og(group, series_num, labelled_img, iso, fuz, skdata, iso_cc
         # plt.close()
 
         plt.show()
+
 
 
 # def plot_junc_areas(group, series_num, iso, fuz, unk, labelled_img):
@@ -877,22 +980,26 @@ def plot_junc_areas(group, series_num, labelled_img, iso, fuz, skdata, iso_cc_co
         plt.show()
 
 
-# nps, skdata, labelled_img = label_junctions('Climp', 8)
-#
-# label_vals, unassigned_cc_dict = separate_junc_cc(nps, skdata, labelled_img)
-# iso, fuz, unk = get_junction_areas(label_vals, unassigned_cc_dict)
-#
-# iso_cc = get_cc_ids(labelled_img, iso)
-# fuz_cc = get_cc_ids(labelled_img, fuz)
-# unk_cc = get_cc_ids(labelled_img, unk)
-#
-# iso_cc_coords = {each: np.where(labelled_img==each) for each in iso_cc}
-# fuz_cc_coords = {each: np.where(labelled_img==each) for each in fuz_cc}
-# unk_cc_coords = {each: np.where(labelled_img==each) for each in unk_cc}
+nps, skdata, labelled_img = junc_analysis.label_junctions('Climp', 8)
 
-# plot_junc_areas_og('Climp', 8, labelled_img, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords, unk_cc_coords)
+label_vals, unassigned_cc_dict = junc_analysis.separate_junc_cc(nps, skdata, labelled_img)
+iso, fuz, unk = junc_analysis.get_junction_areas(label_vals, unassigned_cc_dict)
 
+# print(iso)
 # exit()
+
+iso_cc = get_cc_ids(labelled_img, iso)
+fuz_cc = get_cc_ids(labelled_img, fuz)
+# unk_cc = get_cc_ids(labelled_img, unk)
+
+iso_cc_coords = {each: np.where(labelled_img==each) for each in iso_cc}
+fuz_cc_coords = {each: np.where(labelled_img==each) for each in fuz_cc}
+# unk_cc_coords = {each: np.where(labelled_img==each) for each in unk_cc}
+unk_cc_coords = {}
+
+plot_junc_areas_og('Climp', 8, labelled_img, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords, unk_cc_coords)
+
+exit()
 
 
 def get_label_id(regions, iso, junc_id):
