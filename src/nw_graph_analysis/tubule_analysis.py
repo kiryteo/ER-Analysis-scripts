@@ -49,14 +49,14 @@ def get_tubule_data(group, series_num, connection):
     er_input_path = f'{confocal_data_path}/{group}/new_op_jul/er_mean/{group.lower()}{series_num}_er_mean.png'
     skel_path = f'{confocal_data_path}/{group}/new_op_jul/er_mean_proc/{group.lower()}{series_num}_er_mean_proc_enhance_skel.png'
 
-    conn_graph = node_connector(er_input_path, skel_path)
+    # conn_graph = node_connector(er_input_path, skel_path)
+    ref_junctions = junc_analysis.get_junctions(er_input_path, skel_path)
 
 
-
-    deg_one_nodes, deg_two_nodes, high_deg_nodes = get_updated_degree_nodes(conn_graph)
+    # deg_one_nodes, deg_two_nodes, high_deg_nodes = get_updated_degree_nodes(conn_graph)
 
     # graph = junc_analysis.skel_to_graph(mean_img)
-    ref_junctions = junc_analysis.get_junctions(conn_graph)
+    # ref_junctions = junc_analysis.get_junctions(conn_graph)
 
     ref_junctions = [[junc[0], junc[1]] for junc in ref_junctions]
 
@@ -65,11 +65,11 @@ def get_tubule_data(group, series_num, connection):
         er_path = f'{confocal_data_path}/{group}/new_op_jul/std_egfp/{group_pref[group]}{series_num}_decon_t0{frame:02d}_ch00_std.png'
         skeleton_path = f'{confocal_data_path}/{group}/new_op_jul/skel/{group_pref[group]}{series_num}/{group_pref[group]}{series_num}_decon_t0{frame:02d}_ch00_skel.png'
 
-        graph = node_connector(er_path, skeleton_path)
+        # graph = node_connector(er_path, skeleton_path)
 
-        # create_tubule_junc_plot(er_path, skeleton_path)
+        # # create_tubule_junc_plot(er_path, skeleton_path)
 
-        junctions = junc_analysis.get_junctions(graph)
+        junctions = junc_analysis.get_junctions(er_path, skeleton_path)
 
         junc_array = [[junc[0], junc[1]] for junc in junctions]
         per_frame_junctions.extend(junc_array)

@@ -23,10 +23,17 @@ class JunctionAnalysis:
     
     # node_connector
     def get_junctions(self, path_er, path_skel):
+        """
+        @param path_er: path to er image
+        @param path_skel: path to skeleton image
+        @return: junctions (list) - provides all junctions with degree > 2 from the mean projection proc skeleton
+        """
+
         graph = self.skel_to_graph(path_skel)
 
-        fin_dict, g_nodes_array = gcm.get_updated_neighbor_dict(graph)
+        updated_dict, g_nodes_array = gcm.get_updated_neighbor_dict(graph)
 
+        # create a copy of the graph for node connection
         temp_graph = copy.deepcopy(graph)
 
         er_input = imageio.imread(path_er)
@@ -36,10 +43,12 @@ class JunctionAnalysis:
             # access the first element of graph.neighbors
             neighbor = next(iter(graph.neighbors(node)))
 
-            gcm.connect_nodes(er_input, temp_graph, node, neighbor, fin_dict, cost_arr, g_nodes_array)
+            # connect the node to its neighbor
+            gcm.connect_nodes(er_input, temp_graph, node, neighbor, updated_dict, cost_arr, g_nodes_array)
 
         tgraph = copy.deepcopy(temp_graph)
         for node in temp_graph.nodes():
+            # adjust the degree of the node
             gcm.process_node(tgraph, node)
 
         tgraph2 = copy.deepcopy(tgraph)

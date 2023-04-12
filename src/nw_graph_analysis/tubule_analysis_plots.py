@@ -132,7 +132,7 @@ def filter_data(data):
 def get_per_pixel_variation_over_sequence(group, connection, channel, variation):
     # data: All tubule intensity data over 100 frames for all movies in the group.
 
-    data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/tubule/{group.lower()}_{connection}_tubules_{channel}.pkl', 'rb'))
+    data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/corrected_pickles/{group.lower()}_{connection}_tubules_{channel}.pkl', 'rb'))
     data = filter_data(data)
 
     variation_vals = []
@@ -186,10 +186,27 @@ def plot_per_pixel_variation_over_sequence(connection, channel, variation):
     plt.ylabel(f'Per pixel {variation_name} over 100 frames in each tubule', fontsize=18)
     plt.show()
 
+# plot_per_pixel_variation_over_sequence('iso-iso', 'egfp', 'mean')
+# plot_per_pixel_variation_over_sequence('iso-iso', 'egfp', 'std')
+# plot_per_pixel_variation_over_sequence('iso-iso', 'mch', 'mean')
+# plot_per_pixel_variation_over_sequence('iso-iso', 'mch', 'std')
+
+# plot_per_pixel_variation_over_sequence('iso-fuz', 'mch', 'std')
+# plot_per_pixel_variation_over_sequence('iso-fuz', 'mch', 'mean')
+# plot_per_pixel_variation_over_sequence('iso-fuz', 'egfp', 'std')
+# plot_per_pixel_variation_over_sequence('iso-fuz', 'egfp', 'mean')
+
+# plot_per_pixel_variation_over_sequence('fuz-fuz', 'mch', 'std')
+# plot_per_pixel_variation_over_sequence('fuz-fuz', 'mch', 'mean')
+# plot_per_pixel_variation_over_sequence('fuz-fuz', 'egfp', 'std')
+# plot_per_pixel_variation_over_sequence('fuz-fuz', 'egfp', 'mean')
+
+
+
 
 def get_per_pixel_correlation_over_sequence(group, connection):
-    egfp_data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/tubule/{group.lower()}_{connection}_tubules_egfp.pkl', 'rb'))
-    mch_data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/tubule/{group.lower()}_{connection}_tubules_mch.pkl', 'rb'))
+    egfp_data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/corrected_pickles/{group.lower()}_{connection}_tubules_egfp.pkl', 'rb'))
+    mch_data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/corrected_pickles/{group.lower()}_{connection}_tubules_mch.pkl', 'rb'))
 
     egfp_data = filter_data(egfp_data)
     mch_data = filter_data(mch_data)
@@ -213,12 +230,12 @@ def plot_per_pixel_correlation_over_sequence(connection):
     rtn_corr_vals = get_per_pixel_correlation_over_sequence('RTN', connection)
     # control_corr_vals = get_per_pixel_correlation_over_sequence('Control', connection)
 
-    sns.distplot(atl_corr_vals, hist=False, kde=True, kde_kws={'shade': True, 'linewidth': 3}, label='ATL')
-    sns.distplot(climp_corr_vals, hist=False, kde=True, kde_kws={'shade': True, 'linewidth': 3}, label='Climp')
-    sns.distplot(rtn_corr_vals, hist=False, kde=True, kde_kws={'shade': True, 'linewidth': 3}, label='RTN')
-    plt.show()
+    # sns.distplot(atl_corr_vals, hist=False, kde=True, kde_kws={'shade': True, 'linewidth': 3}, label='ATL')
+    # sns.distplot(climp_corr_vals, hist=False, kde=True, kde_kws={'shade': True, 'linewidth': 3}, label='Climp')
+    # sns.distplot(rtn_corr_vals, hist=False, kde=True, kde_kws={'shade': True, 'linewidth': 3}, label='RTN')
+    # plt.show()
 
-    exit()
+    # exit()
 
     df = pd.DataFrame()
     
@@ -247,11 +264,11 @@ def plot_per_pixel_correlation_over_sequence(connection):
     plt.ylabel('Per pixel cross-correlation over 100 frames in each tubule', fontsize=18)
     plt.show()
 
-plot_per_pixel_correlation_over_sequence('iso-iso')
+# plot_per_pixel_correlation_over_sequence('iso-iso')
 # plot_per_pixel_correlation_over_sequence('iso-fuz')
 # plot_per_pixel_correlation_over_sequence('fuz-fuz')
 
-exit()
+# exit()
 
 
 # plot_per_pixel_variation_over_sequence('iso-iso', 'egfp', 'mean')
