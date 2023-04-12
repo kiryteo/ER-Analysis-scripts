@@ -113,27 +113,167 @@ def filter_data(data):
 #                 m_mean.append(np.mean(m))
 #     return e_mean, m_mean
 
+# data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/tubule/atl_iso-iso_tubules_egfp.pkl', 'rb'))
+
+# print(len(data))
+# print(len(data[1]))
+# print(len(data[0][0]))
+
+# print(data[0][10])
+# variation_vals = []
+# for series in data:
+#     for tubule in series:
+#         transposed_list = [list(x) for x in zip(*tubule)]
+#         for each in transposed_list:
+#             variation_vals.append(np.mean(each))
+#             # variation_vals.append(np.std(each))
+
 
 def get_per_pixel_variation_over_sequence(group, connection, channel, variation):
     # data: All tubule intensity data over 100 frames for all movies in the group.
 
-    data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/{group.lower()}_{connection}_tubules_{channel}.pkl', 'rb'))
+    data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/tubule/{group.lower()}_{connection}_tubules_{channel}.pkl', 'rb'))
     data = filter_data(data)
 
     variation_vals = []
     for series in data:
         for tubule in series:
             transposed_list = list(map(list, zip(*tubule)))
-            for each in transposed_list:
+            for pixel_seq_vals in transposed_list:
                 if variation == 'mean':
-                    variation_vals.append(np.mean(each))
+                    variation_vals.append(np.mean(pixel_seq_vals))
                 else:
-                    variation_vals.append(np.std(each))
+                    variation_vals.append(np.std(pixel_seq_vals))
     return variation_vals
 
 
-# get_per_pixel_mean_over_sequence('ATL', 'iso-fuz', 'egfp')
-# exit()
+def plot_per_pixel_variation_over_sequence(connection, channel, variation):
+    
+    df = pd.DataFrame()
+    
+    atl_variation = get_per_pixel_variation_over_sequence('ATL', connection, channel, variation)
+    rtn_variation = get_per_pixel_variation_over_sequence('RTN', connection, channel, variation)
+    climp_variation = get_per_pixel_variation_over_sequence('Climp', connection, channel, variation)
+    if channel == 'egfp':
+        control_variation = get_per_pixel_variation_over_sequence('Control', connection, channel, variation)
+        
+        df['Per-pixel-mean'] = pd.Series(np.concatenate((atl_variation, climp_variation, rtn_variation, control_variation)))
+
+        df['Group'] = pd.Series(np.concatenate((['ATL']*len(atl_variation), ['Climp']*len(climp_variation), ['RTN']*len(rtn_variation), ['Control']*len(control_variation))))
+    else:
+        df['Per-pixel-mean'] = pd.Series(np.concatenate((atl_variation, climp_variation, rtn_variation)))
+
+        df['Group'] = pd.Series(np.concatenate((['ATL']*len(atl_variation), ['Climp']*len(climp_variation), ['RTN']*len(rtn_variation))))
+
+    ax = sns.boxenplot(data=df, x='Group', y='Per-pixel-mean')
+    box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'Control'), ('Climp', 'RTN'), ('Control', 'RTN')] if channel == 'egfp' else [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
+    statannot.add_stat_annotation(ax, x='Group', y='Per-pixel-mean', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
+
+        # plt.yscale('log')
+
+
+    ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
+    variation_name = 'standard deviation' if variation == 'std' else 'mean'
+
+    plt.title(f'Per-pixel {variation_name} over sequence for {connection} tubules in {ch_name}', fontsize=20)
+
+    plt.grid(True)
+    plt.xlabel('Group', fontsize=18)
+    # plt.ylabel(f'Tubular {variation}, log scale', fontsize=18)
+    # plt.ylabel(f'Tubular {variation}', fontsize=18)
+    plt.ylabel(f'Per pixel {variation_name} over 100 frames in each tubule', fontsize=18)
+    plt.show()
+
+
+def get_per_pixel_correlation_over_sequence(group, connection):
+    egfp_data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/tubule/{group.lower()}_{connection}_tubules_egfp.pkl', 'rb'))
+    mch_data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/tubule/{group.lower()}_{connection}_tubules_mch.pkl', 'rb'))
+
+    egfp_data = filter_data(egfp_data)
+    mch_data = filter_data(mch_data)
+
+    correlation_vals = []
+
+    for egfp, mch in zip(egfp_data, mch_data):
+        for egfp_tubule, mch_tubule in zip(egfp, mch):
+            egfp_transposed_list = list(map(list, zip(*egfp_tubule)))
+            mch_transposed_list = list(map(list, zip(*mch_tubule)))
+
+            for egfp_pixel_seq_vals, mch_pixel_seq_vals in zip(egfp_transposed_list, mch_transposed_list):
+                correlation_vals.append(np.corrcoef(egfp_pixel_seq_vals, mch_pixel_seq_vals)[0][1])
+    
+    return correlation_vals
+
+
+def plot_per_pixel_correlation_over_sequence(connection):
+    atl_corr_vals = get_per_pixel_correlation_over_sequence('ATL', connection)
+    climp_corr_vals = get_per_pixel_correlation_over_sequence('Climp', connection)
+    rtn_corr_vals = get_per_pixel_correlation_over_sequence('RTN', connection)
+    # control_corr_vals = get_per_pixel_correlation_over_sequence('Control', connection)
+
+    sns.distplot(atl_corr_vals, hist=False, kde=True, kde_kws={'shade': True, 'linewidth': 3}, label='ATL')
+    sns.distplot(climp_corr_vals, hist=False, kde=True, kde_kws={'shade': True, 'linewidth': 3}, label='Climp')
+    sns.distplot(rtn_corr_vals, hist=False, kde=True, kde_kws={'shade': True, 'linewidth': 3}, label='RTN')
+    plt.show()
+
+    exit()
+
+    df = pd.DataFrame()
+    
+    df['Per-pixel-corr'] = pd.Series(np.concatenate((atl_corr_vals, climp_corr_vals, rtn_corr_vals)))
+    
+    df['Group'] = pd.Series(np.concatenate((['ATL']*len(atl_corr_vals), ['Climp']*len(climp_corr_vals), ['RTN']*len(rtn_corr_vals))))
+
+    ax = sns.boxenplot(data=df, x='Group', y='Per-pixel-corr')
+    box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
+    statannot.add_stat_annotation(ax, x='Group', y='Per-pixel-corr', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
+
+    # plt.yscale('log')
+
+
+    # ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
+    # variation_name = 'standard deviation' if variation == 'std' else 'mean'
+
+    plt.title(f'Per-pixel cross-correlation over sequence for {connection} tubules', fontsize=20)
+
+    plt.grid(True)
+    plt.xlabel('Group', fontsize=18)
+    # plt.ylabel(f'Tubular {variation}, log scale', fontsize=18)
+    # plt.ylabel(f'Tubular {variation}', fontsize=18)
+    plt.ylabel('Per pixel cross-correlation over 100 frames in each tubule', fontsize=18)
+    plt.show()
+
+plot_per_pixel_correlation_over_sequence('iso-iso')
+# plot_per_pixel_correlation_over_sequence('iso-fuz')
+# plot_per_pixel_correlation_over_sequence('fuz-fuz')
+
+exit()
+
+
+# plot_per_pixel_variation_over_sequence('iso-iso', 'egfp', 'mean')
+# plot_per_pixel_variation_over_sequence('iso-fuz', 'egfp', 'mean')
+# plot_per_pixel_variation_over_sequence('fuz-fuz', 'egfp', 'mean')
+
+# plot_per_pixel_variation_over_sequence('iso-iso', 'egfp', 'std')
+# plot_per_pixel_variation_over_sequence('iso-fuz', 'egfp', 'std')
+# plot_per_pixel_variation_over_sequence('fuz-fuz', 'egfp', 'std')
+
+# plot_per_pixel_variation_over_sequence('iso-iso', 'mch', 'mean')
+# plot_per_pixel_variation_over_sequence('iso-fuz', 'mch', 'mean')
+# plot_per_pixel_variation_over_sequence('fuz-fuz', 'mch', 'mean')
+
+# plot_per_pixel_variation_over_sequence('iso-iso', 'mch', 'std')
+# plot_per_pixel_variation_over_sequence('iso-fuz', 'mch', 'std')
+# plot_per_pixel_variation_over_sequence('fuz-fuz', 'mch', 'std')
+
+exit()
+
+
+
 
 def per_pixel_correlation(egfp_data, mch_data):
     egfp = filter_data(egfp_data)
@@ -229,8 +369,8 @@ def plot_per_pixel_correlation(connection, plottype):
     plt.show()
 
 
-plot_per_pixel_correlation('fuz-fuz', 'replicate')
-exit()
+# plot_per_pixel_correlation('fuz-fuz', 'replicate')
+# exit()
 
 def plot_per_pixel_variation(connection, channel, variation, plottype):
     atl = get_per_pixel_variation_over_sequence('ATL', connection, channel, variation)
@@ -239,9 +379,9 @@ def plot_per_pixel_variation(connection, channel, variation, plottype):
 
     df = pd.DataFrame()
 
-    ar1, ar2, ar3 = atl[:10], atl[10:20], atl[20:]
-    cr1, cr2, cr3 = climp[:10], climp[10:20], climp[20:]
-    rr1, rr2, rr3 = rtn[:10], rtn[10:20], rtn[20:]
+    # ar1, ar2, ar3 = atl[:10], atl[10:20], atl[20:]
+    # cr1, cr2, cr3 = climp[:10], climp[10:20], climp[20:]
+    # rr1, rr2, rr3 = rtn[:10], rtn[10:20], rtn[20:]
 
     if channel == 'egfp':
         ctrl = get_per_pixel_variation_over_sequence('Control', connection, channel, variation)
@@ -304,6 +444,10 @@ def plot_per_pixel_variation(connection, channel, variation, plottype):
     # plt.ylabel(f'Tubular {variation}', fontsize=18)
     plt.ylabel(f'Per pixel {variation_name} over 100 frames in each tubule', fontsize=18)
     plt.show()
+
+plot_per_pixel_variation('iso-iso', 'egfp', 'mean', 'replicates')
+exit()
+
 
 
 def get_egfp_plots(connection, channel, variation):

@@ -1,3 +1,23 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import networkx as nx
+import cv2
+import os
+import sys
+import pickle
+import pandas as pd
+import seaborn as sns
+import scipy.stats as stats
+import scipy.ndimage as ndimage
+from skimage.measure import label
+
+from structure_extraction import *
+from junction_analysis_modules import JunctionAnalysis as junc_analysis
+
+
+confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
+
+
 def get_edges(conn_graph, iso_ids, fuz_ids, connection):
     # Find the edges between iso-iso, iso-fuz, fuz-fuz
     if connection == 'iso-iso':
@@ -17,6 +37,11 @@ def get_edges(conn_graph, iso_ids, fuz_ids, connection):
         return list(conn_graph.edges())
 
 
+def get_intersection(a, b):
+    # get common elements between 2 ndarrays (list of nodes)
+    return np.array([x for x in a if np.any(np.all(x == b, axis=1))])
+
+
 def get_tubule_data(group, series_num, connection):
     group_pref = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
 
@@ -26,12 +51,14 @@ def get_tubule_data(group, series_num, connection):
 
     conn_graph = node_connector(er_input_path, skel_path)
 
+
+
     deg_one_nodes, deg_two_nodes, high_deg_nodes = get_updated_degree_nodes(conn_graph)
 
     # graph = junc_analysis.skel_to_graph(mean_img)
     ref_junctions = junc_analysis.get_junctions(conn_graph)
 
-    ref_junctions = [[each[0], each[1]] for each in ref_junctions]
+    ref_junctions = [[junc[0], junc[1]] for junc in ref_junctions]
 
     per_frame_junctions = []
     for frame in range(100):
@@ -51,8 +78,8 @@ def get_tubule_data(group, series_num, connection):
     per_frame_junctions = np.array(per_frame_junctions)
 
     spread_img = np.zeros((128, 128))
-    for each in per_frame_junctions:
-        spread_img[each[0], each[1]] = 255.
+    for junc in per_frame_junctions:
+        spread_img[junc[0], junc[1]] = 255.
 
     labelled_img = label(spread_img, connectivity=2)
 
@@ -86,6 +113,8 @@ def get_tubule_data(group, series_num, connection):
     return edges, conn_graph
 
 
+import imageio
+
 def tubule_sequence_data(group, series_num, connection, channel, measure):
     """
     Returns sequence data for tubule images from a given group, series, connection, and channel.
@@ -100,10 +129,10 @@ def tubule_sequence_data(group, series_num, connection, channel, measure):
     - seq_data (list): A list of lists of pixel values for each edge in image sequence.
     """
 
-    assert group in VALID_GROUPS, f"Invalid group name: {group}"
-    assert connection in VALID_CONNECTIONS, f"Invalid connection type: {connection}"
-    assert channel in VALID_CHANNELS, f"Invalid channel name: {channel}"
-    assert measure in VALID_MEASURES, f"Invalid measure name: {measure}"
+    # assert group in VALID_GROUPS, f"Invalid group name: {group}"
+    # assert connection in VALID_CONNECTIONS, f"Invalid connection type: {connection}"
+    # assert channel in VALID_CHANNELS, f"Invalid channel name: {channel}"
+    # assert measure in VALID_MEASURES, f"Invalid measure name: {measure}"
 
     group_pref = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
 
@@ -125,18 +154,21 @@ def tubule_sequence_data(group, series_num, connection, channel, measure):
 
     ch_id = 0 if channel == 'egfp' else 1
 
-    for each in edge_pts:
+    for pt in edge_pts:
         edge_data = []
         for i in range(100):
             er = get_er_input(i, group, channel, series_num, ch_id)
-            edge_data.append(er[each[:, 0], each[:, 1]])
+            edge_data.append(er[pt[:, 0], pt[:, 1]])
             # if measure == 'tubules':
-            #     edge_data.append(er[each[:, 0], each[:, 1]])
+            #     edge_data.append(er[pt[:, 0], pt[:, 1]])
             # elif measure == 'tub-mean':
-            #     edge_data.append(np.mean(er[each[:, 0], each[:, 1]]))
+            #     edge_data.append(np.mean(er[pt[:, 0], pt[:, 1]]))
         seq_data.append(edge_data)
 
     return seq_data
+
+seq_data = tubule_sequence_data('ATL', 1, 'iso-iso', 'egfp', 'mean')
+exit()
 
 
 def create_tub_data_pickles(group, total_series, connection, channel, measure):
@@ -226,9 +258,9 @@ def tubule_intensity_analysis(group, series_num, connection, measure):
         edge_pts = [conn_graph[u][v][0]['pts'] for (u, v) in edges]
         vals = []
         if measure == 'mean':
-            vals.extend(np.mean(er[each[:, 0], each[:, 1]]) for each in edge_pts)
+            vals.extend(np.mean(er[pt[:, 0], pt[:, 1]]) for pt in edge_pts)
         else:
-            vals.extend(np.std(er[each]) for each in edge_pts)
+            vals.extend(np.std(er[pt]) for pt in edge_pts)
 
         return vals
 
@@ -287,9 +319,9 @@ def plot_seq_mean_tubule_mean(group, channel, connection):
 
     d1 = []
 
-    for each in data:
+    for d in data:
         try:
-            d1.extend(np.std(i) for i in each if len(i) > 0)
+            d1.extend(np.std(i) for i in d if len(i) > 0)
         except:
             pass
     return d1

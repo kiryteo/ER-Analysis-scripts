@@ -37,12 +37,81 @@ def get_std_img(path):
     return (img - img.min()) / (img.max() - img.min())
 
 
+def filter_data(data):
+    return [arr for arr in data if arr is not None and not np.all(arr == None)]
 
-def per_CC_pixel_variation(group, num_series, channel, connection_type):
-    atl = get_per_CC_pixel_data('ATL', 26, 'fuz', 'egfp')
-    climp = get_per_CC_pixel_data('Climp', 31, 'fuz', 'egfp')
-    rtn = get_per_CC_pixel_data('RTN', 29, 'fuz', 'egfp')
-    ctrl = get_per_CC_pixel_data('Control', 31, 'fuz', 'egfp')
+
+# def per_pixel_correlation(egfp_data, mch_data):
+#     egfp = filter_data(egfp_data)
+#     mch = filter_data(mch_data)
+
+#     corr_vals = []
+
+#     for s1, s2 in zip(egfp, mch):
+#         for t1, t2 in zip(s1, s2):
+#             transposed_egfp = list(map(list, zip(*t1)))
+#             transposed_mch = list(map(list, zip(*t2)))
+#             corr_vals.extend(np.corrcoef(e1, e2)[0, 1] for e1, e2 in zip(transposed_egfp, transposed_mch))
+
+#     return corr_vals
+
+
+def per_CC_pixel_correlation(egfp_data, mch_data):
+    corr_vals = []
+
+    for group_num in range(len(egfp_data)):
+        for junc_e, junc_m in zip(egfp_data[group_num], mch_data[group_num]):
+            corr_vals.append(np.corrcoef(junc_e, junc_m)[0, 1])
+        
+    return corr_vals
+
+
+def per_CC_pixel_variation(region):
+    atl_egfp = pkl.load(open(f'ATL_egfp_{region}_data.pkl', 'rb'))
+    climp_egfp = pkl.load(open(f'Climp_egfp_{region}_data.pkl', 'rb'))
+    rtn_egfp = pkl.load(open(f'RTN_egfp_{region}_data.pkl', 'rb'))
+
+    atl_mch = pkl.load(open(f'ATL_mch_{region}_data.pkl', 'rb'))
+    climp_mch = pkl.load(open(f'Climp_mch_{region}_data.pkl', 'rb'))
+    rtn_mch = pkl.load(open(f'RTN_mch_{region}_data.pkl', 'rb'))
+
+    atl_corr = per_CC_pixel_correlation(atl_egfp, atl_mch)
+    climp_corr = per_CC_pixel_correlation(climp_egfp, climp_mch)
+    rtn_corr = per_CC_pixel_correlation(rtn_egfp, rtn_mch)
+
+    df = pd.DataFrame()
+    df['data_tubule_mean'] = pd.Series(np.concatenate((atl_corr, climp_corr, rtn_corr)))
+    df['Group'] = pd.Series(np.concatenate((
+        ['ATL'] * len(atl_corr), ['Climp'] * len(climp_corr), ['RTN'] * len(rtn_corr))))
+    
+
+    # ax.set_ylim(-1, 1)
+
+    ax = sns.boxenplot(data=df, x='Group', y='data_tubule_mean')
+    # ax = sns.boxenplot(data=df, x='Replicate', y='data_tubule_mean', hue='Group', dodge=True)  # , yscale='log')
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
+    # plt.show()
+    # plt.yscale('log')
+
+
+    box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
+
+    statannot.add_stat_annotation(ax, x='Group', y='data_tubule_mean', data=df, box_pairs=box_pairs,
+                                  test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+
+    region_name = 'Isolated' if region == 'iso' else 'Fuzzy'
+    # ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
+
+    plt.suptitle(f'{region_name} CC, per junction correlation across conditions', fontsize=20)
+    plt.title('Correlation over 100 frames for each junction location within a CC', fontsize=18)
+    plt.grid(True)
+    plt.xlabel('Group', fontsize=18)
+    plt.ylabel('Cross-correlation value', fontsize=18)
+    plt.show()
+
+
+per_CC_pixel_variation('iso')
+exit()
 
 
 def get_CC_variation(channel, region, measure):

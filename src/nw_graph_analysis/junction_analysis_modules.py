@@ -20,46 +20,7 @@ class JunctionAnalysis:
         @return:
         """
         return sknw.build_sknw(imageio.imread(skel_img_path), multi=True, iso=False)
-
-    def get_all_junc(self, group, num_series):
-        # get reference junctions based on mean projection frame and per frame junctions for each series, all groups
-        """
-
-        @param group: group to be analyzed
-        @param num_series: sequence number
-        @return: nps (list) - provides all junctions with degree > 2 from the mean projection proc skeleton, per_frame_junctions (list) - provides all junctions per skel frame
-        """
-
-        group_pref = {'ATL':'A', 'Climp':'C', 'Control':'Ct', 'RTN':'R'}
-
-        mean_er = f'{self.confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{num_series}_er_mean.png'
-
-        mean_skel = f'{self.confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
-
-        # Get junction coordinates from projection frame
-        ref_junctions = self.get_junctions(mean_er, mean_skel)
-
-        ref_junctions = [[each[0], each[1]] for each in ref_junctions]
-
-        per_frame_junctions = []
-        for frame in range(100):
-
-            er_path = f'{confocal_data_path}{group}/new_op_jul/std_egfp/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_std.png'
-
-            skeleton_path = f'{confocal_data_path}{group}/new_op_jul/skel/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
-
-            junctions = self.get_junctions(er_path, skeleton_path)
-
-            junc_array = [[junc[0], junc[1]] for junc in junctions]
-            per_frame_junctions.extend(junc_array)
-
-        return ref_junctions, per_frame_junctions
-
-    # def process_node_runner(self, graph):
-    #     temp_graph = copy.deepcopy(graph)
-    #     for node in graph.nodes():
-    #         gcm.process_node(temp_graph, node)
-
+    
     # node_connector
     def get_junctions(self, path_er, path_skel):
         graph = self.skel_to_graph(path_skel)
@@ -90,6 +51,46 @@ class JunctionAnalysis:
         node_coords = np.array([node_set[node]['o'] for node in node_set])
 
         return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
+
+    def get_all_junc(self, group, num_series):
+        # get reference junctions based on mean projection frame and per frame junctions for each series, all groups
+        """
+
+        @param group: group to be analyzed
+        @param num_series: sequence number
+        @return: nps (list) - provides all junctions with degree > 2 from the mean projection proc skeleton, per_frame_junctions (list) - provides all junctions per skel frame
+        """
+
+        # pr
+        group_pref = {'ATL':'A', 'Climp':'C', 'Control':'Ct', 'RTN':'R'}
+
+        mean_er = f'{self.confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{num_series}_er_mean.png'
+
+        mean_skel = f'{self.confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
+
+        # Get junction coordinates from projection frame
+        ref_junctions = self.get_junctions(mean_er, mean_skel)
+
+        ref_junctions = [[each[0], each[1]] for each in ref_junctions]
+
+        per_frame_junctions = []
+        for frame in range(100):
+
+            er_path = f'{confocal_data_path}{group}/new_op_jul/std_egfp/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_std.png'
+
+            skeleton_path = f'{confocal_data_path}{group}/new_op_jul/skel/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
+
+            junctions = self.get_junctions(er_path, skeleton_path)
+
+            junc_array = [[junc[0], junc[1]] for junc in junctions]
+            per_frame_junctions.extend(junc_array)
+
+        return ref_junctions, per_frame_junctions
+
+    # def process_node_runner(self, graph):
+    #     temp_graph = copy.deepcopy(graph)
+    #     for node in graph.nodes():
+    #         gcm.process_node(temp_graph, node)
 
     def label_junctions(self, group, series_num):
 
