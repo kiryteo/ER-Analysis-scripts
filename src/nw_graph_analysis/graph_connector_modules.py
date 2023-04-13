@@ -11,8 +11,6 @@ import networkx as nx
 from collections import OrderedDict
 from skimage.graph import route_through_array
 from sklearn.neighbors import NearestNeighbors
-import sknw
-import imageio
 
 
 def get_nbrs(nodes_array):
@@ -70,7 +68,7 @@ def get_path_coords(er_input, cost_arr, g_nodes_array, node, fin_dict):
     path_coords, _ = route_through_array(cost_arr, start=start_coord, end=end_coord, fully_connected=True)
 
     # locations without signal in the path
-    zero_signal_coords = sum(er_input[each] == 0 for each in path_coords)
+    zero_signal_coords = sum(er_input[loc] == 0 for loc in path_coords)
 
     signal_coords = len(path_coords) - zero_signal_coords
 

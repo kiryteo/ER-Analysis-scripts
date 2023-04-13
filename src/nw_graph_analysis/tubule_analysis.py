@@ -167,8 +167,8 @@ def tubule_sequence_data(group, series_num, connection, channel, measure):
 
     return seq_data
 
-seq_data = tubule_sequence_data('ATL', 1, 'iso-iso', 'egfp', 'mean')
-exit()
+# seq_data = tubule_sequence_data('ATL', 1, 'iso-iso', 'egfp', 'mean')
+# exit()
 
 
 def create_tub_data_pickles(group, total_series, connection, channel, measure):
@@ -266,20 +266,28 @@ def tubule_intensity_analysis(group, series_num, connection, measure):
 
 
 def tubule_length_analysis(conn_graph, edges):
-    # sourcery skip: inline-immediately-returned-variable
     # Find the length of each edge in iso-iso
-    connection_length = [conn_graph[u][v][0]['weight'] for (u, v) in edges]
+    connection_length = [
+        conn_graph[u][v][0]['weight'] for (u, v) in edges
+    ]
 
     return connection_length
 
 
 def get_group_len_data(group, connection):
-    l1 = []
-    for i in range(1, 11):
-        edges, conn_graph = get_tubule_data(group, i, connection)
+    """Get tubule lengths for all tubules in a given group.
+
+    :param group: The group to analyze.
+    :param connection: The connection to the database.
+    :returns: A list of tubule lengths.
+    """
+    tubule_lengths = []
+    for tubule_number in range(1, 11):
+        edges, conn_graph = get_tubule_data(group, tubule_number, connection)
         ln = tubule_length_analysis(conn_graph, edges)
-        l1.extend(ln)
-    return l1
+        tubule_lengths.extend(ln)
+    return tubule_lengths
+
 
 def correlation_analysis(group, repl_start, repl_end, region):
     corr_list = []
@@ -291,8 +299,6 @@ def correlation_analysis(group, repl_start, repl_end, region):
         ln_egfp, ln_mch, region_cc_coords = calc_deposit_net_norm(ser_num, group, region)
 
         ids = list(region_cc_coords.keys())
-        # print(ids)
-        # exit()
         l = []
 
         for idx, val in enumerate(ids):

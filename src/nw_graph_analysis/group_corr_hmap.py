@@ -19,6 +19,16 @@ import cv2
 import numpy as np
 import networkx as nx
 
+
+
+import itertools
+l = ['ATL', 'Climp', 'RTN', 'Control']
+for i in itertools.combinations(l, 2):
+    print(i)
+
+exit()
+
+
 # Step 1: Create a skeleton for the structure in the image
 def skeletonize(img):
     skel = np.zeros(img.shape, np.uint8)

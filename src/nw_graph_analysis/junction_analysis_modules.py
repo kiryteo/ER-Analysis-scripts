@@ -46,9 +46,11 @@ class JunctionAnalysis:
             # connect the node to its neighbor
             gcm.connect_nodes(er_input, temp_graph, node, neighbor, updated_dict, cost_arr, g_nodes_array)
 
+        # Create a copy of the graph
         tgraph = copy.deepcopy(temp_graph)
+
+        # Go through each node and adjust the degree
         for node in temp_graph.nodes():
-            # adjust the degree of the node
             gcm.process_node(tgraph, node)
 
         tgraph2 = copy.deepcopy(tgraph)

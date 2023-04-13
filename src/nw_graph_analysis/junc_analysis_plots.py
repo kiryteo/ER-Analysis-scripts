@@ -19,7 +19,7 @@ import pickle as pkl
 
 from structure_extraction import node_connector, get_updated_degree_nodes
 from junction_analysis_modules import JunctionAnalysis as JA
-from junction_analysis import cc_area_measure, calc_deposit_net_norm, get_per_CC_pixel_data
+from junction_analysis import cc_area_measure, cc_signal_net_norm, get_per_CC_pixel_data
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies'
 
@@ -54,6 +54,32 @@ def filter_data(data):
 #             corr_vals.extend(np.corrcoef(e1, e2)[0, 1] for e1, e2 in zip(transposed_egfp, transposed_mch))
 
 #     return corr_vals
+
+# atl_data = pkl.load(open('pickles/CC_junctions/ATL_egfp_iso_data.pkl', 'rb'))
+# print(len(atl_data))
+# print(len(atl_data[0]))
+# print(len(atl_data[0][0]))
+
+# print(atl_data[0][4])
+# print(len(atl_data[0][4]))
+# # print(atl_data[0][0][0])
+
+# for seq in atl_data:
+#     data = np.array(seq)
+#     print(data.shape)
+#     exit()
+
+
+def get_CC_mean(channel, region):
+    atl_data = pkl.load(open(f'ATL_{channel}_{region}_data.pkl', 'rb'))
+    climp_data = pkl.load(open(f'Climp_{channel}_{region}_data.pkl', 'rb'))
+    rtn_data = pkl.load(open(f'RTN_{channel}_{region}_data.pkl', 'rb'))
+    if channel == 'egfp':
+        control_data = pkl.load(open(f'Control_{channel}_{region}_data.pkl', 'rb'))
+        # control_mean, control_std = get_mean_std_per_CC_pixel_data(control_data)
+
+
+
 
 
 def per_CC_pixel_correlation(egfp_data, mch_data):
@@ -110,8 +136,8 @@ def per_CC_pixel_variation(region):
     plt.show()
 
 
-per_CC_pixel_variation('iso')
-exit()
+# per_CC_pixel_variation('iso')
+# exit()
 
 
 def get_CC_variation(channel, region, measure):
@@ -164,8 +190,8 @@ def get_CC_variation(channel, region, measure):
     plt.show()
 
 
-get_CC_variation('mch', 'iso', 'std')
-exit()
+# get_CC_variation('mch', 'iso', 'std')
+# exit()
 
 
 
@@ -985,7 +1011,7 @@ def junc_line_mean_std(group, repl_start, repl_end, region, measure):
     for ser_num in range(repl_start, repl_end + 1):
         global junc_id
 
-        ln_egfp, ln_mch, region_cc_coords = calc_deposit_net_norm(ser_num, group, region)
+        ln_egfp, ln_mch, region_cc_coords = cc_signal_net_norm(ser_num, group, region)
 
 
         ids = list(region_cc_coords.keys())
@@ -1014,8 +1040,8 @@ def junc_line_mean_std(group, repl_start, repl_end, region, measure):
             else:
                 mch_list = None
 
-    # return egfp_list, mch_list
-    return mch_list
+    return egfp_list, mch_list
+    # return mch_list
 
 
 
@@ -1190,10 +1216,11 @@ def full_data_variation_plots(region, measure, channel):
 
 
 def full_data_variation_plots_all(region, measure, channel):
-    atl_egfp = junc_line_mean_std('ATL', 1, 27, region, measure)
-    climp_egfp = junc_line_mean_std('Climp', 1, 32, region, measure)
-    rtn_egfp = junc_line_mean_std('RTN', 1, 30, region, measure)
-    control_egfp = junc_line_mean_std('Control', 1, 32, region, measure)
+    atl_egfp, atl_mch = junc_line_mean_std(group, repl_start, repl_end, region, measure)
+    # atl_egfp = junc_line_mean_std('ATL', 1, 27, region, measure)
+    # climp_egfp = junc_line_mean_std('Climp', 1, 32, region, measure)
+    # rtn_egfp = junc_line_mean_std('RTN', 1, 30, region, measure)
+    # control_egfp = junc_line_mean_std('Control', 1, 32, region, measure)
 
     df = pd.DataFrame()
 
@@ -1230,9 +1257,9 @@ def junc_line_charts_norm(ser_num, group, junc_num):
     egfp_list = []
     mch_list = []
     global junc_id
-    # ln_egfp, ln_mch, region_cc_coords = calc_deposit_cc_norm(ser_num, group, 'iso')
+    # ln_egfp, ln_mch, region_cc_coords = cc_signal_cc_norm(ser_num, group, 'iso')
 
-    ln_egfp, ln_mch, region_cc_coords = calc_deposit_net_norm(ser_num, group, 'fuz')
+    ln_egfp, ln_mch, region_cc_coords = cc_signal_net_norm(ser_num, group, 'fuz')
 
     # print(region_cc_coords)
     # exit()

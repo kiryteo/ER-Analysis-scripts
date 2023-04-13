@@ -8,6 +8,14 @@ import matplotlib.pyplot as plt
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies'
 
 def get_correlation_data_per_replicate(data_egfp, data_mch) -> object:
+    """
+    Function to get the correlation data for each replicate.
+    :param data_egfp: Data from eGFP
+    :param data_mch: Data from mCherry
+    :return: Correlation data for each replicate
+    """
+
+    # Get correlation data for each replicate
     correlation_data_r1 = []
     for tub_eg, tub_mch in zip(data_egfp[:10], data_mch[:10]):
         correlation_data_r1.extend(np.corrcoef(i, j)[0][1] for i, j in zip(tub_eg, tub_mch))
@@ -23,6 +31,13 @@ def get_correlation_data_per_replicate(data_egfp, data_mch) -> object:
     return correlation_data_r1, correlation_data_r2, correlation_data_r3
 
 
+def get_correlation_data_per_replicate(data_egfp, data_mch):
+    correlation_data = []
+    for tub_eg, tub_mch in zip(data_egfp, data_mch):
+        correlation_data.append(np.corrcoef(tub_eg, tub_mch)[0][1])
+    return correlation_data
+
+
 def get_channel_corr(group, connection):
     with open(f'{group.lower()}_{connection}.pkl', 'rb') as f:
         data_egfp = pkl.load(f)
@@ -32,10 +47,6 @@ def get_channel_corr(group, connection):
 
     if connection != 'None':
         return get_correlation_data_per_replicate(data_egfp, data_mch)
-    correlation_data = []
-    for tub_eg, tub_mch in zip(data_egfp, data_mch):
-        correlation_data.extend(np.corrcoef(i, j)[0][1] for i, j in zip(tub_eg, tub_mch))
-    return correlation_data
 
 
 def get_pickle_data(group, conn, measure, channel):
@@ -46,14 +57,30 @@ def get_pickle_data(group, conn, measure, channel):
     return data
 
 
+import itertools
+
+
+def get_group_box_pairs(channel):
+    groups = (
+        ['ATL', 'Climp', 'RTN']
+        if channel == 'mch'
+        else ['ATL', 'Climp', 'RTN', 'Control']
+    )
+    return list(itertools.combinations(groups, 2))
+
+
 def get_box_pairs(channel):
+    # Get group names
     if channel == 'mch':
         groups = ['ATL', 'Climp', 'RTN']
     else:
         groups = ['ATL', 'Climp', 'RTN', 'Control']
-    regions = ['R1', 'R2', 'R3']
-    box_pairs = []
 
+    # Get region names
+    regions = ['R1', 'R2', 'R3']
+
+    # Get all pairs of groups across regions
+    box_pairs = []
     for r in regions:
         for i, m1 in enumerate(groups):
             for m2 in groups[i+1:]:
@@ -68,73 +95,25 @@ def filter_data(data):
     return new_list
 
 
-# egfp = pkl.load(open('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/tubules/climp_iso-iso_tubules_egfp.pkl', 'rb'))
-# mch = pkl.load(open('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/tubules/climp_iso-iso_tubules_mch.pkl', 'rb'))
-#
-# for e, m in zip(egfp[0], mch[0]):
-#     if np.array_equal(e[0], m[0]):
-#         print(e[0])
-#
-#
-# # print(egfp[0][0][2])
-# # print(mch[0][0][2])
-# exit()
-
-
-# data = get_pickle_data('ATL', 'iso-iso', 'tubule', 'egfp')
-# data_mch = get_pickle_data('ATL', 'iso-iso', 'tubule', 'mch')
-# print(data[0].shape)
-
-# print(data[0][0][0])
-# print(data_mch[0][0][0])
-
-
-# atl_mch = pkl.load(open('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/atl_fuz-fuz_tubules_mch.pkl', 'rb'))
-# atl_egfp = pkl.load(open('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/atl_fuz-fuz_tubules_egfp.pkl', 'rb'))
-# rtn_egfp = pkl.load(open('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/rtn_fuz-fuz_tubules_egfp.pkl', 'rb'))
-
-
-# def load_data(group, connection):
-#     data_egfp = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/{group.lower()}_{connection}_tubules_egfp.pkl', 'rb'))
-#     data_mch = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/{group.lower()}_{connection}_tubules_mch.pkl', 'rb'))
-#     return data_egfp, data_mch
-
-
-# def get_per_pixel_mean_over_sequence(egfp, mch):
-#     e_mean = []
-#     m_mean = []
-#     # l_std = []
-#     for e_series, m_series in zip(egfp, mch):
-#         for e_tubule, m_tubule in zip(e_series, m_series):
-#             e_transposed_list = list(map(list, zip(*e_tubule)))
-#             m_transposed_list = list(map(list, zip(*m_tubule)))
-#             for e, m in zip(e_transposed_list, m_transposed_list):
-#                 e_mean.append(np.mean(e))
-#                 m_mean.append(np.mean(m))
-#     return e_mean, m_mean
-
-# data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/tubule/atl_iso-iso_tubules_egfp.pkl', 'rb'))
-
-# print(len(data))
-# print(len(data[1]))
-# print(len(data[0][0]))
-
-# print(data[0][10])
-# variation_vals = []
-# for series in data:
-#     for tubule in series:
-#         transposed_list = [list(x) for x in zip(*tubule)]
-#         for each in transposed_list:
-#             variation_vals.append(np.mean(each))
-#             # variation_vals.append(np.std(each))
-
-
 def get_per_pixel_variation_over_sequence(group, connection, channel, variation):
+    """
+    Function to get the per-pixel variation over sequence for a given group, connection, channel and variation.
+    :param group: Group name
+    :param connection: Connection type
+    :param channel: Channel name
+    :param variation: Variation type
+    :return: Per-pixel variation over sequence
+    """
+
     # data: All tubule intensity data over 100 frames for all movies in the group.
 
+    # Load the data from the pickle file
     data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/corrected_pickles/{group.lower()}_{connection}_tubules_{channel}.pkl', 'rb'))
+
+    # Filter the data
     data = filter_data(data)
 
+    # Extract the variation values
     variation_vals = []
     for series in data:
         for tubule in series:
@@ -166,7 +145,8 @@ def plot_per_pixel_variation_over_sequence(connection, channel, variation):
         df['Group'] = pd.Series(np.concatenate((['ATL']*len(atl_variation), ['Climp']*len(climp_variation), ['RTN']*len(rtn_variation))))
 
     ax = sns.boxenplot(data=df, x='Group', y='Per-pixel-mean')
-    box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'Control'), ('Climp', 'RTN'), ('Control', 'RTN')] if channel == 'egfp' else [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
+    box_pairs = get_group_box_pairs(channel)
+
     statannot.add_stat_annotation(ax, x='Group', y='Per-pixel-mean', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
 
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
@@ -185,6 +165,9 @@ def plot_per_pixel_variation_over_sequence(connection, channel, variation):
     # plt.ylabel(f'Tubular {variation}', fontsize=18)
     plt.ylabel(f'Per pixel {variation_name} over 100 frames in each tubule', fontsize=18)
     plt.show()
+
+
+
 
 # plot_per_pixel_variation_over_sequence('iso-iso', 'egfp', 'mean')
 # plot_per_pixel_variation_over_sequence('iso-iso', 'egfp', 'std')
@@ -244,7 +227,7 @@ def plot_per_pixel_correlation_over_sequence(connection):
     df['Group'] = pd.Series(np.concatenate((['ATL']*len(atl_corr_vals), ['Climp']*len(climp_corr_vals), ['RTN']*len(rtn_corr_vals))))
 
     ax = sns.boxenplot(data=df, x='Group', y='Per-pixel-corr')
-    box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
+    box_pairs = get_group_box_pairs('mch')
     statannot.add_stat_annotation(ax, x='Group', y='Per-pixel-corr', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
 
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
@@ -347,7 +330,7 @@ def plot_per_pixel_correlation(connection, plottype):
         df['Per-pixel-mean'] = pd.Series(per_pixel_data)
         df['Group'] = pd.Series(group_labels)
 
-        box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
+        box_pairs = get_group_box_pairs('mch')
 
         ax = sns.boxenplot(data=df, x='Group', y='Per-pixel-mean')
 
@@ -435,8 +418,7 @@ def plot_per_pixel_variation(connection, channel, variation, plottype):
 
     if plottype == 'all':
         ax = sns.boxenplot(data=df, x='Group', y='Per-pixel-mean')
-        box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'Control'), ('Climp', 'RTN'),
-                                 ('Control', 'RTN')] if channel == 'egfp' else [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
+        box_pairs = get_group_box_pairs(channel)
         statannot.add_stat_annotation(ax, x='Group', y='Per-pixel-mean', data=df, box_pairs=box_pairs,
                                       test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
     else:
@@ -648,7 +630,7 @@ def compare_groups(connection, plottype):
 
         ax = sns.boxenplot(data=df, x='Group', y='tub-mean')
 
-        box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')]
+        box_pairs = get_group_box_pairs('egfp')
 
         statannot.add_stat_annotation(ax, x='Group', y='tub-mean', data=df, box_pairs=box_pairs,
                                       test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
