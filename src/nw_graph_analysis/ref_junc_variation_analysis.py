@@ -141,7 +141,6 @@ def plot_ref_junc_variation(channel, region, measure, plot_type):
             df['Group'] = pd.Series(np.concatenate((['ATL'] * len(atl), ['Climp'] * len(climp), ['RTN'] * len(rtn))))
 
         ax = sns.boxenplot(data=df, x='Group', y='data_tubule_mean')
-        ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
 
         box_pairs = get_group_box_pairs(channel)
 
@@ -177,7 +176,6 @@ def plot_ref_junc_variation(channel, region, measure, plot_type):
             ['Climp'] * len(c3), ['RTN'] * len(r1), ['RTN'] * len(r2), ['RTN'] * len(r3))))
 
         ax = sns.boxenplot(data=df, x='Replicate', y='data_tubule_mean', hue='Group', dodge=True)  # , yscale='log')
-        ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
 
         replicates = ['R1', 'R2', 'R3']
         
@@ -188,6 +186,7 @@ def plot_ref_junc_variation(channel, region, measure, plot_type):
         plt.title(f'Reference junction {measure} over sequence for {region_name} CCs in {ch_name} channel across replicates', fontsize=20)
         plt.xlabel('Replicate', fontsize=20)
 
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
     plt.grid(True)
     plt.ylabel('Mean over sequence per reference junction', fontsize=18)
 
