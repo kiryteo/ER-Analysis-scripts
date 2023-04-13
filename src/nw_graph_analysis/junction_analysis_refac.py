@@ -26,7 +26,6 @@ confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 junc_analysis = JA(confocal_data_path)
 
 
-# add comment per function
 
 def get_std_img(path):
     """
@@ -435,13 +434,9 @@ def cc_area_measure(group, region, rstart, rend):
     cc_area_list = []
 
     for series_num in range(rstart, rend + 1):
-        try:
-            region_cc, labelled_img = get_region_cc(group, series_num, region)
-        except FileNotFoundError:
-            print("Series %d does not exist" % series_num)
-            continue
-
+        region_cc, labelled_img = get_region_cc(group, series_num, region)
         regions = regionprops(labelled_img)
+
         if len(regions) == 0:
             print("No connected components in series %d" % series_num)
             continue
@@ -780,77 +775,6 @@ def crop_cc_from_saved():
 # exit()
 
 
-def junction_crops_creator(group, ser_num, junc_id, channel):
-    nps, skdata, labelled_img = junc_analysis.label_junctions(group, ser_num)
-
-    label_vals, unassigned_cc_dict = junc_analysis.separate_junc_cc(nps, skdata, labelled_img)
-    iso, fuz, unk = junc_analysis.get_junction_areas(label_vals, unassigned_cc_dict)
-
-    iso_cc = get_cc_ids(labelled_img, iso)
-    iso_cc_coords = {each: np.where(labelled_img == each) for each in iso_cc}
-
-    if channel == 'egfp':
-        ch = 0
-    else:
-        ch = 1
-
-    for i in range(100):
-        file = get_std_img(
-            f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/{group[0]}{ser_num}_decon_t0{i:02d}_ch0{ch}.tif')
-
-        # file_mch = get_std_img(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/{group[0]}{ser_num}_decon_t0{i:02d}_ch01.tif')
-
-        # file = get_std_img(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/junction_crops/S1_j15_29_74_CC/A{ser_num}_decon_t0{i:02d}_ch00.png')
-
-        regions = regionprops(labelled_img)
-        # print(regions[junc_id].label)
-        #
-        # exit()
-
-        x, y = iso[junc_id][0], iso[junc_id][1]
-
-        # print(x, y)
-        # exit()
-
-        # fig = Figure()
-        # canvas = FigureCanvas(fig)
-        # ax = fig.gca()
-
-        # contour code
-        j = get_label_id(regions, iso, junc_id)
-        label_i = regions[j].label
-
-        contour = measure.find_contours(labelled_img == label_i, 0.8)[0]
-        cntrY, cntrX = contour.T
-
-        # crp_egfp = file_egfp[x-5:x+5, y-5:y+5]
-        # crp_mch = file_mch[x-5:x+5, y-5:y+5]
-
-        plt.axis('off')
-        # plt.imshow(crp_file, cmap='gray')
-
-        plt.imshow(file, cmap='gray', interpolation=None)
-        plt.plot(cntrX, cntrY, color='red', linewidth=0.0001)
-
-        # fig = plt.gca()
-        # crp = fig[x-5:x+5, y-5:y+5]
-
-        # plt.imshow(crp_file)
-        # plt.title(f't={i}')
-        # fig = plt.gca(figsize=(8,10))
-
-        plt.savefig(
-            f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/junction_crops/S{ser_num}_j{junc_id}_{x}_{y}_CC_crops/{group[0]}{ser_num}_decon_t0{i:02d}_ch0{ch}.png',
-            bbox_inches='tight', pad_inches=0)
-        plt.close()
-        # plt.show()
-
-        # imageio.imsave(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/junction_crops/S{ser_num}_junc{junc_id}_{x}_{y}/{group[0]}{ser_num}_decon_t0{i:02d}_ch00.png', crp_egfp)
-        # imageio.imsave(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/junction_crops/S{ser_num}_junc{junc_id}_{x}_{y}/{group[0]}{ser_num}_decon_t0{i:02d}_ch01.png', crp_mch)
-
-
-# junction_crops_creator('ATL', 1, 15, 'mCherry')
-
 # junction_crops_creator('RTN', 13, 10, 'egfp')
 # exit()
 
@@ -914,31 +838,7 @@ def calc_egfp_junction_intensity_nbrhood(group, series_num, channel):
     return sl
 
 
-def junction_nbrhood_mean_plot():
-    atl = calc_egfp_junction_intensity_nbrhood('ATL', 26, 'mCherry')
-    climp = calc_egfp_junction_intensity_nbrhood('Climp', 31, 'mCherry')
-    # # ctrl = calc_egfp_junction_intensity_nbrhood('Control', 31, 'EGFP')
-    rtn = calc_egfp_junction_intensity_nbrhood('RTN', 29, 'mCherry')
-    #
-    # sns.distplot(atl, label='ATL', hist=False)
-    # sns.distplot(climp, label='Climp', hist=False)
-    # # sns.distplot(ctrl, label='Control', hist=False)
-    # sns.distplot(rtn, label='RTN', hist=False)
-    #
 
-    df = pd.DataFrame()
-    df['Values'] = pd.Series(np.concatenate((atl, climp, rtn)))
-    # df['ids'] = pd.Series(np.concatenate((np.arange(1, len(atl)+1), np.arange(1, len(climp)+1), np.arange(1, len(ctrl)+1), np.arange(1, len(rtn)+1))))
-    df['Group'] = pd.Series(np.concatenate((['ATL'] * len(atl), ['Climp'] * len(climp), ['RTN'] * len(rtn))))
-    #
-    sns.swarmplot(data=df, y='Group', x='Values')
-
-    plt.suptitle('mCherry deposit in isolated reference junction 3x3 neighbourhood across conditions', fontsize=16)
-    # # plt.title('Variance of junction CC mean per patch over 100 frames', fontsize=14)
-    plt.title('Mean Intensity per junction neighbourhood', fontsize=14)
-    # plt.xlabel('mCherry intensity mean values (3x3)', fontsize=12)
-    # plt.legend()
-    plt.show()
 
 
 # exit()

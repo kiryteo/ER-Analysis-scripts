@@ -1642,3 +1642,382 @@ plt.close()
 # plt.show()
 
 # junction_cc_mean_distplot_per_group('RTN', 29)
+
+
+def junction_nbrhood_mean_plot():
+    atl = calc_egfp_junction_intensity_nbrhood('ATL', 26, 'mCherry')
+    climp = calc_egfp_junction_intensity_nbrhood('Climp', 31, 'mCherry')
+    # # ctrl = calc_egfp_junction_intensity_nbrhood('Control', 31, 'EGFP')
+    rtn = calc_egfp_junction_intensity_nbrhood('RTN', 29, 'mCherry')
+    #
+    # sns.distplot(atl, label='ATL', hist=False)
+    # sns.distplot(climp, label='Climp', hist=False)
+    # # sns.distplot(ctrl, label='Control', hist=False)
+    # sns.distplot(rtn, label='RTN', hist=False)
+    #
+
+    df = pd.DataFrame()
+    df['Values'] = pd.Series(np.concatenate((atl, climp, rtn)))
+    # df['ids'] = pd.Series(np.concatenate((np.arange(1, len(atl)+1), np.arange(1, len(climp)+1), np.arange(1, len(ctrl)+1), np.arange(1, len(rtn)+1))))
+    df['Group'] = pd.Series(np.concatenate((['ATL'] * len(atl), ['Climp'] * len(climp), ['RTN'] * len(rtn))))
+    #
+    sns.swarmplot(data=df, y='Group', x='Values')
+
+    plt.suptitle('mCherry deposit in isolated reference junction 3x3 neighbourhood across conditions', fontsize=16)
+    # # plt.title('Variance of junction CC mean per patch over 100 frames', fontsize=14)
+    plt.title('Mean Intensity per junction neighbourhood', fontsize=14)
+    # plt.xlabel('mCherry intensity mean values (3x3)', fontsize=12)
+    # plt.legend()
+    plt.show()
+
+def junction_nbrhood_mean_plot():
+    atl = calc_egfp_junction_intensity_nbrhood('ATL', 26, 'mCherry')
+    climp = calc_egfp_junction_intensity_nbrhood('Climp', 31, 'mCherry')
+    # # ctrl = calc_egfp_junction_intensity_nbrhood('Control', 31, 'EGFP')
+    rtn = calc_egfp_junction_intensity_nbrhood('RTN', 29, 'mCherry')
+    #
+    # sns.distplot(atl, label='ATL', hist=False)
+    # sns.distplot(climp, label='Climp', hist=False)
+    # # sns.distplot(ctrl, label='Control', hist=False)
+    # sns.distplot(rtn, label='RTN', hist=False)
+    #
+
+    df = pd.DataFrame()
+    df['Values'] = pd.Series(np.concatenate((atl, climp, rtn)))
+    # df['ids'] = pd.Series(np.concatenate((np.arange(1, len(atl)+1), np.arange(1, len(climp)+1), np.arange(1, len(ctrl)+1), np.arange(1, len(rtn)+1))))
+    df['Group'] = pd.Series(np.concatenate((['ATL'] * len(atl), ['Climp'] * len(climp), ['RTN'] * len(rtn))))
+    #
+    sns.swarmplot(data=df, y='Group', x='Values')
+
+    plt.suptitle('mCherry deposit in isolated reference junction 3x3 neighbourhood across conditions', fontsize=16)
+    # # plt.title('Variance of junction CC mean per patch over 100 frames', fontsize=14)
+    plt.title('Mean Intensity per junction neighbourhood', fontsize=14)
+    # plt.xlabel('mCherry intensity mean values (3x3)', fontsize=12)
+    # plt.legend()
+    plt.show()
+
+def junction_cc_mean_plot():
+    atl = calc_egfp_deposit('ATL', 'mCherry', 26, 'iso')
+
+    climp = calc_egfp_deposit('Climp', 'mCherry', 31, 'iso')
+    # ctrl = calc_egfp_deposit('Control', 'EGFP', 31, 'iso')
+    rtn = calc_egfp_deposit('RTN', 'mCherry', 29, 'iso')
+
+    # print(len(atl))
+    # print(len(climp))
+    # # print(len(ctrl))
+    # print(len(rtn))
+    #
+    # exit()
+
+    sns.distplot(atl, label='ATL', hist=False)
+    sns.distplot(climp, label='Climp', hist=False)
+    # sns.distplot(ctrl, label='Control', hist=False)
+    sns.distplot(rtn, label='RTN', hist=False)
+
+    # sns.boxplot(atl, label='ATL')
+    # sns.boxplot(climp, label='Climp')
+    # sns.boxplot(ctrl, label='Control')
+    # sns.boxplot(rtn, label='RTN')
+
+    # df = pd.DataFrame()
+    # df['Values'] = pd.Series(np.concatenate((atl, climp, ctrl, rtn)))
+    # df['ids'] = pd.Series(np.concatenate((np.arange(1, len(atl)+1), np.arange(1, len(climp)+1), np.arange(1, len(ctrl)+1), np.arange(1, len(rtn)+1))))
+    # df['Group'] = pd.Series(np.concatenate((['ATL'] * len(atl), ['Climp'] * len(climp), ['Control'] * len(ctrl), ['RTN'] * len(rtn))))
+    # #
+    # # sns.boxplot(data=df, y='Group', x='Values')
+    # sns.scatterplot(data=df, x='ids', y='Values', hue='Group', style='Group')
+
+    plt.suptitle('mCherry deposit in isolated region junction CCs across conditions', fontsize=16)
+    # plt.title('Variance of junction CC mean per patch over 100 frames', fontsize=14)
+    plt.title('Mean Intensity per junction CC patch', fontsize=14)
+    # plt.xlabel('EGFP intensity mean values', fontsize=12)
+    plt.legend()
+    plt.show()
+
+def plot_per_movie_junction_dist():
+    ATL_iso, ATL_fuz = per_movie_num_junctions('ATL', 26)
+    Climp_iso, Climp_fuz = per_movie_num_junctions('Climp', 31)
+    Ctrl_iso, Ctrl_fuz = per_movie_num_junctions('Control', 31)
+    RTN_iso, RTN_fuz = per_movie_num_junctions('RTN', 29)
+
+    # sns.distplot(ATL_iso, hist=False, label='atl_iso')
+    sns.distplot(ATL_fuz, hist=False, label='atl_fuz')
+    # sns.distplot(Climp_iso, hist=False, label='climp_iso')
+    sns.distplot(Climp_fuz, hist=False, label='climp_fuz')
+    # sns.distplot(Ctrl_iso, hist=False, label='control_iso')
+    sns.distplot(Ctrl_fuz, hist=False, label='control_fuz')
+    # sns.distplot(RTN_iso, hist=False, label='rtn_iso')
+    sns.distplot(RTN_fuz, hist=False, label='rtn_fuz')
+
+    # and fuzzy region
+    # (iso: isolated, fuz: fuzzy)
+    plt.title('Distribution of fuzzy region junctions across conditions ', fontsize=16)
+    plt.xlabel('Number of junctions (per movie)')
+    plt.legend()
+
+    plt.show()
+
+def plot_per_movie_junction_area_dist():
+    ATL_iso, ATL_fuz = per_movie_junctions_area('ATL', 26)
+    Climp_iso, Climp_fuz = per_movie_junctions_area('Climp', 31)
+    Ctrl_iso, Ctrl_fuz = per_movie_junctions_area('Control', 31)
+    RTN_iso, RTN_fuz = per_movie_junctions_area('RTN', 29)
+
+    sns.distplot(ATL_iso, hist=False, label='atl_iso_area')
+    # sns.distplot(ATL_fuz, hist=False, label='atl_fuz_area')
+    sns.distplot(Climp_iso, hist=False, label='climp_iso_area')
+    # sns.distplot(Climp_fuz, hist=False, label='climp_fuz_area')
+    sns.distplot(Ctrl_iso, hist=False, label='control_iso_area')
+    # sns.distplot(Ctrl_fuz, hist=False, label='control_fuz_area')
+    sns.distplot(RTN_iso, hist=False, label='rtn_iso_area')
+    # sns.distplot(RTN_fuz, hist=False, label='rtn_fuz_area')
+
+    # and fuzzy region
+    # (iso: isolated, fuz: fuzzy)
+    # plt.title('Distribution of fuzzy region junctions across conditions ', fontsize=16)
+    plt.title('Distribution of isolated region area across conditions ', fontsize=16)
+    plt.xlabel('Region area values (per movie)')
+    plt.legend()
+
+    plt.show()
+
+def fuz_isolated_junctions(group, series_num):
+    nps, skdata = get_all_junc(group, series_num)
+
+    nps = np.array(nps)
+    skdata = np.array(skdata)
+
+    spread_img = np.zeros((128, 128))
+    for each in skdata:
+        spread_img[each[0], each[1]] = 255.
+
+    # plt.imshow(spread_img)
+    # plt.show()
+    #
+    # exit()
+
+    labelled_img = label(spread_img, connectivity=2)
+
+    # plt.imshow(labelled_img)
+    # plt.show()
+    #
+    # exit()
+
+    regions = regionprops(labelled_img)
+
+    # cc_list = []
+    # for idx in range(1, labelled_img.max()):
+    #     lab_i = props[idx].label
+
+    cc_area_dict = {idx: props.area for idx, props in enumerate(regions)}
+    # print(cc_area_dict)
+
+    # exit()
+
+    num_components = np.unique(labelled_img)
+
+    label_vals, assigned_components = get_ref_junc_per_CC_id(nps, labelled_img)
+
+    unassigned_cc_dict = get_uncertain_junctions(labelled_img, skdata, num_components, assigned_components)
+
+    isolated_junc = []
+    isolated_junc_area = []
+    fuzzy_junc = []
+    fuzzy_junc_area = []
+    for k, v in label_vals.items():
+        if k != 0:
+            if len(v) == 1:
+                isolated_junc.append(v[0])
+                isolated_junc_area.append(cc_area_dict[k])
+            else:
+                fuzzy_junc.append(v)
+                fuzzy_junc_area.append(cc_area_dict[k])
+
+    print(isolated_junc_area)
+    print(fuzzy_junc_area)
+
+    unknown_junc = [v for k, v in unassigned_cc_dict.items()]
+    iso = np.array(isolated_junc)
+
+    fuz = list(itertools.chain.from_iterable(fuzzy_junc))
+    fuz = np.array(fuz)
+
+    unk = list(itertools.chain.from_iterable(unknown_junc))
+    unk = np.array(unk)
+
+    # img = imageio.imread(
+    #     '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc.png')
+
+    for i in range(100):
+        plt.axis('off')
+        if group == 'Control':
+            img = imageio.imread(confocal_data_path + f'{group}/files/img_{series_num}_decon_t0{i:02d}.tif')
+
+        else:
+            img = imageio.imread(confocal_data_path + f'{group}/files/{group[0]}{series_num}_decon_t0{i:02d}_ch00.tif')
+
+        img = (img - img.min()) / (img.max() - img.min())
+        plt.imshow(img, cmap='gray')
+        plt.plot(iso[:, 1], iso[:, 0], 'o', markerfacecolor='None', markeredgecolor='red')
+        if len(fuz) > 0:
+            plt.plot(fuz[:, 1], fuz[:, 0], 'o', markerfacecolor='None', markeredgecolor='blue')
+        plt.plot(unk[:, 1], unk[:, 0], 'o', markerfacecolor='None', markeredgecolor='green')
+        plt.plot(skdata[:, 1], skdata[:, 0], 'x', markerfacecolor='None', markeredgecolor='yellow')
+        plt.show()
+        # if group == 'Control':
+        #     plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junc_types_movies/Ct%s_decon_t0%s_ch00.png'%(f'{group}', f'{series_num}', f'{i:02d}'), bbox_inches='tight', pad_inches=0)
+        # else:
+        #     plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junc_types_movies/%s_decon_t0%s_ch00.png'%(f'{group}', f'{group[0]}{series_num}', f'{i:02d}'), bbox_inches='tight', pad_inches=0)
+        # plt.close()
+
+
+# fuz_isolated_junctions('Control', 13)
+
+def plot_junc_spread(group, n1, n2, num_series):
+    fig = plt.gcf()
+    ax = fig.gca()
+    # gr = cm.Greens(np.linspace(n3arr.min()[0], n3arr.max()[0], num=len(n3)))
+    # mcmap = mcolors.LinearSegmentedColormap.from_list('mcmap', gr)
+    img = imageio.imread((confocal_data_path + f'{group}/new_op_jul/er_mean/{group.lower()}{num_series}_er_mean.png'))
+
+    plt.imshow(img, cmap='gray', interpolation='none')
+    # plt.plot(n2[:, 1], n2[:, 0], 'b.')
+    plt.scatter(n2[:, 1], n2[:, 0], c=n3val, cmap='Blues', marker='o')
+    # plt.colorbar()
+    plt.plot(n1[:, 1], n1[:, 0], 'o', markerfacecolor='None', markeredgecolor='red', mew=1.5)  # , ms=4)
+    # plt.plot(n1[:, 1], n1[:, 0], 'r.')
+    # c = Circle((n1[0, 1], n1[0, 0]), radius=3, linewidth=2, facecolor='none', edgecolor='green', alpha=0.7)
+    # ax.add_patch(c)
+    # plt.plot(n2[:, 1], n2[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue')
+
+    for i, each in enumerate(n1):
+        c1 = plt.Circle((n1[i, 1], n1[i, 0]), 3, color='r', fill=False, linestyle='--')
+        ax.add_patch(c1)
+        # if n5[i] > med:
+        s = '(' + '%.2f' % n5[i] + ',' + str(n6[i]) + ')'
+        # s = '(' + str(n1[i,1]) + ',' + str(n1[i,0]) + ',' + '%.2f'%n5[i] + ',' + str(n6[i]) + ')'
+        ax.text(n1[i, 1], n1[i, 0], s, c='yellow')
+
+    plt.axis('off')
+    plt.suptitle(f'Climp series {num_series} junctions movement variance')
+    plt.title('Variance of list with distances for matched junctions per frame w.r.t. reference frame junctions')
+    # plt.savefig('RTN1_junc_spread.png', bbox_inches='tight', pad_inches=0)
+    plt.show()
+
+
+# plot_junc_spread('Climp', n1, n2, 3)
+# exit()
+
+def inter_channel_correlation_runner():
+    atl_data = inter_channel_correlation(atl_egfp, atl_mc)
+    climp_data = inter_channel_correlation(climp_egfp, climp_mc)
+    rtn_data = inter_channel_correlation(rtn_egfp, rtn_mc)
+
+    sns.distplot(atl_data, label='ATL')
+    sns.distplot(climp_data, label='Climp')
+    sns.distplot(rtn_data, label='RTN')
+    plt.legend()
+    plt.title('Per patch correlation coefficient between EGFP and mCherry channels', fontsize=16)
+    plt.xlabel('Correlation coefficient', fontsize=12)
+    plt.show()
+
+def graph_node_connector(group, series):
+    global rel
+    pref = 'Ct' if group == 'Control' else group[0]
+
+    # projection frame analysis
+    # path = '{confocal_data_path}Climp/new_op_jul/er_mean_proc/climp16_er_mean_proc_enhance_skel.png'
+    path = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance_skel.png'
+
+    # path_frame = f'{confocal_data_path}{group}/new_op_jul/skel/{group[0]}{series}/{group[0]}{series}_decon_t006_ch00_skel.png'
+
+
+    path_proc_enh = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc_enhance.png'
+
+    path_er = f'{confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png'
+
+    path_er_proc = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc.png'
+
+    # all junction from the graph with degree > 2
+    junc_analysis = JA(confocal_data_path)
+    graph = junc_analysis.skel_to_graph(path)
+    junctions = junc_analysis.get_junctions(graph)
+
+    relevant_nodes = np.array(junctions)
+
+    fin_dict, g_nodes_array = gcm.get_updated_neighbor_dict(graph)
+
+    temp_graph = copy.deepcopy(graph)
+
+    # er_proc = imageio.imread(path_er_proc)
+    # er_proc_bg = np.where(er_proc==0)
+
+    er_input = imageio.imread(path_er)
+    cost_arr = np.ones((128, 128))
+    # cost_arr[er_proc_bg] = 0
+
+    for node in dict(graph.degree()):
+
+        # access the first element of graph.neighbors
+        neighbor = next(iter(graph.neighbors(node)))
+
+        gcm.connect_nodes(er_input, temp_graph, node, neighbor, fin_dict, cost_arr, g_nodes_array)
+
+    tgraph = copy.deepcopy(temp_graph)
+    for node in temp_graph.nodes():
+        gcm.process_node(tgraph, node)
+
+    tgraph2 = copy.deepcopy(tgraph)
+    for node in tgraph.nodes():
+        gcm.process_node(tgraph2, node)
+
+
+    # for (st, end) in tgraph2.edges():
+    #     print(st, end)
+    #
+    #
+    exclude_edges = []
+    for (node1, node2) in tgraph2.edges():
+        if tgraph2.degree(node1) == 1 or tgraph2.degree(node2) == 1:
+            exclude_edges.append((node1, node2))
+    #
+    # print(exclude_edges)
+    # exit()
+
+    ### Plotting the updated graph
+    deg_one_nodes, deg_two_nodes, high_deg_nodes = gcm.get_updated_degree_nodes(tgraph2)
+
+    er_mean = imageio.imread(
+        f'{confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png')
+    plt.imshow(er_mean, cmap='gray')
+
+    for (start_node, end_node) in tgraph2.edges():
+        if tgraph2[start_node][end_node][0]:
+            ps = tgraph2[start_node][end_node][0]['pts']
+            if (start_node, end_node) not in exclude_edges:
+                plt.plot(ps[:, 1], ps[:, 0], 'red')
+            else:
+                plt.plot(ps[:, 1], ps[:, 0], 'green')
+        # elif temp_graph[start_node][end_node][1]:
+        #     ps = tgraph2[start_node][end_node][1]['pts']
+        #     plt.plot(ps[:, 1], ps[:, 0], 'red')
+
+    if len(deg_one_nodes) != 0:
+        plt.plot(deg_one_nodes[:, 1], deg_one_nodes[:, 0], 'o', markerfacecolor='yellow', markeredgecolor='yellow',
+                 mew=0.5, markersize=3)
+
+    # if len(deg_two_nodes) != 0:
+    #     plt.plot(deg_two_nodes[:, 1], deg_two_nodes[:, 0], 'o', markerfacecolor='magenta', markeredgecolor='magenta',
+    #              mew=0.5, markersize=3)
+
+    if len(high_deg_nodes) != 0:
+        plt.plot(high_deg_nodes[:, 1], high_deg_nodes[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue',
+                 mew=0.5, markersize=3)
+
+    # plt.axis('off')
+    # plt.savefig(f'graphs/connected/repair/{group}_{series}_edge_graph_projection_connected_final_v2', bbox_inches='tight', pad_inches=0)
+    # plt.savefig(f'graphs/connected/{group}_{series}_v2-2', bbox_inches='tight', pad_inches=0)
+    # plt.close()
+    # #
+    plt.show()

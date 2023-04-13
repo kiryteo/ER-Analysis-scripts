@@ -15,6 +15,77 @@ confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 # # plt.show()
 # exit()
 
+def junction_crops_creator(group, ser_num, junc_id, channel):
+    nps, skdata, labelled_img = junc_analysis.label_junctions(group, ser_num)
+
+    label_vals, unassigned_cc_dict = junc_analysis.separate_junc_cc(nps, skdata, labelled_img)
+    iso, fuz, unk = junc_analysis.get_junction_areas(label_vals, unassigned_cc_dict)
+
+    iso_cc = get_cc_ids(labelled_img, iso)
+    iso_cc_coords = {each: np.where(labelled_img == each) for each in iso_cc}
+
+    if channel == 'egfp':
+        ch = 0
+    else:
+        ch = 1
+
+    for i in range(100):
+        file = get_std_img(
+            f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/{group[0]}{ser_num}_decon_t0{i:02d}_ch0{ch}.tif')
+
+        # file_mch = get_std_img(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/files/{group[0]}{ser_num}_decon_t0{i:02d}_ch01.tif')
+
+        # file = get_std_img(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/junction_crops/S1_j15_29_74_CC/A{ser_num}_decon_t0{i:02d}_ch00.png')
+
+        regions = regionprops(labelled_img)
+        # print(regions[junc_id].label)
+        #
+        # exit()
+
+        x, y = iso[junc_id][0], iso[junc_id][1]
+
+        # print(x, y)
+        # exit()
+
+        # fig = Figure()
+        # canvas = FigureCanvas(fig)
+        # ax = fig.gca()
+
+        # contour code
+        j = get_label_id(regions, iso, junc_id)
+        label_i = regions[j].label
+
+        contour = measure.find_contours(labelled_img == label_i, 0.8)[0]
+        cntrY, cntrX = contour.T
+
+        # crp_egfp = file_egfp[x-5:x+5, y-5:y+5]
+        # crp_mch = file_mch[x-5:x+5, y-5:y+5]
+
+        plt.axis('off')
+        # plt.imshow(crp_file, cmap='gray')
+
+        plt.imshow(file, cmap='gray', interpolation=None)
+        plt.plot(cntrX, cntrY, color='red', linewidth=0.0001)
+
+        # fig = plt.gca()
+        # crp = fig[x-5:x+5, y-5:y+5]
+
+        # plt.imshow(crp_file)
+        # plt.title(f't={i}')
+        # fig = plt.gca(figsize=(8,10))
+
+        plt.savefig(
+            f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/junction_crops/S{ser_num}_j{junc_id}_{x}_{y}_CC_crops/{group[0]}{ser_num}_decon_t0{i:02d}_ch0{ch}.png',
+            bbox_inches='tight', pad_inches=0)
+        plt.close()
+        # plt.show()
+
+        # imageio.imsave(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/junction_crops/S{ser_num}_junc{junc_id}_{x}_{y}/{group[0]}{ser_num}_decon_t0{i:02d}_ch00.png', crp_egfp)
+        # imageio.imsave(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/junction_crops/S{ser_num}_junc{junc_id}_{x}_{y}/{group[0]}{ser_num}_decon_t0{i:02d}_ch01.png', crp_mch)
+
+
+# junction_crops_creator('ATL', 1, 15, 'mCherry')
+
 
 def junc_spread_comparison():
     """
@@ -198,4 +269,225 @@ def runner_viz_regionprops():
     viz_regionprops(lab, img)
 
 # runner_viz_regionprops()
+# exit()
+
+def crop_img():
+    mean_img = confocal_data_path + 'ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
+
+    newps = get_junctions(mean_img)
+
+    nps = [[each[0], each[1]] for each in newps]
+    nps = np.array(nps)
+    for i in range(100):
+        img = imageio.imread(confocal_data_path + f'ATL/new_op_jul/A1_junc_viz/j48_skel/ATL1_t{i:02d}.png')
+
+        # plt.imshow(img)
+        # plt.show()
+
+        # y = nps[74,1]
+        # x = nps[74,0]
+        # #
+        # # # print(y, x)
+        cimg = img[137 - 30:137 + 30, 143 - 30:143 + 30]
+
+        plt.axis('off')
+        plt.title(f't={i}')
+        plt.imshow(cimg, interpolation='nearest', aspect='auto')
+        plt.savefig(confocal_data_path + f'ATL/new_op_jul/A1_junc_viz/j48_skel/crops/ATL1_t{i:02d}.png',
+                    bbox_inches='tight', pad_inches=0)
+
+        # imageio.imsave('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/A1_junc_viz/j47_skel/crops/ATL1_t%s.png'%f'{i:02d}', cimg)
+        # plt.close()
+        plt.show()
+
+def plot_junc_areas_og(group, series_num, labelled_img, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords, unk_cc_coords):
+    for i in range(1):
+        plt.axis('off')
+        if group == 'Control':
+            img = imageio.imread(f'{confocal_data_path}{group}/files/img_{series_num}_decon_t0{i:02d}.tif')
+        else:
+            img = imageio.imread(f'{confocal_data_path}{group}/files/{group[0]}{series_num}_decon_t0{i:02d}_ch00.tif')
+
+        img = (img - img.min()) / (img.max() - img.min())
+
+        # resc_img = skimage.transform.rescale(img, 2, anti_aliasing=False)
+
+        # plt.imshow(resc_img, cmap='gray', interpolation=None)
+
+        plt.imshow(img, cmap='gray', interpolation=None)
+
+        # plt.plot(iso[:, 1], iso[:, 0], 's', markerfacecolor='None', markeredgecolor='red')
+
+        # plt.plot(skdata[:, 1], skdata[:, 0], '.', markerfacecolor='None', markeredgecolor='green', mew=0.4)
+        for k, v in iso_cc_coords.items():
+            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='red', mew=0.4)
+        #
+        for k, v in fuz_cc_coords.items():
+            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='blue', mew=0.4)
+        #
+        for k, v in unk_cc_coords.items():
+            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='green', mew=0.4)
+        #
+        if len(fuz) > 0:
+            plt.plot(fuz[:, 1], fuz[:, 0], 'o', markerfacecolor='None', markeredgecolor='white', mew=0.6)
+        #
+        # plt.plot(unk[:, 1], unk[:, 0], 'o', markerfacecolor='None', markeredgecolor='green')
+        plt.plot(iso[:, 1], iso[:, 0], 'o', markerfacecolor='None', markeredgecolor='yellow', mew=0.6)
+
+        #######################################
+
+        # for k, v in iso_cc_coords.items():
+        #     plt.plot(v[1], v[0], 's', markerfacecolor='magenta', markeredgecolor='magenta', mew=0.35, ms=20)
+        #
+        # for k, v in fuz_cc_coords.items():
+        #     plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='blue', mew=0.35)
+        #
+        # for k, v in unk_cc_coords.items():
+        #     plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='green', mew=0.5)
+        #
+        # if len(fuz) > 0:
+        #     plt.plot(fuz[:, 1], fuz[:, 0], '.', markerfacecolor='None', markeredgecolor='white', mew=0.6)
+
+        # plt.plot(unk[:, 1], unk[:, 0], 'o', markerfacecolor='None', markeredgecolor='green')
+        # plt.plot(iso[:, 1], iso[:, 0], '.', markerfacecolor='None', markeredgecolor='yellow', mew=0.6)
+        # plt.plot(iso[:, 1], iso[:, 0], '.', markerfacecolor='None', markeredgecolor='yellow', mew=0.6)
+
+        # plots contours
+        # for index in range(1, labelled_img.max()):
+        #     label_i = regions[index].label
+        #     contour = measure.find_contours(labelled_img == label_i, 0.8)[0]
+        #     y, x = contour.T
+        #     plt.plot(x, y, color='cyan')
+
+        # for index in range(1, op.max()):
+        #     label_i = regions[index].label
+        #     contour = measure.find_contours(op == label_i, 0.8)[0]
+        #     y, x = contour.T
+        #     plt.plot(x, y, color='cyan')
+
+        # plt.axis('off')
+        # plt.savefig('Climp_series12_junc_representation_iso_fuz_unk_2_new_colors', bbox_inches='tight', pad_inches=0, dpi=700)
+        # plt.close()
+
+        plt.show()
+
+# def plot_junc_areas(group, series_num, iso, fuz, unk, labelled_img):
+def plot_junc_areas(group, series_num, labelled_img, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords, unk_cc_coords):
+    regions = regionprops(labelled_img)
+    # regions = regionprops(op)
+
+    for i in range(1):
+        plt.axis('off')
+        if group == 'Control':
+            img = imageio.imread(f'{confocal_data_path}{group}/files/img_{series_num}_decon_t0{i:02d}.tif')
+        else:
+            img = imageio.imread(f'{confocal_data_path}{group}/files/{group[0]}{series_num}_decon_t0{i:02d}_ch00.tif')
+
+        img = (img - img.min()) / (img.max() - img.min())
+
+        resc_img = skimage.transform.rescale(img, 2, anti_aliasing=False)
+
+        plt.imshow(resc_img, cmap='gray', interpolation=None)
+        # plt.plot(iso[:, 1], iso[:, 0], 's', markerfacecolor='None', markeredgecolor='red')
+
+        # plt.plot(skdata[:, 1], skdata[:, 0], '.', markerfacecolor='None', markeredgecolor='green', mew=0.4)
+        # for k, v in iso_cc_coords.items():
+        #     plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='green', mew=0.4)
+        #
+        # for k, v in fuz_cc_coords.items():
+        #     plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='yellow', mew=0.4)
+        #
+        # for k, v in unk_cc_coords.items():
+        #     plt.plot(v[1], v[0], '.', m
+        for k, v in fuz_cc_coords.items():
+            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='blue', mew=0.35)
+
+        for k, v in unk_cc_coords.items():
+            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='green', mew=0.5)
+
+        if len(fuz) > 0:
+            plt.plot(fuz[:, 1], fuz[:, 0], '.', markerfacecolor='None', markeredgecolor='white', mew=0.6)
+
+        # plt.plot(unk[:, 1], unk[:, 0], 'o', markerfacecolor='None', markeredgecolor='green')
+        # plt.plot(iso[:, 1], iso[:, 0], '.', markerfacecolor='None', markeredgecolor='yellow', mew=0.6)
+        plt.plot(iso[:, 1], iso[:, 0], '.', markerfacecolor='None', markeredgecolor='yellow', mew=0.6)
+
+        # plots contours
+        # for index in range(1, labelled_img.max()):
+        #     label_i = regions[index].label
+        #     contour = measure.find_contours(labelled_img == label_i, 0.8)[0]
+        #     y, x = contour.T
+        #     plt.plot(x, y, color='cyan')
+
+        for index in range(1, op.max()):
+            label_i = regions[index].label
+            contour = measure.find_contours(op == label_i, 0.8)[0]
+            y, x = contour.T
+            plt.plot(x, y, color='cyan')
+
+        # plt.axis('off')
+        # plt.savefig('Climp_series12_junc_representation_iso_fuz_unk_2_new_colors', bbox_inches='tight', pad_inches=0, dpi=700)
+        # plt.close()
+
+        plt.show()arkerfacecolor='None', markeredgecolor='pink', mew=0.4)
+        #
+        # if len(fuz) > 0:
+        #     plt.plot(fuz[:, 1], fuz[:, 0], 'o', markerfacecolor='None', markeredgecolor='blue', mew=0.6)
+        #
+        # # plt.plot(unk[:, 1], unk[:, 0], 'o', markerfacecolor='None', markeredgecolor='green')
+        # plt.plot(iso[:, 1], iso[:, 0], 'o', markerfacecolor='None', markeredgecolor='red', mew=0.6)
+
+        for k, v in iso_cc_coords.items():
+            plt.plot(v[1], v[0], 's', markerfacecolor='magenta', markeredgecolor='magenta', mew=0.35, ms=20)
+
+        for k, v in fuz_cc_coords.items():
+            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='blue', mew=0.35)
+
+        for k, v in unk_cc_coords.items():
+            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='green', mew=0.5)
+
+        if len(fuz) > 0:
+            plt.plot(fuz[:, 1], fuz[:, 0], '.', markerfacecolor='None', markeredgecolor='white', mew=0.6)
+
+        # plt.plot(unk[:, 1], unk[:, 0], 'o', markerfacecolor='None', markeredgecolor='green')
+        # plt.plot(iso[:, 1], iso[:, 0], '.', markerfacecolor='None', markeredgecolor='yellow', mew=0.6)
+        plt.plot(iso[:, 1], iso[:, 0], '.', markerfacecolor='None', markeredgecolor='yellow', mew=0.6)
+
+        # plots contours
+        # for index in range(1, labelled_img.max()):
+        #     label_i = regions[index].label
+        #     contour = measure.find_contours(labelled_img == label_i, 0.8)[0]
+        #     y, x = contour.T
+        #     plt.plot(x, y, color='cyan')
+
+        for index in range(1, op.max()):
+            label_i = regions[index].label
+            contour = measure.find_contours(op == label_i, 0.8)[0]
+            y, x = contour.T
+            plt.plot(x, y, color='cyan')
+
+        # plt.axis('off')
+        # plt.savefig('Climp_series12_junc_representation_iso_fuz_unk_2_new_colors', bbox_inches='tight', pad_inches=0, dpi=700)
+        # plt.close()
+
+        plt.show()
+
+def crop_cc_from_saved():
+    for i in range(100):
+        img = imageio.imread(
+            f'/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/junction_crops/S13_j10_27_48_CC_crops/R13_decon_t0{i:02d}_ch01.png')
+        x = 80
+        y = 140
+        img = img[:, :, :3]
+        op = img[x - 8:x + 8, y - 8:y + 8]
+        plt.axis('off')
+        plt.imshow(op, cmap='gray', interpolation=None)
+        plt.savefig(
+            f'/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/junction_crops/S13_j10_cc_area_v2/R13_decon_t0{i:02d}_ch01.png',
+            bbox_inches='tight', pad_inches=0)
+        plt.show()
+        # plt.close()
+
+
+# crop_cc_from_saved()
 # exit()
