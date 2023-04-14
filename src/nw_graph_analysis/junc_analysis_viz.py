@@ -44,13 +44,6 @@ def junction_crops_creator(group, ser_num, junc_id, channel):
 
         x, y = iso[junc_id][0], iso[junc_id][1]
 
-        # print(x, y)
-        # exit()
-
-        # fig = Figure()
-        # canvas = FigureCanvas(fig)
-        # ax = fig.gca()
-
         # contour code
         j = get_label_id(regions, iso, junc_id)
         label_i = regions[j].label
@@ -114,6 +107,9 @@ def junc_spread_comparison():
     # plt.title('Junction detection methods comparison (based on input)', fontsize=12)
     plt.show()
 
+junc_spread_comparison()
+exit()
+
 
 def junc_spread_display(group, num_series):
     """
@@ -126,7 +122,7 @@ def junc_spread_display(group, num_series):
         f'{confocal_data_path}{group}/new_op_jul/junctions/{group[0]}{num_series}_junc_mean.png')
 
     junc_mean_proj_img = imageio.imread(
-        f'{confocal_data_path}{group}/new_op_jul/junctions/{group[0]}{num_series}_proc_junc_mean.png'))
+        f'{confocal_data_path}{group}/new_op_jul/junctions/{group[0]}{num_series}_proc_junc_mean.png')
 
     init_proj_img_coords = np.where(init_mean_proj_img != 0)
     junc_proj_img_coords = np.where(junc_mean_proj_img != 0)
@@ -149,7 +145,7 @@ def junc_spread_display(group, num_series):
     # print(n1)
     # print(n2)
     img = imageio.imread(
-        f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc.png'))
+        f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc.png')
 
     plt.imshow(img)
     # plt.scatter(y1, x1, color='red')
@@ -429,7 +425,8 @@ def plot_junc_areas(group, series_num, labelled_img, iso, fuz, skdata, iso_cc_co
         # plt.savefig('Climp_series12_junc_representation_iso_fuz_unk_2_new_colors', bbox_inches='tight', pad_inches=0, dpi=700)
         # plt.close()
 
-        plt.show()arkerfacecolor='None', markeredgecolor='pink', mew=0.4)
+        plt.show()
+        #markerfacecolor='None', markeredgecolor='pink', mew=0.4)
         #
         # if len(fuz) > 0:
         #     plt.plot(fuz[:, 1], fuz[:, 0], 'o', markerfacecolor='None', markeredgecolor='blue', mew=0.6)
