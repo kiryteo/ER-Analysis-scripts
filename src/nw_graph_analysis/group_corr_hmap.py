@@ -21,6 +21,37 @@ import networkx as nx
 
 
 
+mean_skel = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_mean_proj/A5_mean.png')
+
+binarize_mean_skel = (mean_skel > 0).astype('int')
+# plt.imshow(binarize_mean_skel)
+# plt.show()
+
+skel = morphology.skeletonize(binarize_mean_skel)
+
+# Create a figure with two subplots
+fig, ax = plt.subplots(1, 2)
+
+# Plot the first image in the first subplot
+ax[0].imshow(mean_skel)
+ax[0].set_title('Image 1')
+
+# Plot the second image in the second subplot
+ax[1].imshow(binarize_mean_skel)
+ax[1].set_title('Image 2')
+
+# ax[2].imshow(skel)
+# ax[2].set_title('Image 3')
+
+# Show the figure
+plt.show()
+
+
+
+exit()
+
+
+
 import itertools
 l = ['ATL', 'Climp', 'RTN', 'Control']
 for i in itertools.combinations(l, 2):

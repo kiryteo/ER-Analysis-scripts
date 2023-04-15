@@ -19,9 +19,11 @@ import pickle as pkl
 
 from structure_extraction import node_connector, get_updated_degree_nodes
 from junction_analysis_modules import JunctionAnalysis as JA
-from junction_analysis import cc_area_measure, cc_signal_net_norm, get_per_CC_pixel_data
+from junction_analysis import cc_area_measure, cc_signal_net_norm, get_per_CC_pixel_data, get_mean_std_per_CC_pixel_data
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies'
+pickle_path_prefix = '/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/CC_junctions/'
+
 
 GROUP_PREF = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
 VALID_GROUPS = ['ATL', 'Climp', 'RTN', 'Control']
@@ -93,13 +95,13 @@ def per_CC_pixel_correlation(egfp_data, mch_data):
 
 
 def per_CC_pixel_variation(region):
-    atl_egfp = pkl.load(open(f'ATL_egfp_{region}_data.pkl', 'rb'))
-    climp_egfp = pkl.load(open(f'Climp_egfp_{region}_data.pkl', 'rb'))
-    rtn_egfp = pkl.load(open(f'RTN_egfp_{region}_data.pkl', 'rb'))
+    atl_egfp = pkl.load(open(f'{pickle_path_prefix}ATL_egfp_{region}_data.pkl', 'rb'))
+    climp_egfp = pkl.load(open(f'{pickle_path_prefix}Climp_egfp_{region}_data.pkl', 'rb'))
+    rtn_egfp = pkl.load(open(f'{pickle_path_prefix}RTN_egfp_{region}_data.pkl', 'rb'))
 
-    atl_mch = pkl.load(open(f'ATL_mch_{region}_data.pkl', 'rb'))
-    climp_mch = pkl.load(open(f'Climp_mch_{region}_data.pkl', 'rb'))
-    rtn_mch = pkl.load(open(f'RTN_mch_{region}_data.pkl', 'rb'))
+    atl_mch = pkl.load(open(f'{pickle_path_prefix}ATL_mch_{region}_data.pkl', 'rb'))
+    climp_mch = pkl.load(open(f'{pickle_path_prefix}Climp_mch_{region}_data.pkl', 'rb'))
+    rtn_mch = pkl.load(open(f'{pickle_path_prefix}RTN_mch_{region}_data.pkl', 'rb'))
 
     atl_corr = per_CC_pixel_correlation(atl_egfp, atl_mch)
     climp_corr = per_CC_pixel_correlation(climp_egfp, climp_mch)
@@ -111,64 +113,82 @@ def per_CC_pixel_variation(region):
         ['ATL'] * len(atl_corr), ['Climp'] * len(climp_corr), ['RTN'] * len(rtn_corr))))
     
 
-    # ax.set_ylim(-1, 1)
-
     ax = sns.boxenplot(data=df, x='Group', y='data_tubule_mean')
     # ax = sns.boxenplot(data=df, x='Replicate', y='data_tubule_mean', hue='Group', dodge=True)  # , yscale='log')
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
     # plt.show()
     # plt.yscale('log')
+    ax.set_ylim(-0.6, 1)
+    yt = ax.get_yticks()
+    yt = [f'{y:.2f}' for y in yt]
+    # ax.set_ylim([0.0, 0.5])
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
+    ax.set_yticklabels(yt, fontsize=18)
 
 
     box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
 
     statannot.add_stat_annotation(ax, x='Group', y='data_tubule_mean', data=df, box_pairs=box_pairs,
-                                  test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+                                  test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=20)
 
     region_name = 'Isolated' if region == 'iso' else 'Fuzzy'
     # ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
 
-    plt.suptitle(f'{region_name} CC, per junction correlation across conditions', fontsize=20)
-    plt.title('Correlation over 100 frames for each junction location within a CC', fontsize=18)
+    # plt.suptitle(f'{region_name} CC, per junction correlation across conditions', fontsize=20)
+    plt.title(f'Correlation between channels over 100 frames for each junction within {region_name} CC', fontsize=24)
     plt.grid(True)
-    plt.xlabel('Group', fontsize=18)
-    plt.ylabel('Cross-correlation value', fontsize=18)
+    plt.xlabel('Group', fontsize=24)
+    plt.ylabel('Cross-correlation value', fontsize=24)
     plt.show()
 
 
-# per_CC_pixel_variation('iso')
+per_CC_pixel_variation('iso')
+per_CC_pixel_variation('fuz')
+exit()
+# fpath = '/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/CC_junctions/ATL_egfp_iso_data.pkl'
+# atl_data = pkl.load(open(fpath, 'rb'))
+# print(len(atl_data))
+# print(len(atl_data[0]))
+# print(atl_data[0][0])
+# print(np.array(atl_data[0][0], dtype='f')/255.)
 # exit()
 
 
-def get_CC_variation(channel, region, measure):
-    atl_data = pkl.load(open(f'ATL_{channel}_{region}_data.pkl', 'rb'))
-    climp_data = pkl.load(open(f'Climp_{channel}_{region}_data.pkl', 'rb'))
-    rtn_data = pkl.load(open(f'RTN_{channel}_{region}_data.pkl', 'rb'))
-    if channel == 'egfp':
-        control_data = pkl.load(open(f'Control_{channel}_{region}_data.pkl', 'rb'))
-        control_mean, control_std = get_mean_std_per_CC_pixel_data(control_data)
 
-    atl_mean, atl_std = get_mean_std_per_CC_pixel_data(atl_data)
-    climp_mean, climp_std = get_mean_std_per_CC_pixel_data(climp_data)
-    rtn_mean, rtn_std = get_mean_std_per_CC_pixel_data(rtn_data)
+def get_CC_variation(channel, region, measure):
+    atl_data = pkl.load(open(f'{pickle_path_prefix}ATL_{channel}_{region}_data.pkl', 'rb'))
+    climp_data = pkl.load(open(f'{pickle_path_prefix}Climp_{channel}_{region}_data.pkl', 'rb'))
+    rtn_data = pkl.load(open(f'{pickle_path_prefix}RTN_{channel}_{region}_data.pkl', 'rb'))
+    if channel == 'egfp':
+        control_data = pkl.load(open(f'{pickle_path_prefix}Control_{channel}_{region}_data.pkl', 'rb'))
+        control_measure_data = get_mean_std_per_CC_pixel_data(control_data, measure)
+
+    atl_measure_data = get_mean_std_per_CC_pixel_data(atl_data, measure)
+    climp_measure_data = get_mean_std_per_CC_pixel_data(climp_data, measure)
+    rtn_measure_data = get_mean_std_per_CC_pixel_data(rtn_data, measure)
 
     df = pd.DataFrame()
     if channel == 'egfp':
-        df['data_tubule_mean'] = pd.Series(np.concatenate((atl_mean, climp_mean, rtn_mean, control_mean)))
+        df['data_tubule_mean'] = pd.Series(np.concatenate((atl_measure_data, climp_measure_data, rtn_measure_data, control_measure_data)))
         df['Group'] = pd.Series(np.concatenate((
-            ['ATL'] * len(atl_std), ['Climp'] * len(climp_std), ['RTN'] * len(rtn_std), ['Control'] * len(control_std))))
+            ['ATL'] * len(atl_measure_data), ['Climp'] * len(climp_measure_data), ['RTN'] * len(rtn_measure_data), ['Control'] * len(control_measure_data))))
     else:
-        df['data_tubule_mean'] = pd.Series(np.concatenate((atl_std, climp_std, rtn_std)))
+        df['data_tubule_mean'] = pd.Series(np.concatenate((atl_measure_data, climp_measure_data, rtn_measure_data)))
         df['Group'] = pd.Series(np.concatenate((
-            ['ATL'] * len(atl_std), ['Climp'] * len(climp_std), ['RTN'] * len(rtn_std))))
+            ['ATL'] * len(atl_measure_data), ['Climp'] * len(climp_measure_data), ['RTN'] * len(rtn_measure_data))))
     
 
 
     ax = sns.boxenplot(data=df, x='Group', y='data_tubule_mean')
     # ax = sns.boxenplot(data=df, x='Replicate', y='data_tubule_mean', hue='Group', dodge=True)  # , yscale='log')
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
+    yt = ax.get_yticks()
+    yt = [f'{y:.2f}' for y in yt]
+    ax.set_ylim([0.0, 0.5])
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
+    ax.set_yticklabels(yt, fontsize=18)
+    # sns.set(font_scale=2)
     # plt.show()
-    plt.yscale('log')
+    # plt.yscale('log')
+
 
     if channel == 'egfp':
         box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')]
@@ -176,22 +196,30 @@ def get_CC_variation(channel, region, measure):
         box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
 
     statannot.add_stat_annotation(ax, x='Group', y='data_tubule_mean', data=df, box_pairs=box_pairs,
-                                  test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+                                  test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=20)
 
     region_name = 'Isolated' if region == 'iso' else 'Fuzzy'
     measure_name = 'Mean' if measure == 'mean' else 'Standard Deviation'
     ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
 
-    plt.suptitle(f'{region_name} CC, per junction {measure_name} across conditions ({ch_name})', fontsize=20)
-    plt.title(f'{measure_name} over 100 frames for each junction location within a CC', fontsize=18)
+    # plt.suptitle(f'{region_name} CC, per junction {measure_name} across conditions ({ch_name})', fontsize=20)
+    # plt.title(f'{measure_name} over 100 frames for each junction location within a CC', fontsize=18)
+    plt.title(f'{measure_name} over 100 frames for each junction within a CC ({region_name} CCs, {ch_name})', fontsize=24)
     plt.grid(True)
-    plt.xlabel('Group', fontsize=18)
-    plt.ylabel(f'Junction Intensity {measure_name}, log scale', fontsize=18)
+    plt.xlabel('Group', fontsize=24)
+    plt.ylabel(f'Junction Intensity {measure_name}', fontsize=24)
     plt.show()
 
 
+# get_CC_variation('egfp', 'iso', 'mean')
+# get_CC_variation('egfp', 'fuz', 'mean')
+# get_CC_variation('mch', 'iso', 'mean')
+# get_CC_variation('mch', 'fuz', 'mean')
+get_CC_variation('egfp', 'iso', 'std')
+get_CC_variation('egfp', 'fuz', 'std')
 # get_CC_variation('mch', 'iso', 'std')
-# exit()
+# get_CC_variation('mch', 'fuz', 'std')
+exit()
 
 
 
@@ -1214,13 +1242,41 @@ def full_data_variation_plots(region, measure, channel):
     plt.ylabel(f'{measure_name} value per sequence', fontsize=18)
     plt.show()
 
+def get_group_box_pairs(channel):
+    groups = (
+        ['ATL', 'Climp', 'RTN']
+        if channel == 'mch'
+        else ['ATL', 'Climp', 'RTN', 'Control']
+    )
+    return list(itertools.combinations(groups, 2))
 
-def full_data_variation_plots_all(region, measure, channel):
-    atl_egfp, atl_mch = junc_line_mean_std(group, repl_start, repl_end, region, measure)
+
+def full_data_variation_plots_all(region, measure):
+    atl_egfp, atl_mch = junc_line_mean_std('ATL', 1, 26, region, measure)
+    climp_egfp, climp_mch = junc_line_mean_std('Climp', 1, 31, region, measure)
+    rtn_egfp, rtn_mch = junc_line_mean_std('RTN', 1, 29, region, measure)
+    control_egfp, control_mch = junc_line_mean_std('Control', 1, 31, region, measure)
     # atl_egfp = junc_line_mean_std('ATL', 1, 27, region, measure)
     # climp_egfp = junc_line_mean_std('Climp', 1, 32, region, measure)
     # rtn_egfp = junc_line_mean_std('RTN', 1, 30, region, measure)
     # control_egfp = junc_line_mean_std('Control', 1, 32, region, measure)
+
+    with open(f'CC_mean_atl_egfp_{region}_{measure}.pkl', 'wb') as f:
+        pickle.dump(atl_egfp, f)
+    with open(f'CC_mean_climp_egfp_{region}_{measure}.pkl', 'wb') as f:
+        pickle.dump(climp_egfp, f)
+    with open(f'CC_mean_rtn_egfp_{region}_{measure}.pkl', 'wb') as f:
+        pickle.dump(rtn_egfp, f)
+    with open(f'CC_mean_control_egfp_{region}_{measure}.pkl', 'wb') as f:
+        pickle.dump(control_egfp, f)
+    
+    with open(f'CC_mean_atl_mch_{region}_{measure}.pkl', 'wb') as f:
+        pickle.dump(atl_mch, f)
+    with open(f'CC_mean_climp_mch_{region}_{measure}.pkl', 'wb') as f:
+        pickle.dump(climp_mch, f)
+    with open(f'CC_mean_rtn_mch_{region}_{measure}.pkl', 'wb') as f:
+        pickle.dump(rtn_mch, f)
+    
 
     df = pd.DataFrame()
 
@@ -1235,6 +1291,11 @@ def full_data_variation_plots_all(region, measure, channel):
 
     # plt.suptitle('Isolated CC area across conditions', fontsize=20)
     # plt.title('Standard Deviation per sequence for junction CC mean intensity (isolated junctions)', fontsize=18)
+
+    box_pairs = get_group_box_pairs('egfp')
+    statannot.add_stat_annotation(ax, x='Group', y='data_junc_CC_mean', data=df, box_pairs=box_pairs,
+                                  test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=12)
+
     measure_name = 'Standard deviation' if measure == 'std' else 'Mean'
     region_name = 'isolated' if region == 'iso' else 'fuzzy'
     plt.title(

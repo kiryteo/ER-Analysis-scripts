@@ -153,20 +153,21 @@ def get_per_CC_pixel_data(group, num_series, region):
     return group_data_egfp, group_data_mch
 
 
-def get_mean_std_per_CC_pixel_data(data):
+def get_mean_std_per_CC_pixel_data(data, measure):
     """
     Get mean and std of pixel data per CC id
     @param data: list of lists of lists of lists of pixel values
     @return: list of means and list of stds
     """
     if data:
-        mean_data = []
-        std_data = []
+        measure_data = []
         for seq_num in data:
             for junction_data in seq_num:
-                mean_data.append(np.mean(junction_data))
-                std_data.append(np.std(junction_data))
-        return mean_data, std_data
+                if measure == 'mean':
+                    measure_data.append(np.mean(np.array(junction_data, dtype=np.float)/255.))
+                elif measure == 'std':
+                    measure_data.append(np.std(np.array(junction_data, dtype=np.float)/255.))
+        return measure_data
 
 
 def create_per_CC_pixel_data_pickles(group, num_series, region):
