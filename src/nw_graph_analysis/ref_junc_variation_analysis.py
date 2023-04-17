@@ -134,7 +134,6 @@ def plot_ref_junc_variation(channel, region, measure, plot_type):
 
             df['Group'] = pd.Series(np.concatenate((['ATL'] * len(atl), ['Climp'] * len(climp), ['RTN'] * len(rtn), ['Control'] * len(ctrl))))
 
-
         else:
             df['data_tubule_mean'] = pd.Series(np.concatenate((atl, climp, rtn)))
 

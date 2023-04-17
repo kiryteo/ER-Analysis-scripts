@@ -20,6 +20,136 @@ import numpy as np
 import networkx as nx
 
 
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+image = plt.imread('/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/er_mean_proc/control1_er_mean_proc.png')
+skel = plt.imread('/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/er_mean_proc/control1_er_mean_proc_enhance_skel.png')
+
+
+op = 0.85 * image + 0.15 * skel
+
+imageio.imwrite('/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/er_mean_proc/control1_proc_skel.png', op)
+
+# plt.imshow(op)
+
+# plt.show()
+
+exit()
+
+
+image = plt.imread('/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/er_mean_proc/control1_er_mean_proc.png')
+
+
+op = filters.meijering(image)
+
+fig, ax = plt.subplots(1, 2)
+ax[0].imshow(image)
+ax[0].set_title('Image 1')
+
+# Plot the second image in the second subplot
+ax[1].imshow(op)
+ax[1].set_title('Image 2')
+
+plt.show()
+
+exit()
+
+# Load the image and convert it to grayscale
+image = plt.imread('/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/er_mean_proc/control1_er_mean_proc.png')
+# gray_image = np.mean(image, axis=2)
+gray_image = image
+
+# Create a 3D meshgrid based on the image size
+x, y = np.meshgrid(np.arange(gray_image.shape[1]), np.arange(gray_image.shape[0]))
+
+# Use the gray values as the z-coordinates of the meshgrid
+z = gray_image
+
+ridge_image = filters.meijering(z)
+
+# Create a 3D plot of the terrain manifold
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.plot_surface(x, y, z, facecolors=plt.cm.viridis(ridge_image))
+plt.show()
+
+
+
+exit()
+
+
+
+proc_img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/er_mean_proc/control1_er_mean_proc.png')
+
+
+def custom_threshold(image_patch):
+    signal_values = image_patch[image_patch > 0]
+    threshold = np.median(signal_values)  # or np.median(signal_values)
+    return threshold
+
+op = filters.threshold_local(proc_img, 3, method='generic', param=custom_threshold)
+
+op = np.nan_to_num(op, nan=0)
+
+# op = filters.gaussian(op, sigma=1)
+
+print(type(op))
+print(op)
+print(op.max())
+print(op.min())
+
+# exit()
+
+fig, ax = plt.subplots(1, 2)
+ax[0].imshow(proc_img)
+ax[0].set_title('Image 1')
+
+# Plot the second image in the second subplot
+ax[1].imshow(op)
+ax[1].set_title('Image 2')
+
+plt.show()
+
+exit()
+
+# flat_image = proc_img.flatten()
+
+# # Find the minimum value in the flattened image that is greater than zero
+# min_value = np.min(flat_image[np.where(flat_image > 0)])
+# print(min_value)
+
+# exit()
+
+# aop = morphology.area_opening(proc_img)
+op = filters.threshold_local(proc_img, 3)
+# op = filters.sobel(proc_img)
+# aop = morphology.erosion(op)
+aop = op > 0
+
+
+skel = morphology.skeletonize(proc_img > 0)
+
+# Create a figure with two subplots
+fig, ax = plt.subplots(1, 3)
+
+# Plot the first image in the first subplot
+ax[0].imshow(proc_img)
+ax[0].set_title('Image 1')
+
+# Plot the second image in the second subplot
+ax[1].imshow(op)
+ax[1].set_title('Image 2')
+
+ax[2].imshow(aop)
+
+# Show the figure
+plt.show()
+
+exit()
+
+
 
 mean_skel = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/ATL_mean_proj/A5_mean.png')
 
