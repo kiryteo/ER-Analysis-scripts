@@ -76,7 +76,7 @@ def get_path_coords(er_input, cost_arr, g_nodes_array, node, fin_dict):
         return None
 
     # Return the path coordinates as a NumPy array if the path is short enough, otherwise return None
-    return np.array(path_coords) if len(path_coords) < 20 else None
+    return np.array(path_coords) if len(path_coords) < 15 else None
 
 
 # def connect_low_degree_nodes(temp_graph, node, fin_dict, path_coords):
@@ -97,11 +97,11 @@ def connect_low_degree_nodes(temp_graph, node, fin_dict, path_coords):
         math.sqrt((path_coords[i + 1][0] - path_coords[i][0]) ** 2 + (path_coords[i + 1][1] - path_coords[i][1]) ** 2)
         for i in range(len(path_coords) - 1))
 
-    if total_distance < 15:
+    # if total_distance < 15:
         # add edge between the close nodes and get length of edge (distance)
-        temp_graph.add_edge(node, fin_dict[node][0])
+    temp_graph.add_edge(node, fin_dict[node][0])
 
-        return {(node, fin_dict[node][0], 0): {'pts': path_coords, 'weight': total_distance}}
+    return {(node, fin_dict[node][0], 0): {'pts': path_coords, 'weight': total_distance}}
 
 
 def remove_edge_if_exists(temp_graph, node, neighbor):
@@ -122,8 +122,8 @@ def connect_nodes(er_input, temp_graph, n1, n2, fin_dict, cost_arr, g_nodes_arra
             edge_data = connect_low_degree_nodes(temp_graph, n1, fin_dict, path_coords)
 
             # Update the edge attributes of the graph with the new connection
-            if edge_data:
-                nx.set_edge_attributes(temp_graph, edge_data)
+            # if edge_data:
+            nx.set_edge_attributes(temp_graph, edge_data)
 
 
 def get_updated_degree_nodes(temp_graph):

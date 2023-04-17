@@ -184,6 +184,18 @@ def create_per_CC_pixel_data_pickles(group, num_series, region):
         pickle.dump(mch_data, open(f'{group}_mch_{region}_data.pkl', 'wb'))
 
 
+create_per_CC_pixel_data_pickles('ATL', 26, 'iso')
+create_per_CC_pixel_data_pickles('Climp', 31, 'iso')
+create_per_CC_pixel_data_pickles('RTN', 29, 'iso')
+create_per_CC_pixel_data_pickles('Control', 31, 'iso')
+create_per_CC_pixel_data_pickles('ATL', 26, 'fuz')
+create_per_CC_pixel_data_pickles('Climp', 31, 'fuz')
+create_per_CC_pixel_data_pickles('RTN', 29, 'fuz')
+create_per_CC_pixel_data_pickles('Control', 31, 'fuz')
+
+exit()
+
+
 
 def get_region_areas(label_id_junctions):
     """
@@ -596,7 +608,8 @@ def per_patch_variation(group, channel):
         er_img = ''
         mean_img = confocal_data_path + f'{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
 
-        newps = junc_analysis.get_junctions(er_img, mean_img)
+        graph = junc_analysis.skel_to_graph(mean_img)
+        newps = junc_analysis.get_ref_junctions(graph)
 
         sl = []
 
@@ -633,7 +646,8 @@ def patch_variation_viz():
     er_img = ''
     mean_img = f'{confocal_data_path}ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc_enhance_skel.png'
 
-    newps = junc_analysis.get_junctions(er_img, mean_img)
+    graph = junc_analysis.skel_to_graph(mean_img)
+    newps = junc_analysis.get_ref_junctions(graph)
     sl = []
     dtl = []
 
@@ -668,7 +682,9 @@ def junc_area_locator(group, num_series):
     mean_img = confocal_data_path + f'{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
 
     # Get junction coordinates from projection frame
-    newps = junc_analysis.get_junctions(er_img, mean_img)
+    # newps = junc_analysis.get_junctions(er_img, mean_img)
+    graph = junc_analysis.skel_to_graph(mean_img)
+    newps = junc_analysis.get_ref_junctions(graph)
 
     nps = [[each[0], each[1]] for each in newps]
     nps = np.array(nps)
@@ -1029,7 +1045,8 @@ def junction_location_plotter(group, num_series):
     group_pref = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
     mean_img = confocal_data_path + f'{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
 
-    newps = get_junctions(mean_img)
+    graph = junc_analysis.skel_to_graph(mean_img)
+    newps = junc_analysis.get_ref_junctions(graph)
 
     nps = [[each[0], each[1]] for each in newps]
     nps = np.array(nps)
@@ -1100,7 +1117,8 @@ def per_patch_pixel_fourier(group, channel):
     for num_series in range(1, 2):
         mean_img = confocal_data_path + f'{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
 
-        newps = get_junctions(mean_img)
+        graph = junc_analysis.skel_to_graph(mean_img)
+        newps = junc_analysis.get_ref_junctions(graph)
 
         sl = []
         for frame in range(100):
@@ -1261,7 +1279,8 @@ def per_patch_pixel_variance(group):
     for num_series in range(1, 25):
         mean_img = confocal_data_path + f'{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
 
-        newps = get_junctions(mean_img)
+        graph = junc_analysis.skel_to_graph(mean_img)
+        newps = junc_analysis.get_ref_junctions(graph)
 
         sl = []
 
@@ -1309,7 +1328,8 @@ def per_patch_if_corr():
     for num_series in range(1, 25):
         mean_img = confocal_data_path + f'{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
 
-        newps = get_junctions(mean_img)
+        graph = junc_analysis.skel_to_graph(mean_img)
+        newps = junc_analysis.get_ref_junctions(graph)
 
         sl = []
 
