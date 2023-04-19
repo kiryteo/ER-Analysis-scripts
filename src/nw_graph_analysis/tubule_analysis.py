@@ -4,7 +4,7 @@ import networkx as nx
 import cv2
 import os
 import sys
-import pickle
+import pickle as pkl
 import pandas as pd
 import seaborn as sns
 import scipy.stats as stats
@@ -12,10 +12,11 @@ import scipy.ndimage as ndimage
 from skimage.measure import label
 
 from structure_extraction import *
-from junction_analysis_modules import JunctionAnalysis as junc_analysis
+from junction_analysis_modules import JunctionAnalysis as JA
 
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
+junc_analysis = JA(confocal_data_path)
 
 
 def get_edges(conn_graph, iso_ids, fuz_ids, connection):
@@ -46,14 +47,15 @@ def get_tubule_data(group, series_num, connection):
     group_pref = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
 
     # sourcery skip: inline-immediately-returned-variable
-    er_input_path = f'{confocal_data_path}/{group}/new_op_jul/er_mean/{group.lower()}{series_num}_er_mean.png'
-    skel_path = f'{confocal_data_path}/{group}/new_op_jul/er_mean_proc/{group.lower()}{series_num}_er_mean_proc_enhance_skel.png'
+    # mean_er_path = f'{confocal_data_path}/{group}/new_op_jul/er_mean/{group.lower()}{series_num}_er_mean.png'
+    mean_skel_path = f'{confocal_data_path}/{group}/new_op_jul/er_mean_proc/{group.lower()}{series_num}_proc_skel.png'
 
-    # conn_graph = node_connector(er_input_path, skel_path)
-    ref_junctions = junc_analysis.get_junctions(er_input_path, skel_path)
+    # ref_junctions = junc_analysis.get_junctions(er_input_path, skel_path)
 
+    conn_graph = junc_analysis.skel_to_graph(mean_skel_path)
+    ref_junctions = junc_analysis.get_ref_junctions(conn_graph)
 
-    # deg_one_nodes, deg_two_nodes, high_deg_nodes = get_updated_degree_nodes(conn_graph)
+    deg_one_nodes, deg_two_nodes, high_deg_nodes = get_updated_degree_nodes(conn_graph)
 
     # graph = junc_analysis.skel_to_graph(mean_img)
     # ref_junctions = junc_analysis.get_junctions(conn_graph)
@@ -69,7 +71,7 @@ def get_tubule_data(group, series_num, connection):
 
         # # create_tubule_junc_plot(er_path, skeleton_path)
 
-        junctions = junc_analysis.get_junctions(er_path, skeleton_path)
+        junctions, graph = junc_analysis.get_junctions(er_path, skeleton_path)
 
         junc_array = [[junc[0], junc[1]] for junc in junctions]
         per_frame_junctions.extend(junc_array)
@@ -231,18 +233,24 @@ def create_pickles(groups: dict, connections: list, channels: list, measure: lis
         for connection in connections:
             if group != 'Control':
                 for channel in channels:
+                    # print(group, num_series, connection, channel, measure)
                     create_tub_data_pickles(group, num_series, connection, channel, measure)
             else:
+                # print(group, num_series, connection, 'egfp', measure)
                 create_tub_data_pickles(group, num_series, connection, 'egfp', measure)
 
 
 def pickle_creation_runner():
     groups = {'ATL': 26, 'Climp': 31, 'Control': 31, 'RTN': 29}
-    # connections = ['iso-iso', 'iso-fuz', 'fuz-fuz']
-    # channels = ['egfp', 'mch']
-    # measure = ['tubule']
+    connections = ['iso-iso', 'iso-fuz', 'fuz-fuz']
+    channels = ['egfp', 'mch']
+    measure = 'tubules'
     # measure = VALID_MEASURES
-    create_pickles(groups, VALID_CONNECTIONS, VALID_CHANNELS, VALID_MEASURES)
+    # create_pickles(groups, VALID_CONNECTIONS, VALID_CHANNELS, VALID_MEASURES)
+    create_pickles(groups, connections, channels, measure)
+
+pickle_creation_runner()
+exit()
 
 
 def tubule_intensity_analysis(group, series_num, connection, measure):

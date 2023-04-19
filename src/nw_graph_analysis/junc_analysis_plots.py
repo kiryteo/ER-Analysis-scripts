@@ -19,11 +19,11 @@ import pickle as pkl
 
 from structure_extraction import node_connector, get_updated_degree_nodes
 from junction_analysis_modules import JunctionAnalysis as JA
-from junction_analysis import cc_area_measure, cc_signal_net_norm, get_per_CC_pixel_data, get_mean_std_per_CC_pixel_data
+from junction_analysis import cc_area_measure, cc_signal, cc_signal_net_norm, get_per_CC_pixel_data, get_mean_std_per_CC_pixel_data
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies'
-pickle_path_prefix = '/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/CC_junctions/'
-
+# pickle_path_prefix = '/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/CC_junctions/'
+pickle_path_prefix = '/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/'
 
 GROUP_PREF = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
 VALID_GROUPS = ['ATL', 'Climp', 'RTN', 'Control']
@@ -57,30 +57,68 @@ def filter_data(data):
 
 #     return corr_vals
 
-# atl_data = pkl.load(open('pickles/CC_junctions/ATL_egfp_iso_data.pkl', 'rb'))
-# print(len(atl_data))
-# print(len(atl_data[0]))
-# print(len(atl_data[0][0]))
-
-# print(atl_data[0][4])
-# print(len(atl_data[0][4]))
-# # print(atl_data[0][0][0])
-
-# for seq in atl_data:
-#     data = np.array(seq)
-#     print(data.shape)
-#     exit()
 
 
-def get_CC_mean(channel, region):
-    atl_data = pkl.load(open(f'ATL_{channel}_{region}_data.pkl', 'rb'))
-    climp_data = pkl.load(open(f'Climp_{channel}_{region}_data.pkl', 'rb'))
-    rtn_data = pkl.load(open(f'RTN_{channel}_{region}_data.pkl', 'rb'))
-    if channel == 'egfp':
-        control_data = pkl.load(open(f'Control_{channel}_{region}_data.pkl', 'rb'))
-        # control_mean, control_std = get_mean_std_per_CC_pixel_data(control_data)
+
+def get_mean_group_data(data, measure):
+    func = np.mean if measure == 'mean' else np.std
+    group_data = []
+    for series in data:
+        group_data.extend(func(cc) for cc in series)
+    return group_data
 
 
+def get_CC_mean_variation(channel, region):
+    atl = cc_signal('ATL', channel, region)
+    pkl.dump(atl, open(f'ATL_{channel}_{region}_CC_mean.pkl', 'wb'))
+    climp = cc_signal('Climp', channel, region)
+    pkl.dump(climp, open(f'Climp_{channel}_{region}_CC_mean.pkl', 'wb'))
+    rtn = cc_signal('RTN', channel, region)
+    pkl.dump(rtn, open(f'RTN_{channel}_{region}_CC_mean.pkl', 'wb'))
+    # control = cc_signal('Control', channel, region)
+    # pkl.dump(control, open(f'Control_{channel}_{region}_CC_mean.pkl', 'wb'))
+
+    atl= get_mean_group_data(atl, 'mean')
+    climp = get_mean_group_data(climp, 'mean')
+    rtn = get_mean_group_data(rtn, 'mean')
+    # control = get_mean_group_data(control, 'mean')
+
+    df = pd.DataFrame()
+    df['CC_mean'] = pd.Series(np.concatenate((atl, climp, rtn)))#, control)))
+    df['Group'] = pd.Series(np.concatenate((['ATL'] * len(atl), ['Climp'] * len(climp), ['RTN'] * len(rtn))))#, ['Control'] * len(control))))
+
+    ax = sns.boxenplot(data=df, x='Group', y='CC_mean')
+    # plt.show()
+    # plt.yscale('log')
+    # ax.set_ylim(-0.6, 1)
+    yt = ax.get_yticks()
+    yt = [f'{y:.2f}' for y in yt]
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
+    ax.set_yticklabels(yt, fontsize=18)
+
+    # box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')]
+    box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
+
+    statannot.add_stat_annotation(ax, x='Group', y='CC_mean', data=df, box_pairs=box_pairs,
+                                  test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=20)
+
+    region_name = 'Isolated' if region == 'iso' else 'Fuzzy'
+    ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
+
+    # plt.suptitle(f'{region_name} CC, per junction correlation across conditions', fontsize=20)
+    plt.title(f'Mean over 100 frames for Junction CC mean in {region_name} CC ({ch_name})', fontsize=24)
+    plt.grid(True)
+    plt.xlabel('Group', fontsize=24)
+    plt.ylabel('Mean over sequence per CC mean', fontsize=24)
+    plt.show()
+
+
+
+# get_CC_mean_variation('egfp', 'iso')
+# get_CC_mean_variation('egfp', 'fuz')
+# get_CC_mean_variation('mch', 'iso')
+get_CC_mean_variation('mch', 'iso')
+exit()
 
 
 
@@ -141,9 +179,10 @@ def per_CC_pixel_variation(region):
     plt.show()
 
 
-per_CC_pixel_variation('iso')
-per_CC_pixel_variation('fuz')
-exit()
+# per_CC_pixel_variation('iso')
+# per_CC_pixel_variation('fuz')
+# exit()
+
 # fpath = '/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/CC_junctions/ATL_egfp_iso_data.pkl'
 # atl_data = pkl.load(open(fpath, 'rb'))
 # print(len(atl_data))
@@ -182,7 +221,7 @@ def get_CC_variation(channel, region, measure):
     # ax = sns.boxenplot(data=df, x='Replicate', y='data_tubule_mean', hue='Group', dodge=True)  # , yscale='log')
     yt = ax.get_yticks()
     yt = [f'{y:.2f}' for y in yt]
-    ax.set_ylim([0.0, 0.5])
+    # ax.set_ylim([0.0, 0.5])
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
     ax.set_yticklabels(yt, fontsize=18)
     # sns.set(font_scale=2)
@@ -215,11 +254,11 @@ def get_CC_variation(channel, region, measure):
 # get_CC_variation('egfp', 'fuz', 'mean')
 # get_CC_variation('mch', 'iso', 'mean')
 # get_CC_variation('mch', 'fuz', 'mean')
-get_CC_variation('egfp', 'iso', 'std')
-get_CC_variation('egfp', 'fuz', 'std')
+# get_CC_variation('egfp', 'iso', 'std')
+# get_CC_variation('egfp', 'fuz', 'std')
 # get_CC_variation('mch', 'iso', 'std')
 # get_CC_variation('mch', 'fuz', 'std')
-exit()
+# exit()
 
 
 
@@ -453,9 +492,14 @@ def plot_cc_area_all(a1, c1, r1, ct1, region):
 
     # ax = sns.swarmplot(data=df, x='Group', y='CC_area', hue='Replicate', dodge=True)
     # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
+
+
     ax = sns.boxenplot(data=df, x='Group', y='CC_area')
     # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
+    yt = ax.get_yticks()
+    yt = [f'{y:.2f}' for y in yt]
+    ax.set_yticklabels(yt, fontsize=18)
     # sns.boxplot(data=df, x='Group', y='CC_area', hue='replicate', color='white', dodge=True)
 
     plt.yscale('log')
@@ -464,25 +508,26 @@ def plot_cc_area_all(a1, c1, r1, ct1, region):
                  ('RTN', 'Control')]
 
     statannot.add_stat_annotation(ax, x='Group', y='CC_area', data=df, box_pairs=box_pairs,
-                                  test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+                                  test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=20)
 
     region_name = 'Isolated' if region == 'iso' else 'Fuzzy'
 
-    plt.suptitle(f'{region_name} CC area across conditions', fontsize=20)
-    plt.title('CC area denotes the total movement of each junction', fontsize=18)
+    # plt.suptitle(f'{region_name} CC area across conditions', fontsize=24)
+    # plt.title('CC area denotes the total movement of each junction', fontsize=24)
+    plt.title(f'{region_name} CC area across conditions', fontsize=24)
     plt.grid(True)
-    plt.xlabel('Group', fontsize=18)
-    plt.ylabel('CC_area (movement of junctions), log scale', fontsize=18)
+    plt.xlabel('Group', fontsize=24)
+    plt.ylabel('CC_area (movement of junctions), log scale', fontsize=24)
     plt.show()
 
 
-# a1 = pd.Series(cc_area_measure('ATL', 'fuz', 1, 26))
-# c1 = pd.Series(cc_area_measure('Climp', 'fuz', 1, 31))
-# r1 = pd.Series(cc_area_measure('RTN', 'fuz', 1, 29))
-# ct1 = pd.Series(cc_area_measure('Control', 'fuz', 1, 31))
+a1 = pd.Series(cc_area_measure('ATL', 'iso', 1, 26))
+c1 = pd.Series(cc_area_measure('Climp', 'iso', 1, 31))
+r1 = pd.Series(cc_area_measure('RTN', 'iso', 1, 29))
+ct1 = pd.Series(cc_area_measure('Control', 'iso', 1, 31))
 
-# plot_cc_area_all(a1, c1, r1, ct1, 'fuz')
-# exit()
+plot_cc_area_all(a1, c1, r1, ct1, 'iso')
+exit()
 
 
 def get_data_cc_area(region):

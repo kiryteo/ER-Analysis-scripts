@@ -2,9 +2,10 @@ import imageio
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-
+from junction_analysis_modules import JunctionAnalysis as JA
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
+junc_analysis = JA(confocal_data_path)
 
 # img = imageio.imread('/localhome/asa420/ER-Analysis-scripts/Figure2/A1_decon_t000_ch00_skel.png')
 # plt.axis('off')
@@ -107,8 +108,8 @@ def junc_spread_comparison():
     # plt.title('Junction detection methods comparison (based on input)', fontsize=12)
     plt.show()
 
-junc_spread_comparison()
-exit()
+# junc_spread_comparison()
+# exit()
 
 
 def junc_spread_display(group, num_series):
@@ -296,7 +297,8 @@ def crop_img():
         # plt.close()
         plt.show()
 
-def plot_junc_areas_og(group, series_num, labelled_img, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords, unk_cc_coords):
+# def plot_junc_areas_og(group, series_num, labelled_img, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords, unk_cc_coords):
+def plot_junc_areas_og(group, series_num, labelled_img, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords):
     for i in range(1):
         plt.axis('off')
         if group == 'Control':
@@ -321,8 +323,8 @@ def plot_junc_areas_og(group, series_num, labelled_img, iso, fuz, skdata, iso_cc
         for k, v in fuz_cc_coords.items():
             plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='blue', mew=0.4)
         #
-        for k, v in unk_cc_coords.items():
-            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='green', mew=0.4)
+        # for k, v in unk_cc_coords.items():
+        #     plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='green', mew=0.4)
         #
         if len(fuz) > 0:
             plt.plot(fuz[:, 1], fuz[:, 0], 'o', markerfacecolor='None', markeredgecolor='white', mew=0.6)
@@ -366,6 +368,56 @@ def plot_junc_areas_og(group, series_num, labelled_img, iso, fuz, skdata, iso_cc
         # plt.close()
 
         plt.show()
+
+
+def get_cc_ids(labelled_img, region):
+    """
+    Get CC ids for the specified region
+    @param labelled_img: labelled image
+    @param region: isolated or fuzzy
+    @return: list of CC ids
+    """
+
+    # Create a dictionary to store per component data
+    cc_data = {cc_id: [] for cc_id in np.unique(labelled_img)}
+
+    # Populate the dictionary with locations for the specified region
+    for loc in region:
+        loc_x, loc_y = loc[0], loc[1]
+        cc_id = labelled_img[loc_x, loc_y]
+        cc_data[cc_id].append(loc)
+
+    # Extract CC ids for the specified region
+    cc_ids = [cc_id for cc_id, data in cc_data.items() if cc_id > 0 and len(data) > 0]
+
+    return cc_ids
+
+
+ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions('Climp', 12)
+# dict with ids as key and (x, y) as value
+label_ids, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
+
+# iso, fuz, unk: list of lists with x, y
+iso, fuz, unk = junc_analysis.get_junction_areas(label_ids, unassigned_cc_dict)
+
+iso_cc = get_cc_ids(labelled_img, iso)
+fuz_cc = get_cc_ids(labelled_img, fuz)
+# unk_cc = get_cc_ids(labelled_img, unk)
+
+iso_cc_coords = {each: np.where(labelled_img==each) for each in iso_cc}
+fuz_cc_coords = {each: np.where(labelled_img==each) for each in fuz_cc}
+# unk_cc_coords = {each: np.where(labelled_img==each) for each in unk_cc}
+#
+#
+# iso_list = []
+# for each in iso:
+#     iso_list.append([each[0], each[1]])
+
+plot_junc_areas_og('Climp', 12, labelled_img, iso, fuz, per_frame_junctions, iso_cc_coords, fuz_cc_coords)
+
+exit()
+
+
 
 # def plot_junc_areas(group, series_num, iso, fuz, unk, labelled_img):
 def plot_junc_areas(group, series_num, labelled_img, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords, unk_cc_coords):

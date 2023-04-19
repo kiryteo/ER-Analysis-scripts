@@ -184,16 +184,16 @@ def create_per_CC_pixel_data_pickles(group, num_series, region):
         pickle.dump(mch_data, open(f'{group}_mch_{region}_data.pkl', 'wb'))
 
 
-create_per_CC_pixel_data_pickles('ATL', 26, 'iso')
-create_per_CC_pixel_data_pickles('Climp', 31, 'iso')
-create_per_CC_pixel_data_pickles('RTN', 29, 'iso')
-create_per_CC_pixel_data_pickles('Control', 31, 'iso')
-create_per_CC_pixel_data_pickles('ATL', 26, 'fuz')
-create_per_CC_pixel_data_pickles('Climp', 31, 'fuz')
-create_per_CC_pixel_data_pickles('RTN', 29, 'fuz')
-create_per_CC_pixel_data_pickles('Control', 31, 'fuz')
+# create_per_CC_pixel_data_pickles('ATL', 26, 'iso')
+# create_per_CC_pixel_data_pickles('Climp', 31, 'iso')
+# create_per_CC_pixel_data_pickles('RTN', 29, 'iso')
+# create_per_CC_pixel_data_pickles('Control', 31, 'iso')
+# create_per_CC_pixel_data_pickles('ATL', 26, 'fuz')
+# create_per_CC_pixel_data_pickles('Climp', 31, 'fuz')
+# create_per_CC_pixel_data_pickles('RTN', 29, 'fuz')
+# create_per_CC_pixel_data_pickles('Control', 31, 'fuz')
 
-exit()
+# exit()
 
 
 
@@ -275,7 +275,7 @@ def get_region_areas_per_group(group, num_series, region):
     return area_data
 
 
-def cc_signal(num_series, group, region):
+def cc_signal(group, channel, region):
     """
     Calculate deposit
     @param num_series: number of series
@@ -283,41 +283,37 @@ def cc_signal(num_series, group, region):
     @param region: 'iso' or 'non-iso'
     @return: list of lists of deposits
     """
-    for num in range(num_series, num_series + 1):
 
-        region_cc, labelled_img = get_region_cc(group, num, region)
+    # groups = {'ATL': 26, 'Climp': 31, 'Control': 31, 'RTN': 29}
+    groups = {'ATL': 26, 'Climp': 31, 'RTN': 29}
+    channel_idx = 0 if channel == 'egfp' else 1
 
+    group_data = []
+    for series_num in range(1, groups[group] + 1):
+        region_cc, labelled_img = get_region_cc(group, series_num, region)
+
+        # CC coords per series
         region_cc_coords = {each: np.where(labelled_img == each) for each in region_cc}
 
-        egfp_seq_data = []
-        mch_seq_data = []
+        # Data: num_cc * 100
+        series_values = []
+        for i in range(100):
+            # if group == 'Control':
+            #     path = f'{confocal_data_path}/Control/files/img_{series_num}_decon_t0{i:02d}.tif'
+            # else:
+            #     path = f'{confocal_data_path}/{group}/files/{group[0]}{series_num}_decon_t0{i:02d}_ch0{channel_idx}.tif'
+            path = f'{confocal_data_path}/{group}/files/{group[0]}{series_num}_decon_t0{i:02d}_ch0{channel_idx}.tif'
+            img = get_std_img(path)
+            region_means = [np.mean(img[coords]) for coords in region_cc_coords.values()]
+            series_values.append(region_means)
 
-        for i in range(30):
-            if group == 'Control':
-                path_EGFP = f'{confocal_data_path}/Control/files/img_{num}_decon_t0{i:02d}.tif'
-                path_mch = None
-            else:
-                path_EGFP = f'{confocal_data_path}/{group}/files/{group[0]}{num}_decon_t0{i:02d}_ch00.tif'
-                path_mch = f'{confocal_data_path}/{group}/files/{group[0]}{num}_decon_t0{i:02d}_ch01.tif'
+        series_values = np.array(series_values)
 
-            img_egfp = get_std_img(path_EGFP)
-            egfp_frame_data = [np.mean(img_egfp[v]) for v in region_cc_coords.values()]
+        group_data.append(series_values.T)
 
-            egfp_seq_data.append(egfp_frame_data)
+    return group_data
 
-            if path_mch is not None:
-                img_mch = get_std_img(path_mch)
-                mch_frame_data = [np.mean(img_mch[v]) for v in region_cc_coords.values()]
-                # j57_data.append([img_mch[v] for v in region_cc_coords.values()])
-                mch_seq_data.append(mch_frame_data)
 
-        egfp_seq_data = np.array(egfp_seq_data)
-
-        mch_seq_data = np.array(mch_seq_data)
-        # print(j57_data[:5])
-        # exit()
-
-    return egfp_seq_data.T, mch_seq_data.T, region_cc_coords
 
 
 # egfp_seq_data, mch_seq_data, region_cc_coords = calc_deposit(1, 'ATL', 'iso')
@@ -520,6 +516,9 @@ def cc_area_measure(group, region, rstart, rend):
 
         cc_areas = [regions[each - 1]['Area'] for each in region_cc]
         cc_area_list.extend(cc_areas)
+
+    # with open(f'cc_area_{group}_{region}.pkl', 'wb') as f:
+    #     pickle.dump(cc_area_list, f)
 
     return cc_area_list
 

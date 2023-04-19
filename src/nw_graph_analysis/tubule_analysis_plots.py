@@ -81,12 +81,12 @@ def get_channel_corr(group, connection):
         return get_correlation_data_per_replicate(data_egfp, data_mch)
 
 
-def get_pickle_data(group, conn, measure, channel):
-    with open(
-            f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/{measure}/{group.lower()}_{conn}_{measure}_{channel}.pkl',
-            'rb') as f:
-        data = pkl.load(f)
-    return data
+# def get_pickle_data(group, conn, measure, channel):
+#     with open(
+#             f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/{measure}/{group.lower()}_{conn}_{measure}_{channel}.pkl',
+#             'rb') as f:
+#         data = pkl.load(f)
+#     return data
 
 
 def filter_data(data):
@@ -107,7 +107,7 @@ def get_per_pixel_variation_over_sequence(group, connection, channel, variation)
     # data: All tubule intensity data over 100 frames for all movies in the group.
 
     # Load the data from the pickle file
-    data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/corrected_pickles/{group.lower()}_{connection}_tubules_{channel}.pkl', 'rb'))
+    data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/{group.lower()}_{connection}_tubules_{channel}.pkl', 'rb'))
 
     # Filter the data
     data = filter_data(data)
@@ -146,9 +146,12 @@ def plot_per_pixel_variation_over_sequence(connection, channel, variation):
     ax = sns.boxenplot(data=df, x='Group', y='Per-pixel-variation')
     box_pairs = get_group_box_pairs(channel)
 
-    statannot.add_stat_annotation(ax, x='Group', y='Per-pixel-variation', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+    statannot.add_stat_annotation(ax, x='Group', y='Per-pixel-variation', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=20)
 
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=18)
+    yt = ax.get_yticks()
+    yt = [f'{y:.2f}' for y in yt]
+    ax.set_yticklabels(yt, fontsize=18)
 
         # plt.yscale('log')
 
@@ -156,13 +159,13 @@ def plot_per_pixel_variation_over_sequence(connection, channel, variation):
     ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
     variation_name = 'standard deviation' if variation == 'std' else 'mean'
 
-    plt.title(f'Per-pixel {variation_name} over sequence for {connection} tubules in {ch_name}', fontsize=20)
+    plt.title(f'Per-pixel {variation_name} over sequence for {connection} tubules in {ch_name}', fontsize=24)
 
     plt.grid(True)
-    plt.xlabel('Group', fontsize=18)
+    plt.xlabel('Group', fontsize=24)
     # plt.ylabel(f'Tubular {variation}, log scale', fontsize=18)
     # plt.ylabel(f'Tubular {variation}', fontsize=18)
-    plt.ylabel(f'Per pixel {variation_name} over 100 frames in each tubule', fontsize=18)
+    plt.ylabel(f'{variation_name} over sequence', fontsize=24)
     plt.show()
 
 
@@ -183,12 +186,17 @@ def plot_per_pixel_variation_over_sequence(connection, channel, variation):
 # plot_per_pixel_variation_over_sequence('fuz-fuz', 'egfp', 'std')
 # plot_per_pixel_variation_over_sequence('fuz-fuz', 'egfp', 'mean')
 
+# exit()
+
 
 
 
 def get_per_pixel_correlation_over_sequence(group, connection):
-    egfp_data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/corrected_pickles/{group.lower()}_{connection}_tubules_egfp.pkl', 'rb'))
-    mch_data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/corrected_pickles/{group.lower()}_{connection}_tubules_mch.pkl', 'rb'))
+    # egfp_data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/corrected_pickles/{group.lower()}_{connection}_tubules_egfp.pkl', 'rb'))
+    # mch_data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/corrected_pickles/{group.lower()}_{connection}_tubules_mch.pkl', 'rb'))
+
+    egfp_data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/{group.lower()}_{connection}_tubules_egfp.pkl', 'rb'))
+    mch_data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/{group.lower()}_{connection}_tubules_mch.pkl', 'rb'))
 
     egfp_data = filter_data(egfp_data)
     mch_data = filter_data(mch_data)
@@ -227,9 +235,12 @@ def plot_per_pixel_correlation_over_sequence(connection):
 
     ax = sns.boxenplot(data=df, x='Group', y='Per-pixel-corr')
     box_pairs = get_group_box_pairs('mch')
-    statannot.add_stat_annotation(ax, x='Group', y='Per-pixel-corr', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+    statannot.add_stat_annotation(ax, x='Group', y='Per-pixel-corr', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=20)
 
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=18)
+    yt = ax.get_yticks()
+    yt = [f'{y:.2f}' for y in yt]
+    ax.set_yticklabels(yt, fontsize=18)
 
     # plt.yscale('log')
 
@@ -237,13 +248,13 @@ def plot_per_pixel_correlation_over_sequence(connection):
     # ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
     # variation_name = 'standard deviation' if variation == 'std' else 'mean'
 
-    plt.title(f'Per-pixel cross-correlation over sequence for {connection} tubules', fontsize=20)
+    plt.title(f'Per pixel cross-correlation over the sequence in {connection} tubules', fontsize=24)
 
     plt.grid(True)
-    plt.xlabel('Group', fontsize=18)
+    plt.xlabel('Group', fontsize=24)
     # plt.ylabel(f'Tubular {variation}, log scale', fontsize=18)
     # plt.ylabel(f'Tubular {variation}', fontsize=18)
-    plt.ylabel('Per pixel cross-correlation over 100 frames in each tubule', fontsize=18)
+    plt.ylabel('Cross-correlation value', fontsize=24)
     plt.show()
 
 # plot_per_pixel_correlation_over_sequence('iso-iso')
@@ -545,22 +556,24 @@ def load_corrected_pickles(group, connection, channel):
     return pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/corrected_pickles/{group.lower()}_{connection}_tubules_{channel}.pkl', 'rb'))
 
 
+def load_annot_tub_pickles(group, connection, channel):
+    return pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/{group.lower()}_{connection}_tubules_{channel}.pkl', 'rb'))
+
+
 def get_length_per_tubule(data):
     all_tubules = []
     data = filter_data(data)
     for series in data:
-        lengths = [len(tubule[0]) for tubule in series if len(tubule[0]) > 3]
+        lengths = [len(tubule_seq[0]) for tubule_seq in series if len(tubule_seq[0]) > 3]
         all_tubules.extend(lengths)
     return all_tubules
 
 
-
-
 def plot_tubule_length_distribution(connection, channel):
-    atl_data = load_corrected_pickles('ATL', connection, channel)
-    climp_data = load_corrected_pickles('Climp', connection, channel)
-    rtn_data = load_corrected_pickles('RTN', connection, channel)
-    ctr_data = load_corrected_pickles('Control', connection, channel)
+    atl_data = load_annot_tub_pickles('ATL', connection, channel)
+    climp_data = load_annot_tub_pickles('Climp', connection, channel)
+    rtn_data = load_annot_tub_pickles('RTN', connection, channel)
+    ctr_data = load_annot_tub_pickles('Control', connection, channel)
 
     atl_lengths = get_length_per_tubule(atl_data)
     climp_lengths = get_length_per_tubule(climp_data)
@@ -574,29 +587,83 @@ def plot_tubule_length_distribution(connection, channel):
     
     ax = sns.boxenplot(data=df, x='Group', y='tub-length', dodge=True)
     # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
+    yt = ax.get_yticks()
+    yt = [f'{y:.2f}' for y in yt]
+    ax.set_yticklabels(yt, fontsize=18)
 
     # plt.yscale('log')
 
     box_pairs = get_group_box_pairs(channel)
 
     statannot.add_stat_annotation(ax, x='Group', y='tub-length', data=df, box_pairs=box_pairs,
-                                    test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+                                    test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=20)
     
     ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
-    plt.title(f'Tubule length distribution in {connection} edges ({ch_name})', fontsize=18)
+    plt.title(f'Tubule length in {connection} connections', fontsize=24)
     plt.suptitle
     # plt.suptitle(f'{region_name} CC area across conditions', fontsize=20)
     # plt.title('CC area denotes the total movement of each junction', fontsize=18)
     plt.grid(True)
-    plt.xlabel('Group', fontsize=18)
-    plt.ylabel('Tubule length (pixels)', fontsize=18)
+    plt.xlabel('Group', fontsize=24)
+    plt.ylabel('Tubule length (pixels)', fontsize=24)
     plt.show()
 
 
-# plot_tubule_length_distribution('iso-iso', 'egfp')
+def plot_tubule_length_distribution_all():
+    atl_ii = load_annot_tub_pickles('ATL', 'iso-iso', 'egfp')
+    atl_if = load_annot_tub_pickles('ATL', 'iso-fuz', 'egfp')
+    atl_ff = load_annot_tub_pickles('ATL', 'fuz-fuz', 'egfp')
 
-# exit()
+    climp_ii = load_annot_tub_pickles('Climp', 'iso-iso', 'egfp')
+    climp_if = load_annot_tub_pickles('Climp', 'iso-fuz', 'egfp')
+    climp_ff = load_annot_tub_pickles('Climp', 'fuz-fuz', 'egfp')
+
+    rtn_ii = load_annot_tub_pickles('RTN', 'iso-iso', 'egfp')
+    rtn_if = load_annot_tub_pickles('RTN', 'iso-fuz', 'egfp')
+    rtn_ff = load_annot_tub_pickles('RTN', 'fuz-fuz', 'egfp')
+
+    ctr_ii = load_annot_tub_pickles('Control', 'iso-iso', 'egfp')
+    ctr_if = load_annot_tub_pickles('Control', 'iso-fuz', 'egfp')
+    ctr_ff = load_annot_tub_pickles('Control', 'fuz-fuz', 'egfp')
+
+    atl_lengths = get_length_per_tubule(atl_ii) + get_length_per_tubule(atl_if) + get_length_per_tubule(atl_ff)
+    climp_lengths = get_length_per_tubule(climp_ii) + get_length_per_tubule(climp_if) + get_length_per_tubule(climp_ff)
+    rtn_lengths = get_length_per_tubule(rtn_ii) + get_length_per_tubule(rtn_if) + get_length_per_tubule(rtn_ff)
+    ctr_lengths = get_length_per_tubule(ctr_ii) + get_length_per_tubule(ctr_if) + get_length_per_tubule(ctr_ff)
+
+    df = pd.DataFrame()
+    df['tub-length'] = pd.Series(np.concatenate((atl_lengths, climp_lengths, rtn_lengths, ctr_lengths)))
+    df['Group'] = pd.Series(np.concatenate((
+            ['ATL'] * len(atl_lengths), ['Climp'] * len(climp_lengths), ['RTN'] * len(rtn_lengths), ['Control'] * len(ctr_lengths))))
+    
+    ax = sns.boxenplot(data=df, x='Group', y='tub-length', dodge=True)
+    # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
+    yt = ax.get_yticks()
+    yt = [f'{y:.2f}' for y in yt]
+    ax.set_yticklabels(yt, fontsize=18)
+
+    # plt.yscale('log')
+    channel = 'egfp'
+
+    box_pairs = get_group_box_pairs(channel)
+
+    statannot.add_stat_annotation(ax, x='Group', y='tub-length', data=df, box_pairs=box_pairs,
+                                    test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=20)
+    
+    ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
+    plt.title('Tubule length in all tubules across groups', fontsize=24)
+    plt.suptitle
+    # plt.suptitle(f'{region_name} CC area across conditions', fontsize=20)
+    # plt.title('CC area denotes the total movement of each junction', fontsize=18)
+    plt.grid(True)
+    plt.xlabel('Group', fontsize=24)
+    plt.ylabel('Tubule length (pixels)', fontsize=24)
+    plt.show()
+
+plot_tubule_length_distribution_all()
+exit()
 
 
 def get_edge_length(group, connection, measure, channel):
