@@ -254,6 +254,21 @@ def get_region_cc(group, series_num, region):
         return get_cc_ids(labelled_img, iso), labelled_img
     else:
         return get_cc_ids(labelled_img, fuz), labelled_img
+    
+
+# def get_num_junctions_per_group(group, num_series):
+#     junction_num = []
+#     for num in range(1, num_series+1):
+#         ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions(group, num)
+
+#         # dict with ids as key and (x, y) as value
+#         label_ids, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
+
+#         # iso, fuz, unk: list of lists with x, y
+#         iso, fuz, unk = junc_analysis.get_junction_areas(label_ids, unassigned_cc_dict)
+
+#         junction_num.append(len(iso))
+#     return junction_num
 
 
 def get_region_areas_per_group(group, num_series, region):

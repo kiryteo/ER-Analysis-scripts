@@ -568,24 +568,44 @@ def get_length_per_tubule(data):
         all_tubules.extend(lengths)
     return all_tubules
 
+def get_length_per_tubule_variation(data, measure):
+    all_tubules = []
+    data = filter_data(data)
+    for series in data:
+        if measure == 'var':
+            lengths_variance = np.std([len(tubule_seq[0]) for tubule_seq in series if len(tubule_seq[0]) > 3]) ** 2
+            all_tubules.append(lengths_variance)
+        else:
+            lengths_mean = np.mean([len(tubule_seq[0]) for tubule_seq in series if len(tubule_seq[0]) > 3])
+            all_tubules.append(lengths_mean)
+    return all_tubules
 
-def plot_tubule_length_distribution(connection, channel):
+
+def plot_tubule_length_distribution(connection, channel, measure):
     atl_data = load_annot_tub_pickles('ATL', connection, channel)
     climp_data = load_annot_tub_pickles('Climp', connection, channel)
     rtn_data = load_annot_tub_pickles('RTN', connection, channel)
     ctr_data = load_annot_tub_pickles('Control', connection, channel)
 
-    atl_lengths = get_length_per_tubule(atl_data)
-    climp_lengths = get_length_per_tubule(climp_data)
-    rtn_lengths = get_length_per_tubule(rtn_data)
-    ctr_lengths = get_length_per_tubule(ctr_data)
+    # atl_lengths = get_length_per_tubule(atl_data)
+    # climp_lengths = get_length_per_tubule(climp_data)
+    # rtn_lengths = get_length_per_tubule(rtn_data)
+    # ctr_lengths = get_length_per_tubule(ctr_data)
+
+    atl_mean = get_length_per_tubule_variation(atl_data, measure)
+    climp_mean = get_length_per_tubule_variation(climp_data, measure)
+    rtn_mean = get_length_per_tubule_variation(rtn_data, measure)
+    ctr_mean = get_length_per_tubule_variation(ctr_data, measure)
 
     df = pd.DataFrame()
-    df['tub-length'] = pd.Series(np.concatenate((atl_lengths, climp_lengths, rtn_lengths, ctr_lengths)))
-    df['Group'] = pd.Series(np.concatenate((
-            ['ATL'] * len(atl_lengths), ['Climp'] * len(climp_lengths), ['RTN'] * len(rtn_lengths), ['Control'] * len(ctr_lengths))))
+    df['tub-length'] = pd.Series(np.concatenate((ctr_mean, rtn_mean, climp_mean, atl_mean)))
+    df['Group'] = pd.Series(np.concatenate((['Control'] * len(ctr_mean), ['RTN'] * len(rtn_mean), ['Climp'] * len(climp_mean), ['ATL'] * len(atl_mean))))
+
+    # df['tub-length'] = pd.Series(np.concatenate((atl_lengths, climp_lengths, rtn_lengths, ctr_lengths)))
+    # df['Group'] = pd.Series(np.concatenate((
+            # ['ATL'] * len(atl_lengths), ['Climp'] * len(climp_lengths), ['RTN'] * len(rtn_lengths), ['Control'] * len(ctr_lengths))))
     
-    ax = sns.boxenplot(data=df, x='Group', y='tub-length', dodge=True)
+    ax = sns.boxplot(data=df, x='Group', y='tub-length', dodge=True)
     # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
     yt = ax.get_yticks()
@@ -594,20 +614,33 @@ def plot_tubule_length_distribution(connection, channel):
 
     # plt.yscale('log')
 
-    box_pairs = get_group_box_pairs(channel)
+    # box_pairs = get_group_box_pairs(channel)
 
-    statannot.add_stat_annotation(ax, x='Group', y='tub-length', data=df, box_pairs=box_pairs,
-                                    test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=20)
+    # statannot.add_stat_annotation(ax, x='Group', y='tub-length', data=df, box_pairs=box_pairs,
+    #                                 test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=20)
     
-    ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
-    plt.title(f'Tubule length in {connection} connections', fontsize=24)
-    plt.suptitle
+    # ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
+    measure_name = 'variance' if measure == 'var' else 'mean (pixels)'
+    # plt.title(f'Tubule length in {connection} connections', fontsize=24)
+
+    plt.title(f'Tubule length {measure_name} per sequence in {connection} connections', fontsize=24)
+    # plt.suptitle
     # plt.suptitle(f'{region_name} CC area across conditions', fontsize=20)
     # plt.title('CC area denotes the total movement of each junction', fontsize=18)
     plt.grid(True)
     plt.xlabel('Group', fontsize=24)
-    plt.ylabel('Tubule length (pixels)', fontsize=24)
+    # plt.ylabel('Tubule length (pixels)', fontsize=24)
+    plt.ylabel(f'Tubule length {measure_name}', fontsize=24)
     plt.show()
+
+
+plot_tubule_length_distribution('iso-iso', 'egfp', 'mean')
+plot_tubule_length_distribution('iso-fuz', 'egfp', 'mean')
+plot_tubule_length_distribution('fuz-fuz', 'egfp', 'mean')
+plot_tubule_length_distribution('iso-iso', 'egfp', 'var')
+plot_tubule_length_distribution('iso-fuz', 'egfp',  'var')
+plot_tubule_length_distribution('fuz-fuz', 'egfp', 'var')
+exit()
 
 
 def plot_tubule_length_distribution_all():

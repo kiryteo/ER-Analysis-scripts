@@ -68,58 +68,171 @@ def get_mean_group_data(data, measure):
     return group_data
 
 
-def get_CC_mean_variation(channel, region):
-    atl = cc_signal('ATL', channel, region)
-    pkl.dump(atl, open(f'ATL_{channel}_{region}_CC_mean.pkl', 'wb'))
-    climp = cc_signal('Climp', channel, region)
-    pkl.dump(climp, open(f'Climp_{channel}_{region}_CC_mean.pkl', 'wb'))
-    rtn = cc_signal('RTN', channel, region)
-    pkl.dump(rtn, open(f'RTN_{channel}_{region}_CC_mean.pkl', 'wb'))
+def get_CC_mean_variation(channel, region, measure):
+    # atl = cc_signal('ATL', channel, region)
+    # pkl.dump(atl, open(f'ATL_{channel}_{region}_CC_mean.pkl', 'wb'))
+    # climp = cc_signal('Climp', channel, region)
+    # pkl.dump(climp, open(f'Climp_{channel}_{region}_CC_mean.pkl', 'wb'))
+    # rtn = cc_signal('RTN', channel, region)
+    # pkl.dump(rtn, open(f'RTN_{channel}_{region}_CC_mean.pkl', 'wb'))
     # control = cc_signal('Control', channel, region)
     # pkl.dump(control, open(f'Control_{channel}_{region}_CC_mean.pkl', 'wb'))
 
-    atl= get_mean_group_data(atl, 'mean')
-    climp = get_mean_group_data(climp, 'mean')
-    rtn = get_mean_group_data(rtn, 'mean')
-    # control = get_mean_group_data(control, 'mean')
+    atl = pkl.load(open(f'ATL_{channel}_{region}_CC_mean.pkl', 'rb'))
+    climp = pkl.load(open(f'Climp_{channel}_{region}_CC_mean.pkl', 'rb'))
+    rtn = pkl.load(open(f'RTN_{channel}_{region}_CC_mean.pkl', 'rb'))
+    # control = pkl.load(open(f'Control_{channel}_{region}_CC_mean.pkl', 'rb'))
+
+
+    atl= get_mean_group_data(atl, measure)
+    climp = get_mean_group_data(climp, measure)
+    rtn = get_mean_group_data(rtn, measure)
+    # control = get_mean_group_data(control, measure)
 
     df = pd.DataFrame()
-    df['CC_mean'] = pd.Series(np.concatenate((atl, climp, rtn)))#, control)))
-    df['Group'] = pd.Series(np.concatenate((['ATL'] * len(atl), ['Climp'] * len(climp), ['RTN'] * len(rtn))))#, ['Control'] * len(control))))
+    df['CC_mean'] = pd.Series(np.concatenate((rtn, climp, atl)))
+    df['Group'] = pd.Series(np.concatenate((['RTN'] * len(rtn), ['Climp'] * len(climp), ['ATL'] * len(atl) )))
 
     ax = sns.boxenplot(data=df, x='Group', y='CC_mean')
     # plt.show()
     # plt.yscale('log')
-    # ax.set_ylim(-0.6, 1)
+    ax.set_ylim(0, 1)
     yt = ax.get_yticks()
     yt = [f'{y:.2f}' for y in yt]
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
     ax.set_yticklabels(yt, fontsize=18)
 
     # box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')]
-    box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
+    # box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
 
-    statannot.add_stat_annotation(ax, x='Group', y='CC_mean', data=df, box_pairs=box_pairs,
-                                  test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=20)
+    # statannot.add_stat_annotation(ax, x='Group', y='CC_mean', data=df, box_pairs=box_pairs,
+    #                               test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=20)
 
     region_name = 'Isolated' if region == 'iso' else 'Fuzzy'
     ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
+    measure_name = 'Mean' if measure == 'mean' else 'Standard Deviation'
 
     # plt.suptitle(f'{region_name} CC, per junction correlation across conditions', fontsize=20)
-    plt.title(f'Mean over 100 frames for Junction CC mean in {region_name} CC ({ch_name})', fontsize=24)
+    plt.title(f'{measure_name} over 100 frames for Junction CC mean \n in {region_name} CC ({ch_name})', fontsize=24)
     plt.grid(True)
+    # plt.tight_layout()
+    plt.subplots_adjust(hspace = 1, wspace = 0)
     plt.xlabel('Group', fontsize=24)
-    plt.ylabel('Mean over sequence per CC mean', fontsize=24)
+    plt.ylabel(f'{measure_name} over sequence per CC mean', fontsize=24)
     plt.show()
 
 
 
-# get_CC_mean_variation('egfp', 'iso')
-# get_CC_mean_variation('egfp', 'fuz')
-# get_CC_mean_variation('mch', 'iso')
-get_CC_mean_variation('mch', 'iso')
+# get_CC_mean_variation('egfp', 'iso', 'std')
+# get_CC_mean_variation('egfp', 'fuz', 'std')
+get_CC_mean_variation('mch', 'iso', 'std')
+get_CC_mean_variation('mch', 'fuz', 'std')
 exit()
 
+
+def plot_num_junctions():
+    """
+    Plot number of junctions per group
+    """
+    atl = pkl.load(open('ATL_egfp_iso_CC_mean.pkl', 'rb'))
+    climp = pkl.load(open('Climp_egfp_iso_CC_mean.pkl', 'rb'))
+    rtn = pkl.load(open('RTN_egfp_iso_CC_mean.pkl', 'rb'))
+    control = pkl.load(open('Control_egfp_iso_CC_mean.pkl', 'rb'))
+
+    atl_num = [len(series) for series in atl]
+    climp_num = [len(series) for series in climp]
+    rtn_num = [len(series) for series in rtn]
+    control_num = [len(series) for series in control]
+
+    df = pd.DataFrame()
+    df['Num_junctions'] = pd.Series(np.concatenate((control_num, rtn_num, climp_num, atl_num)))
+    df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_num), ['RTN'] * len(rtn_num), ['Climp'] * len(climp_num), ['ATL'] * len(atl_num))))
+
+    ax = sns.boxplot(data=df, x='Group', y='Num_junctions')
+    yt = ax.get_yticks()
+    yt = [f'{y:.2f}' for y in yt]
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
+    ax.set_yticklabels(yt, fontsize=18)
+    plt.rcParams['figure.figsize'] = (5, 20)
+    plt.title(f'Number of isolated junctions per sequence', fontsize=24)
+    plt.grid(True)
+    plt.xlabel('Group', fontsize=24)
+    plt.ylabel('Number of junctions', fontsize=24)
+    plt.show()
+
+# plot_num_junctions()
+# exit()
+
+
+def get_variation_from_pickles():
+    # atl_egfp = pkl.load(open('ATL_egfp_fuz_CC_mean.pkl', 'rb'))
+    # climp_egfp = pkl.load(open('Climp_egfp_fuz_CC_mean.pkl', 'rb'))
+    # rtn_egfp = pkl.load(open('RTN_egfp_fuz_CC_mean.pkl', 'rb'))
+    # control_egfp = pkl.load(open('Control_egfp_fuz_CC_mean.pkl', 'rb'))
+
+    atl_mch = pkl.load(open('ATL_mch_iso_CC_mean.pkl', 'rb'))
+    climp_mch = pkl.load(open('Climp_mch_iso_CC_mean.pkl', 'rb'))
+    rtn_mch = pkl.load(open('RTN_mch_iso_CC_mean.pkl', 'rb'))
+    # control_mch = pkl.load(open('Control_mch_fuz_CC_mean.pkl', 'rb'))
+
+
+
+    atl = get_mean_group_data(atl_mch, 'std')
+    climp = get_mean_group_data(climp_mch, 'std')
+    rtn = get_mean_group_data(rtn_mch, 'std')
+    # control = get_mean_group_data(control_egfp, 'std')
+
+    df = pd.DataFrame()
+    df['CC_mean'] = pd.Series(np.concatenate((atl, climp, rtn)))
+    df['Group'] = pd.Series(np.concatenate((['ATL'] * len(atl), ['Climp'] * len(climp), ['RTN'] * len(rtn))))#, ['Control'] * len(control))))
+
+    ax = sns.boxenplot(data=df, x='Group', y='CC_mean')
+
+    box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
+
+    statannot.add_stat_annotation(ax, x='Group', y='CC_mean', data=df, box_pairs=box_pairs,
+                                    test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=20)
+    
+    plt.title('Standard deviation over 100 frames for Junction CC mean in Isolated CC (mCherry)', fontsize=24)
+    plt.grid(True)
+    plt.xlabel('Group', fontsize=24)
+    plt.ylabel('Standard deviation over sequence per CC mean', fontsize=24)
+    plt.show()
+
+# get_variation_from_pickles()
+# exit()
+
+def plot_num_junctions_per_group():
+    # atl = get_num_junctions_per_group('ATL', 26)
+    # climp = get_num_junctions_per_group('Climp', 31)
+    # rtn = get_num_junctions_per_group('RTN', 29)
+    # control = get_num_junctions_per_group('Control', 31)
+
+
+    df = pd.DataFrame()
+    df['Num_junctions'] = pd.Series(np.concatenate((atl, climp, rtn, control)))
+    df['Group'] = pd.Series(np.concatenate((['ATL'] * len(atl), ['Climp'] * len(climp), ['RTN'] * len(rtn), ['Control'] * len(control))))
+
+    ax = sns.boxplot(data=df, y='Group', x='Num_junctions')
+    ax.set_yticklabels(ax.get_yticklabels(), fontsize=20)
+    xt = ax.get_xticks()
+    xt = [f'{x:.2f}' for x in xt]
+    ax.set_xticklabels(xt, fontsize=18)
+
+    # box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')]
+
+    # statannot.add_stat_annotation(ax, x='Group', y='Num_junctions', data=df, box_pairs=box_pairs,
+                                  
+    #                                 test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=20)
+    
+    plt.title('Number of isolated reference junctions', fontsize=24)
+    plt.grid(True)
+    plt.xlabel('Group', fontsize=24)
+    plt.ylabel('Number of junctions', fontsize=24)
+    plt.show()
+    
+# plot_num_junctions_per_group()    
+# exit()
 
 
 def per_CC_pixel_correlation(egfp_data, mch_data):
@@ -481,9 +594,9 @@ def plot_cc_area_all(a1, c1, r1, ct1, region):
     # df['Group'] = pd.Series(np.concatenate((['ATL'] * len(cc_area_atl), ['Climp'] * len(cc_area_climp),
     #                                         ['RTN'] * len(cc_area_rtn), ['Control'] * len(cc_area_ctrl))))
 
-    df['CC_area'] = pd.Series(np.concatenate((a1, c1, r1, ct1)))
-    df['Group'] = pd.Series(np.concatenate((
-        ['ATL'] * len(a1), ['Climp'] * len(c1), ['RTN'] * len(r1), ['Control'] * len(ct1))))
+    df['CC_area'] = pd.Series(np.concatenate((ct1, r1, c1, a1)))
+    df['Group'] = pd.Series(np.concatenate((['Control'] * len(ct1), ['RTN'] * len(r1), ['Climp'] * len(c1),
+        ['ATL'] * len(a1))))
 
     # df['Replicate'] = pd.Series(np.concatenate((['R1'] * len(a1), ['R2'] * len(a2), ['R3'] * len(a3), ['R1'] * len(c1),
     #                                             ['R2'] * len(c2), ['R3'] * len(c3), ['R1'] * len(r1), ['R2'] * len(r2),
@@ -502,13 +615,13 @@ def plot_cc_area_all(a1, c1, r1, ct1, region):
     ax.set_yticklabels(yt, fontsize=18)
     # sns.boxplot(data=df, x='Group', y='CC_area', hue='replicate', color='white', dodge=True)
 
-    plt.yscale('log')
+    # plt.yscale('log')
 
-    box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'),
-                 ('RTN', 'Control')]
+    # box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'),
+    #              ('RTN', 'Control')]
 
-    statannot.add_stat_annotation(ax, x='Group', y='CC_area', data=df, box_pairs=box_pairs,
-                                  test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=20)
+    # statannot.add_stat_annotation(ax, x='Group', y='CC_area', data=df, box_pairs=box_pairs,
+    #                               test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=20)
 
     region_name = 'Isolated' if region == 'iso' else 'Fuzzy'
 
@@ -517,16 +630,21 @@ def plot_cc_area_all(a1, c1, r1, ct1, region):
     plt.title(f'{region_name} CC area across conditions', fontsize=24)
     plt.grid(True)
     plt.xlabel('Group', fontsize=24)
-    plt.ylabel('CC_area (movement of junctions), log scale', fontsize=24)
+    # plt.ylabel('CC_area (movement of junctions), log scale', fontsize=24)
+    plt.ylabel('CC_area (movement of junctions)', fontsize=24)
     plt.show()
 
 
-a1 = pd.Series(cc_area_measure('ATL', 'iso', 1, 26))
-c1 = pd.Series(cc_area_measure('Climp', 'iso', 1, 31))
-r1 = pd.Series(cc_area_measure('RTN', 'iso', 1, 29))
-ct1 = pd.Series(cc_area_measure('Control', 'iso', 1, 31))
+# a1 = pd.Series(cc_area_measure('ATL', 'iso', 1, 26))
+# c1 = pd.Series(cc_area_measure('Climp', 'iso', 1, 31))
+# r1 = pd.Series(cc_area_measure('RTN', 'iso', 1, 29))
+# ct1 = pd.Series(cc_area_measure('Control', 'iso', 1, 31))
+ct1 = pkl.load(open('cc_area_Control_fuz.pkl', 'rb'))
+r1 = pkl.load(open('cc_area_RTN_fuz.pkl', 'rb'))
+c1 = pkl.load(open('cc_area_Climp_fuz.pkl', 'rb'))
+a1 = pkl.load(open('cc_area_ATL_fuz.pkl', 'rb'))
 
-plot_cc_area_all(a1, c1, r1, ct1, 'iso')
+plot_cc_area_all(a1, c1, r1, ct1, 'fuz')
 exit()
 
 
