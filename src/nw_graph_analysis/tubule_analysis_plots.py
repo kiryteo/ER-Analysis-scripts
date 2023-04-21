@@ -582,30 +582,72 @@ def get_length_per_tubule_variation(data, measure):
 
 
 def plot_tubule_length_distribution(connection, channel, measure):
-    atl_data = load_annot_tub_pickles('ATL', connection, channel)
-    climp_data = load_annot_tub_pickles('Climp', connection, channel)
-    rtn_data = load_annot_tub_pickles('RTN', connection, channel)
-    ctr_data = load_annot_tub_pickles('Control', connection, channel)
+    atl_iso_iso = load_annot_tub_pickles('ATL', 'iso-iso', channel)
+    atl_iso_fuz = load_annot_tub_pickles('ATL', 'iso-fuz', channel)
+    atl_fuz_fuz = load_annot_tub_pickles('ATL', 'fuz-fuz', channel)
+
+    climp_iso_iso = load_annot_tub_pickles('Climp', 'iso-iso', channel)
+    climp_iso_fuz = load_annot_tub_pickles('Climp', 'iso-fuz', channel)
+    climp_fuz_fuz = load_annot_tub_pickles('Climp', 'fuz-fuz', channel)
+
+    rtn_iso_iso = load_annot_tub_pickles('RTN', 'iso-iso', channel)
+    rtn_iso_fuz = load_annot_tub_pickles('RTN', 'iso-fuz', channel)
+    rtn_fuz_fuz = load_annot_tub_pickles('RTN', 'fuz-fuz', channel)
+
+    ctr_iso_iso = load_annot_tub_pickles('Control', 'iso-iso', channel)
+    ctr_iso_fuz = load_annot_tub_pickles('Control', 'iso-fuz', channel)
+    ctr_fuz_fuz = load_annot_tub_pickles('Control', 'fuz-fuz', channel)
 
     # atl_lengths = get_length_per_tubule(atl_data)
     # climp_lengths = get_length_per_tubule(climp_data)
     # rtn_lengths = get_length_per_tubule(rtn_data)
     # ctr_lengths = get_length_per_tubule(ctr_data)
 
-    atl_mean = get_length_per_tubule_variation(atl_data, measure)
-    climp_mean = get_length_per_tubule_variation(climp_data, measure)
-    rtn_mean = get_length_per_tubule_variation(rtn_data, measure)
-    ctr_mean = get_length_per_tubule_variation(ctr_data, measure)
+    atl_iso_iso_mean = get_length_per_tubule_variation(atl_iso_iso, measure)
+    atl_iso_fuz_mean = get_length_per_tubule_variation(atl_iso_fuz, measure)
+    atl_fuz_fuz_mean = get_length_per_tubule_variation(atl_fuz_fuz, measure)
+
+    climp_iso_iso_mean = get_length_per_tubule_variation(climp_iso_iso, measure)
+    climp_iso_fuz_mean = get_length_per_tubule_variation(climp_iso_fuz, measure)
+    climp_fuz_fuz_mean = get_length_per_tubule_variation(climp_fuz_fuz, measure)
+
+    rtn_iso_iso_mean = get_length_per_tubule_variation(rtn_iso_iso, measure)
+    rtn_iso_fuz_mean = get_length_per_tubule_variation(rtn_iso_fuz, measure)
+    rtn_fuz_fuz_mean = get_length_per_tubule_variation(rtn_fuz_fuz, measure)
+
+    ctr_iso_iso_mean = get_length_per_tubule_variation(ctr_iso_iso, measure)
+    ctr_iso_fuz_mean = get_length_per_tubule_variation(ctr_iso_fuz, measure)
+    ctr_fuz_fuz_mean = get_length_per_tubule_variation(ctr_fuz_fuz, measure)
+
+    # climp_mean = get_length_per_tubule_variation(climp_data, measure)
+    # rtn_mean = get_length_per_tubule_variation(rtn_data, measure)
+    # ctr_mean = get_length_per_tubule_variation(ctr_data, measure)
+
+    # ymin = min(min(atl_iso_iso_mean), min(atl_iso_fuz_mean), min(climp_iso_iso_mean), min(climp_iso_fuz_mean), min(rtn_iso_iso_mean), min(rtn_iso_fuz_mean), min(ctr_iso_iso_mean), min(ctr_iso_fuz_mean))
+    # ymax = max(max(atl_iso_iso_mean), max(atl_iso_fuz_mean), max(climp_iso_iso_mean), max(climp_iso_fuz_mean), max(rtn_iso_iso_mean), max(rtn_iso_fuz_mean), max(ctr_iso_iso_mean), max(ctr_iso_fuz_mean))
+    ymin = min(min(atl_iso_iso_mean), min(atl_iso_fuz_mean), min(atl_fuz_fuz_mean), min(climp_iso_iso_mean), min(climp_iso_fuz_mean), min(climp_fuz_fuz_mean), min(rtn_iso_iso_mean), min(rtn_iso_fuz_mean), min(rtn_fuz_fuz_mean), min(ctr_iso_iso_mean), min(ctr_iso_fuz_mean), min(ctr_fuz_fuz_mean))
+    ymax = max(max(atl_iso_iso_mean), max(atl_iso_fuz_mean), max(atl_fuz_fuz_mean), max(climp_iso_iso_mean), max(climp_iso_fuz_mean), max(climp_fuz_fuz_mean), max(rtn_iso_iso_mean), max(rtn_iso_fuz_mean), max(rtn_fuz_fuz_mean), max(ctr_iso_iso_mean), max(ctr_iso_fuz_mean), max(ctr_fuz_fuz_mean))
 
     df = pd.DataFrame()
-    df['tub-length'] = pd.Series(np.concatenate((ctr_mean, rtn_mean, climp_mean, atl_mean)))
-    df['Group'] = pd.Series(np.concatenate((['Control'] * len(ctr_mean), ['RTN'] * len(rtn_mean), ['Climp'] * len(climp_mean), ['ATL'] * len(atl_mean))))
+    if connection == 'iso-iso':
+        df['tub-length'] = pd.Series(np.concatenate((ctr_iso_iso_mean, rtn_iso_iso_mean, climp_iso_iso_mean, atl_iso_iso_mean)))
+        df['Group'] = pd.Series(np.concatenate((['Control'] * len(ctr_iso_iso_mean), ['RTN'] * len(rtn_iso_iso_mean), ['Climp'] * len(climp_iso_iso_mean), ['ATL'] * len(atl_iso_iso_mean))))
+    elif connection == 'iso-fuz':
+        df['tub-length'] = pd.Series(np.concatenate((ctr_iso_fuz_mean, rtn_iso_fuz_mean, climp_iso_fuz_mean, atl_iso_fuz_mean)))
+        df['Group'] = pd.Series(np.concatenate((['Control'] * len(ctr_iso_fuz_mean), ['RTN'] * len(rtn_iso_fuz_mean), ['Climp'] * len(climp_iso_fuz_mean), ['ATL'] * len(atl_iso_fuz_mean))))
+    else:
+        df['tub-length'] = pd.Series(np.concatenate((ctr_fuz_fuz_mean, rtn_fuz_fuz_mean, climp_fuz_fuz_mean, atl_fuz_fuz_mean)))
+        df['Group'] = pd.Series(np.concatenate((['Control'] * len(ctr_fuz_fuz_mean), ['RTN'] * len(rtn_fuz_fuz_mean), ['Climp'] * len(climp_fuz_fuz_mean), ['ATL'] * len(atl_fuz_fuz_mean))))
+
+    # df['tub-length'] = pd.Series(np.concatenate((ctr_mean, rtn_mean, climp_mean, atl_mean)))
+    # df['Group'] = pd.Series(np.concatenate((['Control'] * len(ctr_mean), ['RTN'] * len(rtn_mean), ['Climp'] * len(climp_mean), ['ATL'] * len(atl_mean))))
 
     # df['tub-length'] = pd.Series(np.concatenate((atl_lengths, climp_lengths, rtn_lengths, ctr_lengths)))
     # df['Group'] = pd.Series(np.concatenate((
             # ['ATL'] * len(atl_lengths), ['Climp'] * len(climp_lengths), ['RTN'] * len(rtn_lengths), ['Control'] * len(ctr_lengths))))
     
-    ax = sns.boxplot(data=df, x='Group', y='tub-length', dodge=True)
+    ax = sns.boxplot(data=df, x='Group', y='tub-length')#, dodge=True)
+    ax.set_ylim(ymin-0.2, ymax+0.2)
     # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
     yt = ax.get_yticks()
@@ -623,11 +665,12 @@ def plot_tubule_length_distribution(connection, channel, measure):
     measure_name = 'variance' if measure == 'var' else 'mean (pixels)'
     # plt.title(f'Tubule length in {connection} connections', fontsize=24)
 
-    plt.title(f'Tubule length {measure_name} per sequence in {connection} connections', fontsize=24)
+    plt.title(f'Tubule length {measure_name} per sequence \n in {connection} connections', fontsize=24)
     # plt.suptitle
     # plt.suptitle(f'{region_name} CC area across conditions', fontsize=20)
     # plt.title('CC area denotes the total movement of each junction', fontsize=18)
     plt.grid(True)
+    plt.subplots_adjust(hspace = 1, wspace = 0)
     plt.xlabel('Group', fontsize=24)
     # plt.ylabel('Tubule length (pixels)', fontsize=24)
     plt.ylabel(f'Tubule length {measure_name}', fontsize=24)

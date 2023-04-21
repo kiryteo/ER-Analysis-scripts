@@ -78,25 +78,59 @@ def get_CC_mean_variation(channel, region, measure):
     # control = cc_signal('Control', channel, region)
     # pkl.dump(control, open(f'Control_{channel}_{region}_CC_mean.pkl', 'wb'))
 
-    atl = pkl.load(open(f'ATL_{channel}_{region}_CC_mean.pkl', 'rb'))
-    climp = pkl.load(open(f'Climp_{channel}_{region}_CC_mean.pkl', 'rb'))
-    rtn = pkl.load(open(f'RTN_{channel}_{region}_CC_mean.pkl', 'rb'))
+    atl_iso = pkl.load(open(f'ATL_{channel}_iso_CC_mean.pkl', 'rb'))
+    atl_fuz = pkl.load(open(f'ATL_{channel}_fuz_CC_mean.pkl', 'rb'))
+
+    climp_iso = pkl.load(open(f'Climp_{channel}_iso_CC_mean.pkl', 'rb'))
+    climp_fuz = pkl.load(open(f'Climp_{channel}_fuz_CC_mean.pkl', 'rb'))
+
+    rtn_iso = pkl.load(open(f'RTN_{channel}_iso_CC_mean.pkl', 'rb'))
+    rtn_fuz = pkl.load(open(f'RTN_{channel}_fuz_CC_mean.pkl', 'rb'))
+
+    control_iso = pkl.load(open(f'Control_{channel}_iso_CC_mean.pkl', 'rb'))
+    control_fuz = pkl.load(open(f'Control_{channel}_fuz_CC_mean.pkl', 'rb'))
+
+    # atl = pkl.load(open(f'ATL_{channel}_{region}_CC_mean.pkl', 'rb'))
+    # climp = pkl.load(open(f'Climp_{channel}_{region}_CC_mean.pkl', 'rb'))
+    # rtn = pkl.load(open(f'RTN_{channel}_{region}_CC_mean.pkl', 'rb'))
     # control = pkl.load(open(f'Control_{channel}_{region}_CC_mean.pkl', 'rb'))
 
+    atl_iso = get_mean_group_data(atl_iso, measure)
+    atl_fuz = get_mean_group_data(atl_fuz, measure)
 
-    atl= get_mean_group_data(atl, measure)
-    climp = get_mean_group_data(climp, measure)
-    rtn = get_mean_group_data(rtn, measure)
+    climp_iso = get_mean_group_data(climp_iso, measure)
+    climp_fuz = get_mean_group_data(climp_fuz, measure)
+
+    rtn_iso = get_mean_group_data(rtn_iso, measure)
+    rtn_fuz = get_mean_group_data(rtn_fuz, measure)
+
+    control_iso = get_mean_group_data(control_iso, measure)
+    control_fuz = get_mean_group_data(control_fuz, measure)
+
+    ymax = max(max(atl_iso), max(atl_fuz), max(climp_iso), max(climp_fuz), max(rtn_iso), max(rtn_fuz), max(control_iso), max(control_fuz))
+    # ymin = min(min(atl_iso), min(atl_fuz), min(climp_iso), min(climp_fuz),
+    # min(rtn_iso), min(rtn_fuz), min(control_iso), min(control_fuz))
+
+
+
+    # atl= get_mean_group_data(atl, measure)
+    # climp = get_mean_group_data(climp, measure)
+    # rtn = get_mean_group_data(rtn, measure)
     # control = get_mean_group_data(control, measure)
 
     df = pd.DataFrame()
-    df['CC_mean'] = pd.Series(np.concatenate((rtn, climp, atl)))
-    df['Group'] = pd.Series(np.concatenate((['RTN'] * len(rtn), ['Climp'] * len(climp), ['ATL'] * len(atl) )))
+
+    if region == 'iso':
+        df['CC_mean'] = pd.Series(np.concatenate((control_iso, rtn_iso, climp_iso, atl_iso)))
+        df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_iso), ['RTN'] * len(rtn_iso), ['Climp'] * len(climp_iso), ['ATL'] * len(atl_iso) )))
+    else:
+        df['CC_mean'] = pd.Series(np.concatenate((control_fuz, rtn_fuz, climp_fuz, atl_fuz)))
+        df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_fuz), ['RTN'] * len(rtn_fuz), ['Climp'] * len(climp_fuz), ['ATL'] * len(atl_fuz))))
 
     ax = sns.boxenplot(data=df, x='Group', y='CC_mean')
     # plt.show()
     # plt.yscale('log')
-    ax.set_ylim(0, 1)
+    ax.set_ylim(0, ymax+0.01)
     yt = ax.get_yticks()
     yt = [f'{y:.2f}' for y in yt]
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
@@ -123,11 +157,30 @@ def get_CC_mean_variation(channel, region, measure):
 
 
 
-# get_CC_mean_variation('egfp', 'iso', 'std')
-# get_CC_mean_variation('egfp', 'fuz', 'std')
-get_CC_mean_variation('mch', 'iso', 'std')
-get_CC_mean_variation('mch', 'fuz', 'std')
-exit()
+# get_CC_mean_variation('egfp', 'iso', 'mean')
+# get_CC_mean_variation('egfp', 'fuz', 'mean')
+# get_CC_mean_variation('mch', 'iso', 'mean')
+# get_CC_mean_variation('mch', 'fuz', 'mean')
+# exit()
+
+
+def get_CC_mean_correlation(channel, region, measure):
+    atl_egfp_iso = pkl.load(open('ATL_egfp_iso_CC_mean.pkl', 'rb'))
+    atl_egfp_fuz = pkl.load(open('ATL_egfp_fuz_CC_mean.pkl', 'rb'))
+    atl_mch_iso = pkl.load(open('ATL_mch_iso_CC_mean.pkl', 'rb'))
+    atl_mch_fuz = pkl.load(open('ATL_mch_fuz_CC_mean.pkl', 'rb'))
+
+    climp_egfp_iso = pkl.load(open('Climp_egfp_iso_CC_mean.pkl', 'rb'))
+    climp_egfp_fuz = pkl.load(open('Climp_egfp_fuz_CC_mean.pkl', 'rb'))
+    climp_mch_iso = pkl.load(open('Climp_mch_iso_CC_mean.pkl', 'rb'))
+    climp_mch_fuz = pkl.load(open('Climp_mch_fuz_CC_mean.pkl', 'rb'))
+
+    rtn_egfp_iso = pkl.load(open('RTN_egfp_iso_CC_mean.pkl', 'rb'))
+    rtn_egfp_fuz = pkl.load(open('RTN_egfp_fuz_CC_mean.pkl', 'rb'))
+    rtn_mch_iso = pkl.load(open('RTN_mch_iso_CC_mean.pkl', 'rb'))
+    rtn_mch_fuz = pkl.load(open('RTN_mch_fuz_CC_mean.pkl', 'rb'))
+
+
 
 
 def plot_num_junctions():
