@@ -11,7 +11,7 @@ from numpy.polynomial.polynomial import polyfit
 import pandas as pd
 import scipy
 import os
-from scipy.stats import pearsonr
+from scipy.stats import pearsonr, sem
 import statannot
 from statsmodels.stats.multicomp import MultiComparison
 from scipy.stats import kruskal, mannwhitneyu
@@ -19,7 +19,7 @@ import pickle as pkl
 
 from structure_extraction import node_connector, get_updated_degree_nodes
 from junction_analysis_modules import JunctionAnalysis as JA
-from junction_analysis import cc_area_measure, cc_signal, cc_signal_net_norm, get_per_CC_pixel_data, get_mean_std_per_CC_pixel_data
+from junction_analysis import cc_area_measure, cc_signal, cc_signal_net_norm, get_per_CC_pixel_data, get_mean_std_per_CC_pixel_data, get_region_areas_per_group
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies'
 # pickle_path_prefix = '/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/CC_junctions/'
@@ -181,8 +181,6 @@ def get_CC_mean_correlation(channel, region, measure):
     rtn_mch_fuz = pkl.load(open('RTN_mch_fuz_CC_mean.pkl', 'rb'))
 
 
-
-
 def plot_num_junctions():
     """
     Plot number of junctions per group
@@ -201,11 +199,26 @@ def plot_num_junctions():
     df['Num_junctions'] = pd.Series(np.concatenate((control_num, rtn_num, climp_num, atl_num)))
     df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_num), ['RTN'] * len(rtn_num), ['Climp'] * len(climp_num), ['ATL'] * len(atl_num))))
 
-    ax = sns.boxplot(data=df, x='Group', y='Num_junctions')
+    ax = sns.boxplot(data=df, x='Group', y='Num_junctions', fliersize=5, whis=0.5, linewidth=2)
+    # ax = sns.boxplot(data=df, x='Group', y='Num_junctions', showfliers=False, whis=0.5, linewidth=2)
+
+    # ax = sns.barplot(data=df, x='Group', y='Num_junctions')#, ci='sd', capsize=0.2, linewidth=2, errwidth=2)
     yt = ax.get_yticks()
     yt = [f'{y:.2f}' for y in yt]
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
     ax.set_yticklabels(yt, fontsize=18)
+
+    # sns.pointplot(x='Group', y='Num_junctions', data=df.groupby('Group', as_index=False).mean(), ax=ax)
+
+    # ctrl_sem = np.std(control_num) / np.sqrt(len(control_num))
+    # rtn_sem = np.std(rtn_num) / np.sqrt(len(rtn_num))
+    # climp_sem = np.std(climp_num) / np.sqrt(len(climp_num))
+    # atl_sem = np.std(atl_num) / np.sqrt(len(atl_num))
+
+    # plt.errorbar(x=[0, 1, 2, 3], y=[np.mean(control_num), np.mean(rtn_num), np.mean(climp_num), np.mean(atl_num)], yerr=[np.std(control_num), np.std(rtn_num), np.std(climp_num), np.std(atl_num)], fmt='o', color='black', capsize=5, markersize=8)
+
+    # plt.errorbar(x=[0, 1, 2, 3], y=[np.mean(control_num), np.mean(rtn_num), np.mean(climp_num), np.mean(atl_num)], yerr=[ctrl_sem, rtn_sem, climp_sem, atl_sem], fmt='o', color='black', capsize=5, markersize=8)
+
     plt.rcParams['figure.figsize'] = (5, 20)
     plt.title(f'Number of isolated junctions per sequence', fontsize=24)
     plt.grid(True)
@@ -215,6 +228,116 @@ def plot_num_junctions():
 
 # plot_num_junctions()
 # exit()
+
+def get_iso_fuz_ratio():
+    atl_iso = pkl.load(open('ATL_egfp_iso_CC_mean.pkl', 'rb'))
+    climp_iso = pkl.load(open('Climp_egfp_iso_CC_mean.pkl', 'rb'))
+    rtn_iso = pkl.load(open('RTN_egfp_iso_CC_mean.pkl', 'rb'))
+    control_iso = pkl.load(open('Control_egfp_iso_CC_mean.pkl', 'rb'))
+
+    atl_fuz = pkl.load(open('ATL_egfp_fuz_CC_mean.pkl', 'rb'))
+    climp_fuz = pkl.load(open('Climp_egfp_fuz_CC_mean.pkl', 'rb'))
+    rtn_fuz = pkl.load(open('RTN_egfp_fuz_CC_mean.pkl', 'rb'))
+    control_fuz = pkl.load(open('Control_egfp_fuz_CC_mean.pkl', 'rb'))
+
+    atl_iso_num = [len(series) for series in atl_iso]
+    climp_iso_num = [len(series) for series in climp_iso]
+    rtn_iso_num = [len(series) for series in rtn_iso]
+    control_iso_num = [len(series) for series in control_iso]
+
+    atl_fuz_num = [len(series) for series in atl_fuz]
+    climp_fuz_num = [len(series) for series in climp_fuz]
+    rtn_fuz_num = [len(series) for series in rtn_fuz]
+    control_fuz_num = [len(series) for series in control_fuz]
+
+    atl_ratio = [iso / fuz for iso, fuz in zip(atl_iso_num, atl_fuz_num)]
+    climp_ratio = [iso / fuz for iso, fuz in zip(climp_iso_num, climp_fuz_num)]
+    rtn_ratio = [iso / fuz for iso, fuz in zip(rtn_iso_num, rtn_fuz_num)]
+    
+    control_ratio = [iso / fuz for iso, fuz in zip(control_iso_num, control_fuz_num) if fuz != 0]
+
+    df = pd.DataFrame()
+    df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_ratio), ['RTN'] * len(rtn_ratio), ['Climp'] * len(climp_ratio), ['ATL'] * len(atl_ratio))))
+
+    df['Ratio'] = pd.Series(np.concatenate((control_ratio, rtn_ratio, climp_ratio, atl_ratio)))
+
+    ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, whis=0.5, linewidth=2)
+    # ax = sns.swarmplot(data=df, x='Group', y='Ratio', color='black', size=8)
+
+    yt = ax.get_yticks()
+    yt = [f'{y:.2f}' for y in yt]
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
+    ax.set_yticklabels(yt, fontsize=18)
+
+    plt.rcParams['figure.figsize'] = (5, 20)
+    plt.title(f'Isolated to Overlapping junctions ratio', fontsize=24)
+    plt.grid(True)
+    plt.xlabel('Group', fontsize=24)
+    plt.ylabel('Ratio', fontsize=24)
+    plt.show()
+
+# get_iso_fuz_ratio()
+# exit() 
+
+def get_iso_fuz_area_ratio():
+    atl_iso = get_region_areas_per_group('ATL', 26, 'iso')
+    with open('ATL_iso_area.pkl', 'wb') as f:
+        pkl.dump(atl_iso, f)
+    
+    climp_iso = get_region_areas_per_group('Climp', 31, 'iso')
+    with open('Climp_iso_area.pkl', 'wb') as f:
+        pkl.dump(climp_iso, f)
+
+    rtn_iso = get_region_areas_per_group('RTN', 29, 'iso')
+    with open('RTN_iso_area.pkl', 'wb') as f:
+        pkl.dump(rtn_iso, f)
+
+    control_iso = get_region_areas_per_group('Control', 31, 'iso')
+    with open('Control_iso_area.pkl', 'wb') as f:
+        pkl.dump(control_iso, f)
+
+    atl_fuz = get_region_areas_per_group('ATL', 26, 'fuz')
+    with open('ATL_fuz_area.pkl', 'wb') as f:
+        pkl.dump(atl_fuz, f)
+
+    climp_fuz = get_region_areas_per_group('Climp', 31, 'fuz')
+    with open('Climp_fuz_area.pkl', 'wb') as f:
+        pkl.dump(climp_fuz, f)
+
+    rtn_fuz = get_region_areas_per_group('RTN', 29, 'fuz')
+    with open('RTN_fuz_area.pkl', 'wb') as f:
+        pkl.dump(rtn_fuz, f)
+
+    control_fuz = get_region_areas_per_group('Control', 31, 'fuz')
+    with open('Control_fuz_area.pkl', 'wb') as f:
+        pkl.dump(control_fuz, f)
+
+    atl_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(atl_iso, atl_fuz)]
+    climp_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(climp_iso, climp_fuz)]
+    rtn_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(rtn_iso, rtn_fuz)]
+    control_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(control_iso, control_fuz)]
+
+    df = pd.DataFrame()
+    df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_ratio), ['RTN'] * len(rtn_ratio), ['Climp'] * len(climp_ratio), ['ATL'] * len(atl_ratio))))
+
+    df['Ratio'] = pd.Series(np.concatenate((control_ratio, rtn_ratio, climp_ratio, atl_ratio)))
+
+    ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, whis=0.5, linewidth=2)
+
+    yt = ax.get_yticks()
+    yt = [f'{y:.2f}' for y in yt]
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
+    ax.set_yticklabels(yt, fontsize=18)
+
+    plt.rcParams['figure.figsize'] = (5, 20)
+    plt.title(f'Isolated to Overlapping CC area ratio', fontsize=24)
+    plt.grid(True)
+    plt.xlabel('Group', fontsize=24)
+    plt.ylabel('Ratio', fontsize=24)
+    plt.show()
+
+get_iso_fuz_area_ratio()
+exit()
 
 
 def get_variation_from_pickles():

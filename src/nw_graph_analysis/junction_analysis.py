@@ -69,9 +69,9 @@ def get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, region
     return label_id_junctions
 
 
-# ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions('ATL', 1)
-# label_ids, assigned_components = junc_analysis.get_ref_junc_per_CC_id(ref_junctions, labelled_img)
-# label_id_junctions = get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, 'fuz')
+ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions('ATL', 1)
+label_ids, assigned_components = junc_analysis.get_ref_junc_per_CC_id(ref_junctions, labelled_img)
+label_id_junctions = get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, 'fuz')
 
 
 # get pixel data per CC id
