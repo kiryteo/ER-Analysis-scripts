@@ -370,6 +370,30 @@ def plot_junc_areas_og(group, series_num, labelled_img, iso, fuz, skdata, iso_cc
         plt.show()
 
 
+def plot_ref_iso_fuz_junc(group, series_num, iso, fuz):
+    for i in range(1):
+        plt.axis('off')
+        if group == 'Control':
+            img = imageio.imread(f'{confocal_data_path}{group}/files/img_{series_num}_decon_t0{i:02d}.tif')
+        else:
+            img = imageio.imread(f'{confocal_data_path}{group}/files/{group[0]}{series_num}_decon_t0{i:02d}_ch00.tif')
+
+        img = (img - img.min()) / (img.max() - img.min())
+
+        plt.imshow(img, cmap='gray', interpolation=None)
+
+        if len(fuz) > 0:
+            plt.plot(fuz[:, 1], fuz[:, 0], '.', markerfacecolor='None', markeredgecolor='blue', mew=1)
+
+        plt.plot(iso[:, 1], iso[:, 0], '.', markerfacecolor='None', markeredgecolor='red', mew=1)
+
+        plt.axis('off')
+        plt.savefig(f'{group}_series{series_num}_ref_iso_fuz', bbox_inches='tight', pad_inches=0, dpi=700)
+        plt.close()
+
+        # plt.show()
+
+
 def get_cc_ids(labelled_img, region):
     """
     Get CC ids for the specified region
@@ -393,19 +417,19 @@ def get_cc_ids(labelled_img, region):
     return cc_ids
 
 
-ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions('Climp', 12)
+ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions('Control', 13)
 # dict with ids as key and (x, y) as value
 label_ids, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
 
 # iso, fuz, unk: list of lists with x, y
 iso, fuz, unk = junc_analysis.get_junction_areas(label_ids, unassigned_cc_dict)
 
-iso_cc = get_cc_ids(labelled_img, iso)
-fuz_cc = get_cc_ids(labelled_img, fuz)
-# unk_cc = get_cc_ids(labelled_img, unk)
+# iso_cc = get_cc_ids(labelled_img, iso)
+# fuz_cc = get_cc_ids(labelled_img, fuz)
+# # unk_cc = get_cc_ids(labelled_img, unk)
 
-iso_cc_coords = {each: np.where(labelled_img==each) for each in iso_cc}
-fuz_cc_coords = {each: np.where(labelled_img==each) for each in fuz_cc}
+# iso_cc_coords = {each: np.where(labelled_img==each) for each in iso_cc}
+# fuz_cc_coords = {each: np.where(labelled_img==each) for each in fuz_cc}
 # unk_cc_coords = {each: np.where(labelled_img==each) for each in unk_cc}
 #
 #
@@ -413,7 +437,9 @@ fuz_cc_coords = {each: np.where(labelled_img==each) for each in fuz_cc}
 # for each in iso:
 #     iso_list.append([each[0], each[1]])
 
-plot_junc_areas_og('Climp', 12, labelled_img, iso, fuz, per_frame_junctions, iso_cc_coords, fuz_cc_coords)
+# plot_junc_areas_og('Climp', 12, labelled_img, iso, fuz, per_frame_junctions, iso_cc_coords, fuz_cc_coords)
+
+plot_ref_iso_fuz_junc('Control', 13, iso, fuz)
 
 exit()
 

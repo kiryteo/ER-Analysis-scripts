@@ -195,18 +195,30 @@ def plot_num_junctions():
     rtn_num = [len(series) for series in rtn]
     control_num = [len(series) for series in control]
 
+    # print(atl_num)
+    # print(climp_num)
+    # print(rtn_num)
+    # print(control_num)
+    # exit()
+
     df = pd.DataFrame()
     df['Num_junctions'] = pd.Series(np.concatenate((control_num, rtn_num, climp_num, atl_num)))
-    df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_num), ['RTN'] * len(rtn_num), ['Climp'] * len(climp_num), ['ATL'] * len(atl_num))))
+    df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_num), ['Reticulon'] * len(rtn_num), ['Climp'] * len(climp_num), ['Atlastin'] * len(atl_num))))
 
-    ax = sns.boxplot(data=df, x='Group', y='Num_junctions', fliersize=5, whis=0.5, linewidth=2)
+    ax = sns.boxplot(data=df, x='Group', y='Num_junctions', showfliers=False, linewidth=2)
     # ax = sns.boxplot(data=df, x='Group', y='Num_junctions', showfliers=False, whis=0.5, linewidth=2)
 
     # ax = sns.barplot(data=df, x='Group', y='Num_junctions')#, ci='sd', capsize=0.2, linewidth=2, errwidth=2)
+
+    # yt = ax.get_yticks()
+    # yt = [f'{y:.2f}' for y in yt]
+    # ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
+    # ax.set_yticklabels(yt, fontsize=18)
+
     yt = ax.get_yticks()
     yt = [f'{y:.2f}' for y in yt]
+    ax.set_yticklabels(yt, fontsize=20)
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
-    ax.set_yticklabels(yt, fontsize=18)
 
     # sns.pointplot(x='Group', y='Num_junctions', data=df.groupby('Group', as_index=False).mean(), ax=ax)
 
@@ -219,18 +231,26 @@ def plot_num_junctions():
 
     # plt.errorbar(x=[0, 1, 2, 3], y=[np.mean(control_num), np.mean(rtn_num), np.mean(climp_num), np.mean(atl_num)], yerr=[ctrl_sem, rtn_sem, climp_sem, atl_sem], fmt='o', color='black', capsize=5, markersize=8)
 
-    plt.rcParams['figure.figsize'] = (5, 20)
+    # plt.rcParams['figure.figsize'] = (5, 20)
     plt.title(f'Number of isolated junctions per sequence', fontsize=24)
     plt.grid(True)
     plt.xlabel('Group', fontsize=24)
     plt.ylabel('Number of junctions', fontsize=24)
-    plt.show()
+    # plt.show()
+    plt.gcf().set_size_inches(14, 8)
+    plt.savefig('num_juncs_iso.png', bbox_inches='tight', pad_inches=0.6)
+    plt.close()
 
 # plot_num_junctions()
 # exit()
 
 def get_iso_fuz_ratio():
     atl_iso = pkl.load(open('ATL_egfp_iso_CC_mean.pkl', 'rb'))
+
+    atl_iso_num = [len(series) for series in atl_iso]
+    print(atl_iso_num)
+    exit()
+
     climp_iso = pkl.load(open('Climp_egfp_iso_CC_mean.pkl', 'rb'))
     rtn_iso = pkl.load(open('RTN_egfp_iso_CC_mean.pkl', 'rb'))
     control_iso = pkl.load(open('Control_egfp_iso_CC_mean.pkl', 'rb'))
@@ -256,6 +276,18 @@ def get_iso_fuz_ratio():
     
     control_ratio = [iso / fuz for iso, fuz in zip(control_iso_num, control_fuz_num) if fuz != 0]
 
+    # print(atl_ratio)
+    # print(climp_ratio)
+    # print(rtn_ratio)
+    # print(control_ratio)
+
+    # print(np.median(atl_ratio)) # 6
+    # print(np.median(climp_ratio)) # 13
+    # print(np.median(rtn_ratio)) # 2
+    # print(np.median(control_ratio)) # 13
+
+    # exit()
+
     df = pd.DataFrame()
     df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_ratio), ['RTN'] * len(rtn_ratio), ['Climp'] * len(climp_ratio), ['ATL'] * len(atl_ratio))))
 
@@ -276,46 +308,56 @@ def get_iso_fuz_ratio():
     plt.ylabel('Ratio', fontsize=24)
     plt.show()
 
-# get_iso_fuz_ratio()
-# exit() 
+get_iso_fuz_ratio()
+exit()
 
 def get_iso_fuz_area_ratio():
-    atl_iso = get_region_areas_per_group('ATL', 26, 'iso')
-    with open('ATL_iso_area.pkl', 'wb') as f:
-        pkl.dump(atl_iso, f)
+    # atl_iso = get_region_areas_per_group('ATL', 26, 'iso')
+    # with open('ATL_iso_area.pkl', 'wb') as f:
+    #     pkl.dump(atl_iso, f)
     
-    climp_iso = get_region_areas_per_group('Climp', 31, 'iso')
-    with open('Climp_iso_area.pkl', 'wb') as f:
-        pkl.dump(climp_iso, f)
+    # climp_iso = get_region_areas_per_group('Climp', 31, 'iso')
+    # with open('Climp_iso_area.pkl', 'wb') as f:
+    #     pkl.dump(climp_iso, f)
 
-    rtn_iso = get_region_areas_per_group('RTN', 29, 'iso')
-    with open('RTN_iso_area.pkl', 'wb') as f:
-        pkl.dump(rtn_iso, f)
+    # rtn_iso = get_region_areas_per_group('RTN', 29, 'iso')
+    # with open('RTN_iso_area.pkl', 'wb') as f:
+    #     pkl.dump(rtn_iso, f)
 
-    control_iso = get_region_areas_per_group('Control', 31, 'iso')
-    with open('Control_iso_area.pkl', 'wb') as f:
-        pkl.dump(control_iso, f)
+    # control_iso = get_region_areas_per_group('Control', 31, 'iso')
+    # with open('Control_iso_area.pkl', 'wb') as f:
+    #     pkl.dump(control_iso, f)
 
-    atl_fuz = get_region_areas_per_group('ATL', 26, 'fuz')
-    with open('ATL_fuz_area.pkl', 'wb') as f:
-        pkl.dump(atl_fuz, f)
+    # atl_fuz = get_region_areas_per_group('ATL', 26, 'fuz')
+    # with open('ATL_fuz_area.pkl', 'wb') as f:
+    #     pkl.dump(atl_fuz, f)
 
-    climp_fuz = get_region_areas_per_group('Climp', 31, 'fuz')
-    with open('Climp_fuz_area.pkl', 'wb') as f:
-        pkl.dump(climp_fuz, f)
+    # climp_fuz = get_region_areas_per_group('Climp', 31, 'fuz')
+    # with open('Climp_fuz_area.pkl', 'wb') as f:
+    #     pkl.dump(climp_fuz, f)
 
-    rtn_fuz = get_region_areas_per_group('RTN', 29, 'fuz')
-    with open('RTN_fuz_area.pkl', 'wb') as f:
-        pkl.dump(rtn_fuz, f)
+    # rtn_fuz = get_region_areas_per_group('RTN', 29, 'fuz')
+    # with open('RTN_fuz_area.pkl', 'wb') as f:
+    #     pkl.dump(rtn_fuz, f)
 
-    control_fuz = get_region_areas_per_group('Control', 31, 'fuz')
-    with open('Control_fuz_area.pkl', 'wb') as f:
-        pkl.dump(control_fuz, f)
+    # control_fuz = get_region_areas_per_group('Control', 31, 'fuz')
+    # with open('Control_fuz_area.pkl', 'wb') as f:
+    #     pkl.dump(control_fuz, f)
+
+    atl_iso = pkl.load(open('ATL_iso_area.pkl', 'rb'))
+    climp_iso = pkl.load(open('Climp_iso_area.pkl', 'rb'))
+    rtn_iso = pkl.load(open('RTN_iso_area.pkl', 'rb'))
+    control_iso = pkl.load(open('Control_iso_area.pkl', 'rb'))
+
+    atl_fuz = pkl.load(open('ATL_fuz_area.pkl', 'rb'))
+    climp_fuz = pkl.load(open('Climp_fuz_area.pkl', 'rb'))
+    rtn_fuz = pkl.load(open('RTN_fuz_area.pkl', 'rb'))
+    control_fuz = pkl.load(open('Control_fuz_area.pkl', 'rb'))
 
     atl_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(atl_iso, atl_fuz)]
     climp_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(climp_iso, climp_fuz)]
     rtn_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(rtn_iso, rtn_fuz)]
-    control_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(control_iso, control_fuz)]
+    control_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(control_iso, control_fuz) if sum(fuz) != 0]
 
     df = pd.DataFrame()
     df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_ratio), ['RTN'] * len(rtn_ratio), ['Climp'] * len(climp_ratio), ['ATL'] * len(atl_ratio))))

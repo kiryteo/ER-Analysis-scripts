@@ -135,33 +135,32 @@ def plot_per_pixel_variation_over_sequence(connection, channel, variation):
     if channel == 'egfp':
         control_variation = get_per_pixel_variation_over_sequence('Control', connection, channel, variation)
         
-        df['Per-pixel-variation'] = pd.Series(np.concatenate((atl_variation, climp_variation, rtn_variation, control_variation)))
+        df['Per-pixel-variation'] = pd.Series(np.concatenate((control_variation, rtn_variation, climp_variation, atl_variation)))
 
-        df['Group'] = pd.Series(np.concatenate((['ATL']*len(atl_variation), ['Climp']*len(climp_variation), ['RTN']*len(rtn_variation), ['Control']*len(control_variation))))
+        df['Group'] = pd.Series(np.concatenate((['Control']*len(control_variation), ['RTN']*len(rtn_variation), ['Climp']*len(climp_variation), ['ATL']*len(atl_variation))))
     else:
-        df['Per-pixel-variation'] = pd.Series(np.concatenate((atl_variation, climp_variation, rtn_variation)))
+        df['Per-pixel-variation'] = pd.Series(np.concatenate((rtn_variation, climp_variation, atl_variation)))
 
-        df['Group'] = pd.Series(np.concatenate((['ATL']*len(atl_variation), ['Climp']*len(climp_variation), ['RTN']*len(rtn_variation))))
+        df['Group'] = pd.Series(np.concatenate((['RTN']*len(rtn_variation), ['Climp']*len(climp_variation), ['ATL']*len(atl_variation))))
 
     ax = sns.boxenplot(data=df, x='Group', y='Per-pixel-variation')
-    box_pairs = get_group_box_pairs(channel)
+    ax.set_ylim(0, 0.3)
+    # box_pairs = get_group_box_pairs(channel)
 
-    statannot.add_stat_annotation(ax, x='Group', y='Per-pixel-variation', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=20)
+    # statannot.add_stat_annotation(ax, x='Group', y='Per-pixel-variation', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=20)
 
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=18)
     yt = ax.get_yticks()
     yt = [f'{y:.2f}' for y in yt]
     ax.set_yticklabels(yt, fontsize=18)
 
-        # plt.yscale('log')
-
-
     ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
     variation_name = 'standard deviation' if variation == 'std' else 'mean'
 
-    plt.title(f'Per-pixel {variation_name} over sequence for {connection} tubules in {ch_name}', fontsize=24)
+    plt.title(f'Per-pixel {variation_name} over sequence \n for {connection} tubules in {ch_name}', fontsize=24)
 
     plt.grid(True)
+    plt.subplots_adjust(hspace = 1, wspace = 0)
     plt.xlabel('Group', fontsize=24)
     # plt.ylabel(f'Tubular {variation}, log scale', fontsize=18)
     # plt.ylabel(f'Tubular {variation}', fontsize=18)
@@ -170,24 +169,36 @@ def plot_per_pixel_variation_over_sequence(connection, channel, variation):
 
 
 
+# ylim 0, 1
 
 # plot_per_pixel_variation_over_sequence('iso-iso', 'egfp', 'mean')
-# plot_per_pixel_variation_over_sequence('iso-iso', 'egfp', 'std')
-# plot_per_pixel_variation_over_sequence('iso-iso', 'mch', 'mean')
-# plot_per_pixel_variation_over_sequence('iso-iso', 'mch', 'std')
-
-# plot_per_pixel_variation_over_sequence('iso-fuz', 'mch', 'std')
-# plot_per_pixel_variation_over_sequence('iso-fuz', 'mch', 'mean')
-# plot_per_pixel_variation_over_sequence('iso-fuz', 'egfp', 'std')
 # plot_per_pixel_variation_over_sequence('iso-fuz', 'egfp', 'mean')
-
-# plot_per_pixel_variation_over_sequence('fuz-fuz', 'mch', 'std')
-# plot_per_pixel_variation_over_sequence('fuz-fuz', 'mch', 'mean')
-# plot_per_pixel_variation_over_sequence('fuz-fuz', 'egfp', 'std')
 # plot_per_pixel_variation_over_sequence('fuz-fuz', 'egfp', 'mean')
 
 # exit()
 
+# ylim 0, 0.9
+# plot_per_pixel_variation_over_sequence('iso-iso', 'mch', 'mean')
+# plot_per_pixel_variation_over_sequence('iso-fuz', 'mch', 'mean')
+# plot_per_pixel_variation_over_sequence('fuz-fuz', 'mch', 'mean')
+
+
+# exit()
+
+# ylim 0, 0.35
+
+# plot_per_pixel_variation_over_sequence('iso-iso', 'egfp', 'std')
+# plot_per_pixel_variation_over_sequence('iso-fuz', 'egfp', 'std')
+# plot_per_pixel_variation_over_sequence('fuz-fuz', 'egfp', 'std')
+
+# exit()
+
+# ylim 0, 0.3
+
+# plot_per_pixel_variation_over_sequence('iso-iso', 'mch', 'std')
+# plot_per_pixel_variation_over_sequence('iso-fuz', 'mch', 'std')
+# plot_per_pixel_variation_over_sequence('fuz-fuz', 'mch', 'std')
+# exit()
 
 
 
@@ -229,13 +240,15 @@ def plot_per_pixel_correlation_over_sequence(connection):
 
     df = pd.DataFrame()
     
-    df['Per-pixel-corr'] = pd.Series(np.concatenate((atl_corr_vals, climp_corr_vals, rtn_corr_vals)))
+    df['Per-pixel-corr'] = pd.Series(np.concatenate((rtn_corr_vals, climp_corr_vals, atl_corr_vals)))
     
-    df['Group'] = pd.Series(np.concatenate((['ATL']*len(atl_corr_vals), ['Climp']*len(climp_corr_vals), ['RTN']*len(rtn_corr_vals))))
+    df['Group'] = pd.Series(np.concatenate((['RTN']*len(rtn_corr_vals), ['Climp']*len(climp_corr_vals), ['ATL']*len(atl_corr_vals))))
 
-    ax = sns.boxenplot(data=df, x='Group', y='Per-pixel-corr')
-    box_pairs = get_group_box_pairs('mch')
-    statannot.add_stat_annotation(ax, x='Group', y='Per-pixel-corr', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=20)
+    ax = sns.violinplot(data=df, x='Group', y='Per-pixel-corr')
+    ax.set_ylim(-0.4, 0.85)
+
+    # box_pairs = get_group_box_pairs('mch')
+    # statannot.add_stat_annotation(ax, x='Group', y='Per-pixel-corr', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=20)
 
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=18)
     yt = ax.get_yticks()
@@ -251,6 +264,7 @@ def plot_per_pixel_correlation_over_sequence(connection):
     plt.title(f'Per pixel cross-correlation over the sequence in {connection} tubules', fontsize=24)
 
     plt.grid(True)
+    plt.subplots_adjust(hspace = 1, wspace = 0)
     plt.xlabel('Group', fontsize=24)
     # plt.ylabel(f'Tubular {variation}, log scale', fontsize=18)
     # plt.ylabel(f'Tubular {variation}', fontsize=18)
@@ -582,42 +596,53 @@ def get_length_per_tubule_variation(data, measure):
 
 
 def plot_tubule_length_distribution(connection, channel, measure):
-    atl_iso_iso = load_annot_tub_pickles('ATL', 'iso-iso', channel)
-    atl_iso_fuz = load_annot_tub_pickles('ATL', 'iso-fuz', channel)
-    atl_fuz_fuz = load_annot_tub_pickles('ATL', 'fuz-fuz', channel)
 
-    climp_iso_iso = load_annot_tub_pickles('Climp', 'iso-iso', channel)
-    climp_iso_fuz = load_annot_tub_pickles('Climp', 'iso-fuz', channel)
-    climp_fuz_fuz = load_annot_tub_pickles('Climp', 'fuz-fuz', channel)
+    atl_conn = load_annot_tub_pickles('ATL', connection, channel)
+    climp_conn = load_annot_tub_pickles('Climp', connection, channel)
+    rtn_conn = load_annot_tub_pickles('RTN', connection, channel)
+    ctrl_conn = load_annot_tub_pickles('Control', connection, channel)
 
-    rtn_iso_iso = load_annot_tub_pickles('RTN', 'iso-iso', channel)
-    rtn_iso_fuz = load_annot_tub_pickles('RTN', 'iso-fuz', channel)
-    rtn_fuz_fuz = load_annot_tub_pickles('RTN', 'fuz-fuz', channel)
+    atl_conn_variation = get_length_per_tubule_variation(atl_conn, measure)
+    climp_conn_variation = get_length_per_tubule_variation(climp_conn, measure)
+    rtn_conn_variation = get_length_per_tubule_variation(rtn_conn, measure)
+    ctrl_conn_variation = get_length_per_tubule_variation(ctrl_conn, measure)
 
-    ctr_iso_iso = load_annot_tub_pickles('Control', 'iso-iso', channel)
-    ctr_iso_fuz = load_annot_tub_pickles('Control', 'iso-fuz', channel)
-    ctr_fuz_fuz = load_annot_tub_pickles('Control', 'fuz-fuz', channel)
+    # atl_iso_iso = load_annot_tub_pickles('ATL', 'iso-iso', channel)
+    # atl_iso_fuz = load_annot_tub_pickles('ATL', 'iso-fuz', channel)
+    # atl_fuz_fuz = load_annot_tub_pickles('ATL', 'fuz-fuz', channel)
+
+    # climp_iso_iso = load_annot_tub_pickles('Climp', 'iso-iso', channel)
+    # climp_iso_fuz = load_annot_tub_pickles('Climp', 'iso-fuz', channel)
+    # climp_fuz_fuz = load_annot_tub_pickles('Climp', 'fuz-fuz', channel)
+
+    # rtn_iso_iso = load_annot_tub_pickles('RTN', 'iso-iso', channel)
+    # rtn_iso_fuz = load_annot_tub_pickles('RTN', 'iso-fuz', channel)
+    # rtn_fuz_fuz = load_annot_tub_pickles('RTN', 'fuz-fuz', channel)
+
+    # ctr_iso_iso = load_annot_tub_pickles('Control', 'iso-iso', channel)
+    # ctr_iso_fuz = load_annot_tub_pickles('Control', 'iso-fuz', channel)
+    # ctr_fuz_fuz = load_annot_tub_pickles('Control', 'fuz-fuz', channel)
 
     # atl_lengths = get_length_per_tubule(atl_data)
     # climp_lengths = get_length_per_tubule(climp_data)
     # rtn_lengths = get_length_per_tubule(rtn_data)
     # ctr_lengths = get_length_per_tubule(ctr_data)
 
-    atl_iso_iso_mean = get_length_per_tubule_variation(atl_iso_iso, measure)
-    atl_iso_fuz_mean = get_length_per_tubule_variation(atl_iso_fuz, measure)
-    atl_fuz_fuz_mean = get_length_per_tubule_variation(atl_fuz_fuz, measure)
+    # atl_iso_iso_mean = get_length_per_tubule_variation(atl_iso_iso, measure)
+    # atl_iso_fuz_mean = get_length_per_tubule_variation(atl_iso_fuz, measure)
+    # atl_fuz_fuz_mean = get_length_per_tubule_variation(atl_fuz_fuz, measure)
 
-    climp_iso_iso_mean = get_length_per_tubule_variation(climp_iso_iso, measure)
-    climp_iso_fuz_mean = get_length_per_tubule_variation(climp_iso_fuz, measure)
-    climp_fuz_fuz_mean = get_length_per_tubule_variation(climp_fuz_fuz, measure)
+    # climp_iso_iso_mean = get_length_per_tubule_variation(climp_iso_iso, measure)
+    # climp_iso_fuz_mean = get_length_per_tubule_variation(climp_iso_fuz, measure)
+    # climp_fuz_fuz_mean = get_length_per_tubule_variation(climp_fuz_fuz, measure)
 
-    rtn_iso_iso_mean = get_length_per_tubule_variation(rtn_iso_iso, measure)
-    rtn_iso_fuz_mean = get_length_per_tubule_variation(rtn_iso_fuz, measure)
-    rtn_fuz_fuz_mean = get_length_per_tubule_variation(rtn_fuz_fuz, measure)
+    # rtn_iso_iso_mean = get_length_per_tubule_variation(rtn_iso_iso, measure)
+    # rtn_iso_fuz_mean = get_length_per_tubule_variation(rtn_iso_fuz, measure)
+    # rtn_fuz_fuz_mean = get_length_per_tubule_variation(rtn_fuz_fuz, measure)
 
-    ctr_iso_iso_mean = get_length_per_tubule_variation(ctr_iso_iso, measure)
-    ctr_iso_fuz_mean = get_length_per_tubule_variation(ctr_iso_fuz, measure)
-    ctr_fuz_fuz_mean = get_length_per_tubule_variation(ctr_fuz_fuz, measure)
+    # ctr_iso_iso_mean = get_length_per_tubule_variation(ctr_iso_iso, measure)
+    # ctr_iso_fuz_mean = get_length_per_tubule_variation(ctr_iso_fuz, measure)
+    # ctr_fuz_fuz_mean = get_length_per_tubule_variation(ctr_fuz_fuz, measure)
 
     # climp_mean = get_length_per_tubule_variation(climp_data, measure)
     # rtn_mean = get_length_per_tubule_variation(rtn_data, measure)
@@ -625,19 +650,48 @@ def plot_tubule_length_distribution(connection, channel, measure):
 
     # ymin = min(min(atl_iso_iso_mean), min(atl_iso_fuz_mean), min(climp_iso_iso_mean), min(climp_iso_fuz_mean), min(rtn_iso_iso_mean), min(rtn_iso_fuz_mean), min(ctr_iso_iso_mean), min(ctr_iso_fuz_mean))
     # ymax = max(max(atl_iso_iso_mean), max(atl_iso_fuz_mean), max(climp_iso_iso_mean), max(climp_iso_fuz_mean), max(rtn_iso_iso_mean), max(rtn_iso_fuz_mean), max(ctr_iso_iso_mean), max(ctr_iso_fuz_mean))
-    ymin = min(min(atl_iso_iso_mean), min(atl_iso_fuz_mean), min(atl_fuz_fuz_mean), min(climp_iso_iso_mean), min(climp_iso_fuz_mean), min(climp_fuz_fuz_mean), min(rtn_iso_iso_mean), min(rtn_iso_fuz_mean), min(rtn_fuz_fuz_mean), min(ctr_iso_iso_mean), min(ctr_iso_fuz_mean), min(ctr_fuz_fuz_mean))
-    ymax = max(max(atl_iso_iso_mean), max(atl_iso_fuz_mean), max(atl_fuz_fuz_mean), max(climp_iso_iso_mean), max(climp_iso_fuz_mean), max(climp_fuz_fuz_mean), max(rtn_iso_iso_mean), max(rtn_iso_fuz_mean), max(rtn_fuz_fuz_mean), max(ctr_iso_iso_mean), max(ctr_iso_fuz_mean), max(ctr_fuz_fuz_mean))
+    
+    
+    # ymin = min(min(atl_iso_iso_mean), min(atl_iso_fuz_mean), min(atl_fuz_fuz_mean), min(climp_iso_iso_mean), min(climp_iso_fuz_mean), min(climp_fuz_fuz_mean), min(rtn_iso_iso_mean), min(rtn_iso_fuz_mean), min(rtn_fuz_fuz_mean), min(ctr_iso_iso_mean), min(ctr_iso_fuz_mean), min(ctr_fuz_fuz_mean))
+    # ymax = max(max(atl_iso_iso_mean), max(atl_iso_fuz_mean), max(atl_fuz_fuz_mean), max(climp_iso_iso_mean), max(climp_iso_fuz_mean), max(climp_fuz_fuz_mean), max(rtn_iso_iso_mean), max(rtn_iso_fuz_mean), max(rtn_fuz_fuz_mean), max(ctr_iso_iso_mean), max(ctr_iso_fuz_mean), max(ctr_fuz_fuz_mean))
+
+    # ymin = min(min(atl_iso_iso_mean), min(climp_iso_iso_mean), min(rtn_iso_iso_mean), min(ctr_iso_iso_mean))
+    # ymax = max(max(atl_iso_iso_mean), max(climp_iso_iso_mean), max(rtn_iso_iso_mean), max(ctr_iso_iso_mean))
+
+    # for mean
+    ymin = 3.0
+    ymax = 17.5
+
+    # for variation
+    # ymin = 0.0
+    # ymax = 100.0
+
+    print(atl_conn_variation)
+    print(climp_conn_variation)
+    print(rtn_conn_variation)
+    print(ctrl_conn_variation)
+
+    print(np.median(atl_conn_variation))
+    print(np.median(climp_conn_variation))
+    print(np.median(rtn_conn_variation))
+    print(np.median(ctrl_conn_variation))
+
+    exit()
+
 
     df = pd.DataFrame()
-    if connection == 'iso-iso':
-        df['tub-length'] = pd.Series(np.concatenate((ctr_iso_iso_mean, rtn_iso_iso_mean, climp_iso_iso_mean, atl_iso_iso_mean)))
-        df['Group'] = pd.Series(np.concatenate((['Control'] * len(ctr_iso_iso_mean), ['RTN'] * len(rtn_iso_iso_mean), ['Climp'] * len(climp_iso_iso_mean), ['ATL'] * len(atl_iso_iso_mean))))
-    elif connection == 'iso-fuz':
-        df['tub-length'] = pd.Series(np.concatenate((ctr_iso_fuz_mean, rtn_iso_fuz_mean, climp_iso_fuz_mean, atl_iso_fuz_mean)))
-        df['Group'] = pd.Series(np.concatenate((['Control'] * len(ctr_iso_fuz_mean), ['RTN'] * len(rtn_iso_fuz_mean), ['Climp'] * len(climp_iso_fuz_mean), ['ATL'] * len(atl_iso_fuz_mean))))
-    else:
-        df['tub-length'] = pd.Series(np.concatenate((ctr_fuz_fuz_mean, rtn_fuz_fuz_mean, climp_fuz_fuz_mean, atl_fuz_fuz_mean)))
-        df['Group'] = pd.Series(np.concatenate((['Control'] * len(ctr_fuz_fuz_mean), ['RTN'] * len(rtn_fuz_fuz_mean), ['Climp'] * len(climp_fuz_fuz_mean), ['ATL'] * len(atl_fuz_fuz_mean))))
+    df['tub-length'] = pd.Series(np.concatenate((ctrl_conn_variation, rtn_conn_variation, climp_conn_variation, atl_conn_variation)))
+    df['Group'] = pd.Series(np.concatenate((['Control'] * len(ctrl_conn_variation), ['RTN'] * len(rtn_conn_variation), ['Climp'] * len(climp_conn_variation), ['ATL'] * len(atl_conn_variation))))
+
+    # if connection == 'iso-iso':
+    #     df['tub-length'] = pd.Series(np.concatenate((ctr_iso_iso_mean, rtn_iso_iso_mean, climp_iso_iso_mean, atl_iso_iso_mean)))
+    #     df['Group'] = pd.Series(np.concatenate((['Control'] * len(ctr_iso_iso_mean), ['RTN'] * len(rtn_iso_iso_mean), ['Climp'] * len(climp_iso_iso_mean), ['ATL'] * len(atl_iso_iso_mean))))
+    # elif connection == 'iso-fuz':
+    #     df['tub-length'] = pd.Series(np.concatenate((ctr_iso_fuz_mean, rtn_iso_fuz_mean, climp_iso_fuz_mean, atl_iso_fuz_mean)))
+    #     df['Group'] = pd.Series(np.concatenate((['Control'] * len(ctr_iso_fuz_mean), ['RTN'] * len(rtn_iso_fuz_mean), ['Climp'] * len(climp_iso_fuz_mean), ['ATL'] * len(atl_iso_fuz_mean))))
+    # else:
+    #     df['tub-length'] = pd.Series(np.concatenate((ctr_fuz_fuz_mean, rtn_fuz_fuz_mean, climp_fuz_fuz_mean, atl_fuz_fuz_mean)))
+    #     df['Group'] = pd.Series(np.concatenate((['Control'] * len(ctr_fuz_fuz_mean), ['RTN'] * len(rtn_fuz_fuz_mean), ['Climp'] * len(climp_fuz_fuz_mean), ['ATL'] * len(atl_fuz_fuz_mean))))
 
     # df['tub-length'] = pd.Series(np.concatenate((ctr_mean, rtn_mean, climp_mean, atl_mean)))
     # df['Group'] = pd.Series(np.concatenate((['Control'] * len(ctr_mean), ['RTN'] * len(rtn_mean), ['Climp'] * len(climp_mean), ['ATL'] * len(atl_mean))))
@@ -646,13 +700,14 @@ def plot_tubule_length_distribution(connection, channel, measure):
     # df['Group'] = pd.Series(np.concatenate((
             # ['ATL'] * len(atl_lengths), ['Climp'] * len(climp_lengths), ['RTN'] * len(rtn_lengths), ['Control'] * len(ctr_lengths))))
     
-    ax = sns.boxplot(data=df, x='Group', y='tub-length')#, dodge=True)
-    ax.set_ylim(ymin-0.2, ymax+0.2)
+    ax = sns.boxplot(data=df, x='Group', y='tub-length', showfliers=False, linewidth=2)#, dodge=True)
+    # sns.swarmplot(data=df, x='Group', y='tub-length', size=8, dodge=True)
+    ax.set_ylim(ymin-0.1, ymax+0.1)
     # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
     yt = ax.get_yticks()
     yt = [f'{y:.2f}' for y in yt]
-    ax.set_yticklabels(yt, fontsize=18)
+    ax.set_yticklabels(yt, fontsize=20)
 
     # plt.yscale('log')
 
@@ -665,24 +720,35 @@ def plot_tubule_length_distribution(connection, channel, measure):
     measure_name = 'variance' if measure == 'var' else 'mean (pixels)'
     # plt.title(f'Tubule length in {connection} connections', fontsize=24)
 
-    plt.title(f'Tubule length {measure_name} per sequence \n in {connection} connections', fontsize=24)
+    if connection == 'iso-iso':
+        conn_name = 'isolated-isolated'
+    elif connection == 'iso-fuz':
+        conn_name = 'isolated-overlapping'
+    else:
+        conn_name = 'overlapping-overlapping'
+
+    plt.title(f'Tubule length {measure_name} per sequence \n in {conn_name} connections', fontsize=24)
     # plt.suptitle
     # plt.suptitle(f'{region_name} CC area across conditions', fontsize=20)
     # plt.title('CC area denotes the total movement of each junction', fontsize=18)
     plt.grid(True)
-    plt.subplots_adjust(hspace = 1, wspace = 0)
+    # plt.subplots_adjust(hspace = 1, wspace = 0)
     plt.xlabel('Group', fontsize=24)
     # plt.ylabel('Tubule length (pixels)', fontsize=24)
     plt.ylabel(f'Tubule length {measure_name}', fontsize=24)
-    plt.show()
+    plt.gcf().set_size_inches(14, 8)
+    plt.savefig(f'Seq_{measure}_tub_length_{connection}.png', bbox_inches='tight', pad_inches=0.6)
+    # plt.show()
+    plt.close()
 
 
 plot_tubule_length_distribution('iso-iso', 'egfp', 'mean')
-plot_tubule_length_distribution('iso-fuz', 'egfp', 'mean')
-plot_tubule_length_distribution('fuz-fuz', 'egfp', 'mean')
-plot_tubule_length_distribution('iso-iso', 'egfp', 'var')
-plot_tubule_length_distribution('iso-fuz', 'egfp',  'var')
-plot_tubule_length_distribution('fuz-fuz', 'egfp', 'var')
+# plot_tubule_length_distribution('iso-fuz', 'egfp', 'mean')
+# plot_tubule_length_distribution('fuz-fuz', 'egfp', 'mean')
+
+# plot_tubule_length_distribution('iso-iso', 'egfp', 'var')
+# plot_tubule_length_distribution('iso-fuz', 'egfp',  'var')
+# plot_tubule_length_distribution('fuz-fuz', 'egfp', 'var')
 exit()
 
 
