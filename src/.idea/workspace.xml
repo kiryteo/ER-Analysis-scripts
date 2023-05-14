@@ -1,7 +1,68 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="4cc9963e-5c62-4a5f-9bba-61b8e3a594fb" name="Default Changelist" comment="[WIP] Node connector deadlock resolved, merged get_junctions and get_connected_junctions in the junction_analysis_modules.py file" />
+    <list default="true" id="4cc9963e-5c62-4a5f-9bba-61b8e3a594fb" name="Default Changelist" comment="[WIP] Node connector deadlock resolved, merged get_junctions and get_connected_junctions in the junction_analysis_modules.py file">
+      <change afterPath="$PROJECT_DIR$/CC_validation/A1_j15_egfp_35_45.tif" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/A1_j15_mch_35_45.tif" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/A1_j35_egfp_35_45.tif" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/A1_j35_mch_35_45.tif" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/ATL1_J15.drawio.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/ATL1_j15_ma3.drawio(2).png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/ATL1_j15_ma3.drawio.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/ATL1_j15_ma5.drawio(1).png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/ATL1_j15_ma5.drawio.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/ATL1_j15_ma7.drawio(1).png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/ATL1_j15_ma7.drawio.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/ATL1_j15_ma9.drawio(1).png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/ATL1_j15_ma9.drawio.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/ATL1_j15_updated.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/ATL1_j35_updated.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/ATL1_j71_updated.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/ATL1_j79_updated.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/ATL_S1_Junc15.drawio(1).png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/ATL_S1_Junc15.drawio.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/C1_j12_egfp_12_25.tif" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/C1_j12_mch_12_25.tif" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/C1_j38_egfp_15.tif" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/C1_j38_mch_15.tif" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/Climp1_j12_updated.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/Climp1_j38_updated.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/Climp1_j88_updated.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/Climp1_j89_updated.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/RTN13_j12_updated.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/RTN13_j27_updated.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/RTN13_j36_updated.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/RTN13_j70_updated.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/CC_validation/RTN13_j82_updated.pdf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nw_graph_analysis/ATL_4_edge_graph.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nw_graph_analysis/ATL_fuz_area.pkl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nw_graph_analysis/ATL_iso_area.pkl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nw_graph_analysis/ATL_series6_ref_iso_fuz.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nw_graph_analysis/CC_area_iso_junctions.drawio(1).png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nw_graph_analysis/CC_area_iso_junctions.drawio.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nw_graph_analysis/Climp17_inset.drawio(1).png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nw_graph_analysis/Climp_fuz_area.pkl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nw_graph_analysis/Climp_iso_area.pkl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nw_graph_analysis/Climp_series13_ref_iso_fuz.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nw_graph_analysis/Control_fuz_area.pkl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nw_graph_analysis/Control_iso_area.pkl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nw_graph_analysis/Control_series13_ref_iso_fuz.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nw_graph_analysis/RTN_fuz_area.pkl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nw_graph_analysis/RTN_iso_area.pkl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nw_graph_analysis/RTN_series2_ref_iso_fuz.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nw_graph_analysis/Seq_mean_tub_length_iso-iso.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nw_graph_analysis/Untitled Diagram.drawio(11).png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nw_graph_analysis/image (10).png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nw_graph_analysis/image (11).png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nw_graph_analysis/image (7).png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nw_graph_analysis/image (8).png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nw_graph_analysis/image (9).png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nw_graph_analysis/num_juncs_iso.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nw_graph_analysis/temp_node_plotter" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nw_graph_analysis/updated_graph_annot.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/nw_graph_analysis/junc_analysis_plots.py" beforeDir="false" afterPath="$PROJECT_DIR$/nw_graph_analysis/junc_analysis_plots.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/nw_graph_analysis/junc_analysis_viz.py" beforeDir="false" afterPath="$PROJECT_DIR$/nw_graph_analysis/junc_analysis_viz.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
