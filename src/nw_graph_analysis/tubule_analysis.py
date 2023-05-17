@@ -19,6 +19,14 @@ confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 junc_analysis = JA(confocal_data_path)
 
 
+def get_intensity_flow(er_path, skel_path):
+    # use mean projection frame for er and skel
+    # er = imageio.imread(er_path)
+    # skel = imageio.imread(skel_path)
+
+    
+
+
 def get_edges(conn_graph, iso_ids, fuz_ids, connection):
     # Find the edges between iso-iso, iso-fuz, fuz-fuz
     if connection == 'iso-iso':

@@ -78,63 +78,36 @@ def get_CC_mean_variation(channel, region, measure):
     # control = cc_signal('Control', channel, region)
     # pkl.dump(control, open(f'Control_{channel}_{region}_CC_mean.pkl', 'wb'))
 
-    atl_iso = pkl.load(open(f'ATL_{channel}_iso_CC_mean.pkl', 'rb'))
-    atl_fuz = pkl.load(open(f'ATL_{channel}_fuz_CC_mean.pkl', 'rb'))
-
-    climp_iso = pkl.load(open(f'Climp_{channel}_iso_CC_mean.pkl', 'rb'))
-    climp_fuz = pkl.load(open(f'Climp_{channel}_fuz_CC_mean.pkl', 'rb'))
-
-    rtn_iso = pkl.load(open(f'RTN_{channel}_iso_CC_mean.pkl', 'rb'))
-    rtn_fuz = pkl.load(open(f'RTN_{channel}_fuz_CC_mean.pkl', 'rb'))
-
-    control_iso = pkl.load(open(f'Control_{channel}_iso_CC_mean.pkl', 'rb'))
-    control_fuz = pkl.load(open(f'Control_{channel}_fuz_CC_mean.pkl', 'rb'))
-
-    # atl = pkl.load(open(f'ATL_{channel}_{region}_CC_mean.pkl', 'rb'))
-    # climp = pkl.load(open(f'Climp_{channel}_{region}_CC_mean.pkl', 'rb'))
-    # rtn = pkl.load(open(f'RTN_{channel}_{region}_CC_mean.pkl', 'rb'))
-    # control = pkl.load(open(f'Control_{channel}_{region}_CC_mean.pkl', 'rb'))
-
-    atl_iso = get_mean_group_data(atl_iso, measure)
-    atl_fuz = get_mean_group_data(atl_fuz, measure)
-
-    climp_iso = get_mean_group_data(climp_iso, measure)
-    climp_fuz = get_mean_group_data(climp_fuz, measure)
-
-    rtn_iso = get_mean_group_data(rtn_iso, measure)
-    rtn_fuz = get_mean_group_data(rtn_fuz, measure)
-
-    control_iso = get_mean_group_data(control_iso, measure)
-    control_fuz = get_mean_group_data(control_fuz, measure)
-
-    ymax = max(max(atl_iso), max(atl_fuz), max(climp_iso), max(climp_fuz), max(rtn_iso), max(rtn_fuz), max(control_iso), max(control_fuz))
-    # ymin = min(min(atl_iso), min(atl_fuz), min(climp_iso), min(climp_fuz),
-    # min(rtn_iso), min(rtn_fuz), min(control_iso), min(control_fuz))
-
-
-
-    # atl= get_mean_group_data(atl, measure)
-    # climp = get_mean_group_data(climp, measure)
-    # rtn = get_mean_group_data(rtn, measure)
-    # control = get_mean_group_data(control, measure)
+    atl = pkl.load(open(f'ATL_{channel}_{region}_CC_mean.pkl', 'rb'))
+    climp = pkl.load(open(f'Climp_{channel}_{region}_CC_mean.pkl', 'rb'))
+    rtn = pkl.load(open(f'RTN_{channel}_{region}_CC_mean.pkl', 'rb'))
+    
+    atl = get_mean_group_data(atl, measure)
+    climp = get_mean_group_data(climp, measure)
+    rtn = get_mean_group_data(rtn, measure)
 
     df = pd.DataFrame()
 
-    if region == 'iso':
-        df['CC_mean'] = pd.Series(np.concatenate((control_iso, rtn_iso, climp_iso, atl_iso)))
-        df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_iso), ['RTN'] * len(rtn_iso), ['Climp'] * len(climp_iso), ['ATL'] * len(atl_iso) )))
+    if channel == 'egfp':
+        control = pkl.load(open(f'Control_{channel}_{region}_CC_mean.pkl', 'rb'))
+        control = get_mean_group_data(control, measure)
+        df['CC_mean'] = pd.Series(np.concatenate((control, rtn, climp, atl)))
+        df['Group'] = pd.Series(np.concatenate((['Control'] * len(control), ['RTN'] * len(rtn), ['Climp'] * len(climp), ['ATL'] * len(atl) )))
     else:
-        df['CC_mean'] = pd.Series(np.concatenate((control_fuz, rtn_fuz, climp_fuz, atl_fuz)))
-        df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_fuz), ['RTN'] * len(rtn_fuz), ['Climp'] * len(climp_fuz), ['ATL'] * len(atl_fuz))))
+        df['CC_mean'] = pd.Series(np.concatenate((rtn, climp, atl)))
+        df['Group'] = pd.Series(np.concatenate((['RTN'] * len(rtn), ['Climp'] * len(climp), ['ATL'] * len(atl))))
 
-    ax = sns.boxenplot(data=df, x='Group', y='CC_mean')
+    # ax = sns.boxplot(data=df, x='Group', y='CC_mean', showfliers=False, whis=0.5, linewidth=2)
+    ax = sns.boxplot(data=df, x='Group', y='CC_mean', showfliers=False, linewidth=2)
     # plt.show()
     # plt.yscale('log')
-    ax.set_ylim(0, ymax+0.01)
+    ax.set_ylim(0, 0.85) # for egfp
+    #ax.set_ylim(0, 0.5) # for mch
+    # ax.set_ylim(0, ymax+0.01)
     yt = ax.get_yticks()
     yt = [f'{y:.2f}' for y in yt]
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
-    ax.set_yticklabels(yt, fontsize=18)
+    ax.set_yticklabels(yt, fontsize=20)
 
     # box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')]
     # box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
@@ -150,10 +123,13 @@ def get_CC_mean_variation(channel, region, measure):
     plt.title(f'{measure_name} over 100 frames for Junction CC mean \n in {region_name} CC ({ch_name})', fontsize=24)
     plt.grid(True)
     # plt.tight_layout()
-    plt.subplots_adjust(hspace = 1, wspace = 0)
+    # plt.subplots_adjust(hspace = 1, wspace = 0)
     plt.xlabel('Group', fontsize=24)
     plt.ylabel(f'{measure_name} over sequence per CC mean', fontsize=24)
-    plt.show()
+    plt.gcf().set_size_inches(12, 12)
+    plt.savefig(f'Seq_{measure_name}_CC_mean_{region_name}_{channel}', bbox_inches='tight', pad_inches=0.4)
+    plt.close()
+    # plt.show()
 
 
 
@@ -164,7 +140,8 @@ def get_CC_mean_variation(channel, region, measure):
 # exit()
 
 
-def get_CC_mean_correlation(channel, region, measure):
+# def get_CC_mean_correlation(channel, region, measure):
+def get_CC_mean_correlation():
     atl_egfp_iso = pkl.load(open('ATL_egfp_iso_CC_mean.pkl', 'rb'))
     atl_egfp_fuz = pkl.load(open('ATL_egfp_fuz_CC_mean.pkl', 'rb'))
     atl_mch_iso = pkl.load(open('ATL_mch_iso_CC_mean.pkl', 'rb'))
@@ -181,6 +158,30 @@ def get_CC_mean_correlation(channel, region, measure):
     rtn_mch_fuz = pkl.load(open('RTN_mch_fuz_CC_mean.pkl', 'rb'))
 
 
+
+
+get_CC_mean_correlation()
+exit()
+
+
+
+def get_er_area(group, num_series):
+    signal_len = []
+    for i in range(1, num_series+1):
+        data = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/er_mean/{group.lower()}{i}_er_mean.png')
+        signal = np.where(data > 0)
+        signal_len.append(len(signal[0]))
+    with open(f'{group}_er_area.pkl', 'wb') as f:
+        pkl.dump(signal_len, f)
+
+# get_er_area('ATL', 26)
+# get_er_area('Climp', 31)
+# get_er_area('RTN', 29)
+# get_er_area('Control', 31)
+
+# exit()
+
+
 def plot_num_junctions():
     """
     Plot number of junctions per group
@@ -190,16 +191,20 @@ def plot_num_junctions():
     rtn = pkl.load(open('RTN_egfp_iso_CC_mean.pkl', 'rb'))
     control = pkl.load(open('Control_egfp_iso_CC_mean.pkl', 'rb'))
 
+    atl_area = pkl.load(open('ATL_er_area.pkl', 'rb'))
+    climp_area = pkl.load(open('Climp_er_area.pkl', 'rb'))
+    rtn_area = pkl.load(open('RTN_er_area.pkl', 'rb'))
+    control_area = pkl.load(open('Control_er_area.pkl', 'rb'))
+
     atl_num = [len(series) for series in atl]
     climp_num = [len(series) for series in climp]
     rtn_num = [len(series) for series in rtn]
     control_num = [len(series) for series in control]
 
-    # print(atl_num)
-    # print(climp_num)
-    # print(rtn_num)
-    # print(control_num)
-    # exit()
+    atl_num = [num / area for num, area in zip(atl_num, atl_area)]
+    climp_num = [num / area for num, area in zip(climp_num, climp_area)]
+    rtn_num = [num / area for num, area in zip(rtn_num, rtn_area)]
+    control_num = [num / area for num, area in zip(control_num, control_area)]
 
     df = pd.DataFrame()
     df['Num_junctions'] = pd.Series(np.concatenate((control_num, rtn_num, climp_num, atl_num)))
@@ -232,24 +237,24 @@ def plot_num_junctions():
     # plt.errorbar(x=[0, 1, 2, 3], y=[np.mean(control_num), np.mean(rtn_num), np.mean(climp_num), np.mean(atl_num)], yerr=[ctrl_sem, rtn_sem, climp_sem, atl_sem], fmt='o', color='black', capsize=5, markersize=8)
 
     # plt.rcParams['figure.figsize'] = (5, 20)
-    plt.title(f'Number of isolated junctions per sequence', fontsize=24)
+    plt.title('Number of isolated junctions per sequence (normalized by ER area)', fontsize=24)
     plt.grid(True)
     plt.xlabel('Group', fontsize=24)
-    plt.ylabel('Number of junctions', fontsize=24)
+    plt.ylabel('Number of junctions (normalized)', fontsize=24)
     # plt.show()
     plt.gcf().set_size_inches(14, 8)
-    plt.savefig('num_juncs_iso.png', bbox_inches='tight', pad_inches=0.6)
+    plt.savefig('num_juncs_iso_norm.png', bbox_inches='tight', pad_inches=0.6)
     plt.close()
 
-# plot_num_junctions()
-# exit()
+plot_num_junctions()
+exit()
 
 def get_iso_fuz_ratio():
     atl_iso = pkl.load(open('ATL_egfp_iso_CC_mean.pkl', 'rb'))
 
-    atl_iso_num = [len(series) for series in atl_iso]
-    print(atl_iso_num)
-    exit()
+    # atl_iso_num = [len(series) for series in atl_iso]
+    # print(atl_iso_num)
+    # exit()
 
     climp_iso = pkl.load(open('Climp_egfp_iso_CC_mean.pkl', 'rb'))
     rtn_iso = pkl.load(open('RTN_egfp_iso_CC_mean.pkl', 'rb'))
@@ -270,11 +275,16 @@ def get_iso_fuz_ratio():
     rtn_fuz_num = [len(series) for series in rtn_fuz]
     control_fuz_num = [len(series) for series in control_fuz]
 
-    atl_ratio = [iso / fuz for iso, fuz in zip(atl_iso_num, atl_fuz_num)]
-    climp_ratio = [iso / fuz for iso, fuz in zip(climp_iso_num, climp_fuz_num)]
-    rtn_ratio = [iso / fuz for iso, fuz in zip(rtn_iso_num, rtn_fuz_num)]
+    # atl_ratio = [iso / fuz for iso, fuz in zip(atl_iso_num, atl_fuz_num)]
+    # climp_ratio = [iso / fuz for iso, fuz in zip(climp_iso_num, climp_fuz_num)]
+    # rtn_ratio = [iso / fuz for iso, fuz in zip(rtn_iso_num, rtn_fuz_num)]
     
-    control_ratio = [iso / fuz for iso, fuz in zip(control_iso_num, control_fuz_num) if fuz != 0]
+    # control_ratio = [iso / fuz for iso, fuz in zip(control_iso_num, control_fuz_num) if fuz != 0]
+
+    atl_ratio = [fuz/ iso for fuz, iso in zip(atl_fuz_num, atl_iso_num)]
+    climp_ratio = [fuz / iso for fuz, iso in zip(climp_fuz_num, climp_iso_num)]
+    rtn_ratio = [fuz / iso for fuz, iso in zip(rtn_fuz_num, rtn_iso_num)]
+    control_ratio = [fuz / iso for fuz, iso in zip(control_fuz_num, control_iso_num) if iso != 0]
 
     # print(atl_ratio)
     # print(climp_ratio)
@@ -289,7 +299,7 @@ def get_iso_fuz_ratio():
     # exit()
 
     df = pd.DataFrame()
-    df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_ratio), ['RTN'] * len(rtn_ratio), ['Climp'] * len(climp_ratio), ['ATL'] * len(atl_ratio))))
+    df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_ratio), ['Reticulon'] * len(rtn_ratio), ['Climp'] * len(climp_ratio), ['Atlastin'] * len(atl_ratio))))
 
     df['Ratio'] = pd.Series(np.concatenate((control_ratio, rtn_ratio, climp_ratio, atl_ratio)))
 
@@ -299,17 +309,23 @@ def get_iso_fuz_ratio():
     yt = ax.get_yticks()
     yt = [f'{y:.2f}' for y in yt]
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
-    ax.set_yticklabels(yt, fontsize=18)
+    ax.set_yticklabels(yt, fontsize=20)
 
-    plt.rcParams['figure.figsize'] = (5, 20)
-    plt.title(f'Isolated to Overlapping junctions ratio', fontsize=24)
+    # plt.rcParams['figure.figsize'] = (5, 20)
+    # plt.title(f'Isolated to Overlapping junctions ratio', fontsize=24)
+    plt.title(f'Overlapping to Isolated junctions ratio', fontsize=24)
     plt.grid(True)
     plt.xlabel('Group', fontsize=24)
     plt.ylabel('Ratio', fontsize=24)
-    plt.show()
 
-get_iso_fuz_ratio()
-exit()
+    plt.gcf().set_size_inches(12, 12)
+    # plt.savefig('iso_overlap_juncs_ratio.png', bbox_inches='tight', pad_inches=0.4)
+    plt.savefig('overlap_iso_juncs_ratio.png', bbox_inches='tight', pad_inches=0.4)
+    plt.close()
+    # plt.show()
+
+# get_iso_fuz_ratio()
+# exit()
 
 def get_iso_fuz_area_ratio():
     # atl_iso = get_region_areas_per_group('ATL', 26, 'iso')
@@ -354,13 +370,29 @@ def get_iso_fuz_area_ratio():
     rtn_fuz = pkl.load(open('RTN_fuz_area.pkl', 'rb'))
     control_fuz = pkl.load(open('Control_fuz_area.pkl', 'rb'))
 
-    atl_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(atl_iso, atl_fuz)]
-    climp_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(climp_iso, climp_fuz)]
-    rtn_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(rtn_iso, rtn_fuz)]
-    control_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(control_iso, control_fuz) if sum(fuz) != 0]
+    # atl_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(atl_iso, atl_fuz)]
+    # climp_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(climp_iso, climp_fuz)]
+    # rtn_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(rtn_iso, rtn_fuz)]
+    # control_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(control_iso, control_fuz) if sum(fuz) != 0]
+
+    atl_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(atl_fuz, atl_iso)]
+    climp_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(climp_fuz, climp_iso)]
+    rtn_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(rtn_fuz, rtn_iso)]
+    control_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(control_fuz, control_iso) if sum(iso) != 0]
+
+    # print(atl_ratio)
+    # print(np.median(atl_ratio)) # 2
+    # print(climp_ratio)
+    # print(np.median(climp_ratio)) # 15
+    # print(rtn_ratio)
+    # print(np.median(rtn_ratio)) # 9
+    # print(control_ratio)
+    # print(np.median(control_ratio)) # 7
+    # exit()
+
 
     df = pd.DataFrame()
-    df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_ratio), ['RTN'] * len(rtn_ratio), ['Climp'] * len(climp_ratio), ['ATL'] * len(atl_ratio))))
+    df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_ratio), ['Reticulon'] * len(rtn_ratio), ['Climp'] * len(climp_ratio), ['Atlastin'] * len(atl_ratio))))
 
     df['Ratio'] = pd.Series(np.concatenate((control_ratio, rtn_ratio, climp_ratio, atl_ratio)))
 
@@ -371,15 +403,20 @@ def get_iso_fuz_area_ratio():
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
     ax.set_yticklabels(yt, fontsize=18)
 
-    plt.rcParams['figure.figsize'] = (5, 20)
-    plt.title(f'Isolated to Overlapping CC area ratio', fontsize=24)
+    # plt.rcParams['figure.figsize'] = (5, 20)
+    # plt.title(f'Isolated to Overlapping CC area ratio', fontsize=24)
+    plt.title('Overlapping to Isolated CC area ratio', fontsize=24)
     plt.grid(True)
     plt.xlabel('Group', fontsize=24)
     plt.ylabel('Ratio', fontsize=24)
-    plt.show()
 
-get_iso_fuz_area_ratio()
-exit()
+    plt.gcf().set_size_inches(12, 12)
+    plt.savefig('overlap_iso_CC_area_ratio.png', bbox_inches='tight', pad_inches=0.4)
+    plt.close()
+    # plt.show()
+
+# get_iso_fuz_area_ratio()
+# exit()
 
 
 def get_variation_from_pickles():
