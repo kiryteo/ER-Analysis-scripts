@@ -139,28 +139,63 @@ def get_CC_mean_variation(channel, region, measure):
 # get_CC_mean_variation('mch', 'fuz', 'mean')
 # exit()
 
+def get_correlation(egfp, mch):
+    corr_list = []
+    for seq_egfp, seq_mch in zip(egfp, mch):
+        corr_list.extend(
+            pearsonr(cc_egfp, cc_mch)[0]
+            for cc_egfp, cc_mch in zip(seq_egfp, seq_mch)
+        )
+    return corr_list   
+
 
 # def get_CC_mean_correlation(channel, region, measure):
-def get_CC_mean_correlation():
-    atl_egfp_iso = pkl.load(open('ATL_egfp_iso_CC_mean.pkl', 'rb'))
-    atl_egfp_fuz = pkl.load(open('ATL_egfp_fuz_CC_mean.pkl', 'rb'))
-    atl_mch_iso = pkl.load(open('ATL_mch_iso_CC_mean.pkl', 'rb'))
-    atl_mch_fuz = pkl.load(open('ATL_mch_fuz_CC_mean.pkl', 'rb'))
+def get_CC_mean_correlation(region):
+    atl_egfp = pkl.load(open(f'ATL_egfp_{region}_CC_mean.pkl', 'rb'))
 
-    climp_egfp_iso = pkl.load(open('Climp_egfp_iso_CC_mean.pkl', 'rb'))
-    climp_egfp_fuz = pkl.load(open('Climp_egfp_fuz_CC_mean.pkl', 'rb'))
-    climp_mch_iso = pkl.load(open('Climp_mch_iso_CC_mean.pkl', 'rb'))
-    climp_mch_fuz = pkl.load(open('Climp_mch_fuz_CC_mean.pkl', 'rb'))
+    # print(len(atl_egfp_iso)) # 26
+    # print(len(atl_egfp_iso[0])) # 69
+    # print(len(atl_egfp_iso[0][0])) # 100
+    # print(atl_egfp_iso.shape)
 
-    rtn_egfp_iso = pkl.load(open('RTN_egfp_iso_CC_mean.pkl', 'rb'))
-    rtn_egfp_fuz = pkl.load(open('RTN_egfp_fuz_CC_mean.pkl', 'rb'))
-    rtn_mch_iso = pkl.load(open('RTN_mch_iso_CC_mean.pkl', 'rb'))
-    rtn_mch_fuz = pkl.load(open('RTN_mch_fuz_CC_mean.pkl', 'rb'))
+    atl_mch = pkl.load(open(f'ATL_mch_{region}_CC_mean.pkl', 'rb'))
+
+    climp_egfp = pkl.load(open(f'Climp_egfp_{region}_CC_mean.pkl', 'rb'))
+    climp_mch = pkl.load(open(f'Climp_mch_{region}_CC_mean.pkl', 'rb'))
+
+    rtn_egfp = pkl.load(open(f'RTN_egfp_{region}_CC_mean.pkl', 'rb'))
+    rtn_mch = pkl.load(open(f'RTN_mch_{region}_CC_mean.pkl', 'rb'))
+
+    atl_corr = get_correlation(atl_egfp, atl_mch)
+    climp_corr = get_correlation(climp_egfp, climp_mch)
+    rtn_corr = get_correlation(rtn_egfp, rtn_mch)
+
+    df = pd.DataFrame()
+    df['CC_mean'] = pd.Series(np.concatenate((atl_corr, climp_corr, rtn_corr)))
+    df['Group'] = pd.Series(np.concatenate((['Atlastin'] * len(atl_corr), ['Climp'] * len(climp_corr), ['Reticulon'] * len(rtn_corr))))
+
+    ax = sns.boxplot(data=df, x='Group', y='CC_mean', showfliers=False, linewidth=2)
+
+    xt = ax.get_xticks()
+    xt = [f'{x:.2f}' for x in xt]
+    ax.set_xticklabels(xt, fontsize=20)
+    ax.set_yticklabels(ax.get_yticklabels(), fontsize=20)
+
+    plt.title('CC mean cross-correlation between ERmoxGFP and mCherry over 100 frames', fontsize=20)
+    plt.grid(True)
+    plt.ylabel('Group', fontsize=20)
+    # plt.ylabel('Number of junctions (normalized)', fontsize=24)
+    plt.xlabel('Correlation coefficient', fontsize=20)
+    # plt.show()
+    # plt.gcf().set_size_inches(16, 4)
+    plt.gcf().set_size_inches(12, 8)
+    # plt.savefig('num_juncs_iso_norm.png', bbox_inches='tight', pad_inches=0.6)
+    plt.savefig(f'CC_mean_cross_corr_{region}.png', bbox_inches='tight', pad_inches=0.2)
+    plt.close()
 
 
 
-
-get_CC_mean_correlation()
+get_CC_mean_correlation('iso')
 exit()
 
 
@@ -191,26 +226,26 @@ def plot_num_junctions():
     rtn = pkl.load(open('RTN_egfp_iso_CC_mean.pkl', 'rb'))
     control = pkl.load(open('Control_egfp_iso_CC_mean.pkl', 'rb'))
 
-    atl_area = pkl.load(open('ATL_er_area.pkl', 'rb'))
-    climp_area = pkl.load(open('Climp_er_area.pkl', 'rb'))
-    rtn_area = pkl.load(open('RTN_er_area.pkl', 'rb'))
-    control_area = pkl.load(open('Control_er_area.pkl', 'rb'))
+    # atl_area = pkl.load(open('ATL_er_area.pkl', 'rb'))
+    # climp_area = pkl.load(open('Climp_er_area.pkl', 'rb'))
+    # rtn_area = pkl.load(open('RTN_er_area.pkl', 'rb'))
+    # control_area = pkl.load(open('Control_er_area.pkl', 'rb'))
 
     atl_num = [len(series) for series in atl]
     climp_num = [len(series) for series in climp]
     rtn_num = [len(series) for series in rtn]
     control_num = [len(series) for series in control]
 
-    atl_num = [num / area for num, area in zip(atl_num, atl_area)]
-    climp_num = [num / area for num, area in zip(climp_num, climp_area)]
-    rtn_num = [num / area for num, area in zip(rtn_num, rtn_area)]
-    control_num = [num / area for num, area in zip(control_num, control_area)]
+    # atl_num = [num / area for num, area in zip(atl_num, atl_area)]
+    # climp_num = [num / area for num, area in zip(climp_num, climp_area)]
+    # rtn_num = [num / area for num, area in zip(rtn_num, rtn_area)]
+    # control_num = [num / area for num, area in zip(control_num, control_area)]
 
     df = pd.DataFrame()
     df['Num_junctions'] = pd.Series(np.concatenate((control_num, rtn_num, climp_num, atl_num)))
     df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_num), ['Reticulon'] * len(rtn_num), ['Climp'] * len(climp_num), ['Atlastin'] * len(atl_num))))
 
-    ax = sns.boxplot(data=df, x='Group', y='Num_junctions', showfliers=False, linewidth=2)
+    ax = sns.boxplot(data=df, y='Group', x='Num_junctions', showfliers=False, linewidth=2)
     # ax = sns.boxplot(data=df, x='Group', y='Num_junctions', showfliers=False, whis=0.5, linewidth=2)
 
     # ax = sns.barplot(data=df, x='Group', y='Num_junctions')#, ci='sd', capsize=0.2, linewidth=2, errwidth=2)
@@ -220,10 +255,10 @@ def plot_num_junctions():
     # ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
     # ax.set_yticklabels(yt, fontsize=18)
 
-    yt = ax.get_yticks()
-    yt = [f'{y:.2f}' for y in yt]
-    ax.set_yticklabels(yt, fontsize=20)
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
+    xt = ax.get_xticks()
+    xt = [f'{x:.2f}' for x in xt]
+    ax.set_xticklabels(xt, fontsize=20)
+    ax.set_yticklabels(ax.get_yticklabels(), fontsize=20)
 
     # sns.pointplot(x='Group', y='Num_junctions', data=df.groupby('Group', as_index=False).mean(), ax=ax)
 
@@ -237,17 +272,20 @@ def plot_num_junctions():
     # plt.errorbar(x=[0, 1, 2, 3], y=[np.mean(control_num), np.mean(rtn_num), np.mean(climp_num), np.mean(atl_num)], yerr=[ctrl_sem, rtn_sem, climp_sem, atl_sem], fmt='o', color='black', capsize=5, markersize=8)
 
     # plt.rcParams['figure.figsize'] = (5, 20)
-    plt.title('Number of isolated junctions per sequence (normalized by ER area)', fontsize=24)
+    # plt.title('Number of isolated junctions per sequence (normalized by ER area)', fontsize=24)
+    plt.title('Number of isolated junctions per sequence', fontsize=20)
     plt.grid(True)
-    plt.xlabel('Group', fontsize=24)
-    plt.ylabel('Number of junctions (normalized)', fontsize=24)
+    plt.ylabel('Group', fontsize=20)
+    # plt.ylabel('Number of junctions (normalized)', fontsize=24)
+    plt.xlabel('Number of junctions', fontsize=20)
     # plt.show()
-    plt.gcf().set_size_inches(14, 8)
-    plt.savefig('num_juncs_iso_norm.png', bbox_inches='tight', pad_inches=0.6)
+    plt.gcf().set_size_inches(16, 4)
+    # plt.savefig('num_juncs_iso_norm.png', bbox_inches='tight', pad_inches=0.6)
+    plt.savefig('num_juncs_iso_hor.png', bbox_inches='tight', pad_inches=0.2)
     plt.close()
 
-plot_num_junctions()
-exit()
+# plot_num_junctions()
+# exit()
 
 def get_iso_fuz_ratio():
     atl_iso = pkl.load(open('ATL_egfp_iso_CC_mean.pkl', 'rb'))
@@ -303,24 +341,26 @@ def get_iso_fuz_ratio():
 
     df['Ratio'] = pd.Series(np.concatenate((control_ratio, rtn_ratio, climp_ratio, atl_ratio)))
 
-    ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, whis=0.5, linewidth=2)
+    # ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, whis=0.5, linewidth=2)
+    ax = sns.boxplot(data=df, y='Group', x='Ratio', showfliers=False, linewidth=2)
     # ax = sns.swarmplot(data=df, x='Group', y='Ratio', color='black', size=8)
 
-    yt = ax.get_yticks()
-    yt = [f'{y:.2f}' for y in yt]
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
-    ax.set_yticklabels(yt, fontsize=20)
+    xt = ax.get_xticks()
+    xt = [f'{x:.2f}' for x in xt]
+    ax.set_yticklabels(ax.get_yticklabels(), fontsize=20)
+    ax.set_xticklabels(xt, fontsize=20)
 
     # plt.rcParams['figure.figsize'] = (5, 20)
     # plt.title(f'Isolated to Overlapping junctions ratio', fontsize=24)
-    plt.title(f'Overlapping to Isolated junctions ratio', fontsize=24)
+    plt.title(f'Overlapping to Isolated junctions ratio', fontsize=20)
     plt.grid(True)
-    plt.xlabel('Group', fontsize=24)
-    plt.ylabel('Ratio', fontsize=24)
+    plt.ylabel('Group', fontsize=20)
+    plt.xlabel('Ratio', fontsize=20)
 
-    plt.gcf().set_size_inches(12, 12)
+    # plt.gcf().set_size_inches(12, 12)
+    plt.gcf().set_size_inches(8, 5)
     # plt.savefig('iso_overlap_juncs_ratio.png', bbox_inches='tight', pad_inches=0.4)
-    plt.savefig('overlap_iso_juncs_ratio.png', bbox_inches='tight', pad_inches=0.4)
+    plt.savefig('overlap_iso_juncs_ratio_hor.png', bbox_inches='tight', pad_inches=0.2)
     plt.close()
     # plt.show()
 
@@ -396,22 +436,22 @@ def get_iso_fuz_area_ratio():
 
     df['Ratio'] = pd.Series(np.concatenate((control_ratio, rtn_ratio, climp_ratio, atl_ratio)))
 
-    ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, whis=0.5, linewidth=2)
+    ax = sns.boxplot(data=df, y='Group', x='Ratio', showfliers=False, linewidth=2)
 
-    yt = ax.get_yticks()
-    yt = [f'{y:.2f}' for y in yt]
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
-    ax.set_yticklabels(yt, fontsize=18)
+    xt = ax.get_xticks()
+    xt = [f'{x:.2f}' for x in xt]
+    ax.set_yticklabels(ax.get_yticklabels(), fontsize=20)
+    ax.set_xticklabels(xt, fontsize=18)
 
     # plt.rcParams['figure.figsize'] = (5, 20)
     # plt.title(f'Isolated to Overlapping CC area ratio', fontsize=24)
-    plt.title('Overlapping to Isolated CC area ratio', fontsize=24)
+    plt.title('Overlapping to Isolated CC area ratio', fontsize=20)
     plt.grid(True)
-    plt.xlabel('Group', fontsize=24)
-    plt.ylabel('Ratio', fontsize=24)
+    plt.ylabel('Group', fontsize=20)
+    plt.xlabel('Ratio', fontsize=20)
 
-    plt.gcf().set_size_inches(12, 12)
-    plt.savefig('overlap_iso_CC_area_ratio.png', bbox_inches='tight', pad_inches=0.4)
+    plt.gcf().set_size_inches(8, 5)
+    plt.savefig('overlap_iso_CC_area_ratio_hor.png', bbox_inches='tight', pad_inches=0.2)
     plt.close()
     # plt.show()
 
