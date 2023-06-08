@@ -76,7 +76,7 @@ def get_path_coords(er_input, cost_arr, g_nodes_array, node, fin_dict):
         return None
 
     # Return the path coordinates as a NumPy array if the path is short enough, otherwise return None
-    return np.array(path_coords) if len(path_coords) < 15 else None
+    return np.array(path_coords) if len(path_coords) < 10 else None
 
 
 # def connect_low_degree_nodes(temp_graph, node, fin_dict, path_coords):
