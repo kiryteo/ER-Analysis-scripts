@@ -23,7 +23,7 @@ from junction_analysis import cc_area_measure, cc_signal, cc_signal_net_norm, ge
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies'
 # pickle_path_prefix = '/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/CC_junctions/'
-pickle_path_prefix = '/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/'
+pickle_path_prefix = '/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/'
 
 GROUP_PREF = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
 VALID_GROUPS = ['ATL', 'Climp', 'RTN', 'Control']
@@ -78,9 +78,9 @@ def get_CC_mean_variation(channel, region, measure):
     # control = cc_signal('Control', channel, region)
     # pkl.dump(control, open(f'Control_{channel}_{region}_CC_mean.pkl', 'wb'))
 
-    atl = pkl.load(open(f'ATL_{channel}_{region}_CC_mean.pkl', 'rb'))
-    climp = pkl.load(open(f'Climp_{channel}_{region}_CC_mean.pkl', 'rb'))
-    rtn = pkl.load(open(f'RTN_{channel}_{region}_CC_mean.pkl', 'rb'))
+    atl = pkl.load(open(f'pickles/ATL_{channel}_{region}_CC_mean.pkl', 'rb'))
+    climp = pkl.load(open(f'pickles/Climp_{channel}_{region}_CC_mean.pkl', 'rb'))
+    rtn = pkl.load(open(f'pickles/RTN_{channel}_{region}_CC_mean.pkl', 'rb'))
     
     atl = get_mean_group_data(atl, measure)
     climp = get_mean_group_data(climp, measure)
@@ -89,58 +89,135 @@ def get_CC_mean_variation(channel, region, measure):
     df = pd.DataFrame()
 
     if channel == 'egfp':
-        control = pkl.load(open(f'Control_{channel}_{region}_CC_mean.pkl', 'rb'))
+        control = pkl.load(open(f'pickles/Control_{channel}_{region}_CC_mean.pkl', 'rb'))
         control = get_mean_group_data(control, measure)
         df['CC_mean'] = pd.Series(np.concatenate((control, rtn, climp, atl)))
-        df['Group'] = pd.Series(np.concatenate((['Control'] * len(control), ['RTN'] * len(rtn), ['Climp'] * len(climp), ['ATL'] * len(atl) )))
+        df['Group'] = pd.Series(np.concatenate((['Control'] * len(control), ['Reticulon'] * len(rtn), ['Climp'] * len(climp), ['Atlastin'] * len(atl) )))
     else:
         df['CC_mean'] = pd.Series(np.concatenate((rtn, climp, atl)))
-        df['Group'] = pd.Series(np.concatenate((['RTN'] * len(rtn), ['Climp'] * len(climp), ['ATL'] * len(atl))))
+        df['Group'] = pd.Series(np.concatenate((['Reticulon'] * len(rtn), ['Climp'] * len(climp), ['Atlastin'] * len(atl))))
 
     # ax = sns.boxplot(data=df, x='Group', y='CC_mean', showfliers=False, whis=0.5, linewidth=2)
-    ax = sns.boxplot(data=df, x='Group', y='CC_mean', showfliers=False, linewidth=2)
+
+    # colors = sns.color_palette(n_colors=4)
+
+    # pal = {'Reticulon': colors[1], 'Climp': colors[2], 'Atlastin': colors[3]}
+
+    ax = sns.boxplot(data=df, x='Group', y='CC_mean', showfliers=False, width=0.5)#, palette=pal)
+    # sns.set_palette(pal)
     # plt.show()
     # plt.yscale('log')
 
-    ax.set_ylim(0, 0.12) # for egfp std
+    # ax.set_ylim(0, 0.12) # for egfp std
+    # ax.set_ylim(0, 0.15)
+
+    ax.set_ylim(0, 0.92)
 
     # ax.set_ylim(0, 0.85) # for egfp
     #ax.set_ylim(0, 0.5) # for mch
     # ax.set_ylim(0, ymax+0.01)
     yt = ax.get_yticks()
     yt = [f'{y:.2f}' for y in yt]
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
-    ax.set_yticklabels(yt, fontsize=20)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=12, rotation=90)
+    ax.set_yticklabels(yt, fontsize=12)
 
-    # box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'RTN'), ('Climp', 'Control'), ('RTN', 'Control')]
-    # box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
+    # box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'), ('Reticulon', 'Control')]
+    # box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Climp', 'Reticulon')]
+    # # box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
 
     # statannot.add_stat_annotation(ax, x='Group', y='CC_mean', data=df, box_pairs=box_pairs,
-    #                               test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=20)
+                                #   test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=15)
 
     region_name = 'Isolated' if region == 'iso' else 'Overlapping'
     ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
     measure_name = 'Mean' if measure == 'mean' else 'Standard Deviation'
 
     # plt.suptitle(f'{region_name} CC, per junction correlation across conditions', fontsize=20)
-    plt.title(f'{measure_name} over 100 frames for Junction CC mean \n in {region_name} CC ({ch_name})', fontsize=24)
+    # plt.title(f'{measure_name} over 100 frames for Junction CC mean \n in {region_name} CC ({ch_name})', fontsize=18)
     plt.grid(True)
     # plt.tight_layout()
     # plt.subplots_adjust(hspace = 1, wspace = 0)
-    plt.xlabel('Group', fontsize=24)
-    plt.ylabel(f'{measure_name} over sequence per CC mean', fontsize=24)
-    plt.gcf().set_size_inches(12, 12)
-    plt.savefig(f'Seq_{measure_name}_CC_mean_{region_name}_{channel}', bbox_inches='tight', pad_inches=0.4)
+    plt.xlabel('Group', fontsize=15)
+    plt.ylabel(f'{measure_name} over sequence per CC mean', fontsize=15)
+    plt.gcf().set_size_inches(2, 6)
+    plt.savefig(f'Seq_{measure_name}_CC_mean_{region_name}_{channel}_v2', bbox_inches='tight', pad_inches=0.1)
     plt.close()
     # plt.show()
 
 
 
+# get_CC_mean_variation('egfp', 'iso', 'mean')
+# get_CC_mean_variation('egfp', 'fuz', 'mean')
 # get_CC_mean_variation('egfp', 'iso', 'std')
 # get_CC_mean_variation('egfp', 'fuz', 'std')
-# # get_CC_mean_variation('mch', 'iso', 'std')
-# # get_CC_mean_variation('mch', 'fuz', 'std')
+# get_CC_mean_variation('mch', 'iso', 'std')
+# get_CC_mean_variation('mch', 'fuz', 'std')
+# get_CC_mean_variation('mch', 'iso', 'mean')
+# get_CC_mean_variation('mch', 'fuz', 'mean')
 # exit()
+
+def get_correlation(l1, l2):
+    corr = []
+    for e1, e2 in zip(l1, l2):
+        corr.extend(pearsonr(ee, mm)[0] for ee, mm in zip(e1, e2))
+    return corr
+
+
+def get_CC_mean_correlation(region):
+    atl_egfp = pkl.load(open(f'pickles/ATL_egfp_{region}_CC_mean.pkl', 'rb'))
+    climp_egfp = pkl.load(open(f'pickles/Climp_egfp_{region}_CC_mean.pkl', 'rb'))
+    rtn_egfp = pkl.load(open(f'pickles/RTN_egfp_{region}_CC_mean.pkl', 'rb'))
+
+    atl_mch = pkl.load(open(f'pickles/ATL_mch_{region}_CC_mean.pkl', 'rb'))
+    climp_mch = pkl.load(open(f'pickles/Climp_mch_{region}_CC_mean.pkl', 'rb'))
+    rtn_mch = pkl.load(open(f'pickles/RTN_mch_{region}_CC_mean.pkl', 'rb'))
+
+    atl_corr = get_correlation(atl_egfp, atl_mch)
+    climp_corr = get_correlation(climp_egfp, climp_mch)
+    rtn_corr = get_correlation(rtn_egfp, rtn_mch)
+
+    df = pd.DataFrame()
+    df['Cross-Correlation'] = pd.Series(np.concatenate((rtn_corr, climp_corr, atl_corr)))
+    df['Group'] = pd.Series(np.concatenate((['Reticulon'] * len(rtn_corr), ['Climp'] * len(climp_corr), ['Atlastin'] * len(atl_corr))))
+
+    colors = sns.color_palette(n_colors=4)
+
+    pal = {'Reticulon': colors[1], 'Climp': colors[2], 'Atlastin': colors[3]}
+
+    ax = sns.boxplot(data=df, x='Group', y='Cross-Correlation', showfliers=False, width=0.9, palette=pal)
+
+    ax.set_ylim(-0.31, 0.65)
+    ax.set_xlim(-1, 3.0)
+
+    yt = ax.get_yticks()
+    yt = [f'{y:.2f}' for y in yt]
+    ax.set_yticklabels(yt, fontsize=13)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=90)
+
+    # region_name = 'Isolated' if region == 'iso' else 'Overlapping'
+
+    # box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Climp', 'Reticulon')]
+
+    # statannot.add_stat_annotation(ax, x='Group', y='Cross-Correlation', data=df, box_pairs=box_pairs,
+    #                               test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=15)
+
+    # plt.title(f'{region_name} CC mean cross-correlation between ERmoxGFP and mCherry over 100 frames', fontsize=20)
+    plt.grid(True)
+    plt.xlabel('Group', fontsize=15)
+    # plt.ylabel('Number of junctions (normalized)', fontsize=24)
+    plt.ylabel('Correlation coefficient', fontsize=15)
+    # plt.show()
+    # plt.gcf().set_size_inches(16, 4)
+    plt.gcf().set_size_inches(2.5, 6)
+    # plt.savefig('num_juncs_iso_norm.png', bbox_inches='tight', pad_inches=0.6)
+    plt.savefig(f'CC_mean_cross_corr_{region}_v3.png', bbox_inches='tight', pad_inches=0.1)
+    plt.close()
+
+
+get_CC_mean_correlation('iso')
+get_CC_mean_correlation('fuz')
+exit()
+
 
 
 def get_CC_mean_variation_region(channel, measure):
@@ -316,10 +393,10 @@ def plot_num_junctions():
     """
     Plot number of junctions per group
     """
-    atl = pkl.load(open('ATL_egfp_iso_CC_mean.pkl', 'rb'))
-    climp = pkl.load(open('Climp_egfp_iso_CC_mean.pkl', 'rb'))
-    rtn = pkl.load(open('RTN_egfp_iso_CC_mean.pkl', 'rb'))
-    control = pkl.load(open('Control_egfp_iso_CC_mean.pkl', 'rb'))
+    atl = pkl.load(open('pickles/ATL_egfp_iso_CC_mean.pkl', 'rb'))
+    climp = pkl.load(open('pickles/Climp_egfp_iso_CC_mean.pkl', 'rb'))
+    rtn = pkl.load(open('pickles/RTN_egfp_iso_CC_mean.pkl', 'rb'))
+    control = pkl.load(open('pickles/Control_egfp_iso_CC_mean.pkl', 'rb'))
 
     # atl_area = pkl.load(open('ATL_er_area.pkl', 'rb'))
     # climp_area = pkl.load(open('Climp_er_area.pkl', 'rb'))
@@ -340,7 +417,7 @@ def plot_num_junctions():
     df['Num_junctions'] = pd.Series(np.concatenate((control_num, rtn_num, climp_num, atl_num)))
     df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_num), ['Reticulon'] * len(rtn_num), ['Climp'] * len(climp_num), ['Atlastin'] * len(atl_num))))
 
-    ax = sns.boxplot(data=df, y='Group', x='Num_junctions', showfliers=False, linewidth=2)
+    ax = sns.boxplot(data=df, x='Group', y='Num_junctions', showfliers=False, width=0.5)
     # ax = sns.boxplot(data=df, x='Group', y='Num_junctions', showfliers=False, whis=0.5, linewidth=2)
 
     # ax = sns.barplot(data=df, x='Group', y='Num_junctions')#, ci='sd', capsize=0.2, linewidth=2, errwidth=2)
@@ -350,10 +427,10 @@ def plot_num_junctions():
     # ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
     # ax.set_yticklabels(yt, fontsize=18)
 
-    xt = ax.get_xticks()
-    xt = [f'{x:.2f}' for x in xt]
-    ax.set_xticklabels(xt, fontsize=20)
-    ax.set_yticklabels(ax.get_yticklabels(), fontsize=20)
+    yt = ax.get_yticks()
+    yt = [f'{y}' for y in yt]
+    ax.set_yticklabels(yt, fontsize=12)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=12, rotation=90)
 
     # sns.pointplot(x='Group', y='Num_junctions', data=df.groupby('Group', as_index=False).mean(), ax=ax)
 
@@ -366,17 +443,23 @@ def plot_num_junctions():
 
     # plt.errorbar(x=[0, 1, 2, 3], y=[np.mean(control_num), np.mean(rtn_num), np.mean(climp_num), np.mean(atl_num)], yerr=[ctrl_sem, rtn_sem, climp_sem, atl_sem], fmt='o', color='black', capsize=5, markersize=8)
 
+    box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'),
+                 ('Reticulon', 'Control')]
+
+    statannot.add_stat_annotation(ax, x='Group', y='Num_junctions', data=df, box_pairs=box_pairs,
+                                  test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=10)
+
     # plt.rcParams['figure.figsize'] = (5, 20)
     # plt.title('Number of isolated junctions per sequence (normalized by ER area)', fontsize=24)
-    plt.title('Number of isolated junctions per sequence', fontsize=20)
+    # plt.title('Number of isolated junctions per sequence', fontsize=20)
     plt.grid(True)
-    plt.ylabel('Group', fontsize=20)
+    plt.xlabel('Group', fontsize=15)
     # plt.ylabel('Number of junctions (normalized)', fontsize=24)
-    plt.xlabel('Number of junctions', fontsize=20)
+    plt.ylabel('Number of junctions', fontsize=15)
     # plt.show()
-    plt.gcf().set_size_inches(16, 4)
+    plt.gcf().set_size_inches(2, 6)
     # plt.savefig('num_juncs_iso_norm.png', bbox_inches='tight', pad_inches=0.6)
-    plt.savefig('num_juncs_iso_hor.png', bbox_inches='tight', pad_inches=0.2)
+    plt.savefig('num_juncs_iso_ver_pval.png', bbox_inches='tight', pad_inches=0.1)
     plt.close()
 
 # plot_num_junctions()
@@ -437,14 +520,14 @@ def get_iso_fuz_ratio():
     df['Ratio'] = pd.Series(np.concatenate((control_ratio, rtn_ratio, climp_ratio, atl_ratio)))
 
     # ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, whis=0.5, linewidth=2)
-    ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, linewidth=2)
+    ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, width=0.5)
 
     ax.set_ylim(0, 0.9)
 
     yt = ax.get_yticks()
     yt = [f'{y:.1f}' for y in yt]
-    ax.set_yticklabels(yt, fontsize=10)
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=14)
+    ax.set_yticklabels(yt, fontsize=14)
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=90,fontsize=12)
 
     # box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'),
     #              ('Reticulon', 'Control')]
@@ -454,15 +537,15 @@ def get_iso_fuz_ratio():
 
     # plt.rcParams['figure.figsize'] = (5, 20)
     # plt.title(f'Isolated to Overlapping junctions ratio', fontsize=24)
-    plt.title('Overlapping to Isolated junctions ratio', fontsize=14)
+    # plt.title('Overlapping to Isolated \n junctions ratio', fontsize=15)
     plt.grid(True)
-    plt.xlabel('Group', fontsize=14)
-    plt.ylabel('Ratio', fontsize=14)
+    plt.xlabel('Group', fontsize=15)
+    plt.ylabel('Ratio', fontsize=15)
 
     # plt.gcf().set_size_inches(12, 12)
-    plt.gcf().set_size_inches(5, 8)
+    plt.gcf().set_size_inches(2, 6)
     # plt.savefig('iso_overlap_juncs_ratio.png', bbox_inches='tight', pad_inches=0.4)
-    plt.savefig('overlap_iso_juncs_ratio_ver.png', bbox_inches='tight', pad_inches=0.2)
+    plt.savefig('overlap_iso_juncs_ratio_ver_v2.png', bbox_inches='tight', pad_inches=0.1)
     plt.close()
     # plt.show()
 
@@ -538,21 +621,21 @@ def get_iso_fuz_area_ratio():
 
     df['Ratio'] = pd.Series(np.concatenate((control_ratio, rtn_ratio, climp_ratio, atl_ratio)))
 
-    ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, linewidth=2)
+    ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, width=0.5)
 
-    ax.set_ylim(0, 4.7)
+    ax.set_ylim(0, 5.4)
 
     yt = ax.get_yticks()
     yt = [f'{y:.1f}' for y in yt]
-    ax.set_yticklabels(yt, fontsize=10)
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=14)
+    ax.set_yticklabels(yt, fontsize=14)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=12, rotation=90)
 
     # plt.rcParams['figure.figsize'] = (5, 20)
     # plt.title(f'Isolated to Overlapping CC area ratio', fontsize=24)
-    plt.title('Overlapping to Isolated CC area ratio', fontsize=14)
+    # plt.title('Overlapping to Isolated CC area ratio', fontsize=14)
     plt.grid(True)
-    plt.xlabel('Group', fontsize=14)
-    plt.ylabel('Ratio', fontsize=14)
+    plt.xlabel('Group', fontsize=15)
+    plt.ylabel('Ratio', fontsize=15)
 
     # box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'),
     #              ('Reticulon', 'Control')]
@@ -560,9 +643,9 @@ def get_iso_fuz_area_ratio():
     # statannot.add_stat_annotation(ax, x='Group', y='Ratio', data=df, box_pairs=box_pairs,
     #                               test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=10)
 
-    plt.gcf().set_size_inches(5, 8)
+    plt.gcf().set_size_inches(2, 6)
     # plt.savefig('overlap_iso_CC_area_ratio_hor.png', bbox_inches='tight', pad_inches=0.2)
-    plt.savefig('overlap_iso_CC_area_ratio_ver.png', bbox_inches='tight', pad_inches=0.2)
+    plt.savefig('overlap_iso_CC_area_ratio_ver_v2.png', bbox_inches='tight', pad_inches=0.1)
     plt.close()
     # plt.show()
 
@@ -665,29 +748,28 @@ def per_CC_pixel_variation(region):
     rtn_corr = per_CC_pixel_correlation(rtn_egfp, rtn_mch)
 
     df = pd.DataFrame()
-    df['data_tubule_mean'] = pd.Series(np.concatenate((atl_corr, climp_corr, rtn_corr)))
-    df['Group'] = pd.Series(np.concatenate((
-        ['ATL'] * len(atl_corr), ['Climp'] * len(climp_corr), ['RTN'] * len(rtn_corr))))
+    df['data_tubule_mean'] = pd.Series(np.concatenate((rtn_corr, climp_corr, atl_corr)))
+    df['Group'] = pd.Series(np.concatenate((['Reticulon'] * len(rtn_corr), ['Climp'] * len(climp_corr), ['Atlastin'] * len(atl_corr))))
     
 
-    ax = sns.boxenplot(data=df, x='Group', y='data_tubule_mean')
+    ax = sns.boxplot(data=df, x='Group', y='data_tubule_mean', showfliers=False, width=0.5)
     # ax = sns.boxenplot(data=df, x='Replicate', y='data_tubule_mean', hue='Group', dodge=True)  # , yscale='log')
     # plt.show()
     # plt.yscale('log')
-    ax.set_ylim(-0.6, 1)
+    ax.set_ylim(-0.25, 0.35)
     yt = ax.get_yticks()
     yt = [f'{y:.2f}' for y in yt]
     # ax.set_ylim([0.0, 0.5])
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=20, rotation=90)
     ax.set_yticklabels(yt, fontsize=18)
 
 
-    box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
+    box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Climp', 'Reticulon')]
 
     statannot.add_stat_annotation(ax, x='Group', y='data_tubule_mean', data=df, box_pairs=box_pairs,
-                                  test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=20)
+                                  test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=20)
 
-    region_name = 'Isolated' if region == 'iso' else 'Fuzzy'
+    region_name = 'Isolated' if region == 'iso' else 'Overlapping'
     # ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
 
     # plt.suptitle(f'{region_name} CC, per junction correlation across conditions', fontsize=20)
@@ -695,6 +777,10 @@ def per_CC_pixel_variation(region):
     plt.grid(True)
     plt.xlabel('Group', fontsize=24)
     plt.ylabel('Cross-correlation value', fontsize=24)
+
+    plt.gcf().set_size_inches(2, 6)
+    plt.savefig('Corr_iso_overlap_juncs_ratio.png', bbox_inches='tight', pad_inches=0.4)
+
     plt.show()
 
 
@@ -1013,15 +1099,15 @@ def plot_cc_area_all(a1, c1, r1, ct1, region):
     # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
 
 
-    ax = sns.boxplot(data=df, x='Group', y='CC_area',showfliers=False, linewidth=2)
+    ax = sns.boxplot(data=df, x='Group', y='CC_area',showfliers=False, width=0.5)
     # ax = sns.boxplot(data=df, x='Group', y='CC_area')
     ax.set_ylim(0, 180)
     # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=14)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=12, rotation=90)
     yt = ax.get_yticks()
     # yt = [f'{y:.2f}' for y in yt]
     yt = [f'{y}' for y in yt]
-    ax.set_yticklabels(yt, fontsize=10)
+    ax.set_yticklabels(yt, fontsize=14)
     # sns.boxplot(data=df, x='Group', y='CC_area', hue='replicate', color='white', dodge=True)
 
     # plt.yscale('log')
@@ -1036,14 +1122,14 @@ def plot_cc_area_all(a1, c1, r1, ct1, region):
 
     # plt.suptitle(f'{region_name} CC area across conditions', fontsize=24)
     # plt.title('CC area denotes the total movement of each junction', fontsize=24)
-    plt.title(f'{region_name} CC area across conditions', fontsize=14)
+    # plt.title(f'{region_name} CC area across conditions', fontsize=14)
     plt.grid(True)
-    plt.xlabel('Group', fontsize=14)
+    plt.xlabel('Group', fontsize=15)
     # plt.ylabel('CC_area (movement of junctions), log scale', fontsize=24)
-    plt.ylabel('CC_area (movement of junctions)', fontsize=14)
+    plt.ylabel('CC_area (movement of junctions)', fontsize=15)
     # plt.show()
-    plt.gcf().set_size_inches(5, 8)
-    plt.savefig(f'cc_area_all_conditions_{region}_pval', bbox_inches='tight', pad_inches=0.2)
+    plt.gcf().set_size_inches(2, 6)
+    plt.savefig(f'cc_area_all_conditions_{region}_pval_v2', bbox_inches='tight', pad_inches=0.1)
     plt.close()
 
 # a1 = pd.Series(cc_area_measure('ATL', 'iso', 1, 26))
@@ -1061,9 +1147,9 @@ def cc_area_plotter(region):
     # plot_cc_area_all(a1, c1, r1, ct1, 'iso')
 
 
-cc_area_plotter('fuz')
+# cc_area_plotter('fuz')
 # cc_area_plotter('iso')
-exit()
+# exit()
 
 
 
@@ -1111,35 +1197,36 @@ def plot_num_junc_tub_len_all():
     ctr_ratio = [a / b for a, b in zip(control_num, ctr_lengths)]
 
     df = pd.DataFrame()
-    df['ratio'] = pd.Series(np.concatenate((atl_ratio, climp_ratio, rtn_ratio, ctr_ratio)))
-    df['Group'] = pd.Series(np.concatenate((['Atlastin'] * len(atl_ratio), ['Climp'] * len(climp_ratio), ['Reticulon'] * len(rtn_ratio), ['Control'] * len(ctr_ratio))))
+    df['ratio'] = pd.Series(np.concatenate((ctr_ratio, rtn_ratio, climp_ratio, atl_ratio)))
+    df['Group'] = pd.Series(np.concatenate((['Control'] * len(ctr_ratio), ['Reticulon'] * len(rtn_ratio), ['Climp'] * len(climp_ratio), ['Atlastin'] * len(atl_ratio))))
 
-    ax = sns.boxplot(data=df, x='Group', y='ratio', showfliers=False, linewidth=2)
+    ax = sns.boxplot(data=df, x='Group', y='ratio', showfliers=False, width=0.5)
     ax.set_ylim(0.05, 0.28)
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=14)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=12, rotation=90)
     yt = ax.get_yticks()
     yt = [f'{y:.2f}' for y in yt]
-    ax.set_yticklabels(yt, fontsize=10)
+    ax.set_yticklabels(yt, fontsize=12)
 
     # box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'),
     #              ('Reticulon', 'Control')]
 
     # statannot.add_stat_annotation(ax, x='Group', y='ratio', data=df, box_pairs=box_pairs,
-    #                               test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=10)
+    #                               test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=10)
 
-    plt.title('Number of junctions over total tubule length \n per sequence', fontsize=14)
+    # plt.title('Number of junctions over total tubule length per sequence', fontsize=18)
     plt.grid(True)
     plt.xlabel('Group', fontsize=14)
     plt.ylabel('Ratio', fontsize=14)
 
-    plt.gcf().set_size_inches(5, 8)
-    plt.savefig('num_junc_vs_tub_len_ratio', bbox_inches='tight', pad_inches=0.2)
+    # plt.gcf().set_size_inches(8, 10)
+    plt.gcf().set_size_inches(2, 6)
+    plt.savefig('num_junc_vs_tub_len_ratio_v3', bbox_inches='tight', pad_inches=0.1)
     plt.close()
     # plt.show()
 
 
-plot_num_junc_tub_len_all()
-exit()
+# plot_num_junc_tub_len_all()
+# exit()
 
 
 def plot_tubule_length_distribution_all():

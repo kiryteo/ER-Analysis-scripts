@@ -107,7 +107,7 @@ def get_per_pixel_variation_over_sequence(group, connection, channel, variation)
     # data: All tubule intensity data over 100 frames for all movies in the group.
 
     # Load the data from the pickle file
-    data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/{group.lower()}_{connection}_tubules_{channel}.pkl', 'rb'))
+    data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/{group.lower()}_{connection}_tubules_{channel}.pkl', 'rb'))
 
     # Filter the data
     data = filter_data(data)
@@ -125,6 +125,176 @@ def get_per_pixel_variation_over_sequence(group, connection, channel, variation)
     return variation_vals
 
 
+def get_per_tubule_variation_over_sequence(group, connection, channel, variation):
+    data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/{group.lower()}_{connection}_tubules_{channel}.pkl', 'rb'))
+
+    data = filter_data(data)
+
+    variation_vals = []
+    for series in data:
+        # print(len(series))
+        for tubule in series:
+            frame_data = [np.mean(frame) for frame in tubule]
+            if variation == 'mean':
+                variation_vals.append(np.mean(frame_data))
+            else:
+                variation_vals.append(np.std(frame_data))
+
+    return variation_vals
+
+
+def get_per_tubule_correlation_over_sequence(group, connection, channel):
+    data = pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/{group.lower()}_{connection}_tubules_{channel}.pkl', 'rb'))
+
+    data = filter_data(data)
+
+    variation_vals = []
+    for series in data:
+        for tubule in series:
+            frame_data = [np.mean(frame) for frame in tubule]
+            variation_vals.append(frame_data)
+    return variation_vals
+
+
+def plot_per_tubule_correlation(connection):
+    atl_egfp = get_per_tubule_correlation_over_sequence('ATL', connection, 'egfp')
+    atl_mch = get_per_tubule_correlation_over_sequence('ATL', connection, 'mch')
+
+    climp_egfp = get_per_tubule_correlation_over_sequence('Climp', connection, 'egfp')
+    climp_mch = get_per_tubule_correlation_over_sequence('Climp', connection, 'mch')
+
+    rtn_egfp = get_per_tubule_correlation_over_sequence('RTN', connection, 'egfp')
+    rtn_mch = get_per_tubule_correlation_over_sequence('RTN', connection, 'mch')
+
+    df = pd.DataFrame()
+    atl_correlation_vals = [
+        np.corrcoef(egfp, mch)[0][1] for egfp, mch in zip(atl_egfp, atl_mch)
+    ]
+    climp_correlation_vals = [
+        np.corrcoef(egfp, mch)[0][1]
+        for egfp, mch in zip(climp_egfp, climp_mch)
+    ]
+    rtn_correlation_vals = [
+        np.corrcoef(egfp, mch)[0][1] for egfp, mch in zip(rtn_egfp, rtn_mch)
+    ]
+    df['Per-tubule-correlation'] = pd.Series(np.concatenate((rtn_correlation_vals, climp_correlation_vals, atl_correlation_vals)))
+
+    df['Group'] = pd.Series(np.concatenate((['Reticulon']*len(rtn_correlation_vals), ['Climp']*len(climp_correlation_vals), ['Atlastin']*len(atl_correlation_vals))))
+
+    colors = sns.color_palette(n_colors=4)
+
+    pal = {'Reticulon': colors[1], 'Climp': colors[2], 'Atlastin': colors[3]}
+
+    ax = sns.boxplot(data=df, x='Group', y='Per-tubule-correlation', showfliers=False, width=0.95, palette=pal)
+    # ax.set_aspect(1.5)
+    # ax.set_ylim(-0.28, 0.62)
+    ax.set_ylim(-0.29, 0.75)
+    ax.set_xlim(-1, 3.0)
+
+    yt = ax.get_yticks()
+    yt = [f'{y:.2f}' for y in yt]
+    ax.set_yticklabels(yt, fontsize=15)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=15, rotation=90)
+
+    # box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Climp', 'Reticulon'), ('Control', 'Reticulon'), ('Control', 'Climp'), ('Control', 'Atlastin')]
+
+    # box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Climp', 'Reticulon')]
+
+    # statannot.add_stat_annotation(ax, x='Group', y='Per-tubule-correlation', data=df, box_pairs=box_pairs,
+    #                               test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=15)
+
+    # ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
+
+    # plt.title(f'Per-pixel {variation_name} over sequence \n for {connection} tubules in {ch_name}', fontsize=24)
+
+    plt.grid(True)
+    # plt.subplots_adjust(hspace = 1, wspace = 0)
+    plt.xlabel('Group', fontsize=18)
+    # plt.ylabel(f'Tubular {variation}, log scale', fontsize=18)
+    # plt.ylabel(f'Tubular {variation}', fontsize=18)
+    plt.ylabel('Cross-correlation over sequence', fontsize=18)
+    plt.gcf().set_size_inches(3, 6)
+    # plt.savefig('num_juncs_iso_norm.png', bbox_inches='tight', pad_inches=0.6)
+
+    # plt.show()
+    plt.savefig(f'Seq_Correlation_Tubule_mean_{connection}_v3.png', bbox_inches='tight', pad_inches=0.1)
+    plt.close()
+
+    # plt.savefig(f'Seq_{variation}_Tubule_mean_{connection}_{channel}_v2.png', bbox_inches='tight', pad_inches=0.1)
+    # plt.close()
+
+# plot_per_tubule_correlation('iso-iso')
+# exit()
+
+
+def plot_per_tubule_variation_over_sequence(connection, channel, variation):
+
+    df = pd.DataFrame()
+
+    atl_variation = get_per_tubule_variation_over_sequence('ATL', connection, channel, variation)
+    rtn_variation = get_per_tubule_variation_over_sequence('RTN', connection, channel, variation)
+    climp_variation = get_per_tubule_variation_over_sequence('Climp', connection, channel, variation)
+    if channel == 'egfp':
+        control_variation = get_per_tubule_variation_over_sequence('Control', connection, channel, variation)
+        
+        df['Tubule-mean'] = pd.Series(np.concatenate((control_variation, rtn_variation, climp_variation, atl_variation)))
+
+        df['Group'] = pd.Series(np.concatenate((['Control']*len(control_variation), ['Reticulon']*len(rtn_variation), ['Climp']*len(climp_variation), ['Atlastin']*len(atl_variation))))
+    else:
+        df['Tubule-mean'] = pd.Series(np.concatenate((rtn_variation, climp_variation, atl_variation)))
+
+        df['Group'] = pd.Series(np.concatenate((['Reticulon']*len(rtn_variation), ['Climp']*len(climp_variation), ['Atlastin']*len(atl_variation))))
+
+    # colors = sns.color_palette(n_colors=4)
+
+    # pal = {'Reticulon': colors[1], 'Climp': colors[2], 'Atlastin': colors[3]}
+
+    ax = sns.boxplot(data=df, x='Group', y='Tubule-mean', showfliers=False, width=0.9)#, palette=pal)
+    ax.set_ylim(0, 0.95)
+    ax.set_xlim(-1, 4.0)
+    # box_pairs = get_group_box_pairs(channel)
+
+    # statannot.add_stat_annotation(ax, x='Group', y='Per-pixel-variation', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=20)
+
+    yt = ax.get_yticks()
+    yt = [f'{y:.2f}' for y in yt]
+    ax.set_yticklabels(yt, fontsize=12)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=12, rotation=90)
+
+    # box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Climp', 'Reticulon'), ('Control', 'Reticulon'), ('Control', 'Climp'), ('Control', 'Atlastin')]
+
+    # box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Climp', 'Reticulon')]
+
+    # statannot.add_stat_annotation(ax, x='Group', y='Tubule-mean', data=df, box_pairs=box_pairs,
+    #                               test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=15)
+
+    # ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
+    variation_name = 'standard deviation' if variation == 'std' else 'mean'
+
+    # plt.title(f'Per-pixel {variation_name} over sequence \n for {connection} tubules in {ch_name}', fontsize=24)
+
+    plt.grid(True)
+    # plt.subplots_adjust(hspace = 1, wspace = 0)
+    plt.xlabel('Group', fontsize=15)
+    # plt.ylabel(f'Tubular {variation}, log scale', fontsize=18)
+    # plt.ylabel(f'Tubular {variation}', fontsize=18)
+    plt.ylabel(f'{variation_name} over sequence', fontsize=15)
+    plt.gcf().set_size_inches(2.5, 6)
+    # plt.savefig('num_juncs_iso_norm.png', bbox_inches='tight', pad_inches=0.6)
+
+    # plt.show()
+
+    plt.savefig(f'Seq_{variation}_Tubule_mean_{connection}_{channel}_v3.png', bbox_inches='tight', pad_inches=0.1)
+    plt.close()
+
+
+plot_per_tubule_variation_over_sequence('iso-iso', 'egfp', 'mean')
+# plot_per_tubule_variation_over_sequence('iso-iso', 'egfp', 'std')
+
+exit()
+
+
+
 def plot_per_pixel_variation_over_sequence(connection, channel, variation):
     
     df = pd.DataFrame()
@@ -137,41 +307,49 @@ def plot_per_pixel_variation_over_sequence(connection, channel, variation):
         
         df['Per-pixel-variation'] = pd.Series(np.concatenate((control_variation, rtn_variation, climp_variation, atl_variation)))
 
-        df['Group'] = pd.Series(np.concatenate((['Control']*len(control_variation), ['RTN']*len(rtn_variation), ['Climp']*len(climp_variation), ['ATL']*len(atl_variation))))
+        df['Group'] = pd.Series(np.concatenate((['Control']*len(control_variation), ['Reticulon']*len(rtn_variation), ['Climp']*len(climp_variation), ['Atlastin']*len(atl_variation))))
     else:
         df['Per-pixel-variation'] = pd.Series(np.concatenate((rtn_variation, climp_variation, atl_variation)))
 
-        df['Group'] = pd.Series(np.concatenate((['RTN']*len(rtn_variation), ['Climp']*len(climp_variation), ['ATL']*len(atl_variation))))
+        df['Group'] = pd.Series(np.concatenate((['Reticulon']*len(rtn_variation), ['Climp']*len(climp_variation), ['Atlastin']*len(atl_variation))))
 
-    ax = sns.boxenplot(data=df, x='Group', y='Per-pixel-variation')
-    ax.set_ylim(0, 0.3)
+    colors = sns.color_palette(n_colors=4)
+
+    pal = {'Reticulon': colors[1], 'Climp': colors[2], 'Atlastin': colors[3]}
+
+    ax = sns.boxplot(data=df, x='Group', y='Per-pixel-variation', showfliers=False, width=0.5, palette=pal)
+    # ax.set_ylim(0, 0.3)
     # box_pairs = get_group_box_pairs(channel)
 
     # statannot.add_stat_annotation(ax, x='Group', y='Per-pixel-variation', data=df, box_pairs=box_pairs, test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=20)
 
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=18)
     yt = ax.get_yticks()
     yt = [f'{y:.2f}' for y in yt]
-    ax.set_yticklabels(yt, fontsize=18)
+    ax.set_yticklabels(yt, fontsize=12)
+
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=12, rotation=90)
 
     ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
     variation_name = 'standard deviation' if variation == 'std' else 'mean'
 
-    plt.title(f'Per-pixel {variation_name} over sequence \n for {connection} tubules in {ch_name}', fontsize=24)
+    plt.title(f'Per-pixel {variation_name} over sequence \n for {connection} tubules in {ch_name}', fontsize=15)
 
     plt.grid(True)
-    plt.subplots_adjust(hspace = 1, wspace = 0)
-    plt.xlabel('Group', fontsize=24)
+    # plt.subplots_adjust(hspace = 1, wspace = 0)
+    plt.xlabel('Group', fontsize=12)
     # plt.ylabel(f'Tubular {variation}, log scale', fontsize=18)
     # plt.ylabel(f'Tubular {variation}', fontsize=18)
-    plt.ylabel(f'{variation_name} over sequence', fontsize=24)
-    plt.show()
+    plt.ylabel(f'{variation_name} over sequence', fontsize=12)
+    plt.gcf().set_size_inches(2, 6)
+    plt.savefig(f'Seq_{variation}_Per_pixel_{connection}_{channel}_v3.png', bbox_inches='tight', pad_inches=0.1)
+    # plt.show()
+    plt.close()
 
 
 
 # ylim 0, 1
 
-# plot_per_pixel_variation_over_sequence('iso-iso', 'egfp', 'mean')
+# plot_per_pixel_variation_over_sequence('iso-iso', 'egfp', 'std')
 # plot_per_pixel_variation_over_sequence('iso-fuz', 'egfp', 'mean')
 # plot_per_pixel_variation_over_sequence('fuz-fuz', 'egfp', 'mean')
 
@@ -179,6 +357,7 @@ def plot_per_pixel_variation_over_sequence(connection, channel, variation):
 
 # ylim 0, 0.9
 # plot_per_pixel_variation_over_sequence('iso-iso', 'mch', 'mean')
+# plot_per_pixel_variation_over_sequence('iso-iso', 'mch', 'std')
 # plot_per_pixel_variation_over_sequence('iso-fuz', 'mch', 'mean')
 # plot_per_pixel_variation_over_sequence('fuz-fuz', 'mch', 'mean')
 
@@ -571,7 +750,7 @@ def load_corrected_pickles(group, connection, channel):
 
 
 def load_annot_tub_pickles(group, connection, channel):
-    return pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/{group.lower()}_{connection}_tubules_{channel}.pkl', 'rb'))
+    return pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/{group.lower()}_{connection}_tubules_{channel}.pkl', 'rb'))
 
 
 def get_length_per_tubule(data):
@@ -659,29 +838,49 @@ def plot_tubule_length_distribution(connection, channel, measure):
     # ymax = max(max(atl_iso_iso_mean), max(climp_iso_iso_mean), max(rtn_iso_iso_mean), max(ctr_iso_iso_mean))
 
     # for mean
-    ymin = 3.0
-    ymax = 17.5
+    # ymin = 3.0
+    # ymax = 17.5
+
+    # for iso-iso
+    ymin = 6.0
+    ymax = 15.0
+
+    xmin = 6.0
+    xmax = 15.0
 
     # for variation
     # ymin = 0.0
     # ymax = 100.0
 
-    print(atl_conn_variation)
-    print(climp_conn_variation)
-    print(rtn_conn_variation)
-    print(ctrl_conn_variation)
+    # ymin = 0.0
+    # ymax = 60.0
 
-    print(np.median(atl_conn_variation))
-    print(np.median(climp_conn_variation))
-    print(np.median(rtn_conn_variation))
-    print(np.median(ctrl_conn_variation))
+    # xmin = 0.0
+    # xmax = 60.0
 
-    exit()
+    # print(atl_conn_variation)
+    # print(climp_conn_variation)
+    # print(rtn_conn_variation)
+    # print(ctrl_conn_variation)
+
+    # mean
+    # print(np.median(atl_conn_variation)) # 1
+    # print(np.median(climp_conn_variation)) # 30
+    # print(np.median(rtn_conn_variation)) # 11
+    # print(np.median(ctrl_conn_variation)) # 7
+
+    # variance
+    # print(np.median(atl_conn_variation)) # 8
+    # print(np.median(climp_conn_variation)) # 12
+    # print(np.median(rtn_conn_variation)) # 25
+    # print(np.median(ctrl_conn_variation)) # 13
+
+    # exit()
 
 
     df = pd.DataFrame()
     df['tub-length'] = pd.Series(np.concatenate((ctrl_conn_variation, rtn_conn_variation, climp_conn_variation, atl_conn_variation)))
-    df['Group'] = pd.Series(np.concatenate((['Control'] * len(ctrl_conn_variation), ['RTN'] * len(rtn_conn_variation), ['Climp'] * len(climp_conn_variation), ['ATL'] * len(atl_conn_variation))))
+    df['Group'] = pd.Series(np.concatenate((['Control'] * len(ctrl_conn_variation), ['Reticulon'] * len(rtn_conn_variation), ['Climp'] * len(climp_conn_variation), ['Atlastin'] * len(atl_conn_variation))))
 
     # if connection == 'iso-iso':
     #     df['tub-length'] = pd.Series(np.concatenate((ctr_iso_iso_mean, rtn_iso_iso_mean, climp_iso_iso_mean, atl_iso_iso_mean)))
@@ -700,21 +899,26 @@ def plot_tubule_length_distribution(connection, channel, measure):
     # df['Group'] = pd.Series(np.concatenate((
             # ['ATL'] * len(atl_lengths), ['Climp'] * len(climp_lengths), ['RTN'] * len(rtn_lengths), ['Control'] * len(ctr_lengths))))
     
-    ax = sns.boxplot(data=df, x='Group', y='tub-length', showfliers=False, linewidth=2)#, dodge=True)
+    ax = sns.boxplot(data=df, x='Group', y='tub-length', showfliers=False, width=0.5)#, dodge=True)
     # sns.swarmplot(data=df, x='Group', y='tub-length', size=8, dodge=True)
-    ax.set_ylim(ymin-0.1, ymax+0.1)
+
+    ax.set_ylim(6, 18)
+    # ax.set_ylim(0, 75)
+
     # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=14, rotation=90)
     yt = ax.get_yticks()
-    yt = [f'{y:.2f}' for y in yt]
-    ax.set_yticklabels(yt, fontsize=20)
+    yt = [f'{y}' for y in yt]
+    ax.set_yticklabels(yt, fontsize=14)
 
     # plt.yscale('log')
 
+    # box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'),
+                #  ('Reticulon', 'Control')]
     # box_pairs = get_group_box_pairs(channel)
 
     # statannot.add_stat_annotation(ax, x='Group', y='tub-length', data=df, box_pairs=box_pairs,
-    #                                 test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=20)
+                                    # test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=12)
     
     # ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
     measure_name = 'variance' if measure == 'var' else 'mean (pixels)'
@@ -727,59 +931,64 @@ def plot_tubule_length_distribution(connection, channel, measure):
     else:
         conn_name = 'overlapping-overlapping'
 
-    plt.title(f'Tubule length {measure_name} per sequence \n in {conn_name} connections', fontsize=24)
-    # plt.suptitle
+    # plt.title(f'Tubule length {measure_name} per sequence \n in {conn_name} connections', fontsize=20)
+
     # plt.suptitle(f'{region_name} CC area across conditions', fontsize=20)
     # plt.title('CC area denotes the total movement of each junction', fontsize=18)
     plt.grid(True)
     # plt.subplots_adjust(hspace = 1, wspace = 0)
-    plt.xlabel('Group', fontsize=24)
+    plt.xlabel('Group', fontsize=15)
     # plt.ylabel('Tubule length (pixels)', fontsize=24)
-    plt.ylabel(f'Tubule length {measure_name}', fontsize=24)
-    plt.gcf().set_size_inches(14, 8)
-    plt.savefig(f'Seq_{measure}_tub_length_{connection}.png', bbox_inches='tight', pad_inches=0.6)
+    plt.ylabel(f'Tubule length {measure_name}', fontsize=15)
+
+    plt.gcf().set_size_inches(2, 6)
+
+    # plt.savefig(f'Seq_{measure}_tub_length_{connection}.png', bbox_inches='tight', pad_inches=0.6)
     # plt.show()
+    # plt.savefig(f'Seq_{measure}_tub_length_{connection}_annot.png', bbox_inches='tight', pad_inches=0.4)
+    plt.savefig(f'Seq_{measure}_tub_length_{connection}_v2.png', bbox_inches='tight', pad_inches=0.1)
     plt.close()
 
 
-plot_tubule_length_distribution('iso-iso', 'egfp', 'mean')
+# plot_tubule_length_distribution('iso-iso', 'egfp', 'mean')
 # plot_tubule_length_distribution('iso-fuz', 'egfp', 'mean')
 # plot_tubule_length_distribution('fuz-fuz', 'egfp', 'mean')
 
 # plot_tubule_length_distribution('iso-iso', 'egfp', 'var')
 # plot_tubule_length_distribution('iso-fuz', 'egfp',  'var')
 # plot_tubule_length_distribution('fuz-fuz', 'egfp', 'var')
-exit()
+# exit()
 
 
 def plot_tubule_length_distribution_all():
     atl_ii = load_annot_tub_pickles('ATL', 'iso-iso', 'egfp')
-    atl_if = load_annot_tub_pickles('ATL', 'iso-fuz', 'egfp')
-    atl_ff = load_annot_tub_pickles('ATL', 'fuz-fuz', 'egfp')
+    # atl_if = load_annot_tub_pickles('ATL', 'iso-fuz', 'egfp')
+    # atl_ff = load_annot_tub_pickles('ATL', 'fuz-fuz', 'egfp')
 
     climp_ii = load_annot_tub_pickles('Climp', 'iso-iso', 'egfp')
-    climp_if = load_annot_tub_pickles('Climp', 'iso-fuz', 'egfp')
-    climp_ff = load_annot_tub_pickles('Climp', 'fuz-fuz', 'egfp')
+    # climp_if = load_annot_tub_pickles('Climp', 'iso-fuz', 'egfp')
+    # climp_ff = load_annot_tub_pickles('Climp', 'fuz-fuz', 'egfp')
 
     rtn_ii = load_annot_tub_pickles('RTN', 'iso-iso', 'egfp')
-    rtn_if = load_annot_tub_pickles('RTN', 'iso-fuz', 'egfp')
-    rtn_ff = load_annot_tub_pickles('RTN', 'fuz-fuz', 'egfp')
+    # rtn_if = load_annot_tub_pickles('RTN', 'iso-fuz', 'egfp')
+    # rtn_ff = load_annot_tub_pickles('RTN', 'fuz-fuz', 'egfp')
 
     ctr_ii = load_annot_tub_pickles('Control', 'iso-iso', 'egfp')
-    ctr_if = load_annot_tub_pickles('Control', 'iso-fuz', 'egfp')
-    ctr_ff = load_annot_tub_pickles('Control', 'fuz-fuz', 'egfp')
+    # ctr_if = load_annot_tub_pickles('Control', 'iso-fuz', 'egfp')
+    # ctr_ff = load_annot_tub_pickles('Control', 'fuz-fuz', 'egfp')
 
-    atl_lengths = get_length_per_tubule(atl_ii) + get_length_per_tubule(atl_if) + get_length_per_tubule(atl_ff)
-    climp_lengths = get_length_per_tubule(climp_ii) + get_length_per_tubule(climp_if) + get_length_per_tubule(climp_ff)
-    rtn_lengths = get_length_per_tubule(rtn_ii) + get_length_per_tubule(rtn_if) + get_length_per_tubule(rtn_ff)
-    ctr_lengths = get_length_per_tubule(ctr_ii) + get_length_per_tubule(ctr_if) + get_length_per_tubule(ctr_ff)
+    atl_lengths = get_length_per_tubule(atl_ii)# + get_length_per_tubule(atl_if) + get_length_per_tubule(atl_ff)
+    climp_lengths = get_length_per_tubule(climp_ii)# + get_length_per_tubule(climp_if) + get_length_per_tubule(climp_ff)
+    rtn_lengths = get_length_per_tubule(rtn_ii)# + get_length_per_tubule(rtn_if) + get_length_per_tubule(rtn_ff)
+    ctr_lengths = get_length_per_tubule(ctr_ii)# + get_length_per_tubule(ctr_if) + get_length_per_tubule(ctr_ff)
 
     df = pd.DataFrame()
     df['tub-length'] = pd.Series(np.concatenate((atl_lengths, climp_lengths, rtn_lengths, ctr_lengths)))
     df['Group'] = pd.Series(np.concatenate((
             ['ATL'] * len(atl_lengths), ['Climp'] * len(climp_lengths), ['RTN'] * len(rtn_lengths), ['Control'] * len(ctr_lengths))))
     
-    ax = sns.boxenplot(data=df, x='Group', y='tub-length', dodge=True)
+    # ax = sns.boxenplot(data=df, x='Group', y='tub-length', dodge=True)
+    ax = sns.boxenplot(data=df, x='Group', y='tub-length', showfliers=False, linewidth=2)#, dodge=True)
     # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=20)
     yt = ax.get_yticks()
@@ -789,14 +998,14 @@ def plot_tubule_length_distribution_all():
     # plt.yscale('log')
     channel = 'egfp'
 
-    box_pairs = get_group_box_pairs(channel)
+    # box_pairs = get_group_box_pairs(channel)
 
-    statannot.add_stat_annotation(ax, x='Group', y='tub-length', data=df, box_pairs=box_pairs,
-                                    test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=20)
+    # statannot.add_stat_annotation(ax, x='Group', y='tub-length', data=df, box_pairs=box_pairs,
+    #                                 test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize=20)
     
-    ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
+    # ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
     plt.title('Tubule length in all tubules across groups', fontsize=24)
-    plt.suptitle
+    # plt.suptitle
     # plt.suptitle(f'{region_name} CC area across conditions', fontsize=20)
     # plt.title('CC area denotes the total movement of each junction', fontsize=18)
     plt.grid(True)
