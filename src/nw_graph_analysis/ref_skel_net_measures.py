@@ -47,25 +47,24 @@ def plot_measures(measure):
 
 
 plot_measures(nx.degree_assortativity_coefficient)
-plot_measures(nx.average_clustering)
-plot_measures(nx.average_node_connectivity)
-plot_measures(nx.average_shortest_path_length)
-plot_measures(nx.diameter)
-plot_measures(nx.eccentricity)
-plot_measures(nx.radius)
-plot_measures(nx.periphery)
-plot_measures(nx.center)
-plot_measures(nx.density)
-plot_measures(nx.transitivity)
+plot_measures(nx.average_degree_connectivity)
+plot_measures(nx.degree_pearson_correlation_coefficient)
 plot_measures(nx.average_neighbor_degree)
-plot_measures(nx.edge_connectivity)
-plot_measures(nx.node_connectivity)
-plot_measures(nx.edge_disjoint_paths)
-plot_measures(nx.node_disjoint_paths)
-plot_measures(nx.number_connected_components)
-plot_measures(nx.node_boundary)
-plot_measures(nx.node_clique_number)
-plot_measures(nx.node_disjoint_paths)
 
 
 
+#plot_measures(nx.eigenvector_centrality)
+#plot_measures(nx.closeness_centrality)
+#plot_measures(nx.information_centrality)
+plot_measures(nx.group_betweenness_centrality)
+plot_measures(nx.group_closeness_centrality)
+plot_measures(nx.group_degree_centrality)
+plot_measures(nx.load_centrality)
+plot_measures(nx.global_reaching_centrality)
+
+
+#plot_measures(nx.prominent_group)
+
+
+#plot_measures(nx.subgraph_centrality) # nodes dict
+#plot_measures(nx.harmonic_centrality) # nodes dict
