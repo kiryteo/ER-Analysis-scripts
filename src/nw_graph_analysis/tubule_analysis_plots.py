@@ -250,7 +250,11 @@ def plot_per_tubule_variation_over_sequence(connection, channel, variation):
     # pal = {'Reticulon': colors[1], 'Climp': colors[2], 'Atlastin': colors[3]}
 
     ax = sns.boxplot(data=df, x='Group', y='Tubule-mean', showfliers=False, width=0.9)#, palette=pal)
-    ax.set_ylim(0, 0.95)
+
+    # ax.set_ylim(0, 0.164)
+    ax.set_ylim(0, 0.13)
+
+    # ax.set_xlim(-1, 3.0)
     ax.set_xlim(-1, 4.0)
     # box_pairs = get_group_box_pairs(channel)
 
@@ -258,8 +262,8 @@ def plot_per_tubule_variation_over_sequence(connection, channel, variation):
 
     yt = ax.get_yticks()
     yt = [f'{y:.2f}' for y in yt]
-    ax.set_yticklabels(yt, fontsize=12)
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=12, rotation=90)
+    ax.set_yticklabels(yt, fontsize=13)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=90)
 
     # box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Climp', 'Reticulon'), ('Control', 'Reticulon'), ('Control', 'Climp'), ('Control', 'Atlastin')]
 
@@ -273,23 +277,27 @@ def plot_per_tubule_variation_over_sequence(connection, channel, variation):
 
     # plt.title(f'Per-pixel {variation_name} over sequence \n for {connection} tubules in {ch_name}', fontsize=24)
 
-    plt.grid(True)
+    ax.grid(axis='y')
+    # plt.grid(True)
     # plt.subplots_adjust(hspace = 1, wspace = 0)
     plt.xlabel('Group', fontsize=15)
     # plt.ylabel(f'Tubular {variation}, log scale', fontsize=18)
     # plt.ylabel(f'Tubular {variation}', fontsize=18)
     plt.ylabel(f'{variation_name} over sequence', fontsize=15)
-    plt.gcf().set_size_inches(2.5, 6)
+    plt.gcf().set_size_inches(2.2, 6)
     # plt.savefig('num_juncs_iso_norm.png', bbox_inches='tight', pad_inches=0.6)
 
     # plt.show()
 
-    plt.savefig(f'Seq_{variation}_Tubule_mean_{connection}_{channel}_v3.png', bbox_inches='tight', pad_inches=0.1)
+    plt.savefig(f'Seq_{variation}_Tubule_mean_{connection}_{channel}_v4.png', bbox_inches='tight', pad_inches=0.1)
     plt.close()
 
 
-plot_per_tubule_variation_over_sequence('iso-iso', 'egfp', 'mean')
-# plot_per_tubule_variation_over_sequence('iso-iso', 'egfp', 'std')
+# plot_per_tubule_variation_over_sequence('iso-iso', 'mch', 'mean')
+# plot_per_tubule_variation_over_sequence('iso-iso', 'mch', 'std')
+
+# plot_per_tubule_variation_over_sequence('iso-iso', 'egfp', 'mean')
+plot_per_tubule_variation_over_sequence('iso-iso', 'egfp', 'std')
 
 exit()
 
@@ -899,17 +907,18 @@ def plot_tubule_length_distribution(connection, channel, measure):
     # df['Group'] = pd.Series(np.concatenate((
             # ['ATL'] * len(atl_lengths), ['Climp'] * len(climp_lengths), ['RTN'] * len(rtn_lengths), ['Control'] * len(ctr_lengths))))
     
-    ax = sns.boxplot(data=df, x='Group', y='tub-length', showfliers=False, width=0.5)#, dodge=True)
+    ax = sns.boxplot(data=df, x='Group', y='tub-length', showfliers=False, width=0.9)#, dodge=True)
     # sns.swarmplot(data=df, x='Group', y='tub-length', size=8, dodge=True)
 
-    ax.set_ylim(6, 18)
-    # ax.set_ylim(0, 75)
+    # ax.set_ylim(6, 18)
+    ax.set_xlim(-1, 4.0)
+    ax.set_ylim(0, 81)
 
     # ax.set_yticklabels(ax.get_yticklabels(), fontsize=16)
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=14, rotation=90)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=90)
     yt = ax.get_yticks()
     yt = [f'{y}' for y in yt]
-    ax.set_yticklabels(yt, fontsize=14)
+    ax.set_yticklabels(yt, fontsize=13)
 
     # plt.yscale('log')
 
@@ -941,7 +950,7 @@ def plot_tubule_length_distribution(connection, channel, measure):
     # plt.ylabel('Tubule length (pixels)', fontsize=24)
     plt.ylabel(f'Tubule length {measure_name}', fontsize=15)
 
-    plt.gcf().set_size_inches(2, 6)
+    plt.gcf().set_size_inches(2.2, 6)
 
     # plt.savefig(f'Seq_{measure}_tub_length_{connection}.png', bbox_inches='tight', pad_inches=0.6)
     # plt.show()
