@@ -4,6 +4,9 @@ import numpy as np
 import sknw
 import imageio
 import seaborn as sns
+import pandas as pd
+import statannot
+
 
 seq_per_group = {'ATL': 26, 'RTN': 29, 'Climp':30, 'Control':30}
 
@@ -32,55 +35,67 @@ def get_graph_data_nodes(data):
 
 
 def plot_measures(measure):
-    climp = get_graph_data('Climp', measure)
-    rtn = get_graph_data('RTN', measure)
-    control = get_graph_data('Control', measure)
-    atl = get_graph_data('ATL', measure)
+    climp_data = get_graph_data('Climp', measure)
+    rtn_data = get_graph_data('RTN', measure)
+    control_data = get_graph_data('Control', measure)
+    atl_data = get_graph_data('ATL', measure)
 
-    atl_data = get_graph_data_nodes(atl)
-    rtn_data = get_graph_data_nodes(rtn)
-    climp_data = get_graph_data_nodes(climp)
-    control_data = get_graph_data_nodes(control)
+    # atl_data = get_graph_data_nodes(atl_data)
+    # rtn_data = get_graph_data_nodes(rtn_data)
+    # climp_data = get_graph_data_nodes(climp_data)
+    # control_data = get_graph_data_nodes(control_data)
 
     measure_name = measure.__name__
 
     df = pd.DataFrame()
     df[measure_name] = pd.Series(np.concatenate((atl_data, rtn_data, climp_data, control_data)))
 
-    df['Group'] = pd.Series(np.concatenate(['Atlastin']*len(atl_data), ['Reticulon']*len(rtn_data), ['Climp']*len(climp_data), ['Control']*len(control_data)))
+    df['Group'] = pd.Series(np.concatenate((['Control']*len(control_data), ['Reticulon']*len(rtn_data), ['Climp']*len(climp_data), ['Atlastin']*len(atl_data))))
 
-    sns.boxplot(x='Group', y=measure_name, data=df, showfliers=False)
+    ax = sns.boxplot(x='Group', y=measure_name, data=df, showfliers=False)
 
     box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'), ('Reticulon', 'Control')]
     # box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Climp', 'Reticulon')]
     # # box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
 
-    # statannot.add_stat_annotation(ax, x='Group', y='CC_mean', data=df, box_pairs=box_pairs,
-                                #   test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=15)
+    statannot.add_stat_annotation(ax, x='Group', y=measure_name, data=df, box_pairs=box_pairs,
+                                  test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=15)
 
-    
+    ax.set_xlim(-1, 4.0)
+
+    yt = ax.get_yticks()
+    yt = [f'{y:.2f}' for y in yt]
+    ax.set_yticklabels(yt, fontsize=13)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=90)
+
+    ax.grid(axis='y')
 
     plt.xlabel(measure_name, fontsize=14)
     plt.ylabel('Density', fontsize=14)
+    plt.gcf().set_size_inches(2.2, 7)
 
-    plt.title(f'{measure_name} distribution', fontsize=18)
+    # plt.title(f'{measure_name} distribution', fontsize=18)
 
-    plt.legend()
-    plt.show()
+    plt.savefig(f'{measure_name}_box.png', bbox_inches='tight', pad_inches=0.1)
+    plt.close()
+
+    # plt.legend()
+    # plt.show()
 
 
-# plot_measures(nx.degree_assortativity_coefficient)
-# plot_measures(nx.average_clustering) # float
-# plot_measures(nx.degree_pearson_correlation_coefficient)
-# plot_measures(nx.local_efficiency) # float
-# plot_measures(nx.global_efficiency) # float
+plot_measures(nx.degree_assortativity_coefficient)
+plot_measures(nx.average_clustering) # float
+plot_measures(nx.degree_pearson_correlation_coefficient)
+plot_measures(nx.local_efficiency) # float
+plot_measures(nx.global_efficiency) # float
 
 # plot_measures(nx.closeness_centrality) # nodes dict
 # plot_measures(nx.degree_centrality) # nodes dict
 # plot_measures(nx.betweenness_centrality) # nodes dict
 
-plot_measures(nx.average_degree_connectivity) # nodes dict
-plot_measures(nx.eccentricity)  # nodes dict
+# plot_measures(nx.average_degree_connectivity) # nodes dict
+ 
+# plot_measures(nx.eccentricity)  # nodes dict
 
 
 
