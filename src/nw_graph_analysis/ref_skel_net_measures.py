@@ -101,6 +101,10 @@ def get_iso_fuz_nodes_data(group, measure, region):
         return data
 
 
+# atl = get_iso_fuz_nodes_data('ATL', nx.clustering, 'iso')
+# print(atl)
+# exit()
+
 # plot_measures(nx.closeness_centrality) # nodes dict
 # plot_measures(nx.degree_centrality) # nodes dict
 # plot_measures(nx.betweenness_centrality) # nodes dict
@@ -167,6 +171,9 @@ plot_iso_fuz_graph_measures(nx.degree_centrality, 'fuz')
 
 plot_iso_fuz_graph_measures(nx.betweenness_centrality, 'iso')
 plot_iso_fuz_graph_measures(nx.betweenness_centrality, 'fuz')
+
+# add percolation_centrality
+
 
 exit()
 
