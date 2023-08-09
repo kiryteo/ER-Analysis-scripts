@@ -116,3 +116,35 @@ print(improvement)
 # mean_rel_diff = sum(rel_diff) / len(rel_diff)
 
 # print(mean_rel_diff)
+
+
+# aE_r1 = [0.276,0.449,0.462,0.633,0.489,0.485,0.577,0.578,0.524,0.400]
+# aM_r1 = [0.005,0.010,0.038,0.068,0.054,0.025,0.060,0.025,0.028,0.053]
+# aE_r2 = [0.410,0.590,0.699,0.242,0.377,0.696,0.822,0.603,0.397,0.523]
+# aM_r2 = [0.087,0.163,0.177,0.016,0.063,0.079,0.122,0.056,0.081,0.109]
+# aE_r3 = [0.564,0.545,0.575,0.593,0.548,0.602]
+# aM_r3 = [0.031,0.071,0.021,0.113,0.075, 0.118]
+# import matplotlib.pyplot as plt
+# import seaborn as sns
+# df = pd.DataFrame()
+# df['Error'] = pd.Series(np.concatenate((aE_r1, aE_r2, aE_r3, aM_r1, aM_r2, aM_r3)))
+# df['Replicate'] = pd.Series(np.concatenate((['R1'] * len(aE_r1), ['R2'] * len(aE_r2), [‘R3’] * len(aE_r3), [‘R1’] * len(aM_r1), [‘R2’] * len(aM_r2), [‘R3’] * len(aM_r3))))
+# df[‘Method’] = pd.Series(np.concatenate(([‘ERnet’] * len(aE_r1), [‘ERnet’] * len(aE_r2), [‘ERnet’] * len(aE_r3), [‘DyNet’] * len(aM_r1), [‘DyNet’] * len(aM_r2), [‘DyNet’] * len(aM_r3))))
+# ax = sns.boxplot(data=df, x=‘Replicate’, y=‘Error’, hue=‘Method’)
+# ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
+# # statannot.add_stat_annotation(ax, x=‘Replicate’, y=‘Error’, hue=‘Group’, data=df, box_pairs=box_pairs,
+# #                                   test=‘Mann-Whitney’, text_format=‘simple’, loc=‘inside’, verbose=2, fontsize=‘large’)
+# plt.grid(True)
+# # sns.distplot(E_r1, hist=False, label=‘ERnet_r1’)
+# # sns.distplot(M_r1, hist=False, label=‘DyNet_r1’)
+# # sns.distplot(E_r2, hist=False, label=‘ERnet_r2’)
+# # sns.distplot(M_r2, hist=False, label=‘DyNet_r2’)
+# # sns.distplot(E_r3, hist=False, label=‘ERnet_r3’)
+# # sns.distplot(M_r3, hist=False, label=‘DyNet_r3’)
+# # plt.legend()
+# plt.ylabel(‘Error’, fontsize=18)
+# plt.xlabel(‘Replicate’, fontsize=18)
+# plt.title(‘Atlastin: Error in Number of nodes per replicate for ERnet and DyNet’, fontsize=20)
+# plt.show()
+
+
