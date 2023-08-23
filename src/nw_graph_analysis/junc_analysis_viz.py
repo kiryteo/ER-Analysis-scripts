@@ -300,21 +300,30 @@ def crop_img():
         plt.show()
 
 # def plot_junc_areas_og(group, series_num, labelled_img, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords, unk_cc_coords):
-def plot_junc_areas_og(group, series_num, labelled_img, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords):
+def plot_junc_areas_og(group, series_num, labelled_img, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords, frames, er_input_id):
     for i in range(1):
         plt.axis('off')
+        # if group == 'Control':
+        #     img = imageio.imread(f'{confocal_data_path}{group}/files/img_{series_num}_decon_t0{i:02d}.tif')
+        # else:
+        #     img = imageio.imread(f'{confocal_data_path}{group}/files/{group[0]}{series_num}_decon_t0{i:02d}_ch00.tif')
+
         if group == 'Control':
-            img = imageio.imread(f'{confocal_data_path}{group}/files/img_{series_num}_decon_t0{i:02d}.tif')
+            img = imageio.imread(f'{confocal_data_path}{group}/files/img_{series_num}_decon_t0{er_input_id:02d}.tif')
         else:
-            img = imageio.imread(f'{confocal_data_path}{group}/files/{group[0]}{series_num}_decon_t0{i:02d}_ch00.tif')
+            img = imageio.imread(f'{confocal_data_path}{group}/files/{group[0]}{series_num}_decon_t0{er_input_id:02d}_ch00.tif')
 
         img = (img - img.min()) / (img.max() - img.min())
+
+        skel = imageio.imread(f'{confocal_data_path}{group}/new_op_jul/skel/{group[0]}{series_num}/{group[0]}{series_num}_decon_t0{er_input_id:02d}_ch00_skel.png')
 
         # resc_img = skimage.transform.rescale(img, 2, anti_aliasing=False)
 
         # plt.imshow(resc_img, cmap='gray', interpolation=None)
 
         plt.imshow(img, cmap='gray', interpolation=None)
+
+        # plt.imshow(skel, cmap='Greens', interpolation=None, alpha=0.5)        
 
         # plt.plot(iso[:, 1], iso[:, 0], 's', markerfacecolor='None', markeredgecolor='red')
 
@@ -353,6 +362,7 @@ def plot_junc_areas_og(group, series_num, labelled_img, iso, fuz, skdata, iso_cc
         # plt.plot(iso[:, 1], iso[:, 0], '.', markerfacecolor='None', markeredgecolor='yellow', mew=0.6)
 
         # plots contours
+        # regions = regionprops(labelled_img)
         # for index in range(1, labelled_img.max()):
         #     label_i = regions[index].label
         #     contour = measure.find_contours(labelled_img == label_i, 0.8)[0]
@@ -367,9 +377,10 @@ def plot_junc_areas_og(group, series_num, labelled_img, iso, fuz, skdata, iso_cc
 
         # plt.axis('off')
         # plt.savefig('Climp_series12_junc_representation_iso_fuz_unk_2_new_colors', bbox_inches='tight', pad_inches=0, dpi=700)
-        # plt.close()
+        plt.savefig(f'temporal_res_CC/Climp_series12_temporal_res_{frames}', bbox_inches='tight', pad_inches=0, dpi=700)
+        plt.close()
 
-        plt.show()
+        # plt.show()
 
 
 def plot_ref_iso_fuz_junc(group, series_num, iso, fuz):
@@ -430,8 +441,9 @@ def plot_CC_area_junctions(group, series_num, iso_cc_coords, fuz_cc_coords, labe
 
     # plt.show()
     plt.axis('off')
-    plt.savefig(f'{group}_series{series_num}_CC_area_ratio', bbox_inches='tight', pad_inches=0, dpi=700)
-    plt.close()
+    # plt.savefig(f'{group}_series{series_num}_CC_area_ratio', bbox_inches='tight', pad_inches=0, dpi=700)
+    # plt.close()
+    plt.show()
 
 
 def get_cc_ids(labelled_img, region):
@@ -461,30 +473,31 @@ def plot_tubules(group, series_num):
     pass
 
 
-ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions('RTN', 9)
+for i in range(0, 100, 10):
+    ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions('Climp', 12, i, i+10)
 # dict with ids as key and (x, y) as value
-label_ids, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
+    label_ids, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
 
-# iso, fuz, unk: list of lists with x, y
-iso, fuz, unk = junc_analysis.get_junction_areas(label_ids, unassigned_cc_dict)
+    # iso, fuz, unk: list of lists with x, y
+    iso, fuz, unk = junc_analysis.get_junction_areas(label_ids, unassigned_cc_dict)
 
-iso_cc = get_cc_ids(labelled_img, iso)
-fuz_cc = get_cc_ids(labelled_img, fuz)
-# # unk_cc = get_cc_ids(labelled_img, unk)
+    iso_cc = get_cc_ids(labelled_img, iso)
+    fuz_cc = get_cc_ids(labelled_img, fuz)
+    # # unk_cc = get_cc_ids(labelled_img, unk)
 
-iso_cc_coords = {each: np.where(labelled_img==each) for each in iso_cc}
-fuz_cc_coords = {each: np.where(labelled_img==each) for each in fuz_cc}
-# unk_cc_coords = {each: np.where(labelled_img==each) for each in unk_cc}
-#
-#
-# iso_list = []
-# for each in iso:
-#     iso_list.append([each[0], each[1]])
+    iso_cc_coords = {each: np.where(labelled_img==each) for each in iso_cc}
+    fuz_cc_coords = {each: np.where(labelled_img==each) for each in fuz_cc}
+    # unk_cc_coords = {each: np.where(labelled_img==each) for each in unk_cc}
+    #
+    #
+    # iso_list = []
+    # for each in iso:
+    #     iso_list.append([each[0], each[1]])
 
-# plot_junc_areas_og('Climp', 12, labelled_img, iso, fuz, per_frame_junctions, iso_cc_coords, fuz_cc_coords)
+    plot_junc_areas_og('Climp', 12, labelled_img, iso, fuz, per_frame_junctions, iso_cc_coords, fuz_cc_coords, i+10, i+9)
 
 # plot_ref_iso_fuz_junc('RTN', 2, iso, fuz)
-plot_CC_area_junctions('RTN', 9, iso_cc_coords, fuz_cc_coords, labelled_img)
+# plot_CC_area_junctions('RTN', 9, iso_cc_coords, fuz_cc_coords, labelled_img)
 
 exit()
 
@@ -611,3 +624,30 @@ def crop_cc_from_saved():
 
 # crop_cc_from_saved()
 # exit()
+
+# ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions('Climp', 12)
+# # dict with ids as key and (x, y) as value
+# label_ids, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
+
+# # iso, fuz, unk: list of lists with x, y
+# iso, fuz, unk = junc_analysis.get_junction_areas(label_ids, unassigned_cc_dict)
+
+# iso_cc = get_cc_ids(labelled_img, iso)
+# fuz_cc = get_cc_ids(labelled_img, fuz)
+# # # unk_cc = get_cc_ids(labelled_img, unk)
+
+# iso_cc_coords = {each: np.where(labelled_img==each) for each in iso_cc}
+# fuz_cc_coords = {each: np.where(labelled_img==each) for each in fuz_cc}
+# # unk_cc_coords = {each: np.where(labelled_img==each) for each in unk_cc}
+# #
+# #
+# # iso_list = []
+# # for each in iso:
+# #     iso_list.append([each[0], each[1]])
+
+# plot_junc_areas_og('Climp', 12, labelled_img, iso, fuz, per_frame_junctions, iso_cc_coords, fuz_cc_coords)
+
+# # plot_ref_iso_fuz_junc('RTN', 2, iso, fuz)
+# # plot_CC_area_junctions('RTN', 9, iso_cc_coords, fuz_cc_coords, labelled_img)
+
+
