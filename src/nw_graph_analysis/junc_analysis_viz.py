@@ -4,19 +4,65 @@ import cv2
 import matplotlib.pyplot as plt
 from skimage import measure
 from skimage.measure import label, regionprops
+from skimage.morphology import dilation, closing
 from junction_analysis_modules import JunctionAnalysis as JA
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 junc_analysis = JA(confocal_data_path)
 
-# img = imageio.imread('/localhome/asa420/ER-Analysis-scripts/Figure2/A1_decon_t000_ch00_skel.png')
-# plt.axis('off')
-# plt.imshow(img, cmap='gray')
-#
-# plt.savefig('A1_t0_skel_dpi700.png', bbox_inches='tight', pad_inches=0, dpi=700)
-# plt.close()
-# # plt.show()
+
+# for i in range(1, 6):
+#     er = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/std_egfp/A1_decon_t00{i}_ch00_std.png')
+
+#     skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/A1_skel_repr_t0{i}.png')
+
+#     fig, ax = plt.subplots(1, 2)
+#     plt.axis('off')
+
+#     ax[0].imshow(er, cmap='gray')
+#     ax[0].axis('off')
+
+#     ax[1].imshow(skel, cmap='gray')
+#     ax[1].axis('off')
+
+#     plt.subplots_adjust(wspace=0.01, hspace=0.01)
+#     plt.savefig(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/atl_t{i}_junc.png', bbox_inches='tight', pad_inches=0, dpi=700)
+#     plt.close()
+
 # exit()
+
+
+
+# for i in range(1, 27):
+#     er_mean = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean/atl{i}_er_mean.png')
+
+#     mean_skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel_mean_proj/A{i}_mean_skel.png')
+#     skel_repr = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/mean_skel_representation/A{i}_mean_skel_representation.png')
+
+#     # plot mean_skel and skel_repr side by side
+#     fig, ax = plt.subplots(1, 3)
+#     plt.axis('off')
+
+#     ax[0].imshow(er_mean, cmap='gray')
+#     ax[0].axis('off')
+
+#     # fig.add_subplot(1, 2, 1)
+#     ax[1].imshow(mean_skel, cmap='gray')
+#     ax[1].axis('off')
+#     # plt.title('Mean skeleton projection', fontsize=14)
+
+#     # fig.add_subplot(1, 2, 2)
+#     ax[2].imshow(skel_repr, cmap='gray')
+#     ax[2].axis('off')
+#     # plt.title('Mean skeleton representation', fontsize=14)
+
+#     # plt.suptitle('Climp series 12, Mean skeleton projection Vs. Mean skeleton representation', fontsize=16)
+#     plt.subplots_adjust(wspace=0.01, hspace=0.01)
+#     plt.savefig(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/overlap_region_frames/A{i}_mean_skel_vs_mean_skel_repr.png', bbox_inches='tight', pad_inches=0, dpi=700)
+#     plt.close()
+
+# exit()
+
 
 def junction_crops_creator(group, ser_num, junc_id, channel):
     nps, skdata, labelled_img = junc_analysis.label_junctions(group, ser_num)
@@ -300,87 +346,97 @@ def crop_img():
         plt.show()
 
 # def plot_junc_areas_og(group, series_num, labelled_img, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords, unk_cc_coords):
-def plot_junc_areas_og(group, series_num, labelled_img, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords, frames, er_input_id):
-    for i in range(1):
-        plt.axis('off')
-        # if group == 'Control':
-        #     img = imageio.imread(f'{confocal_data_path}{group}/files/img_{series_num}_decon_t0{i:02d}.tif')
-        # else:
-        #     img = imageio.imread(f'{confocal_data_path}{group}/files/{group[0]}{series_num}_decon_t0{i:02d}_ch00.tif')
+def plot_junc_areas_og(group, series_num, labelled_img, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords):#, frames, er_input_id):
 
-        if group == 'Control':
-            img = imageio.imread(f'{confocal_data_path}{group}/files/img_{series_num}_decon_t0{er_input_id:02d}.tif')
-        else:
-            img = imageio.imread(f'{confocal_data_path}{group}/files/{group[0]}{series_num}_decon_t0{er_input_id:02d}_ch00.tif')
+    group_dict = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
 
-        img = (img - img.min()) / (img.max() - img.min())
+    plt.axis('off')
+    # if group == 'Control':
+    #     img = imageio.imread(f'{confocal_data_path}{group}/files/img_{series_num}_decon_t0{i:02d}.tif')
+    # else:
+    #     img = imageio.imread(f'{confocal_data_path}{group}/files/{group[0]}{series_num}_decon_t0{i:02d}_ch00.tif')
 
-        skel = imageio.imread(f'{confocal_data_path}{group}/new_op_jul/skel/{group[0]}{series_num}/{group[0]}{series_num}_decon_t0{er_input_id:02d}_ch00_skel.png')
+    # if group == 'Control':
+    #     img = imageio.imread(f'{confocal_data_path}{group}/files/img_{series_num}_decon_t0{er_input_id:02d}.tif')
+    # else:
+    #     img = imageio.imread(f'{confocal_data_path}{group}/files/{group[0]}{series_num}_decon_t0{er_input_id:02d}_ch00.tif')
 
-        # resc_img = skimage.transform.rescale(img, 2, anti_aliasing=False)
+    # img = (img - img.min()) / (img.max() - img.min())
 
-        # plt.imshow(resc_img, cmap='gray', interpolation=None)
+    # skel = imageio.imread(f'{confocal_data_path}{group}/new_op_jul/skel/{group[0]}{series_num}/{group[0]}{series_num}_decon_t0{er_input_id:02d}_ch00_skel.png')
 
-        plt.imshow(img, cmap='gray', interpolation=None)
+    # mean_skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel_mean_proj/{group_dict[group]}{series_num}_mean_skel.png')
 
-        # plt.imshow(skel, cmap='Greens', interpolation=None, alpha=0.5)        
+    skel = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t005_ch00_skel.png')
 
-        # plt.plot(iso[:, 1], iso[:, 0], 's', markerfacecolor='None', markeredgecolor='red')
+    # resc_img = skimage.transform.rescale(img, 2, anti_aliasing=False)
 
-        # plt.plot(skdata[:, 1], skdata[:, 0], '.', markerfacecolor='None', markeredgecolor='green', mew=0.4)
-        for k, v in iso_cc_coords.items():
-            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='red', mew=0.4)
-        #
-        for k, v in fuz_cc_coords.items():
-            plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='blue', mew=0.4)
-        #
-        # for k, v in unk_cc_coords.items():
-        #     plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='green', mew=0.4)
-        #
-        if len(fuz) > 0:
-            plt.plot(fuz[:, 1], fuz[:, 0], 'o', markerfacecolor='None', markeredgecolor='white', mew=0.6)
-        #
-        # plt.plot(unk[:, 1], unk[:, 0], 'o', markerfacecolor='None', markeredgecolor='green')
-        plt.plot(iso[:, 1], iso[:, 0], 'o', markerfacecolor='None', markeredgecolor='yellow', mew=0.6)
+    # plt.imshow(resc_img, cmap='gray', interpolation=None)
 
-        #######################################
+    # plt.imshow(mean_skel, cmap='gray', interpolation=None)
+    plt.imshow(skel, cmap='gray', interpolation=None)
 
-        # for k, v in iso_cc_coords.items():
-        #     plt.plot(v[1], v[0], 's', markerfacecolor='magenta', markeredgecolor='magenta', mew=0.35, ms=20)
-        #
-        # for k, v in fuz_cc_coords.items():
-        #     plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='blue', mew=0.35)
-        #
-        # for k, v in unk_cc_coords.items():
-        #     plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='green', mew=0.5)
-        #
-        # if len(fuz) > 0:
-        #     plt.plot(fuz[:, 1], fuz[:, 0], '.', markerfacecolor='None', markeredgecolor='white', mew=0.6)
+    # plt.imshow(skel, cmap='Greens', interpolation=None, alpha=0.5)        
 
-        # plt.plot(unk[:, 1], unk[:, 0], 'o', markerfacecolor='None', markeredgecolor='green')
-        # plt.plot(iso[:, 1], iso[:, 0], '.', markerfacecolor='None', markeredgecolor='yellow', mew=0.6)
-        # plt.plot(iso[:, 1], iso[:, 0], '.', markerfacecolor='None', markeredgecolor='yellow', mew=0.6)
+    # plt.plot(iso[:, 1], iso[:, 0], 's', markerfacecolor='None', markeredgecolor='red')
 
-        # plots contours
-        # regions = regionprops(labelled_img)
-        # for index in range(1, labelled_img.max()):
-        #     label_i = regions[index].label
-        #     contour = measure.find_contours(labelled_img == label_i, 0.8)[0]
-        #     y, x = contour.T
-        #     plt.plot(x, y, color='cyan')
+    # plt.plot(skdata[:, 1], skdata[:, 0], '.', markerfacecolor='None', markeredgecolor='green', mew=0.4)
+    for k, v in iso_cc_coords.items():
+        plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='red', mew=0.4)
+    #
+    for k, v in fuz_cc_coords.items():
+        plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='blue', mew=0.4)
+    #
+    # for k, v in unk_cc_coords.items():
+    #     plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='green', mew=0.4)
+    #
+    if len(fuz) > 0:
+        plt.plot(fuz[:, 1], fuz[:, 0], 'o', markerfacecolor='None', markeredgecolor='white', mew=0.6)
+    #
+    # plt.plot(unk[:, 1], unk[:, 0], 'o', markerfacecolor='None', markeredgecolor='green')
+    plt.plot(iso[:, 1], iso[:, 0], 'o', markerfacecolor='None', markeredgecolor='yellow', mew=0.6)
 
-        # for index in range(1, op.max()):
-        #     label_i = regions[index].label
-        #     contour = measure.find_contours(op == label_i, 0.8)[0]
-        #     y, x = contour.T
-        #     plt.plot(x, y, color='cyan')
+    #######################################
 
-        # plt.axis('off')
-        # plt.savefig('Climp_series12_junc_representation_iso_fuz_unk_2_new_colors', bbox_inches='tight', pad_inches=0, dpi=700)
-        plt.savefig(f'temporal_res_CC/Climp_series12_temporal_res_{frames}', bbox_inches='tight', pad_inches=0, dpi=700)
-        plt.close()
+    # for k, v in iso_cc_coords.items():
+    #     plt.plot(v[1], v[0], 's', markerfacecolor='magenta', markeredgecolor='magenta', mew=0.35, ms=20)
+    #
+    # for k, v in fuz_cc_coords.items():
+    #     plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='blue', mew=0.35)
+    #
+    # for k, v in unk_cc_coords.items():
+    #     plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='green', mew=0.5)
+    #
+    # if len(fuz) > 0:
+    #     plt.plot(fuz[:, 1], fuz[:, 0], '.', markerfacecolor='None', markeredgecolor='white', mew=0.6)
 
-        # plt.show()
+    # plt.plot(unk[:, 1], unk[:, 0], 'o', markerfacecolor='None', markeredgecolor='green')
+    # plt.plot(iso[:, 1], iso[:, 0], '.', markerfacecolor='None', markeredgecolor='yellow', mew=0.6)
+    # plt.plot(iso[:, 1], iso[:, 0], '.', markerfacecolor='None', markeredgecolor='yellow', mew=0.6)
+
+    # plots contours
+    # regions = regionprops(labelled_img)
+    # for index in range(1, labelled_img.max()):
+    #     label_i = regions[index].label
+    #     contour = measure.find_contours(labelled_img == label_i, 0.8)[0]
+    #     y, x = contour.T
+    #     plt.plot(x, y, color='cyan')
+
+    # cntrs = measure.find_contours(labelled_img, 0.8, fully_connected='high')
+    # for cntr in cntrs:
+    #     y, x = cntr.T
+    #     plt.plot(x, y, color='cyan')
+
+    # plt.axis('off')
+    # plt.savefig('Climp_series12_junc_representation_iso_fuz_unk_2_new_colors', bbox_inches='tight', pad_inches=0, dpi=700)
+
+    # plt.savefig(f'temporal_res_CC/ATL_series2_temporal_res_{frames}', bbox_inches='tight', pad_inches=0, dpi=700)
+    # plt.close()
+    # plt.savefig(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/mean_skel_representation/{group_dict[group]}{series_num}_mean_skel_representation', bbox_inches='tight', pad_inches=0, dpi=700)
+
+    plt.savefig(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/{group_dict[group]}{series_num}_skel_repr_t05', bbox_inches='tight', pad_inches=0, dpi=700)
+
+    plt.close()
 
 
 def plot_ref_iso_fuz_junc(group, series_num, iso, fuz):
@@ -433,11 +489,21 @@ def plot_CC_area_junctions(group, series_num, iso_cc_coords, fuz_cc_coords, labe
     for k, v in fuz_cc_coords.items():
         plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='blue', mew=0.4)
 
+    # spread_img = np.zeros((128, 128))
+    # for each in per_frame_junctions:
+    #     spread_img[each[0], each[1]] = 255.
+
     # for index in range(1, labelled_img.max()):
     #     label_i = regions[index].label
     #     contour = measure.find_contours(labelled_img == label_i, 0.8)[0]
     #     y, x = contour.T
     #     plt.plot(x, y, color='cyan')
+
+    cntrs = measure.find_contours(labelled_img, 0.8, fully_connected='high')
+    for cntr in cntrs:
+        y, x = cntr.T
+        plt.plot(x, y, color='cyan')
+    
 
     # plt.show()
     plt.axis('off')
@@ -473,8 +539,160 @@ def plot_tubules(group, series_num):
     pass
 
 
+def get_mean_skel_representation(group):
+    group_dict = {'ATL': 26, 'Climp': 31, 'Control': 31, 'RTN': 29}
+
+    for series in range(1, group_dict[group] + 1):
+        ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions(group, series)
+        # dict with ids as key and (x, y) as value
+        label_ids, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
+
+        # iso, fuz, unk: list of lists with x, y
+        iso, fuz, unk = junc_analysis.get_junction_areas(label_ids, unassigned_cc_dict)
+
+        iso_cc = get_cc_ids(labelled_img, iso)
+        fuz_cc = get_cc_ids(labelled_img, fuz)
+        # # unk_cc = get_cc_ids(labelled_img, unk)
+
+        iso_cc_coords = {each: np.where(labelled_img==each) for each in iso_cc}
+        fuz_cc_coords = {each: np.where(labelled_img==each) for each in fuz_cc}
+        # unk_cc_coords = {each: np.where(labelled_img==each) for each in unk_cc}
+        #
+        #
+        # iso_list = []
+        # for each in iso:
+        #     iso_list.append([each[0], each[1]])
+
+        plot_junc_areas_og(group, series, labelled_img, iso, fuz, per_frame_junctions, iso_cc_coords, fuz_cc_coords)
+
+# get_mean_skel_representation('ATL')
+# get_mean_skel_representation('Climp')
+# get_mean_skel_representation('Control')
+# get_mean_skel_representation('RTN')
+
+
+
+
+
+
+# from skimage import io, color
+# # exit()
+# er = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/std_egfp/A2_decon_t000_ch00_std.png')
+
+# skel = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t000_ch00_skel.png')
+
+# # color = [255, 0, 0]
+
+# er_gr = color.rgb2gray(er)
+# mask = er_gr > 0.1
+
+# skel[mask] = [255, 0, 0]
+
+
+# alpha = 0.5  # Adjust the alpha value for blending
+# overlay = (er * alpha + skel * (1 - alpha)).astype(np.uint8)
+
+# io.imshow(overlay)
+# io.show()
+
+# exit()
+
+
+def plot_junc_through_fuz_CC(labelled_img):
+    plt.axis('off')
+
+    for i in range(100):
+        # img = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2_overlay/A2_decon_t0{i:02d}_ch00_skel_overlay.png')
+
+        # img = (img - img.min()) / (img.max() - img.min())
+
+        # plt.imshow(img, interpolation=None)
+        
+        er = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/std_egfp/A2_decon_t0{i:02d}_ch00_std.png')
+
+        skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t0{i:02d}_ch00_skel.png')
+
+        junc = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/junctions/A2/A2_decon_t0{i:02d}_ch00_junc.png')
+
+
+
+        cntrs = measure.find_contours(labelled_img, 0.8, fully_connected='high')
+        for cntr in cntrs:
+            y, x = cntr.T
+            plt.plot(x, y, color='cyan')
+    
+
+        # plt.show()
+        plt.axis('off')
+        # plt.savefig(f'{group}_series{series_num}_CC_area_ratio', bbox_inches='tight', pad_inches=0, dpi=700)
+        # plt.close()
+        plt.show()
+
+
+
+
+ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions('ATL', 2)
+
+
+# dict with ids as key and (x, y) as value
+label_ids, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
+
+# iso, fuz, unk: list of lists with x, y
+iso, fuz, unk = junc_analysis.get_junction_areas(label_ids, unassigned_cc_dict)
+
+
+# spread_img = np.zeros((128, 128))
+# for each in fuz:
+#     spread_img[each[0], each[1]] = 255.
+
+# plt.imshow(spread_img, cmap='gray', interpolation=None)
+# plt.show()
+# exit()
+
+# lab_img = label(spread_img, connectivity=2)
+
+# plt.imshow(lab_img)
+# plt.show()
+
+# exit()
+
+iso_cc = get_cc_ids(labelled_img, iso)
+fuz_cc = get_cc_ids(labelled_img, fuz)
+# # unk_cc = get_cc_ids(labelled_img, unk)
+
+iso_cc_coords = {each: np.where(labelled_img==each) for each in iso_cc}
+fuz_cc_coords = {each: np.where(labelled_img==each) for each in fuz_cc}
+# unk_cc_coords = {each: np.where(labelled_img==each) for each in unk_cc}
+
+spread_img = np.zeros((128, 128))
+for k, v in fuz_cc_coords.items():
+    spread_img[v[0], v[1]] = 255.
+
+# spread_img = dilation(spread_img)
+spread_img = closing(spread_img)
+# spread_img = dilation(spread_img)
+
+lab_img = label(spread_img, connectivity=2)
+# plt.imshow(lab_img)
+# plt.show()
+
+# exit()
+#
+#
+# iso_list = []
+# for each in iso:
+#     iso_list.append([each[0], each[1]])
+
+# plot_junc_areas_og('ATL', 1, labelled_img, iso, fuz, per_frame_junctions, iso_cc_coords, fuz_cc_coords)
+
+# plot_CC_area_junctions('ATL', 2, iso_cc_coords, fuz_cc_coords, lab_img)
+
+plot_junc_through_fuz_CC(lab_img)
+
+exit()
+
 for i in range(0, 100, 10):
-    ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions('Climp', 12, i, i+10)
+    ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions('ATL', 2, i, i+10)
 # dict with ids as key and (x, y) as value
     label_ids, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
 
@@ -494,7 +712,7 @@ for i in range(0, 100, 10):
     # for each in iso:
     #     iso_list.append([each[0], each[1]])
 
-    plot_junc_areas_og('Climp', 12, labelled_img, iso, fuz, per_frame_junctions, iso_cc_coords, fuz_cc_coords, i+10, i+9)
+    plot_junc_areas_og('ATL', 2, labelled_img, iso, fuz, per_frame_junctions, iso_cc_coords, fuz_cc_coords, i+10, i+9)
 
 # plot_ref_iso_fuz_junc('RTN', 2, iso, fuz)
 # plot_CC_area_junctions('RTN', 9, iso_cc_coords, fuz_cc_coords, labelled_img)
@@ -587,16 +805,10 @@ def plot_junc_areas(group, series_num, labelled_img, iso, fuz, skdata, iso_cc_co
         plt.plot(iso[:, 1], iso[:, 0], '.', markerfacecolor='None', markeredgecolor='yellow', mew=0.6)
 
         # plots contours
-        # for index in range(1, labelled_img.max()):
-        #     label_i = regions[index].label
-        #     contour = measure.find_contours(labelled_img == label_i, 0.8)[0]
-        #     y, x = contour.T
-        #     plt.plot(x, y, color='cyan')
 
-        for index in range(1, op.max()):
-            label_i = regions[index].label
-            contour = measure.find_contours(op == label_i, 0.8)[0]
-            y, x = contour.T
+        cntrs = measure.find_contours(labelled_img, 0.8, fully_connected='high')
+        for cntr in cntrs:
+            y, x = cntr.T
             plt.plot(x, y, color='cyan')
 
         # plt.axis('off')

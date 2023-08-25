@@ -72,7 +72,7 @@ class JunctionAnalysis:
         # return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
         return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
 
-    def get_all_junc(self, group, num_series, fr_start, fr_end):
+    def get_all_junc(self, group, num_series):
         # get reference junctions based on mean projection frame and per frame junctions for each series, all groups
         """
 
@@ -97,7 +97,9 @@ class JunctionAnalysis:
         ref_junctions = [[each[0], each[1]] for each in ref_junctions]
 
         per_frame_junctions = []
-        for frame in range(fr_start, fr_end):
+        
+        # for frame in range(fr_start, fr_end):
+        for frame in range(100):
 
             er_path = f'{confocal_data_path}{group}/new_op_jul/std_egfp/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_std.png'
 
@@ -115,10 +117,10 @@ class JunctionAnalysis:
     #     for node in graph.nodes():
     #         gcm.process_node(temp_graph, node)
 
-    def label_junctions(self, group, series_num, start, end):
+    def label_junctions(self, group, series_num):
 
         # fig, ax = plt.subplots()
-        ref_junctions, per_frame_junctions = self.get_all_junc(group, series_num, start, end)
+        ref_junctions, per_frame_junctions = self.get_all_junc(group, series_num)
 
         ref_junctions = np.array(ref_junctions)
         per_frame_junctions = np.array(per_frame_junctions)
