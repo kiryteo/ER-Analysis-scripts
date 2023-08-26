@@ -33,6 +33,7 @@
 
 import skan
 from skan import draw
+import sknw
 import imageio
 import matplotlib.pyplot as plt
 
@@ -161,7 +162,7 @@ def overlay_skeleton_2d(
         *,
         image_cmap=None,
         color=(1, 0, 0),
-        alpha=1,
+        alpha=0.6,
         dilate=0,
         axes=None
         ):
@@ -206,16 +207,25 @@ def overlay_skeleton_2d(
         skeleton = morphology.binary_dilation(skeleton, selem)
     if axes is None:
         fig, axes = plt.subplots()
+
     image[skeleton] = alpha * np.array(color) + (1-alpha) * image[skeleton]
     # image[junc] = alpha * np.array((1, 1, 1)) + (1-alpha) * image[junc]
 
+    # vals = np.where(skeleton)
+    # print(vals)
+    # exit()
+
+    # plt.plot(vals[1], vals[0], '.', markerfacecolor='red', markeredgecolor='red', mew=0.7, lw=0.7)
+
+    # plt.plot(vals[1], vals[0], ',', markerfacecolor='red', markeredgecolor='red', lw=3.0, mew=3.0)
+
     junctions = np.where(junc)
-    plt.plot(junctions[1], junctions[0], 'o', markerfacecolor='None', markeredgecolor='yellow', mew=1.2)
+    plt.plot(junctions[1], junctions[0], 'o', markerfacecolor='None', markeredgecolor='yellow', mew=0.7)
 
     cntrs = measure.find_contours(lab_img, 0.8, fully_connected='high')
     for cntr in cntrs:
         y, x = cntr.T
-        plt.plot(x, y, color='cyan')
+        plt.plot(x, y, color='cyan', mew=0.7, lw=0.7)
 
     axes.imshow(image)
     axes.axis('off')
@@ -235,9 +245,9 @@ def create_fuz_cc_overlay(group):
         for i in range(100):
             img = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_egfp/{group_pref[group]}{series}_decon_t0{i:02d}_ch00_std.png')
 
-            skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/{group_pref[group]}{series}/{group_pref[group]}{series}_decon_t0{i:02d}_ch00_skel.png')
+            skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{group_pref[group]}{series}/{group_pref[group]}{series}_decon_t0{i:02d}_ch00_skel.png')
 
-            junc = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/junctions/{group_pref[group]}{series}/{group_pref[group]}{series}_decon_t0{i:02d}_ch00_junc.png')
+            junc = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/junctions/{group_pref[group]}{series}/{group_pref[group]}{series}_decon_t0{i:02d}_ch00_junc.png')
 
             ax = overlay_skeleton_2d(img, skel, junc,lab_img)
             
@@ -246,7 +256,63 @@ def create_fuz_cc_overlay(group):
             plt.close()
 
 
-create_fuz_cc_overlay('ATL')
-create_fuz_cc_overlay('Climp')
-create_fuz_cc_overlay('Control')
-create_fuz_cc_overlay('RTN')
+# create_fuz_cc_overlay('ATL')
+# create_fuz_cc_overlay('Climp')
+# create_fuz_cc_overlay('Control')
+# create_fuz_cc_overlay('RTN')
+
+import numpy as np
+
+
+def get_intersection(a, b):
+    # a = (np.array([19, 20, 20, 124]), np.array([124, 122, 123, 43]))
+    # b = (np.array([19, 21, 23, 25, 26]), np.array([124, 125, 127, 110, 46]))
+
+    # Combine values from the first and second arrays in each tuple
+    combined_a = np.stack(a, axis=1)
+    combined_b = np.stack(b, axis=1)
+
+    # Convert the combined arrays to sets of tuples
+    set_a = {tuple(row) for row in combined_a}
+    set_b = {tuple(row) for row in combined_b}
+
+    # Find the intersection of sets
+    intersection_set = set_a.intersection(set_b)
+
+    # Convert the intersection set back to a list of arrays
+    intersection = [np.array(row) for row in intersection_set]
+
+    return intersection
+
+
+# lab_img = get_fuz_cc_outline('ATL', 1)
+# fuzzy_coords = np.where(lab_img)
+
+
+skel = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t000_ch00_skel.png')
+
+graph = sknw.build_sknw(skel, multi=True, iso=False)
+
+node_set = graph.nodes
+
+node_coords = np.array([node_set[node]['o'] for node in node_set])
+
+print(node_coords)
+exit()
+
+for i in range(1):
+    junctions = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/junctions/A1/A1_decon_t0{i:02d}_ch00_junc.png')
+
+    nodes = np.where(junctions)
+
+    skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t0{i:02d}_ch00_skel.png')
+
+    graph = sknw.build_sknw(skel, multi=True, iso=False)
+
+    degree_list = graph.degree
+
+    fuz_nodes = get_intersection(fuzzy_coords, nodes)
+
+    print(fuz_nodes)
+
+
