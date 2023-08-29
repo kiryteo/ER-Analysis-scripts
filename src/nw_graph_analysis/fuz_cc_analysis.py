@@ -2,6 +2,9 @@
 
 import imageio
 import numpy as np
+import seaborn as sns
+import pandas as pd
+import sknw
 import cv2
 import matplotlib.pyplot as plt
 from skimage import measure
@@ -11,6 +14,11 @@ from junction_analysis_modules import JunctionAnalysis as JA
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 junc_analysis = JA(confocal_data_path)
+
+
+group_dict = {'ATL': 26, 'Climp': 31, 'Control': 31, 'RTN': 29}
+
+group_pref = {'ATL':'A', 'Climp':'C', 'Control':'Ct', 'RTN':'R'}
 
 
 def get_cc_ids(labelled_img, region):
@@ -88,9 +96,8 @@ def get_intersection(a, b):
     return intersection
 
 
-lab_img = get_fuz_cc_outline('ATL', 1)
-fuzzy_coords = np.where(lab_img)
-
+# lab_img = get_fuz_cc_outline('ATL', 1)
+# fuzzy_coords = np.where(lab_img)
 
 
 def get_fuz_cc_ids(a, b):
@@ -103,38 +110,76 @@ def get_fuz_cc_ids(a, b):
     return list(intersection)
 
 
-atl_data = []
+# atl_data = []
 
-for i in range(100):
-    skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t0{i:02d}_ch00_skel.png')
+# for i in range(100):
+#     skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t0{i:02d}_ch00_skel.png')
 
-    graph = sknw.build_sknw(skel, multi=True, iso=False)
+#     graph = sknw.build_sknw(skel, multi=True, iso=False)
 
-    nodes = graph.nodes
+#     nodes = graph.nodes
 
-    node_coords = np.array([nodes[node]['o'] for node in nodes])
+#     node_coords = np.array([nodes[node]['o'] for node in nodes])
 
-    node_coords_list = list(zip(node_coords[:,0], node_coords[:,1]))
+#     node_coords_list = list(zip(node_coords[:,0], node_coords[:,1]))
 
-    cc_data = []
+#     cc_data = []
 
-    for cc_id in range(1, lab_img.max()+1):
-        cc_id_coords = np.where(lab_img==cc_id)
+#     for cc_id in range(1, lab_img.max()+1):
+#         cc_id_coords = np.where(lab_img==cc_id)
 
-        cc_id_coords_list = list(zip(cc_id_coords[0], cc_id_coords[1]))
+#         cc_id_coords_list = list(zip(cc_id_coords[0], cc_id_coords[1]))
 
-        fuz_cc_nodes = get_fuz_cc_ids(node_coords_list, cc_id_coords_list)
+#         fuz_cc_nodes = get_fuz_cc_ids(node_coords_list, cc_id_coords_list)
 
-        degree_data = []
-        for node in fuz_cc_nodes:
-            if node in node_coords_list:
-                idx = node_coords_list.index(node)
-                degree_data.append(graph.degree[idx])
+#         degree_data = []
+#         for node in fuz_cc_nodes:
+#             if node in node_coords_list:
+#                 idx = node_coords_list.index(node)
+#                 degree_data.append(graph.degree[idx])
 
-        if degree_data:
-            cc_data.append(np.sum(degree_data)/len(degree_data))
+#         if degree_data:
+#             cc_data.append(np.sum(degree_data)/len(degree_data))
 
-    atl_data.append(cc_data)
+#     atl_data.append(cc_data)
+
+# TO CHECK the following code
+
+def fuz_cc_degree_variation(group):
+    data = []
+    for ser_num in range(1, group_dict[group]+1):
+        skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{group_pref[group]}{ser_num}/{group_pref[group]}{ser_num}_decon_t000_ch00_skel.png')
+
+        graph = sknw.build_sknw(skel, multi=True, iso=False)
+
+        nodes = graph.nodes
+
+        node_coords = np.array([nodes[node]['o'] for node in nodes])
+
+        node_coords_list = list(zip(node_coords[:,0], node_coords[:,1]))
+
+        lab_img = get_fuz_cc_outline(group, ser_num)
+
+        cc_data = []
+
+        for cc_id in range(1, lab_img.max()+1):
+            cc_id_coords = np.where(lab_img==cc_id)
+
+            cc_id_coords_list = list(zip(cc_id_coords[0], cc_id_coords[1]))
+
+            fuz_cc_nodes = get_fuz_cc_ids(node_coords_list, cc_id_coords_list)
+
+            degree_data = []
+            for node in fuz_cc_nodes:
+                if node in node_coords_list:
+                    idx = node_coords_list.index(node)
+                    degree_data.append(graph.degree[idx])
+
+            if degree_data:
+                cc_data.append(np.sum(degree_data)/len(degree_data))
+
+        data.append(cc_data)
+    return data
 
 
 def get_fuz_cc_area(lab_img):
@@ -145,29 +190,47 @@ def get_fuz_cc_area(lab_img):
     return cc_area_list
 
 
-def get_skel_per_fuz_cc(lab_img):
-    data = []
-    for cc_id in range(1, lab_img.max()+1):
-        cc_id_coords = np.where(lab_img==cc_id)
-        cc_data = []
-        for frame in range(100):
+def get_skel_per_fuz_cc(group):
 
-            er = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/std_egfp/A1_decon_t0{frame:02d}_ch00_std.png')
+    group_data = []
+    for ser_num in range(1, group_dict[group]+1):
+        lab_img = get_fuz_cc_outline(group, ser_num)
+        data = []
+        for cc_id in range(1, lab_img.max()+1):
+            cc_id_coords = np.where(lab_img==cc_id)
+            cc_data = []
+            for frame in range(100):
 
-            skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t0{frame:02d}_ch00_skel.png')
-            skel_coords = np.where(skel)
+                er = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_egfp/{group_pref[group]}{ser_num}_decon_t0{frame:02d}_ch00_std.png')
 
-            fuz_skel_pixels = get_intersection(cc_id_coords, skel_coords)
+                skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{group_pref[group]}{ser_num}/{group_pref[group]}{ser_num}_decon_t0{frame:02d}_ch00_skel.png')
+                skel_coords = np.where(skel)
 
-            # print(fuz_skel_pixels)
-            # exit()
-            values_at_coordinates = [er[coord[0], coord[1]] for coord in fuz_skel_pixels]
+                fuz_skel_pixels = get_intersection(cc_id_coords, skel_coords)
 
-            # Calculate the mean of the extracted values
-            mean_value = np.mean(values_at_coordinates)
+                values_at_coordinates = [er[coord[0], coord[1]] for coord in fuz_skel_pixels]
 
-            # cc_data.append(fuz_skel_pixels)
-            cc_data.append(mean_value)
-        data.append(cc_data)
+                # Calculate the mean of the extracted values
+                # mean_value = np.mean(values_at_coordinates)
+                mean_val_over_area = (np.mean(values_at_coordinates)/255.) / len(cc_id_coords[0])
 
-    return data
+                # cc_data.append(mean_value/255.)
+                cc_data.append(mean_val_over_area)
+            data.append(cc_data)
+        group_data.extend(data)
+    return group_data
+
+
+def plot_fuz_skel_intensity_variation(group):
+    data = get_skel_per_fuz_cc(group)
+    group_names = {'ATL': 'Atlastin', 'Climp': 'Climp63', 'Control': 'Control', 'RTN': 'Reticulon'}
+    data = np.array(data)
+
+    df = pd.DataFrame(data, columns=[f't={i}' for i in range(data.shape[1])])
+
+    sns.boxplot(data=df, orient='v')  # 'orient' specifies vertical orientation
+    plt.xlabel('Frames', fontsize=16)
+    plt.ylabel('Mean Intensity', fontsize=16)
+    plt.title(f'Fuzzy CC skeleton mean intensity per frame over CC area - {group_names[group]}', fontsize=18)
+    plt.xticks(rotation=90)  # Rotate x-axis labels for better visibility
+    plt.show()

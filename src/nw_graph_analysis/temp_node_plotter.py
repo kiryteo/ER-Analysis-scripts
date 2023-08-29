@@ -155,34 +155,6 @@ def create_fuz_cc_overlay(group):
 
 
 
-# for fr in range(100):
-#     skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t0{fr:02d}_ch00_skel.png')
-
-#     graph = sknw.build_sknw(skel, multi=True, iso=False)
-
-
-# skel = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t000_ch00_skel.png')
-
-# skel_coords = np.where(skel)
-
-# junctions = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/junctions/A1/A1_decon_t000_ch00_junc.png')
-
-
-# fuz_skel_pixels = get_intersection(fuzzy_coords, skel_coords)
-
-# print(fuz_skel_pixels)
-# exit()
-
-
-
-
-
-# data = get_skel_per_fuz_cc(lab_img)
-# print(data)
-
-
-
-
 graph = sknw.build_sknw(skel, multi=True, iso=False)
 
 # node_set = graph.nodes
