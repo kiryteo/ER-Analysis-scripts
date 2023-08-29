@@ -209,13 +209,14 @@ def get_skel_per_fuz_cc(group):
                 fuz_skel_pixels = get_intersection(cc_id_coords, skel_coords)
 
                 values_at_coordinates = [er[coord[0], coord[1]] for coord in fuz_skel_pixels]
+                
+                if values_at_coordinates:
+                    # Calculate the mean of the extracted values
+                    mean_value = np.mean(values_at_coordinates)
+                    # mean_val_over_area = (np.mean(values_at_coordinates)/255.) / len(cc_id_coords[0])
 
-                # Calculate the mean of the extracted values
-                # mean_value = np.mean(values_at_coordinates)
-                mean_val_over_area = (np.mean(values_at_coordinates)/255.) / len(cc_id_coords[0])
-
-                # cc_data.append(mean_value/255.)
-                cc_data.append(mean_val_over_area)
+                    cc_data.append(mean_value/255.)
+                    # cc_data.append(mean_val_over_area)
             data.append(cc_data)
         group_data.extend(data)
     return group_data
@@ -231,6 +232,220 @@ def plot_fuz_skel_intensity_variation(group):
     sns.boxplot(data=df, orient='v')  # 'orient' specifies vertical orientation
     plt.xlabel('Frames', fontsize=16)
     plt.ylabel('Mean Intensity', fontsize=16)
-    plt.title(f'Fuzzy CC skeleton mean intensity per frame over CC area - {group_names[group]}', fontsize=18)
+    # plt.title(f'Fuzzy CC skeleton mean intensity per frame over CC area - {group_names[group]}', fontsize=18)
+    plt.title(f'Fuzzy CC skeleton mean intensity per frame - {group_names[group]}', fontsize=18)
     plt.xticks(rotation=90)  # Rotate x-axis labels for better visibility
     plt.show()
+
+
+import pickle
+
+# atl_data = get_skel_per_fuz_cc('ATL')
+# with open('atl_fuz_cc_intensity.pkl', 'wb') as f:
+#     pickle.dump(atl_data, f)
+
+# climp_data = get_skel_per_fuz_cc('Climp')
+# with open('climp_fuz_cc_intensity.pkl', 'wb') as f:
+#     pickle.dump(climp_data, f)
+
+# control_data = get_skel_per_fuz_cc('Control')
+# with open('control_fuz_cc_intensity.pkl', 'wb') as f:
+#     pickle.dump(control_data, f)
+
+# rtn_data = get_skel_per_fuz_cc('RTN')
+# with open('rtn_fuz_cc_intensity.pkl', 'wb') as f:
+#     pickle.dump(rtn_data, f)
+
+# exit()
+
+atl_data = pickle.load(open('atl_fuz_cc_intensity.pkl', 'rb'))
+# climp_data = pickle.load(open('climp_fuz_cc_intensity.pkl', 'rb'))
+# control_data = pickle.load(open('control_fuz_cc_intensity.pkl', 'rb'))
+# rtn_data = pickle.load(open('rtn_fuz_cc_intensity.pkl', 'rb'))
+
+# print(atl_data)
+
+for l in atl_data:
+    print(len(l))
+    print('-----------------')
+
+exit()
+
+
+transposed_list = [list(row) for row in zip(*atl_data)]
+# print(transposed_list)
+
+for l in transposed_list:
+    print(len(l))
+    print('-----------------')
+
+exit()
+
+from itertools import chain
+flattened_list = list(chain.from_iterable(transposed_list))
+
+print(pd.Series(flattened_list))
+
+exit()
+
+# atl_data = np.array(atl_data)
+# climp_data = np.array(climp_data)
+# control_data = np.array(control_data)
+# rtn_data = np.array(rtn_data)
+
+# print(np.array(atl_data))
+# exit()
+
+# df = pd.DataFrame()
+# # df['Time'] = np.repeat(np.arange(100), atl_data.shape[0])
+# # df['Values'] = np.concatenate(atl_data)
+# # df['Dataset'] = np.concatenate([['ATL'] * atl_data.shape[0]])
+
+# df['Values'] = pd.Series(atl_data.flatten())
+
+# print(df)
+
+# exit()
+
+# print(atl_data.shape)
+# print(climp_data.shape)
+# print(control_data.shape)
+# print(rtn_data.shape)
+
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+# Load your real datasets here
+# atl_data = np.load('atl_data.npy')
+# climp_data = np.load('climp_data.npy')
+# control_data = np.load('control_data.npy')
+# rtn_data = np.load('rtn_data.npy')
+
+# Assuming you have loaded the data into the variables atl_data, climp_data, control_data, and rtn_data
+
+# Create DataFrames for each dataset
+# dfs = {
+#     'atl_data': pd.DataFrame(atl_data),
+#     'climp_data': pd.DataFrame(climp_data),
+#     'control_data': pd.DataFrame(control_data),
+#     'rtn_data': pd.DataFrame(rtn_data)
+# }
+
+# # Concatenate and reshape data for Seaborn's lineplot
+# df_combined = pd.concat([df.melt(var_name='Time', value_name='Values') for df_name, df in dfs.items()])
+# df_combined['Dataset'] = np.concatenate([[df_name] * len(df) for df_name, df in dfs.items()])
+
+# plt.figure(figsize=(10, 6))
+# sns.lineplot(data=df_combined, x='Time', y='Values', hue='Dataset')
+# plt.xlabel('Time')
+# plt.ylabel('Values')
+# plt.title('Lineplot for Different Datasets')
+# plt.show()
+
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+# # Generate example data (replace this with your actual data)
+# num_time_points = 100
+# num_values = 50
+# num_classes = 4
+
+# # Simulate data for different classes
+# data = np.random.rand(num_time_points, num_values, num_classes)
+
+# # Create a DataFrame
+# time_points = np.arange(num_time_points)
+# df = pd.DataFrame(data.reshape(-1, num_classes), columns=[f'Class_{i+1}' for i in range(num_classes)])
+# df['Time'] = np.repeat(time_points, num_values)
+
+# # Melt the DataFrame for Seaborn's lmplot
+# df_melted = df.melt(id_vars=['Time'], var_name='Class', value_name='Values')
+
+# plt.figure(figsize=(10, 6))  # Adjust the figure size as needed
+
+# # Using lmplot to overlay regression lines for each class
+# sns.lmplot(data=df_melted, x='Time', y='Values', hue='Class', scatter_kws={'s': 10})
+# plt.xlabel('Time')
+# plt.ylabel('Values')
+# plt.title('Regression Lines for Different Classes')
+# plt.show()
+
+
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+# Generate example data (replace this with your actual data)
+num_time_points = 100
+num_values = 50
+num_classes = 4
+
+# Simulate data for different classes
+data = np.random.rand(num_time_points, num_values, num_classes)
+
+# Create a DataFrame
+time_points = np.arange(num_time_points)
+df = pd.DataFrame(data.reshape(-1, num_classes), columns=[f'Class_{i+1}' for i in range(num_classes)])
+
+# print(df)
+
+df['Time'] = np.repeat(time_points, num_values)
+
+# Melt the DataFrame for Seaborn's lineplot
+df_melted = df.melt(id_vars='Time', var_name='Class', value_name='Values')
+
+print(df_melted)
+exit()
+
+plt.figure(figsize=(10, 6))  # Adjust the figure size as needed
+
+# Using lineplot
+sns.lineplot(data=df_melted, x='Time', y='Values', hue='Class')
+
+# Using regplot (comment out the lineplot above if using regplot)
+# sns.regplot(data=df_melted, x='Time', y='Values', hue='Class', scatter=False)
+
+plt.xlabel('Time')
+plt.ylabel('Values')
+plt.title('Lineplot of Values per Time Point for Different Classes')
+plt.legend(title='Classes')
+plt.show()
+
+
+
+# import seaborn as sns
+# import matplotlib.pyplot as plt
+# import numpy as np
+# import pandas as pd
+
+# # Generate example data (replace this with your actual data)
+# num_time_points = 100
+# num_values = 50
+# num_classes = 4
+
+# # Simulate data for different classes
+# data = np.random.rand(num_time_points, num_values, num_classes)
+
+# # Create a DataFrame
+# time_points = np.arange(num_time_points)
+# df = pd.DataFrame(data.reshape(-1, num_classes), columns=[f'Class_{i+1}' for i in range(num_classes)])
+# df['Time'] = np.repeat(time_points, num_values)
+
+# # Loop through each class and create a regression plot
+# for class_col in df.columns[:-1]:  # Exclude the 'Time' column
+#     plt.figure(figsize=(8, 5))  # Adjust the figure size as needed
+#     sns.regplot(data=df, x='Time', y=class_col, scatter_kws={'s': 10})
+#     plt.xlabel('Time')
+#     plt.ylabel('Values')
+#     plt.title(f'Regression Plot for {class_col}')
+#     plt.show()
+
+
