@@ -11,6 +11,64 @@ confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 junc_analysis = JA(confocal_data_path)
 
 
+def er_nodes_overlay():
+    graph = sknw.build_sknw(imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/er_mean_proc/rtn4_proc_skel.png'), multi=True, iso=False)                                                  
+
+    mean_img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/er_mean/rtn4_er_mean.png')
+    plt.imshow(mean_img, cmap='gray')
+
+
+    degree_list = graph.degree
+
+    tgraph = copy.deepcopy(graph)
+
+    for i, val in enumerate(degree_list):
+        if val[1] < 3:
+            tgraph.remove_node(i)
+
+    node_set = tgraph.nodes
+    degree_list = tgraph.degree
+    node_coords = np.array([node_set[node]['o'] for node in node_set])
+    nps = [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
+    nps = np.array(nps)
+
+    plt.plot(nps[:,1], nps[:,0], '.', markerfacecolor='red', markeredgecolor='red', mew=2)
+
+    # plt.show()
+    plt.axis('off')
+    plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/er_mean/rtn4_overlay.png', bbox_inches='tight', pad_inches=0.0)
+    plt.close()
+
+# for i in range(50, 100):
+#     img = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/std_egfp/A2_decon_t0{i:02d}_ch00_std.png')
+
+#     skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t0{i:02d}_ch00_skel.png')
+
+#     fig, ax = plt.subplots()
+
+#     draw.overlay_skeleton_2d(img, skel, dilate=0, axes=ax)
+
+#     plt.savefig(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2_overlay/A2_decon_t0{i:02d}_ch00_skel_overlay.png', bbox_inches='tight', pad_inches=0, dpi=700)
+
+# plt.show()
+
+
+# for i in range(50, 100):
+#     img = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2_overlay/A2_decon_t0{i:02d}_ch00_skel_overlay.png')
+
+#     # skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t0{i:02d}_ch00_skel.png')
+
+#     junc = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/junctions/A2/A2_decon_t0{i:02d}_ch00_junc.png')
+
+#     fig, ax = plt.subplots()
+
+#     draw.overlay_skeleton_2d(img, junc, color=(0,1,1), dilate=0, axes=ax)
+
+#     plt.show()
+
+#     # plt.savefig(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2_overlay/A2_decon_t0{i:02d}_ch00_skel_overlay.png', bbox_inches='tight', pad_inches=0, dpi=700)
+
+
 # for i in range(1, 6):
 #     er = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/std_egfp/A1_decon_t00{i}_ch00_std.png')
 

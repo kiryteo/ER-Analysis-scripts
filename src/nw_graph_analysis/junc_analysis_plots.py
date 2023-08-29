@@ -91,6 +91,7 @@ def get_CC_mean_variation(channel, region, measure):
     if channel == 'egfp':
         control = pkl.load(open(f'pickles/Control_{channel}_{region}_CC_mean.pkl', 'rb'))
         control = get_mean_group_data(control, measure)
+
         df['CC_mean'] = pd.Series(np.concatenate((control, rtn, climp, atl)))
         df['Group'] = pd.Series(np.concatenate((['Control'] * len(control), ['Reticulon'] * len(rtn), ['Climp'] * len(climp), ['Atlastin'] * len(atl) )))
     else:
@@ -155,10 +156,10 @@ def get_CC_mean_variation(channel, region, measure):
 # get_CC_mean_variation('egfp', 'iso', 'std')
 # get_CC_mean_variation('egfp', 'fuz', 'std')
 # get_CC_mean_variation('mch', 'iso', 'mean')
-get_CC_mean_variation('mch', 'fuz', 'mean')
+# get_CC_mean_variation('mch', 'fuz', 'mean')
 # get_CC_mean_variation('mch', 'iso', 'std')
 # get_CC_mean_variation('mch', 'fuz', 'std')
-exit()
+# exit()
 
 def get_correlation(l1, l2):
     corr = []
@@ -412,6 +413,13 @@ def plot_num_junctions():
     rtn_num = [len(series) for series in rtn]
     control_num = [len(series) for series in control]
 
+    # print(atl_num)
+    # print(climp_num)
+    # print(rtn_num)
+    # print(control_num)
+
+    # exit()
+
     # atl_num = [num / area for num, area in zip(atl_num, atl_area)]
     # climp_num = [num / area for num, area in zip(climp_num, climp_area)]
     # rtn_num = [num / area for num, area in zip(rtn_num, rtn_area)]
@@ -604,6 +612,8 @@ def get_iso_fuz_area_ratio():
     rtn_fuz = pkl.load(open('pickles/RTN_fuz_area.pkl', 'rb'))
     control_fuz = pkl.load(open('pickles/Control_fuz_area.pkl', 'rb'))
 
+
+
     # atl_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(atl_iso, atl_fuz)]
     # climp_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(climp_iso, climp_fuz)]
     # rtn_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(rtn_iso, rtn_fuz)]
@@ -613,6 +623,7 @@ def get_iso_fuz_area_ratio():
     climp_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(climp_fuz, climp_iso)]
     rtn_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(rtn_fuz, rtn_iso)]
     control_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(control_fuz, control_iso) if sum(iso) != 0]
+
 
     # print(atl_ratio)
     # print(np.median(atl_ratio)) # 2
@@ -659,8 +670,8 @@ def get_iso_fuz_area_ratio():
     plt.close()
     # plt.show()
 
-# get_iso_fuz_area_ratio()
-# exit()
+get_iso_fuz_area_ratio()
+exit()
 
 
 def get_variation_from_pickles():
@@ -1154,6 +1165,7 @@ def cc_area_plotter(region):
     r1 = pkl.load(open(f'pickles/cc_area_RTN_{region}.pkl', 'rb'))
     c1 = pkl.load(open(f'pickles/cc_area_Climp_{region}.pkl', 'rb'))
     a1 = pkl.load(open(f'pickles/cc_area_ATL_{region}.pkl', 'rb'))
+
 
     plot_cc_area_all(a1, c1, r1, ct1, region)
     # plot_cc_area_all(a1, c1, r1, ct1, 'iso')

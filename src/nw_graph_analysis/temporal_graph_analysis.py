@@ -56,6 +56,9 @@ def create_group_graph_pickles(group):
 # exit()
 
 
+
+
+
 def get_mean_skel_graphs(group, num_series):
 
     data = []
@@ -77,62 +80,62 @@ def get_mean_skel_graphs(group, num_series):
 import networkx as nx
 
 # Step 1: Define subgraph size
-num_nodes = 5
-num_edges = 8
+# num_nodes = 5
+# num_edges = 8
 
-# Step 2: Snapshot-based approach
-# Assume 'snapshots' is a list of NetworkX graphs representing the temporal graph snapshots
+# # Step 2: Snapshot-based approach
+# # Assume 'snapshots' is a list of NetworkX graphs representing the temporal graph snapshots
 
-# Initialize variables to track the most consistent subgraph
-most_consistent_subgraph = None
-highest_consistency_score = 0
-
-
-snapshots = pickle.load(open('ATL_graphs.pkl', 'rb'))[0]
+# # Initialize variables to track the most consistent subgraph
+# most_consistent_subgraph = None
+# highest_consistency_score = 0
 
 
-# print(snapshots)
-subgraphs = [snapshots[0].subgraph(c) for c in nx.connected_components(snapshots[0])]
-# print(subgraphs)
-print(subgraphs[0].nodes())
-print(subgraphs[0].edges())
-exit()
+# snapshots = pickle.load(open('ATL_graphs.pkl', 'rb'))[0]
 
-import networkx as nx
 
-# Step 1: Define subgraph size
-num_nodes = 5
-num_edges = 8
+# # print(snapshots)
+# subgraphs = [snapshots[0].subgraph(c) for c in nx.connected_components(snapshots[0])]
+# # print(subgraphs)
+# print(subgraphs[0].nodes())
+# print(subgraphs[0].edges())
+# exit()
 
-# Step 2: Snapshot-based approach
-# Assume 'snapshots' is a list of NetworkX graphs representing the temporal graph snapshots
+# import networkx as nx
 
-# Initialize variables to track the most consistent subgraph
-most_consistent_subgraph = None
-highest_consistency_score = 0
+# # Step 1: Define subgraph size
+# num_nodes = 5
+# num_edges = 8
 
-for i in range(len(snapshots)):
-    snapshot = snapshots[i]
+# # Step 2: Snapshot-based approach
+# # Assume 'snapshots' is a list of NetworkX graphs representing the temporal graph snapshots
 
-    # Step 2a: Extract subgraphs
-    subgraphs = [snapshot.subgraph(c) for c in nx.connected_components(snapshot)]
+# # Initialize variables to track the most consistent subgraph
+# most_consistent_subgraph = None
+# highest_consistency_score = 0
+
+# for i in range(len(snapshots)):
+#     snapshot = snapshots[i]
+
+#     # Step 2a: Extract subgraphs
+#     subgraphs = [snapshot.subgraph(c) for c in nx.connected_components(snapshot)]
     
-    for subgraph in subgraphs:
-        # Step 2b: Compare subgraph consistency
-        consistency_score = 0
-        for j in range(i+1, len(snapshots)):
-            next_snapshot = snapshots[j]
-            next_subgraphs = [next_snapshot.subgraph(c) for c in nx.connected_components(next_snapshot)]
+#     for subgraph in subgraphs:
+#         # Step 2b: Compare subgraph consistency
+#         consistency_score = 0
+#         for j in range(i+1, len(snapshots)):
+#             next_snapshot = snapshots[j]
+#             next_subgraphs = [next_snapshot.subgraph(c) for c in nx.connected_components(next_snapshot)]
 
-            for next_subgraph in next_subgraphs:
-                # Compare the number of nodes and edges between subgraphs
-                if len(subgraph.nodes) == len(next_subgraph.nodes) == num_nodes and len(subgraph.edges) == len(next_subgraph.edges) == num_edges:
-                    consistency_score += 1
+#             for next_subgraph in next_subgraphs:
+#                 # Compare the number of nodes and edges between subgraphs
+#                 if len(subgraph.nodes) == len(next_subgraph.nodes) == num_nodes and len(subgraph.edges) == len(next_subgraph.edges) == num_edges:
+#                     consistency_score += 1
 
-        # Step 2c: Select the most consistent subgraph
-        if consistency_score > highest_consistency_score:
-            highest_consistency_score = consistency_score
-            most_consistent_subgraph = subgraph
+#         # Step 2c: Select the most consistent subgraph
+#         if consistency_score > highest_consistency_score:
+#             highest_consistency_score = consistency_score
+#             most_consistent_subgraph = subgraph
 
 # Step 3: Event-based approach
 # Assume 'events' is a list of events describing changes in the graph structure
@@ -169,6 +172,13 @@ for i in range(len(snapshots)):
 # The 'most_consistent_subgraph' variable will contain the most consistent subgraph found based on the number of nodes and edges.
 
 
-print(most_consistent_subgraph.nodes())
-print(most_consistent_subgraph.edges())
+# print(most_consistent_subgraph.nodes())
+# print(most_consistent_subgraph.edges())
+
+
+print("ERE".lower())
+
+
+
+
 

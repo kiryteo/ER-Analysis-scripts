@@ -45,15 +45,35 @@ def get_temporal_graphs(group):
     return avg_degree
 
 
+data = []
+
+for i in range(1, 27):
+    ser_data = []
+    for frame in range(100):
+        skeleton_path = f'{confocal_data_path}ATL/new_op_jul/skel/A{i}/A{i}_decon_t0{frame:02d}_ch00_skel.png'
+
+        # graph = junc_analysis.skel_to_graph(skeleton_path)
+
+        graph = sknw.build_sknw(imageio.imread(skeleton_path), multi=False, iso=False)
+
+        ser_data.append(nx.average_clustering(graph))
+    data.append(ser_data)
+
+for d in data:
+    print(np.mean(d))
+    print(np.std(d))
+    print(np.median(d))
+
+exit()
 
 atl_degree_data = get_temporal_graphs('ATL')
-climp_degree_data = get_temporal_graphs('Climp')
-rtn_degree_data = get_temporal_graphs('RTN')
-control_degree_data = get_temporal_graphs('Control')
+# climp_degree_data = get_temporal_graphs('Climp')
+# rtn_degree_data = get_temporal_graphs('RTN')
+# control_degree_data = get_temporal_graphs('Control')
 
-sns.distplot(control_degree_data, rug=True, hist=False, label='Control')
-sns.distplot(rtn_degree_data, rug=True, hist=False, label='RTN')
-sns.distplot(climp_degree_data, rug=True, hist=False, label='Climp')
+# sns.distplot(control_degree_data, rug=True, hist=False, label='Control')
+# sns.distplot(rtn_degree_data, rug=True, hist=False, label='RTN')
+# sns.distplot(climp_degree_data, rug=True, hist=False, label='Climp')
 sns.distplot(atl_degree_data, rug=True, hist=False, label='ATL')
 
 plt.legend()

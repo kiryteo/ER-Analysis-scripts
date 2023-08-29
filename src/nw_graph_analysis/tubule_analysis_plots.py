@@ -297,9 +297,9 @@ def plot_per_tubule_variation_over_sequence(connection, channel, variation):
 # plot_per_tubule_variation_over_sequence('iso-iso', 'mch', 'std')
 
 # plot_per_tubule_variation_over_sequence('iso-iso', 'egfp', 'mean')
-plot_per_tubule_variation_over_sequence('iso-iso', 'egfp', 'std')
+# plot_per_tubule_variation_over_sequence('iso-iso', 'egfp', 'std')
 
-exit()
+# exit()
 
 
 
@@ -793,6 +793,7 @@ def plot_tubule_length_distribution(connection, channel, measure):
     climp_conn_variation = get_length_per_tubule_variation(climp_conn, measure)
     rtn_conn_variation = get_length_per_tubule_variation(rtn_conn, measure)
     ctrl_conn_variation = get_length_per_tubule_variation(ctrl_conn, measure)
+
 
     # atl_iso_iso = load_annot_tub_pickles('ATL', 'iso-iso', channel)
     # atl_iso_fuz = load_annot_tub_pickles('ATL', 'iso-fuz', channel)
