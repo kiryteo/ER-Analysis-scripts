@@ -5,6 +5,7 @@ import numpy as np
 import seaborn as sns
 import pandas as pd
 import sknw
+import pickle
 import cv2
 import matplotlib.pyplot as plt
 from skimage import measure
@@ -43,9 +44,8 @@ def get_cc_ids(labelled_img, region):
 
     return cc_ids
 
-def get_fuz_cc_outline(group, series_num):
+def get_fuz_cc_outline(group, series_num, region):
     ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions(group, series_num)
-
 
     # dict with ids as key and (x, y) as value
     label_ids, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
@@ -54,17 +54,20 @@ def get_fuz_cc_outline(group, series_num):
     iso, fuz, unk = junc_analysis.get_junction_areas(label_ids, unassigned_cc_dict)
 
 
-
-    # iso_cc = get_cc_ids(labelled_img, iso)
-    fuz_cc = get_cc_ids(labelled_img, fuz)
+    if region == 'iso':
+        cc = get_cc_ids(labelled_img, iso)
+    else:
+        cc = get_cc_ids(labelled_img, fuz)
     # # unk_cc = get_cc_ids(labelled_img, unk)
 
+    cc_coords = {each: np.where(labelled_img==each) for each in cc}
+
     # iso_cc_coords = {each: np.where(labelled_img==each) for each in iso_cc}
-    fuz_cc_coords = {each: np.where(labelled_img==each) for each in fuz_cc}
+    # fuz_cc_coords = {each: np.where(labelled_img==each) for each in fuz_cc}
     # unk_cc_coords = {each: np.where(labelled_img==each) for each in unk_cc}
 
     spread_img = np.zeros((128, 128))
-    for k, v in fuz_cc_coords.items():
+    for v in cc_coords.values():
         spread_img[v[0], v[1]] = 255.
 
     # spread_img = dilation(spread_img)
@@ -110,75 +113,335 @@ def get_fuz_cc_ids(a, b):
     return list(intersection)
 
 
-# atl_data = []
+# lab_img = get_fuz_cc_outline('ATL', 1, 'iso')
+# plt.imshow(lab_img)
+# plt.show()
+
+# exit()
+
+def get_skel_intensity_over_cc_intensity(lab_img):
+    """
+    Get the mean intensity of the skeleton over the mean intensity per CC based on region type
+    """
+    data = []
+    for cc_id in range(1, lab_img.max()+1):
+        cc_id_coords = np.where(lab_img==cc_id)
+
+        cc_data = []
+
+        for i in range(100):
+            er = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/std_egfp/A1_decon_t0{i:02d}_ch00_std.png')
+
+            skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t0{i:02d}_ch00_skel.png')
+
+            skel_coords = np.where(skel)
+
+            skel_pixels = get_intersection(cc_id_coords, skel_coords)
+
+            values_at_skel_coordinates = [er[coord[0], coord[1]] for coord in skel_pixels]
+
+            values_at_cc_coordinates = er[cc_id_coords]
+
+            val = sum(values_at_skel_coordinates) / sum(values_at_cc_coordinates)
+
+            cc_data.append(val)
+
+        data.append(cc_data)
+    return data
+
+
+def get_iso_fuz_cc_skel_data(group):
+    group_data_iso = []
+    group_data_fuz = []
+    for series_num in range(1, group_dict[group]+1):
+        lab_img_iso = get_fuz_cc_outline(group, series_num, 'iso')
+        lab_img_fuz = get_fuz_cc_outline(group, series_num, 'fuz')
+
+        data_iso = get_skel_intensity_over_cc_intensity(lab_img_iso)
+        data_fuz = get_skel_intensity_over_cc_intensity(lab_img_fuz)        
+
+        group_data_iso.extend(data_iso)
+        group_data_fuz.extend(data_fuz)
+
+    return group_data_iso, group_data_fuz
+
+
+def plot_iso_fuz_skel_intensity_variation():
+    atl_data_iso, atl_data_fuz = get_iso_fuz_cc_skel_data('ATL')
+    # climp_data_iso, climp_data_fuz = get_iso_fuz_cc_skel_data('Climp')
+    # control_data_iso, control_data_fuz = get_iso_fuz_cc_skel_data('Control')
+    # rtn_data_iso, rtn_data_fuz = get_iso_fuz_cc_skel_data('RTN')
+
+    atl_data_iso = [item for sublist in atl_data_iso for item in sublist]
+    atl_data_fuz = [item for sublist in atl_data_fuz for item in sublist]
+
+
+    df = pd.DataFrame()
+    df['Intensity'] = pd.Series(np.concatenate((atl_data_iso, atl_data_fuz)))
+    df['Region'] = pd.Series(['ATL_iso']*len(atl_data_iso) + ['ATL_fuz']*len(atl_data_fuz))
+
+    sns.boxplot(data=df, x='Region', y='Intensity', showfliers=False)
+
+    plt.xlabel('Region', fontsize=16)
+    plt.ylabel('Intensity', fontsize=16)
+
+    plt.show()
+    
+# plot_iso_fuz_skel_intensity_variation()
+# exit()
+
+# data_iso, data_fuz = get_iso_fuz_cc_skel_data('ATL', 1)
+
+# data_iso = [item for sublist in data_iso for item in sublist]
+# data_fuz = [item for sublist in data_fuz for item in sublist]
+
+# sns.boxplot(data=[data_iso, data_fuz], orient='v')
+# plt.legend(['Isolated', 'Fuzzy'])
+# plt.xlabel('CC Type', fontsize=16)
+# plt.ylabel('Intensity', fontsize=16)
+# plt.show()
+
+
+exit()
+
+def replace_zeros(data):
+    for i, l in enumerate(data):
+        if 0 in l:
+            avg = np.mean(l)
+            idx = l.index(0)
+            data[i][idx] = avg
+    return data
+
+
+def get_df_series(group, series_num, region):
+
+    # group_dict = {'Atlastin': atl_data, 'Climp': climp_data, 'Control': control_data, 'Reticulon': rtn_data}
+
+    data_iso, data_fuz = get_iso_fuz_cc_skel_data(group, series_num)
+    data_iso = replace_zeros(data_iso)
+    data_fuz = replace_zeros(data_fuz)
+
+    region_dict = {'iso': data_iso, 'fuz': data_fuz}
+
+    Tframe = []
+    vals = []
+    group_name = []
+
+    # for i, l in enumerate(group_dict[group]):
+        # Tframe.extend([i]*len(l))
+
+    for i in range(100):
+        Tframe.extend([i]*(len(region_dict[region])-1))
+
+    for i in range(len(region_dict[region])):
+        group_name.extend([group + '_' + region]*len(region_dict[region][i]))
+
+    transposed_list = [list(row) for row in zip(*region_dict[region])]
+
+    for transposed in transposed_list:
+        vals.extend(transposed)
+
+    return Tframe, vals, group_name
+
+    
+def create_dataframe():
+    # tf_atl, vals_atl, group_atl = get_df_series('Atlastin')
+    # tf_climp, vals_climp, group_climp = get_df_series('Climp')
+    # tf_control, vals_control, group_control = get_df_series('Control')
+    # tf_rtn, vals_rtn, group_rtn = get_df_series('Reticulon')
+    atl_tf_iso, atl_vals_iso, atl_group_iso = get_df_series('ATL', 1, 'iso')
+    atl_tf_fuz, atl_vals_fuz, atl_group_fuz = get_df_series('ATL', 1, 'fuz')
+
+    climp_tf_iso, climp_vals_iso, climp_group_iso = get_df_series('Climp', 1, 'iso')
+    climp_tf_fuz, climp_vals_fuz, climp_group_fuz = get_df_series('Climp', 1, 'fuz')
+
+    control_tf_iso, control_vals_iso, control_group_iso = get_df_series('Control', 1, 'iso')
+    control_tf_fuz, control_vals_fuz, control_group_fuz = get_df_series('Control', 1, 'fuz')
+
+    rtn_tf_iso, rtn_vals_iso, rtn_group_iso = get_df_series('RTN', 1, 'iso')
+    rtn_tf_fuz, rtn_vals_fuz, rtn_group_fuz = get_df_series('RTN', 1, 'fuz')
+    
+
+    df = pd.DataFrame()
+    df['Time'] = pd.Series(np.concatenate([atl_tf_iso, atl_tf_fuz, climp_tf_iso, climp_tf_fuz, control_tf_iso, control_tf_fuz, rtn_tf_iso, rtn_tf_fuz]))
+    df['Values'] = pd.Series(np.concatenate([atl_vals_iso, atl_vals_fuz, climp_vals_iso, climp_vals_fuz, control_vals_iso, control_vals_fuz, rtn_vals_iso, rtn_vals_fuz]))
+    df['Group'] = pd.Series(np.concatenate([atl_group_iso, atl_group_fuz, climp_group_iso, climp_group_fuz, control_group_iso, control_group_fuz, rtn_group_iso, rtn_group_fuz]))
+
+    return df
+
+
+
+df = create_dataframe()
+
+plt.figure(figsize=(10, 6))
+sns.lineplot(data=df, x='Time', y='Values', hue='Group')
+plt.xlabel('Time', fontsize=16)
+plt.ylabel('Values', fontsize=16)
+
+plt.show()
+
+exit()
+
+# data_iso = replace_zeros(data_iso)
+# data_fuz = replace_zeros(data_fuz)
+
+# Tframe = []
+# vals = []
+# group_name = []
 
 # for i in range(100):
-#     skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t0{i:02d}_ch00_skel.png')
+#     Tframe.extend([i]*(len(data_iso)-1))
 
-#     graph = sknw.build_sknw(skel, multi=True, iso=False)
+# for i in range(len(data_iso)):
+#     group_name.extend(['ATL_iso']*len(data_iso[i]))
 
-#     nodes = graph.nodes
+# transposed_list = [list(row) for row in zip(*data_iso)]
 
-#     node_coords = np.array([nodes[node]['o'] for node in nodes])
+# for transposed in transposed_list:
+#     vals.extend(transposed)
 
-#     node_coords_list = list(zip(node_coords[:,0], node_coords[:,1]))
+# df = pd.DataFrame()
+# df['Time'] = pd.Series(Tframe)
+# df['Values'] = pd.Series(vals)
+# df['Group'] = pd.Series(group_name)
 
-#     cc_data = []
+# sns.lineplot(data=df, x='Time', y='Values', hue='Group')
+# plt.xlabel('Time', fontsize=16)
+# plt.ylabel('Values', fontsize=16)
+# # plt.title('Fuzzy CC skeleton mean intensity over CC area per frame', fontsize=18)
 
-#     for cc_id in range(1, lab_img.max()+1):
-#         cc_id_coords = np.where(lab_img==cc_id)
+# plt.show()
 
-#         cc_id_coords_list = list(zip(cc_id_coords[0], cc_id_coords[1]))
+# exit()
 
-#         fuz_cc_nodes = get_fuz_cc_ids(node_coords_list, cc_id_coords_list)
 
-#         degree_data = []
-#         for node in fuz_cc_nodes:
-#             if node in node_coords_list:
-#                 idx = node_coords_list.index(node)
-#                 degree_data.append(graph.degree[idx])
 
-#         if degree_data:
-#             cc_data.append(np.sum(degree_data)/len(degree_data))
 
-#     atl_data.append(cc_data)
+def fuz_cc_degree_variation(group):
+    group_data = []
+    for series in range(1, group_dict[group]+1):
+        lab_img = get_fuz_cc_outline(group, series)
+
+        data = []
+
+        for cc_id in range(1, lab_img.max()+1):
+            cc_id_coords = np.where(lab_img==cc_id)
+            cc_id_coords_list = list(zip(cc_id_coords[0], cc_id_coords[1]))
+            cc_data = []
+            for i in range(100):
+                skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t0{i:02d}_ch00_skel.png')
+
+                graph = sknw.build_sknw(skel, multi=True, iso=False)
+
+                nodes = graph.nodes
+
+                node_coords = np.array([nodes[node]['o'] for node in nodes])
+
+                node_coords_list = list(zip(node_coords[:,0], node_coords[:,1]))                
+
+                fuz_cc_nodes = get_fuz_cc_ids(node_coords_list, cc_id_coords_list)
+
+                degree_data = []
+                for node in fuz_cc_nodes:
+                    if node in node_coords_list:
+                        idx = node_coords_list.index(node)
+                        degree_data.append(graph.degree[idx])
+
+                if degree_data:
+                    cc_data.append(np.sum(degree_data)/len(degree_data))
+
+            data.append(cc_data)
+        group_data.extend(data)
+
+    return group_data
+
+
+atl_degree_variation = fuz_cc_degree_variation('ATL')
+climp_degree_variation = fuz_cc_degree_variation('Climp')
+control_degree_variation = fuz_cc_degree_variation('Control')
+rtn_degree_variation = fuz_cc_degree_variation('RTN')
+
+with open('atl_fuz_cc_degree_variation.pkl', 'wb') as f:
+    pickle.dump(atl_degree_variation, f)
+
+with open('climp_fuz_cc_degree_variation.pkl', 'wb') as f:
+    pickle.dump(climp_degree_variation, f)
+
+with open('control_fuz_cc_degree_variation.pkl', 'wb') as f:
+    pickle.dump(control_degree_variation, f)
+
+with open('rtn_fuz_cc_degree_variation.pkl', 'wb') as f:
+    pickle.dump(rtn_degree_variation, f)
+
+exit()
 
 # TO CHECK the following code
 
 def fuz_cc_degree_variation(group):
-    data = []
+    group_data = []
     for ser_num in range(1, group_dict[group]+1):
-        skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{group_pref[group]}{ser_num}/{group_pref[group]}{ser_num}_decon_t000_ch00_skel.png')
-
-        graph = sknw.build_sknw(skel, multi=True, iso=False)
-
-        nodes = graph.nodes
-
-        node_coords = np.array([nodes[node]['o'] for node in nodes])
-
-        node_coords_list = list(zip(node_coords[:,0], node_coords[:,1]))
-
         lab_img = get_fuz_cc_outline(group, ser_num)
 
-        cc_data = []
-
+        data = []
         for cc_id in range(1, lab_img.max()+1):
             cc_id_coords = np.where(lab_img==cc_id)
+            cc_data = []
+            for frame in range(100):
 
-            cc_id_coords_list = list(zip(cc_id_coords[0], cc_id_coords[1]))
+                skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{group_pref[group]}{ser_num}/{group_pref[group]}{ser_num}_decon_t0{frame:02d}_ch00_skel.png')
 
-            fuz_cc_nodes = get_fuz_cc_ids(node_coords_list, cc_id_coords_list)
+                graph = sknw.build_sknw(skel, multi=True, iso=False)
 
-            degree_data = []
-            for node in fuz_cc_nodes:
-                if node in node_coords_list:
-                    idx = node_coords_list.index(node)
-                    degree_data.append(graph.degree[idx])
+                nodes = graph.nodes
 
-            if degree_data:
-                cc_data.append(np.sum(degree_data)/len(degree_data))
+                node_coords = np.array([nodes[node]['o'] for node in nodes])
 
-        data.append(cc_data)
+                node_coords_list = list(zip(node_coords[:,0], node_coords[:,1]))
+
+                fuz_cc_nodes = get_fuz_cc_ids(node_coords_list, cc_id_coords)
+
+                degree_data = []
+                for node in fuz_cc_nodes:
+                    if node in node_coords_list:
+                        idx = node_coords_list.index(node)
+                        degree_data.append(graph.degree[idx])
+
+                if degree_data:
+                    cc_data.append(np.sum(degree_data)/len(degree_data))
+
+            data.append(cc_data)
+
+        # skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{group_pref[group]}{ser_num}/{group_pref[group]}{ser_num}_decon_t000_ch00_skel.png')
+
+        # graph = sknw.build_sknw(skel, multi=True, iso=False)
+
+        # nodes = graph.nodes
+
+        # node_coords = np.array([nodes[node]['o'] for node in nodes])
+
+        # node_coords_list = list(zip(node_coords[:,0], node_coords[:,1]))
+
+        
+
+        # cc_data = []
+
+        # for cc_id in range(1, lab_img.max()+1):
+        #     cc_id_coords = np.where(lab_img==cc_id)
+
+        #     cc_id_coords_list = list(zip(cc_id_coords[0], cc_id_coords[1]))
+
+        #     fuz_cc_nodes = get_fuz_cc_ids(node_coords_list, cc_id_coords_list)
+
+        #     degree_data = []
+        #     for node in fuz_cc_nodes:
+        #         if node in node_coords_list:
+        #             idx = node_coords_list.index(node)
+        #             degree_data.append(graph.degree[idx])
+
+        #     if degree_data:
+        #         cc_data.append(np.sum(degree_data)/len(degree_data))
+
+        # data.append(cc_data)
     return data
 
 
@@ -212,10 +475,17 @@ def get_skel_per_fuz_cc(group):
                 
                 if values_at_coordinates:
                     # Calculate the mean of the extracted values
-                    mean_value = np.mean(values_at_coordinates)
-                    # mean_val_over_area = (np.mean(values_at_coordinates)/255.) / len(cc_id_coords[0])
+                    # mean_value = np.mean(values_at_coordinates)
+                    # cc_data.append(mean_value/255.)
 
-                    cc_data.append(mean_value/255.)
+                    if cc_id_coords:
+                        mean_val_over_area = (np.mean(values_at_coordinates)/255.) / len(cc_id_coords[0])
+                    else:
+                        mean_val_over_area = 0
+                    
+                    cc_data.append(mean_val_over_area)
+                else:
+                    cc_data.append(0)
                     # cc_data.append(mean_val_over_area)
             data.append(cc_data)
         group_data.extend(data)
@@ -241,76 +511,82 @@ def plot_fuz_skel_intensity_variation(group):
 import pickle
 
 # atl_data = get_skel_per_fuz_cc('ATL')
-# with open('atl_fuz_cc_intensity.pkl', 'wb') as f:
+# with open('atl_fuz_cc_intensity_over_area.pkl', 'wb') as f:
 #     pickle.dump(atl_data, f)
 
 # climp_data = get_skel_per_fuz_cc('Climp')
-# with open('climp_fuz_cc_intensity.pkl', 'wb') as f:
+# with open('climp_fuz_cc_intensity_over_area.pkl', 'wb') as f:
 #     pickle.dump(climp_data, f)
 
 # control_data = get_skel_per_fuz_cc('Control')
-# with open('control_fuz_cc_intensity.pkl', 'wb') as f:
+# with open('control_fuz_cc_intensity_over_area.pkl', 'wb') as f:
 #     pickle.dump(control_data, f)
 
 # rtn_data = get_skel_per_fuz_cc('RTN')
-# with open('rtn_fuz_cc_intensity.pkl', 'wb') as f:
+# with open('rtn_fuz_cc_intensity_over_area.pkl', 'wb') as f:
 #     pickle.dump(rtn_data, f)
 
 # exit()
 
 atl_data = pickle.load(open('atl_fuz_cc_intensity.pkl', 'rb'))
-# climp_data = pickle.load(open('climp_fuz_cc_intensity.pkl', 'rb'))
-# control_data = pickle.load(open('control_fuz_cc_intensity.pkl', 'rb'))
-# rtn_data = pickle.load(open('rtn_fuz_cc_intensity.pkl', 'rb'))
-
-# print(atl_data)
-
-for l in atl_data:
-    print(len(l))
-    print('-----------------')
-
-exit()
+climp_data = pickle.load(open('climp_fuz_cc_intensity.pkl', 'rb'))
+control_data = pickle.load(open('control_fuz_cc_intensity.pkl', 'rb'))
+rtn_data = pickle.load(open('rtn_fuz_cc_intensity.pkl', 'rb'))
 
 
-transposed_list = [list(row) for row in zip(*atl_data)]
-# print(transposed_list)
+def replace_zeros(data):
+    for i, l in enumerate(data):
+        if 0 in l:
+            avg = np.mean(l)
+            idx = l.index(0)
+            data[i][idx] = avg
+    return data
 
-for l in transposed_list:
-    print(len(l))
-    print('-----------------')
+atl_data = replace_zeros(atl_data)
+climp_data = replace_zeros(climp_data)
+control_data = replace_zeros(control_data)
+rtn_data = replace_zeros(rtn_data)
 
-exit()
 
-from itertools import chain
-flattened_list = list(chain.from_iterable(transposed_list))
+def get_df_series(group):
 
-print(pd.Series(flattened_list))
+    group_dict = {'Atlastin': atl_data, 'Climp': climp_data, 'Control': control_data, 'Reticulon': rtn_data}
 
-exit()
+    Tframe = []
+    vals = []
+    group_name = []
 
-# atl_data = np.array(atl_data)
-# climp_data = np.array(climp_data)
-# control_data = np.array(control_data)
-# rtn_data = np.array(rtn_data)
+    # for i, l in enumerate(group_dict[group]):
+        # Tframe.extend([i]*len(l))
 
-# print(np.array(atl_data))
-# exit()
+    for i in range(100):
+        Tframe.extend([i]*(len(group_dict[group])-1))
 
-# df = pd.DataFrame()
-# # df['Time'] = np.repeat(np.arange(100), atl_data.shape[0])
-# # df['Values'] = np.concatenate(atl_data)
-# # df['Dataset'] = np.concatenate([['ATL'] * atl_data.shape[0]])
+    for i in range(len(group_dict[group])):
+        group_name.extend([group]*len(group_dict[group][i]))
 
-# df['Values'] = pd.Series(atl_data.flatten())
+    transposed_list = [list(row) for row in zip(*group_dict[group])]
 
-# print(df)
+    for transposed in transposed_list:
+        vals.extend(transposed)
 
-# exit()
+    return Tframe, vals, group_name
 
-# print(atl_data.shape)
-# print(climp_data.shape)
-# print(control_data.shape)
-# print(rtn_data.shape)
+    
+def create_dataframe():
+    tf_atl, vals_atl, group_atl = get_df_series('Atlastin')
+    tf_climp, vals_climp, group_climp = get_df_series('Climp')
+    tf_control, vals_control, group_control = get_df_series('Control')
+    tf_rtn, vals_rtn, group_rtn = get_df_series('Reticulon')
+
+
+    df = pd.DataFrame()
+    df['Time'] = pd.Series(np.concatenate([tf_atl, tf_climp, tf_control, tf_rtn]))
+    df['Values'] = pd.Series(np.concatenate([vals_atl, vals_climp, vals_control, vals_rtn]))
+    df['Group'] = pd.Series(np.concatenate([group_atl, group_climp, group_control, group_rtn]))
+
+    return df
+
 
 
 import seaborn as sns
@@ -318,33 +594,23 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-# Load your real datasets here
-# atl_data = np.load('atl_data.npy')
-# climp_data = np.load('climp_data.npy')
-# control_data = np.load('control_data.npy')
-# rtn_data = np.load('rtn_data.npy')
-
-# Assuming you have loaded the data into the variables atl_data, climp_data, control_data, and rtn_data
-
-# Create DataFrames for each dataset
-# dfs = {
-#     'atl_data': pd.DataFrame(atl_data),
-#     'climp_data': pd.DataFrame(climp_data),
-#     'control_data': pd.DataFrame(control_data),
-#     'rtn_data': pd.DataFrame(rtn_data)
-# }
-
 # # Concatenate and reshape data for Seaborn's lineplot
 # df_combined = pd.concat([df.melt(var_name='Time', value_name='Values') for df_name, df in dfs.items()])
 # df_combined['Dataset'] = np.concatenate([[df_name] * len(df) for df_name, df in dfs.items()])
 
-# plt.figure(figsize=(10, 6))
-# sns.lineplot(data=df_combined, x='Time', y='Values', hue='Dataset')
-# plt.xlabel('Time')
-# plt.ylabel('Values')
-# plt.title('Lineplot for Different Datasets')
-# plt.show()
+df = create_dataframe()
 
+plt.figure(figsize=(10, 6))
+sns.lineplot(data=df, x='Time', y='Values', hue='Group')
+plt.xlabel('Time', fontsize=16)
+plt.ylabel('Values', fontsize=16)
+# plt.title('Lineplot for Different Groups', fontsize=18)
+# plt.title('Fuzzy CC skeleton mean intensity over CC area per frame', fontsize=18)
+plt.title('Fuzzy CC skeleton mean intensity per frame', fontsize=18)
+plt.show()
+
+
+exit()
 
 import seaborn as sns
 import matplotlib.pyplot as plt
