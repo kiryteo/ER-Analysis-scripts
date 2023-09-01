@@ -7,6 +7,7 @@ import pandas as pd
 import sknw
 import pickle
 import cv2
+import statannot
 import matplotlib.pyplot as plt
 from skimage import measure
 from skimage.measure import label, regionprops
@@ -113,11 +114,172 @@ def get_fuz_cc_ids(a, b):
     return list(intersection)
 
 
+
 # lab_img = get_fuz_cc_outline('ATL', 1, 'iso')
-# plt.imshow(lab_img)
-# plt.show()
+# group = 'ATL'
+# series_num = 1
+# ratio = []
+# for cc_id in range(1, lab_img.max()+1):
+#     cc_id_coords = np.where(lab_img==cc_id)
+
+
+#     er = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_egfp/{group_pref[group]}{series_num}_decon_t000_ch00_std.png')
+
+#     skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{group_pref[group]}{series_num}/{group_pref[group]}{series_num}_decon_t000_ch00_skel.png')
+
+#     skel_coords = np.where(skel)
+
+#     skel_pixels = get_intersection(cc_id_coords, skel_coords)
+
+#     ratio.append(len(skel_pixels)/len(cc_id_coords[0]))
+
+# print(ratio)
 
 # exit()
+
+
+def get_single_frame_cc_intensity(group, series_num, lab_img):
+    data_skel = []
+    data_cc = []
+    for cc_id in range(1, lab_img.max()+1):
+        cc_id_coords = np.where(lab_img==cc_id)
+
+
+        er = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_egfp/{group_pref[group]}{series_num}_decon_t000_ch00_std.png')
+
+        skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{group_pref[group]}{series_num}/{group_pref[group]}{series_num}_decon_t000_ch00_skel.png')
+
+        skel_coords = np.where(skel)
+
+        skel_pixels = get_intersection(cc_id_coords, skel_coords)
+
+        values_at_skel_coordinates = [er[coord[0], coord[1]] for coord in skel_pixels]
+
+        values_at_cc_coordinates = er[cc_id_coords]
+
+        data_skel.extend(values_at_skel_coordinates)
+        data_cc.extend(values_at_cc_coordinates)
+
+    if sum(data_cc) != 0:
+        return sum(data_skel) / sum(data_cc)
+
+
+def get_skel_intensity_under_CC(group):
+
+    group_name = {'ATL': 'Atlastin', 'Climp': 'Climp', 'Control': 'Control', 'RTN': 'Reticulon'}
+
+    data_iso = []
+    data_fuz = []
+    for series in range(1, group_dict[group]+1):
+        lab_img_iso = get_fuz_cc_outline(group, series, 'iso')
+        iso_val = get_single_frame_cc_intensity(group, series, lab_img_iso)
+
+        lab_img_fuz = get_fuz_cc_outline(group, series, 'fuz')
+        fuz_val = get_single_frame_cc_intensity(group, series, lab_img_fuz)
+
+        data_iso.append(iso_val)
+        data_fuz.append(fuz_val)
+
+    df = pd.DataFrame()
+    df['Intensity'] = pd.Series(data_iso + data_fuz)
+    df['Region'] = pd.Series([f'{group}_iso']*len(data_iso) + [f'{group}_fuz']*len(data_fuz))
+
+    ax = sns.boxplot(data=df, x='Region', y='Intensity', showfliers=False)
+
+    box_pairs = [(f'{group}_iso', f'{group}_fuz')]
+    statannot.add_stat_annotation(ax, x='Region', y='Intensity', data=df, box_pairs=box_pairs,
+                                    test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=15)
+
+    yt = ax.get_yticks()
+    yt = [f'{y:.2f}' for y in yt]
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=15)
+    ax.set_yticklabels(yt, fontsize=15)
+
+    plt.xlabel('Region', fontsize=18)
+    plt.ylabel('Intensity', fontsize=18)
+    plt.gcf().set_size_inches(2.5, 6)
+    # plt.title(f'{group_name[group]}: Intensity under skeleton over CC area for fuzzy and isolated regions per sequence', fontsize=16)
+
+    plt.show()
+
+
+# get_skel_intensity_under_CC('ATL')
+get_skel_intensity_under_CC('Climp')
+get_skel_intensity_under_CC('Control')
+get_skel_intensity_under_CC('RTN')
+
+exit()
+
+
+replicate_data_iso = []
+replicate_data_fuz = []
+for series in range(1, 11):
+    atl_iso_img = get_fuz_cc_outline('ATL', series, 'iso')
+    atl1_iso = get_single_frame_cc_intensity('ATL', series, atl_iso_img)
+    replicate_data_iso.extend(atl1_iso)
+
+    atl_fuz_img = get_fuz_cc_outline('ATL', series, 'fuz')
+    atl1_fuz = get_single_frame_cc_intensity('ATL', series, atl_fuz_img)
+    replicate_data_fuz.extend(atl1_fuz)
+
+
+print(len(replicate_data_iso))
+print(len(replicate_data_fuz))
+
+df = pd.DataFrame()
+df['Intensity'] = pd.Series(replicate_data_iso + replicate_data_fuz)
+df['Region'] = pd.Series(['ATL_iso']*len(replicate_data_iso) + ['ATL_fuz']*len(replicate_data_fuz))
+
+# df['Intensity'] = pd.Series(atl1_iso + atl1_fuz)
+# df['Region'] = pd.Series(['ATL_iso']*len(atl1_iso) + ['ATL_fuz']*len(atl1_fuz))
+
+ax = sns.boxplot(data=df, x='Region', y='Intensity', showfliers=False)
+
+box_pairs = [('ATL_iso', 'ATL_fuz')]
+
+statannot.add_stat_annotation(ax, x='Region', y='Intensity', data=df, box_pairs=box_pairs,
+                              test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=15)
+
+
+plt.xlabel('Region', fontsize=16)
+plt.ylabel('Intensity', fontsize=16)
+plt.gcf().set_size_inches(4, 8)
+
+plt.show()
+
+# sns.boxplot(data=[atl1_iso, atl1_fuz], orient='v')
+# plt.legend(['Isolated', 'Fuzzy'])
+# plt.xlabel('CC Type', fontsize=16)
+# plt.ylabel('Intensity', fontsize=16)
+# plt.show()
+
+exit()
+
+
+def get_cc_intensity(group):
+    group_data_iso = []
+    group_data_fuz = []
+    for series_num in range(1, group_dict[group]+1):
+        lab_img_iso = get_fuz_cc_outline(group, series_num, 'iso')
+        lab_img_fuz = get_fuz_cc_outline(group, series_num, 'fuz')
+
+        data_iso = get_single_frame_cc_intensity(group, series_num, lab_img_iso)
+        data_fuz = get_single_frame_cc_intensity(group, series_num, lab_img_fuz)
+
+        group_data_iso.append(np.mean(data_iso))
+        group_data_fuz.append(np.mean(data_fuz))
+
+    return group_data_iso, group_data_fuz
+
+
+atl_data_iso, atl_data_fuz = get_cc_intensity('ATL')
+sns.boxplot(data=[atl_data_iso, atl_data_fuz], orient='v')
+plt.legend(['Isolated', 'Fuzzy'])
+plt.xlabel('CC Type', fontsize=16)
+plt.ylabel('Intensity', fontsize=16)
+plt.show()
+
+exit()
 
 def get_skel_intensity_over_cc_intensity(lab_img):
     """
