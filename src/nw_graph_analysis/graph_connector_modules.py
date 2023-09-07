@@ -30,8 +30,14 @@ def get_nbrs(nodes_array):
 
 
 def nearest_node(distances, nbrs):
+    """
+    Get the nearest neighbor of each node
+    @param distances: distances to the nearest neighbors
+    @param nbrs: indices of the nearest neighbors
+    """
+
     # Create a dictionary that maps node indices to their nearest neighbor and the corresponding distance
-    node_dict = {i: (nbrs[i], distances[i]) for i in range(len(nbrs))}
+    node_dict = {idx: (nbrs[idx], distances[idx]) for idx in range(len(nbrs))}
 
     # Create a dictionary that maps each node to its nearest neighbor and the corresponding distance
     nn_dict = {}
@@ -44,8 +50,12 @@ def nearest_node(distances, nbrs):
     return node_dict, nn_dict
 
 
-# Find the closest neighbor of a given node in a graph
 def get_closest_from_nbr(graph, node):
+    """
+    Get the closest neighbor of a given node in a graph
+    @param graph: graph object
+    @param node: node id
+    """
     # Get the list of neighbors and their distances to the node
     neighbors = list(graph.neighbors(node))
     distances = [graph.edges[node, neighbor, 0]['weight'] for neighbor in neighbors]
@@ -58,8 +68,16 @@ def get_closest_from_nbr(graph, node):
     return neighbors[closest_neighbor_index], min(distances)
 
 
-# Get the coordinates of the path between a given node and its closest neighbor in a graph
 def get_path_coords(er_input, cost_arr, g_nodes_array, node, fin_dict):
+    """
+    Get the coordinates of the path between a given node and its closest neighbor in a graph
+    @param er_input: input image
+    @param cost_arr: cost array
+    @param g_nodes_array: array of nodes
+    @param node: node id
+    @param fin_dict: dictionary of final nodes
+    """
+
     # Get the starting and ending coordinates of the path
     start_coord = tuple(g_nodes_array[node][:2])
     end_coord = tuple(g_nodes_array[fin_dict[node][0]][:2])
@@ -92,6 +110,13 @@ def get_path_coords(er_input, cost_arr, g_nodes_array, node, fin_dict):
 
 
 def connect_low_degree_nodes(temp_graph, node, fin_dict, path_coords):
+    """
+    Connect two nodes with a low degree
+    @param temp_graph: temporary graph
+    @param node: node id
+    @param fin_dict: dictionary of final nodes
+    @param path_coords: coordinates of the path between the two nodes
+    """
     # calculate total distance
     total_distance = sum(
         math.sqrt((path_coords[i + 1][0] - path_coords[i][0]) ** 2 + (path_coords[i + 1][1] - path_coords[i][1]) ** 2)
@@ -101,16 +126,33 @@ def connect_low_degree_nodes(temp_graph, node, fin_dict, path_coords):
         # add edge between the close nodes and get length of edge (distance)
     temp_graph.add_edge(node, fin_dict[node][0])
 
+    # return the edge data
     return {(node, fin_dict[node][0], 0): {'pts': path_coords, 'weight': total_distance}}
 
 
 def remove_edge_if_exists(temp_graph, node, neighbor):
+    """
+    Remove an edge between two nodes if it exists
+    @param temp_graph: temporary graph
+    @param node: node id
+    @param neighbor: neighbor id
+    """
     if temp_graph.has_edge(node, neighbor) or temp_graph.has_edge(neighbor, node):
         temp_graph.remove_edge(node, neighbor)
         temp_graph.remove_nodes_from((node, neighbor))
 
 
 def connect_nodes(er_input, temp_graph, n1, n2, fin_dict, cost_arr, g_nodes_array):
+    """
+    Connect two nodes
+    @param er_input: input image
+    @param temp_graph: temporary graph
+    @param n1: node 1
+    @param n2: node 2
+    @param fin_dict: dictionary of final nodes
+    @param cost_arr: cost array
+    @param g_nodes_array: array of nodes
+    """
     # If the two nodes are not already connected
     if fin_dict[n1][0] != n2:
 
@@ -127,6 +169,10 @@ def connect_nodes(er_input, temp_graph, n1, n2, fin_dict, cost_arr, g_nodes_arra
 
 
 def get_updated_degree_nodes(temp_graph):
+    """
+    Get the nodes with degree 1, degree 2, and higher degrees
+    @param temp_graph: temporary graph
+    """
     # Initialize empty lists for nodes with degree 1, degree 2, and higher degrees
     deg_one_nodes, deg_two_nodes, high_deg_nodes = [], [], []
 
@@ -150,6 +196,11 @@ def get_updated_degree_nodes(temp_graph):
 
 
 def create_new_path(path_nbr1, path_nbr2):
+    """
+    Create a new path by combining the two paths
+    @param path_nbr1: path 1
+    @param path_nbr2: path 2
+    """
     # Create an ordered dictionary from the union of path_nbr1 and path_nbr2
     union_dict = OrderedDict.fromkeys(map(tuple, path_nbr1 + path_nbr2))
 
@@ -158,6 +209,14 @@ def create_new_path(path_nbr1, path_nbr2):
 
 
 def get_new_edge_data(temp_graph, nbr_a, nbr_b, path_a, path_b):
+    """
+    Get the edge data for a new edge between two nodes
+    @param temp_graph: temporary graph
+    @param nbr_a: neighbor 1
+    @param nbr_b: neighbor 2
+    @param path_a: path 1
+    @param path_b: path 2
+    """
     # Convert the two paths to a numpy array of coordinates
     path_coords = np.array(create_new_path(path_a, path_b))
 
@@ -174,6 +233,13 @@ def get_new_edge_data(temp_graph, nbr_a, nbr_b, path_a, path_b):
 
 
 def high_deg_connections(temp_graph, node, nbr1, nbr2):
+    """
+    Connect two nodes with a high degree
+    @param temp_graph: temporary graph
+    @param node: node id
+    @param nbr1: neighbor 1
+    @param nbr2: neighbor 2
+    """
     # Get the path coordinates
     path_nbr1 = [[int(x) for x in a] for a in temp_graph[node][nbr1][0]['pts']]
     path_nbr2 = [[int(x) for x in a] for a in temp_graph[node][nbr2][0]['pts']]
@@ -206,6 +272,11 @@ def high_deg_connections(temp_graph, node, nbr1, nbr2):
 
 
 def process_node(temp_graph, node):
+    """
+    Process a node
+    @param temp_graph: temporary graph
+    @param node: node id
+    """
     # Get the neighbors of the node
     nbrs = list(temp_graph.neighbors(node))
 
@@ -223,6 +294,10 @@ def process_node(temp_graph, node):
 
 
 def get_updated_neighbor_dict(graph):
+    """
+    Get the updated neighbor dictionary
+    @param graph: graph object
+    """
     # sourcery skip: assign-if-exp, dict-comprehension
     # Get the nodes of the graph as a list of points
     graph_nodes = np.array([graph.nodes[i]['o'] for i in graph.nodes])

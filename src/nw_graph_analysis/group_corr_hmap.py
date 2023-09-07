@@ -39,22 +39,6 @@ imageio.imwrite('/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/
 exit()
 
 
-image = plt.imread('/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/er_mean_proc/control1_er_mean_proc.png')
-
-
-op = filters.meijering(image)
-
-fig, ax = plt.subplots(1, 2)
-ax[0].imshow(image)
-ax[0].set_title('Image 1')
-
-# Plot the second image in the second subplot
-ax[1].imshow(op)
-ax[1].set_title('Image 2')
-
-plt.show()
-
-exit()
 
 # Load the image and convert it to grayscale
 image = plt.imread('/localhome/asa420/MIAL/data/confocal_movies/Control/new_op_jul/er_mean_proc/control1_er_mean_proc.png')

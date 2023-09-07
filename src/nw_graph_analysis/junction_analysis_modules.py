@@ -33,36 +33,35 @@ class JunctionAnalysis:
 
         updated_dict, g_nodes_array = gcm.get_updated_neighbor_dict(graph)
 
-        # create a copy of the graph for node connection
+        # Create a copy of the graph for node connection
         temp_graph = copy.deepcopy(graph)
 
         er_input = imageio.imread(path_er)
         cost_arr = np.ones((128, 128))
 
         for node in dict(graph.degree()):
-            # access the first element of graph.neighbors
+            # Access the first element of graph.neighbors
             neighbor = next(iter(graph.neighbors(node)))
 
-            # connect the node to its neighbor
+            # Connect the node to its neighbor
             gcm.connect_nodes(er_input, temp_graph, node, neighbor, updated_dict, cost_arr, g_nodes_array)
 
         # Create a copy of the graph
-        tgraph = copy.deepcopy(temp_graph)
+        temp_graph_2 = copy.deepcopy(temp_graph)
 
         # Go through each node and adjust the degree
         for node in temp_graph.nodes():
-            gcm.process_node(tgraph, node)
+            gcm.process_node(temp_graph_2, node)
 
-        tgraph2 = copy.deepcopy(tgraph)
-        for node in tgraph.nodes():
-            gcm.process_node(tgraph2, node)
+        temp_graph_3 = copy.deepcopy(temp_graph_2)
+        for node in temp_graph_2.nodes():
+            gcm.process_node(temp_graph_3, node)
 
-        node_set, degree_list = tgraph2.nodes, tgraph2.degree
+        node_set, degree_list = temp_graph_3.nodes, temp_graph_3.degree
 
         node_coords = np.array([node_set[node]['o'] for node in node_set])
 
-        # return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
-        return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2], tgraph2
+        return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2], temp_graph_3
     
     def get_ref_junctions(self, graph):
         node_set, degree_list = graph.nodes, graph.degree
@@ -86,13 +85,8 @@ class JunctionAnalysis:
 
         mean_er = f'{self.confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{num_series}_er_mean.png'
 
-        # mean_skel = f'{self.confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_er_mean_proc_enhance_skel.png'
         mean_skel = f'{self.confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_proc_skel.png'
 
-        # Get junction coordinates from projection frame
-        # ref_junctions, tgraph2 = self.get_junctions(mean_er, mean_skel)
-
-        # ref_junctions = [[each[0], each[1]] for each in ref_junctions]
         ref_junctions = self.get_ref_junctions(self.skel_to_graph(mean_skel))
         ref_junctions = [[each[0], each[1]] for each in ref_junctions]
 
@@ -105,17 +99,12 @@ class JunctionAnalysis:
 
             skeleton_path = f'{confocal_data_path}{group}/new_op_jul/skel/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
 
-            junctions, tgraph2 = self.get_junctions(er_path, skeleton_path)
+            junctions, temp_graph_3 = self.get_junctions(er_path, skeleton_path)
 
             junc_array = [[junc[0], junc[1]] for junc in junctions]
             per_frame_junctions.extend(junc_array)
 
         return ref_junctions, per_frame_junctions
-
-    # def process_node_runner(self, graph):
-    #     temp_graph = copy.deepcopy(graph)
-    #     for node in graph.nodes():
-    #         gcm.process_node(temp_graph, node)
 
     def label_junctions(self, group, series_num):
 
@@ -195,15 +184,6 @@ class JunctionAnalysis:
 
         """
         regions = regionprops(labelled_img)
-
-        # cc_list = []
-        # for idx in range(1, labelled_img.max()):
-        #     lab_i = props[idx].label
-
-        # cc_area_dict = {}
-        # for idx, props in enumerate(regions):
-        #     cc_area_dict[idx] = props.area
-        # cc_area_dict[idx] = [props.area, props.axis_major_length]
 
         num_components = np.unique(labelled_img)
 

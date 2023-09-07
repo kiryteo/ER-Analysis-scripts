@@ -329,11 +329,6 @@ def cc_signal(group, channel, region):
     return group_data
 
 
-
-
-# egfp_seq_data, mch_seq_data, region_cc_coords = calc_deposit(1, 'ATL', 'iso')
-# exit()
-
 # calc_deposit_net_norm
 def cc_signal_net_norm(num_series, group, region):
     """
@@ -735,13 +730,6 @@ def junc_area_locator(group, num_series):
 
 def refine_junc_dt(dt, min_presence=50):
     return {k: v for k, v in dt.items() if len(v) > min_presence}
-
-
-
-
-
-
-
 
 
 

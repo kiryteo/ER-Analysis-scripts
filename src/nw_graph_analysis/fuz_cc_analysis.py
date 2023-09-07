@@ -5,9 +5,11 @@ import numpy as np
 import seaborn as sns
 import pandas as pd
 import sknw
-import pickle
+import pickle as pkl
 import cv2
 import statannot
+import scipy
+from scipy import ndimage
 import matplotlib.pyplot as plt
 from skimage import measure
 from skimage.measure import label, regionprops
@@ -77,7 +79,7 @@ def get_fuz_cc_outline(group, series_num, region):
 
     lab_img = label(spread_img, connectivity=2)
 
-    return lab_img
+    return lab_img, ref_junctions
 
 def get_intersection(a, b):
     # a = (np.array([19, 20, 20, 124]), np.array([124, 122, 123, 43]))
@@ -100,8 +102,90 @@ def get_intersection(a, b):
     return intersection
 
 
+def get_ref_junc_per_fuz_CC(group):
+    data = []
+    lab_img_data = []
+    ref_junc_data = []
+    for series in range(1, group_dict[group]+1):
+        lab_img, ref_junctions = get_fuz_cc_outline(group, series, 'fuz')
+
+        # ref_junctions: list of lists [x y]
+        lab_img_data.append(lab_img)
+        ref_junc_data.append(ref_junctions)
+
+        # get ref_junctions per CC
+        for cc_id in range(1, lab_img.max()+1):
+            cc_id_coords = np.where(lab_img==cc_id)
+
+            cc_id_coords = np.stack(cc_id_coords, axis=1)
+
+            # get the intersection of ref_junctions and cc_id_coords
+
+            set_ref_junc = {tuple(row) for row in ref_junctions}
+            set_cc_id_coords = {tuple(row) for row in cc_id_coords}
+
+            intersection_set = set_ref_junc.intersection(set_cc_id_coords)
+
+            intersection = [np.array(row) for row in intersection_set]
+
+            data.append(len(intersection))
+
+    with open(f'{group}_fuz_cc_patches.pkl', 'wb') as f:
+            pkl.dump(lab_img_data, f)
+            
+    with open(f'{group}_ref_junc.pkl', 'wb') as f:
+            pkl.dump(ref_junc_data, f)
+
+    return data
+
+data = get_ref_junc_per_fuz_CC('RTN')
+plt.hist(data)
+
+plt.show()
+
+data = get_ref_junc_per_fuz_CC('ATL')
+
+exit()
+
+
 # lab_img = get_fuz_cc_outline('ATL', 1)
 # fuzzy_coords = np.where(lab_img)
+
+# def check_fuz_cc_edt():
+#     lab_img = get_fuz_cc_outline('RTN', 5, 'fuz')
+#     fuzzy_coords = np.where(lab_img)
+
+#     lab_img_iso = get_fuz_cc_outline('RTN', 5, 'iso')
+#     iso_coords = np.where(lab_img_iso)
+
+#     data = np.zeros((128, 128))
+
+#     for i in range(100):
+#         skel1 = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/skel/R5/R5_decon_t0{i:02d}_ch00_skel.png')
+
+#         skel1 = np.invert(skel1)
+
+#         edt1 = ndimage.distance_transform_edt(skel1)
+
+#         data = data + edt1
+
+#     data = data / 100
+
+#     # print(data[fuzzy_coords])
+#     plt.hist(data[fuzzy_coords])
+#     plt.show()
+
+#     plt.hist(data[iso_coords])
+#     plt.show()
+
+#     # for cc_id in range(1, lab_img.max()+1):
+#     #     cc_id_coords = np.where(lab_img==cc_id)
+
+#         # cc_id_coords = np.stack(cc_id_coords, axis=1)
+
+
+# check_fuz_cc_edt()
+# exit()
 
 
 def get_fuz_cc_ids(a, b):
@@ -113,6 +197,20 @@ def get_fuz_cc_ids(a, b):
 
     return list(intersection)
 
+
+# lab_img_iso = get_fuz_cc_outline('ATL', 1, 'iso')
+# l = []
+# for ser in range(1, 30):
+#     lab_img_fuz = get_fuz_cc_outline('RTN', ser, 'fuz')
+#     l.extend(
+#         len(np.where(lab_img_fuz == cc_id)[0])
+#         for cc_id in range(1, lab_img_fuz.max() + 1)
+#     )
+
+# plt.hist(l)
+# plt.show()
+
+# exit()
 
 
 # lab_img = get_fuz_cc_outline('ATL', 1, 'iso')
@@ -204,11 +302,11 @@ def get_skel_intensity_under_CC(group):
 
 
 # get_skel_intensity_under_CC('ATL')
-get_skel_intensity_under_CC('Climp')
-get_skel_intensity_under_CC('Control')
-get_skel_intensity_under_CC('RTN')
+# get_skel_intensity_under_CC('Climp')
+# get_skel_intensity_under_CC('Control')
+# get_skel_intensity_under_CC('RTN')
 
-exit()
+# exit()
 
 
 replicate_data_iso = []

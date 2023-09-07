@@ -24,10 +24,12 @@ import numpy as np
 from sklearn.neighbors import NearestNeighbors
 from statannotations.Annotator import Annotator
 
+import graph_connector_modules as gcm
 from junction_analysis_modules import JunctionAnalysis as JA
 
-
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
+
+junc_analysis = JA(confocal_data_path)
 
 def get_std_img(path):
     img = imageio.imread(path)
@@ -45,14 +47,6 @@ def get_skeleton(img_path):
     vess_enhanced_sample = imageio.imread(img_path)
 
     return pcv.morphology.skeletonize(mask=vess_enhanced_sample)
-
-
-def skel_to_graph(skel_img_path):
-    """
-    @param skel_img_path:
-    @return:
-    """
-    return sknw.build_sknw(imageio.imread(skel_img_path), multi=True, iso=False)
 
 
 def get_tubules(graph):
@@ -102,7 +96,7 @@ def plot_original_graph(skel_img_path):
 
     @param skel_img_path: path the input skeleton
     """
-    graph = skel_to_graph(skel_img_path)
+    graph = junc_analysis.skel_to_graph(skel_img_path)
 
     plt.axis('off')
     plt.imshow(imageio.imread(skel_img_path), cmap='gray')
@@ -228,168 +222,12 @@ def nearest_node(distances, nbrs):
     return nbr_dict, nn_dict
 
 
-# Find the closest neighbor of a given node in a graph
-def get_closest_from_nbr(graph, node):
-    # Get the list of neighbors and their distances to the node
-    neighbors = list(graph.neighbors(node))
-    distances = [graph.edges[node, neighbor, 0]['weight'] for neighbor in neighbors]
-
-    # Find the index of the closest neighbor in the list of neighbors
-    closest_neighbor_index = distances.index(min(distances))
-
-    # Return the closest neighbor and its distance to the node
-    return neighbors[closest_neighbor_index], min(distances)
 
 
-# Get the coordinates of the path between a given node and its closest neighbor in a graph
-def get_path_coords(er_input, cost_arr, g_nodes_array, node, fin_dict):
-    # Get the starting and ending coordinates of the path
-    start_coord = tuple(g_nodes_array[node][:2])
-    end_coord = tuple(g_nodes_array[fin_dict[node][0]][:2])
-
-    # Find the path coordinates using the `route_through_array()` function
-    path_coords, _ = route_through_array(cost_arr, start=start_coord, end=end_coord, fully_connected=True)
-
-    zero_signal_coords = sum(er_input[each] == 0 for each in path_coords)
-
-    signal_coords = len(path_coords) - zero_signal_coords
-
-    if zero_signal_coords > signal_coords:
-        return None
-
-    # Return the path coordinates as a NumPy array if the path is short enough, otherwise return None
-    return np.array(path_coords) if len(path_coords) < 20 else None
 
 
 import math
 
-
-def connect_low_degree_nodes(temp_graph, node, fin_dict, path_coords):
-    temp_graph.add_edge(node, fin_dict[node][0])
-    total_distance = sum(
-        math.sqrt((path_coords[i + 1][0] - path_coords[i][0]) ** 2 + (path_coords[i + 1][1] - path_coords[i][1]) ** 2)
-        for i in range(len(path_coords) - 1))
-    return {(node, fin_dict[node][0], 0): {'pts': path_coords, 'weight': total_distance}}
-
-
-def remove_edge_if_exists(temp_graph, node, neighbor):
-    if temp_graph.has_edge(node, neighbor) or temp_graph.has_edge(neighbor, node):
-        temp_graph.remove_edge(node, neighbor)
-        temp_graph.remove_nodes_from((node, neighbor))
-
-
-def connect_nodes(er_input, temp_graph, n1, n2, fin_dict, cost_arr, g_nodes_array):
-    if fin_dict[n1][0] != n2:
-
-        # print(n1)
-        path_coords = get_path_coords(er_input, cost_arr, g_nodes_array, n1, fin_dict)
-
-        if path_coords is not None and not temp_graph.has_edge(n1, fin_dict[n1][0]):
-            edge_data = connect_low_degree_nodes(temp_graph, n1, fin_dict, path_coords)
-
-            nx.set_edge_attributes(temp_graph, edge_data)
-
-
-def get_updated_degree_nodes(temp_graph):
-    deg_one_nodes, deg_two_nodes, high_deg_nodes = [], [], []
-    for node, degree in temp_graph.degree:
-        if 'o' in temp_graph.nodes[node]:
-            point = list(temp_graph.nodes[node]['o'])
-            if degree == 1:
-                deg_one_nodes.append(point)
-            elif degree == 2:
-                deg_two_nodes.append(point)
-            else:
-                high_deg_nodes.append(point)
-    return np.array(deg_one_nodes), np.array(deg_two_nodes), np.array(high_deg_nodes)
-
-
-def create_new_path(path_nbr1, path_nbr2):
-    union_dict = OrderedDict.fromkeys(map(tuple, path_nbr1 + path_nbr2))
-
-    return list(map(list, union_dict.keys()))
-
-
-def get_new_edge_data(tgraph, nbr_a, nbr_b, path_a, path_b):
-    path_coords = np.array(create_new_path(path_a, path_b))
-    total_distance = sum(
-        math.sqrt((path_coords[i + 1][0] - path_coords[i][0]) ** 2 + (path_coords[i + 1][1] - path_coords[i][1]) ** 2)
-        for i in range(len(path_coords) - 1))
-    tgraph.add_edge(nbr_a, nbr_b)
-    return {(nbr_a, nbr_b, 0): {'pts': path_coords, 'weight': total_distance}}
-
-
-def high_deg_connections(tgraph, node, nbr1, nbr2):
-    path_nbr1 = [[int(x) for x in a] for a in tgraph[node][nbr1][0]['pts']]
-    path_nbr2 = [[int(x) for x in a] for a in tgraph[node][nbr2][0]['pts']]
-
-    if path_nbr1[0] == path_nbr2[0]:
-        path_nbr2 = path_nbr2[::-1]
-        edge_data = get_new_edge_data(tgraph, nbr2, nbr1, path_nbr2, path_nbr1)
-
-    elif path_nbr1[0] == path_nbr2[-1]:
-        edge_data = get_new_edge_data(tgraph, nbr2, nbr1, path_nbr2, path_nbr1)
-
-    elif path_nbr1[-1] == path_nbr2[0]:
-        edge_data = get_new_edge_data(tgraph, nbr1, nbr2, path_nbr1, path_nbr2)
-
-    else:
-        path_nbr2 = path_nbr2[::-1]
-        edge_data = get_new_edge_data(tgraph, nbr1, nbr2, path_nbr1, path_nbr2)
-
-    tgraph.remove_node(node)
-    nx.set_edge_attributes(tgraph, edge_data)
-
-
-def process_node(tgraph, node):
-    nbrs = list(tgraph.neighbors(node))
-    if len(nbrs) != 2:
-        return
-
-    nbr1, nbr2 = nbrs
-    deg1, deg2 = tgraph.degree(nbr1), tgraph.degree(nbr2)
-
-
-    # if deg1 >= 2 and deg2 >= 2:
-    #     high_deg_connections(tgraph, node, nbr1, nbr2)
-    # if (deg1 == 1 and deg2 >= 2) or (deg1 >= 2 and deg2 == 1):
-    #     high_deg_connections(tgraph, node, nbr1, nbr2)
-    if deg1 >= 1 and deg2 >= 1:
-        high_deg_connections(tgraph, node, nbr1, nbr2)
-
-
-def get_updated_neighbor_dict(graph):
-    nodes = graph.nodes()
-
-    g_nodes = np.array([graph.nodes[i]['o'] for i in graph.nodes])
-    g_nodes_array = g_nodes.tolist()
-
-    # closest point in graph which is connected by edge ('neighbor')
-    closest_neighbor_dict = {}
-    for each in nodes:
-        nbr_id, dist = get_closest_from_nbr(graph, each)
-        closest_neighbor_dict[each] = (nbr_id, dist)
-
-    # closest point in graph that may or may not be connected by an edge
-    distances, nbrs_all = get_nbrs(g_nodes)
-
-    # nbr_dict: node id and nearest node id
-    # nn_dict:
-    nbr_dict, nn_dict = nearest_node(distances, nbrs_all)
-
-    fin_dict = {}
-
-    # for k, v in closest_neighbor_dict.items():
-    #     if k in nn_dict:
-    #         fin_dict[k] = nn_dict[k]
-
-    for k, v in closest_neighbor_dict.items():
-        if v[1] < nbr_dict[k][1]:
-            fin_dict[k] = closest_neighbor_dict[k]
-        else:
-            fin_dict[k] = nbr_dict[k]
-
-    return fin_dict, g_nodes_array
 
 
 def graph_node_connector(group, series):
@@ -409,7 +247,7 @@ def graph_node_connector(group, series):
 
     path_er_proc = f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series}_er_mean_proc.png'
 
-    graph = skel_to_graph(path)
+    graph = junc_analysis.skel_to_graph(path)
 
     # all junction from the graph with degree > 2
     junc_analysis = JA(confocal_data_path)
@@ -417,7 +255,7 @@ def graph_node_connector(group, series):
 
     relevant_nodes = np.array(junctions)
 
-    fin_dict, g_nodes_array = get_updated_neighbor_dict(graph)
+    fin_dict, g_nodes_array = gcm.get_updated_neighbor_dict(graph)
 
     temp_graph = copy.deepcopy(graph)
 
@@ -433,7 +271,7 @@ def graph_node_connector(group, series):
         # access the first element of graph.neighbors
         neighbor = next(iter(graph.neighbors(node)))
 
-        connect_nodes(er_input, temp_graph, node, neighbor, fin_dict, cost_arr, g_nodes_array)
+        gcm.connect_nodes(er_input, temp_graph, node, neighbor, fin_dict, cost_arr, g_nodes_array)
 
     tgraph = copy.deepcopy(temp_graph)
     for node in temp_graph.nodes():
@@ -457,7 +295,7 @@ def graph_node_connector(group, series):
     # exit()
 
     ### Plotting the updated graph
-    deg_one_nodes, deg_two_nodes, high_deg_nodes = get_updated_degree_nodes(tgraph2)
+    deg_one_nodes, deg_two_nodes, high_deg_nodes = gcm.get_updated_degree_nodes(tgraph2)
 
     er_mean = imageio.imread(
         f'{confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{series}_er_mean.png')
@@ -506,7 +344,7 @@ def graph_node_connector(group, series):
 
 def node_connector(path_er, path_frame):
 
-    graph = skel_to_graph(path_frame)
+    graph = junc_analysis.skel_to_graph(path_frame)
 
     # all junction from the graph with degree > 2
     junc_analysis = JA(confocal_data_path)
@@ -514,7 +352,7 @@ def node_connector(path_er, path_frame):
 
     relevant_nodes = np.array(junctions)
 
-    fin_dict, g_nodes_array = get_updated_neighbor_dict(graph)
+    fin_dict, g_nodes_array = gcm.get_updated_neighbor_dict(graph)
 
     temp_graph = copy.deepcopy(graph)
 
@@ -529,7 +367,7 @@ def node_connector(path_er, path_frame):
         # access the first element of graph.neighbors
         neighbor = next(iter(graph.neighbors(node)))
 
-        connect_nodes(er_input, temp_graph, node, neighbor, fin_dict, cost_arr, g_nodes_array)
+        gcm.connect_nodes(er_input, temp_graph, node, neighbor, fin_dict, cost_arr, g_nodes_array)
 
     tgraph = copy.deepcopy(temp_graph)
     for node in temp_graph.nodes():
@@ -791,7 +629,7 @@ def rel_edges_length(group, r_start, r_end):
         # ip = (input - input.min())/(input.max() - input.min())
 
         path = f'{confocal_data_path}{group}/new_op_jul/skel/{group[0]}{i}/{group[0]}{i}_decon_t0{frame:02d}_ch00_skel.png'
-        graph = skel_to_graph(path)
+        graph = junc_analysis.skel_to_graph(path)
         junc_analysis = JA(confocal_data_path)
         junctions = junc_analysis.get_junctions(graph)
         relevant_nodes = np.array(junctions)
@@ -820,7 +658,7 @@ def rel_edge_intensity(group, r_start, r_end):
         img = imageio.imread(fname)
         ip = (img - img.min()) / (img.max() - img.min())
         path = f'{confocal_data_path}{group}/new_op_jul/skel/{pref}{i}/{pref}{i}_decon_t0{frame:02d}_ch00_skel.png'
-        graph = skel_to_graph(path)
+        graph = junc_analysis.skel_to_graph(path)
         junc_analysis = JA(confocal_data_path)
         junctions = junc_analysis.get_junctions(graph)
         relevant_nodes = np.array(junctions)
