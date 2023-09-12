@@ -921,3 +921,129 @@ def crop_cc_from_saved():
 # # plot_CC_area_junctions('RTN', 9, iso_cc_coords, fuz_cc_coords, labelled_img)
 
 
+def fuz_isolated_junctions(group, series_num):
+    nps, skdata = get_all_junc(group, series_num)
+
+    nps = np.array(nps)
+    skdata = np.array(skdata)
+
+    spread_img = np.zeros((128, 128))
+    for each in skdata:
+        spread_img[each[0], each[1]] = 255.
+
+    # plt.imshow(spread_img)
+    # plt.show()
+    #
+    # exit()
+
+    labelled_img = label(spread_img, connectivity=2)
+
+    # plt.imshow(labelled_img)
+    # plt.show()
+    #
+    # exit()
+
+    regions = regionprops(labelled_img)
+
+    # cc_list = []
+    # for idx in range(1, labelled_img.max()):
+    #     lab_i = props[idx].label
+
+    cc_area_dict = {idx: props.area for idx, props in enumerate(regions)}
+    # print(cc_area_dict)
+
+    # exit()
+
+    num_components = np.unique(labelled_img)
+
+    label_vals, assigned_components = get_ref_junc_per_CC_id(nps, labelled_img)
+
+    unassigned_cc_dict = get_uncertain_junctions(labelled_img, skdata, num_components, assigned_components)
+
+    isolated_junc = []
+    isolated_junc_area = []
+    fuzzy_junc = []
+    fuzzy_junc_area = []
+    for k, v in label_vals.items():
+        if k != 0:
+            if len(v) == 1:
+                isolated_junc.append(v[0])
+                isolated_junc_area.append(cc_area_dict[k])
+            else:
+                fuzzy_junc.append(v)
+                fuzzy_junc_area.append(cc_area_dict[k])
+
+    print(isolated_junc_area)
+    print(fuzzy_junc_area)
+
+    unknown_junc = [v for k, v in unassigned_cc_dict.items()]
+    iso = np.array(isolated_junc)
+
+    fuz = list(itertools.chain.from_iterable(fuzzy_junc))
+    fuz = np.array(fuz)
+
+    unk = list(itertools.chain.from_iterable(unknown_junc))
+    unk = np.array(unk)
+
+    # img = imageio.imread(
+    #     '/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/er_mean_proc/atl1_er_mean_proc.png')
+
+    for i in range(100):
+        plt.axis('off')
+        if group == 'Control':
+            img = imageio.imread(confocal_data_path + f'{group}/files/img_{series_num}_decon_t0{i:02d}.tif')
+
+        else:
+            img = imageio.imread(confocal_data_path + f'{group}/files/{group[0]}{series_num}_decon_t0{i:02d}_ch00.tif')
+
+        img = (img - img.min()) / (img.max() - img.min())
+        plt.imshow(img, cmap='gray')
+        plt.plot(iso[:, 1], iso[:, 0], 'o', markerfacecolor='None', markeredgecolor='red')
+        if len(fuz) > 0:
+            plt.plot(fuz[:, 1], fuz[:, 0], 'o', markerfacecolor='None', markeredgecolor='blue')
+        plt.plot(unk[:, 1], unk[:, 0], 'o', markerfacecolor='None', markeredgecolor='green')
+        plt.plot(skdata[:, 1], skdata[:, 0], 'x', markerfacecolor='None', markeredgecolor='yellow')
+        plt.show()
+        # if group == 'Control':
+        #     plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junc_types_movies/Ct%s_decon_t0%s_ch00.png'%(f'{group}', f'{series_num}', f'{i:02d}'), bbox_inches='tight', pad_inches=0)
+        # else:
+        #     plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/%s/new_op_jul/junc_types_movies/%s_decon_t0%s_ch00.png'%(f'{group}', f'{group[0]}{series_num}', f'{i:02d}'), bbox_inches='tight', pad_inches=0)
+        # plt.close()
+
+
+# fuz_isolated_junctions('Control', 13)
+
+def plot_junc_spread(group, n1, n2, num_series):
+    fig = plt.gcf()
+    ax = fig.gca()
+    # gr = cm.Greens(np.linspace(n3arr.min()[0], n3arr.max()[0], num=len(n3)))
+    # mcmap = mcolors.LinearSegmentedColormap.from_list('mcmap', gr)
+    img = imageio.imread((confocal_data_path + f'{group}/new_op_jul/er_mean/{group.lower()}{num_series}_er_mean.png'))
+
+    plt.imshow(img, cmap='gray', interpolation='none')
+    # plt.plot(n2[:, 1], n2[:, 0], 'b.')
+    plt.scatter(n2[:, 1], n2[:, 0], c=n3val, cmap='Blues', marker='o')
+    # plt.colorbar()
+    plt.plot(n1[:, 1], n1[:, 0], 'o', markerfacecolor='None', markeredgecolor='red', mew=1.5)  # , ms=4)
+    # plt.plot(n1[:, 1], n1[:, 0], 'r.')
+    # c = Circle((n1[0, 1], n1[0, 0]), radius=3, linewidth=2, facecolor='none', edgecolor='green', alpha=0.7)
+    # ax.add_patch(c)
+    # plt.plot(n2[:, 1], n2[:, 0], 'o', markerfacecolor='blue', markeredgecolor='blue')
+
+    for i, each in enumerate(n1):
+        c1 = plt.Circle((n1[i, 1], n1[i, 0]), 3, color='r', fill=False, linestyle='--')
+        ax.add_patch(c1)
+        # if n5[i] > med:
+        s = '(' + '%.2f' % n5[i] + ',' + str(n6[i]) + ')'
+        # s = '(' + str(n1[i,1]) + ',' + str(n1[i,0]) + ',' + '%.2f'%n5[i] + ',' + str(n6[i]) + ')'
+        ax.text(n1[i, 1], n1[i, 0], s, c='yellow')
+
+    plt.axis('off')
+    plt.suptitle(f'Climp series {num_series} junctions movement variance')
+    plt.title('Variance of list with distances for matched junctions per frame w.r.t. reference frame junctions')
+    # plt.savefig('RTN1_junc_spread.png', bbox_inches='tight', pad_inches=0)
+    plt.show()
+
+
+# plot_junc_spread('Climp', n1, n2, 3)
+# exit()

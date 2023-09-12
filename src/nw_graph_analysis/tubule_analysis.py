@@ -19,15 +19,13 @@ confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 junc_analysis = JA(confocal_data_path)
 
 
-def get_intensity_flow(er_path, skel_path):
-    # use mean projection frame for er and skel
-    # er = imageio.imread(er_path)
-    # skel = imageio.imread(skel_path)
-
-    
-
-
 def get_edges(conn_graph, iso_ids, fuz_ids, connection):
+    """
+    @param conn_graph: graph object
+    @param iso_ids: list of iso ids
+    @param fuz_ids: list of fuz ids
+    @param connection: type of connection
+    """
     # Find the edges between iso-iso, iso-fuz, fuz-fuz
     if connection == 'iso-iso':
         if len(iso_ids) > 0:
@@ -47,11 +45,21 @@ def get_edges(conn_graph, iso_ids, fuz_ids, connection):
 
 
 def get_intersection(a, b):
-    # get common elements between 2 ndarrays (list of nodes)
+    """
+    get common elements between 2 ndarrays (list of nodes)
+    @param a: list of lists
+    @param b: list of lists
+    """
     return np.array([x for x in a if np.any(np.all(x == b, axis=1))])
 
 
 def get_tubule_data(group, series_num, connection):
+    """
+    
+    @param group: group name
+    @param series_num: series number
+    @param connection: type of connection
+    """
     group_pref = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
 
     # sourcery skip: inline-immediately-returned-variable
@@ -179,86 +187,6 @@ def tubule_sequence_data(group, series_num, connection, channel, measure):
 
 # seq_data = tubule_sequence_data('ATL', 1, 'iso-iso', 'egfp', 'mean')
 # exit()
-
-
-def create_tub_data_pickles(group, total_series, connection, channel, measure):
-    group_data = []
-    for i in range(1, total_series + 1):
-        seq_data = np.array(tubule_sequence_data(group, i, connection, channel, measure))
-        group_data.append(seq_data)
-
-    with open(f'{group.lower()}_{connection}_{measure}_{channel}.pkl', 'wb') as fl:
-        pkl.dump(group_data, fl)
-
-
-# groups = {'ATL': 26, 'Climp': 31, 'Control': 31, 'RTN': 29}
-# connections = ['iso-iso', 'iso-fuz', 'fuz-fuz']
-# channels = ['egfp', 'mch']
-#
-# create_tub_data_pickles('ATL', 26, 'iso-iso', 'egfp', 'tubules')
-# create_tub_data_pickles('ATL', 26, 'iso-iso', 'mch', 'tubules')
-# create_tub_data_pickles('ATL', 26, 'iso-fuz', 'egfp', 'tubules')
-# create_tub_data_pickles('ATL', 26, 'iso-fuz', 'mch', 'tubules')
-# create_tub_data_pickles('ATL', 26, 'fuz-fuz', 'egfp', 'tubules')
-# create_tub_data_pickles('ATL', 26, 'fuz-fuz', 'mch', 'tubules')
-#
-# create_tub_data_pickles('Climp', 31, 'iso-iso', 'egfp', 'tubules')
-# create_tub_data_pickles('Climp', 31, 'iso-iso', 'mch', 'tubules')
-# create_tub_data_pickles('Climp', 31, 'iso-fuz', 'egfp', 'tubules')
-# create_tub_data_pickles('Climp', 31, 'iso-fuz', 'mch', 'tubules')
-# create_tub_data_pickles('Climp', 31, 'fuz-fuz', 'egfp', 'tubules')
-# create_tub_data_pickles('Climp', 31, 'fuz-fuz', 'mch', 'tubules')
-#
-# create_tub_data_pickles('RTN', 29, 'iso-iso', 'egfp', 'tubules')
-# create_tub_data_pickles('RTN', 29, 'iso-iso', 'mch', 'tubules')
-# create_tub_data_pickles('RTN', 29, 'iso-fuz', 'egfp', 'tubules')
-# create_tub_data_pickles('RTN', 29, 'iso-fuz', 'mch', 'tubules')
-# create_tub_data_pickles('RTN', 29, 'fuz-fuz', 'egfp', 'tubules')
-# create_tub_data_pickles('RTN', 29, 'fuz-fuz', 'mch', 'tubules')
-#
-# create_tub_data_pickles('Control', 31, 'iso-iso', 'egfp', 'tubules')
-# create_tub_data_pickles('Control', 31, 'iso-fuz', 'egfp', 'tubules')
-# create_tub_data_pickles('Control', 31, 'fuz-fuz', 'egfp', 'tubules')
-#
-# exit()
-
-
-def create_pickles(groups: dict, connections: list, channels: list, measure: list) -> None:
-    """
-    Creates pickles of tubule data for the given groups, connections, channels, and measure.
-
-    Args:
-        groups (dict): A dictionary of group names and the number of series in each group.
-        connections (list): A list of connection types.
-        channels (list): A list of channel names.
-        measure (str): The name of the measure to be pickled.
-
-    Returns:
-        None
-    """
-
-    for group, num_series in groups.items():
-        for connection in connections:
-            if group != 'Control':
-                for channel in channels:
-                    # print(group, num_series, connection, channel, measure)
-                    create_tub_data_pickles(group, num_series, connection, channel, measure)
-            else:
-                # print(group, num_series, connection, 'egfp', measure)
-                create_tub_data_pickles(group, num_series, connection, 'egfp', measure)
-
-
-def pickle_creation_runner():
-    groups = {'ATL': 26, 'Climp': 31, 'Control': 31, 'RTN': 29}
-    connections = ['iso-iso', 'iso-fuz', 'fuz-fuz']
-    channels = ['egfp', 'mch']
-    measure = 'tubules'
-    # measure = VALID_MEASURES
-    # create_pickles(groups, VALID_CONNECTIONS, VALID_CHANNELS, VALID_MEASURES)
-    create_pickles(groups, connections, channels, measure)
-
-pickle_creation_runner()
-exit()
 
 
 def tubule_intensity_analysis(group, series_num, connection, measure):

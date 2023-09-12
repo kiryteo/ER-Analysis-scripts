@@ -1,3 +1,8 @@
+# Description: Vesselness filter for 2D images
+# Python implementation of Jerman Vesselness filter from https://github.com/timjerman/JermanEnhancementFilter
+
+# The results are still not the same as in the original implementation, but they are close enough
+
 import imageio
 import numpy as np
 from scipy.ndimage.filters import correlate
