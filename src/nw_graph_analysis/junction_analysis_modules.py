@@ -7,14 +7,14 @@ from plantcv import plantcv as pcv
 import copy
 import graph_connector_modules as gcm
 
-confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
-sted_data_path = '/localhome/asa420/MIAL/data/live-cell-movies/'
+confocal_data_path = '/localhome/asa420/MIAL/data/confocal-data/'
+sted_data_path = '/localhome/asa420/MIAL/data/sted-data/'
 
 
 class JunctionAnalysis:
 
-    def __init__(self, confocal_data_path):
-        self.confocal_data_path = confocal_data_path
+    def __init__(self, modality):
+        self.data_path = sted_data_path if modality == 'sted' else confocal_data_path
 
     def get_skeleton(self, img_path):
         """
@@ -100,7 +100,8 @@ class JunctionAnalysis:
 
         # mean_er = f'{self.confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{num_series}_er_mean.png'
 
-        mean_skel = f'{self.confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_proc_skel.png'
+        # mean_skel = f'{self.confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_proc_skel.png'
+        mean_skel = f'{self.data_path}{group}/er_mean_proc/{group.lower()}{num_series}_proc_skel.png'
 
         ref_junctions = self.get_ref_junctions(self.skel_to_graph(mean_skel))
         ref_junctions = [[each[0], each[1]] for each in ref_junctions]
@@ -110,7 +111,9 @@ class JunctionAnalysis:
         # for frame in range(fr_start, fr_end):
         for frame in range(100):
 
-            er_path = f'{confocal_data_path}{group}/new_op_jul/std_egfp/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_std.png'
+            # TODO: modify path for sted
+
+            er_path = f'{self.data_path}{group}/std_egfp/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_std.png'
 
             skeleton_path = f'{confocal_data_path}{group}/new_op_jul/skel/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
 

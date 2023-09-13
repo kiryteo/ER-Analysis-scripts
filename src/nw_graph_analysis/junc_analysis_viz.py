@@ -1,6 +1,9 @@
 import imageio
 import numpy as np
 import cv2
+import copy
+import sknw
+from plantcv import plantcv as pcv
 import matplotlib.pyplot as plt
 from skimage import measure
 from skimage.measure import label, regionprops
@@ -8,36 +11,64 @@ from skimage.morphology import dilation, closing
 from junction_analysis_modules import JunctionAnalysis as JA
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
+
+sted_data_path = '/localhome/asa420/MIAL/data/live-cell-movies/Sep2023-sted-analysis/'
+
 junc_analysis = JA(confocal_data_path)
 
 
 def er_nodes_overlay():
-    graph = sknw.build_sknw(imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/er_mean_proc/rtn4_proc_skel.png'), multi=True, iso=False)                                                  
+    # if modality == 'sted':
+    #     path = sted_data_path
+    # else:
+    #     path = confocal_data_path
 
-    mean_img = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/er_mean/rtn4_er_mean.png')
+    # graph = sknw.build_sknw(imageio.imread(f'{confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{series_num}_proc_skel.png'), multi=True, iso=False)                                                  
+    # mean_img = imageio.imread(f'{confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{series_num}_er_mean.png')
+
+    # graph = sknw.build_sknw(imageio.imread('/localhome/asa420/MIAL/data/live-cell-movies/Sep2023-sted-analysis/climp_mean/Series001_decon_converted_mean_proc_skel.png'), multi=True, iso=False)                                                
+
+    skel = pcv.morphology.skeletonize(mask=imageio.imread('/localhome/asa420/MIAL/data/live-cell-movies/Sep2023-sted-analysis/climp_mean/Series001_decon_converted_mean_proc_v2_enhance.png'))
+
+    graph = sknw.build_sknw(skel, multi=True, iso=False)
+
+
+    mean_img = imageio.imread('/localhome/asa420/MIAL/data/live-cell-movies/Sep2023-sted-analysis/climp_mean/Series001_decon_converted_mean_proc.png')
+
     plt.imshow(mean_img, cmap='gray')
-
 
     degree_list = graph.degree
 
     tgraph = copy.deepcopy(graph)
 
-    for i, val in enumerate(degree_list):
-        if val[1] < 3:
-            tgraph.remove_node(i)
+    # for i, val in enumerate(degree_list):
+    #     print(val)
+    #     if val[1] < 3:
+    #         tgraph.remove_node(i)
+
 
     node_set = tgraph.nodes
+    print(node_set)
+
     degree_list = tgraph.degree
     node_coords = np.array([node_set[node]['o'] for node in node_set])
     nps = [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
     nps = np.array(nps)
 
+    # for (s,e) in graph.edges():
+    #     ps = graph[s][e][0]['pts']
+    #     plt.plot(ps[:,1], ps[:,0], 'green')
+
     plt.plot(nps[:,1], nps[:,0], '.', markerfacecolor='red', markeredgecolor='red', mew=2)
 
-    # plt.show()
-    plt.axis('off')
-    plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/er_mean/rtn4_overlay.png', bbox_inches='tight', pad_inches=0.0)
-    plt.close()
+    plt.show()
+    # plt.axis('off')
+    # plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/er_mean/rtn4_overlay.png', bbox_inches='tight', pad_inches=0.0)
+    # plt.close()
+
+# er_nodes_overlay()
+# exit()
+
 
 # for i in range(50, 100):
 #     img = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/std_egfp/A2_decon_t0{i:02d}_ch00_std.png')
