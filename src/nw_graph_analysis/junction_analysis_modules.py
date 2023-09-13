@@ -29,12 +29,12 @@ class JunctionAnalysis:
         @param skel_img_path:
         @return:
         """
-        fname_suffix = skel_img_path.split('/')[-1].split('.')[0].split('_')[-1]
-        if fname_suffix == 'skel':
-            return sknw.build_sknw(imageio.imread(skel_img_path), multi=True, iso=False)
-        elif fname_suffix == 'filt':
-            skel = self.get_skeleton(skel_img_path)
-            return sknw.build_sknw(skel, multi=True, iso=False)
+        # fname_suffix = skel_img_path.split('/')[-1].split('.')[0].split('_')[-1]
+        # if fname_suffix == 'skel':
+        #     return sknw.build_sknw(imageio.imread(skel_img_path), multi=True, iso=False)
+        # elif fname_suffix == 'filt':
+        skel = self.get_skeleton(skel_img_path)
+        return sknw.build_sknw(skel, multi=True, iso=False)
     
     # node_connector
     def get_junctions(self, path_er, path_skel):
@@ -111,11 +111,9 @@ class JunctionAnalysis:
         # for frame in range(fr_start, fr_end):
         for frame in range(100):
 
-            # TODO: modify path for sted
+            er_path = f'{self.data_path}{group}/std/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_std.png'
 
-            er_path = f'{self.data_path}{group}/std_egfp/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_std.png'
-
-            skeleton_path = f'{confocal_data_path}{group}/new_op_jul/skel/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
+            skeleton_path = f'{confocal_data_path}{group}/preproc/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_proc_enhance.png'
 
             junctions, temp_graph_3 = self.get_junctions(er_path, skeleton_path)
 
