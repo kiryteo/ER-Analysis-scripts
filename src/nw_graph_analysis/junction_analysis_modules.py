@@ -3,10 +3,12 @@ from skimage.measure import label, regionprops
 import itertools
 import sknw
 import imageio
+from plantcv import plantcv as pcv
 import copy
 import graph_connector_modules as gcm
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
+sted_data_path = '/localhome/asa420/MIAL/data/live-cell-movies/'
 
 
 class JunctionAnalysis:
@@ -14,12 +16,25 @@ class JunctionAnalysis:
     def __init__(self, confocal_data_path):
         self.confocal_data_path = confocal_data_path
 
+    def get_skeleton(self, img_path):
+        """
+        @param img_path: path to image
+        @return: skeleton (ndarray) - skeleton of the image
+        """
+        img = imageio.imread(img_path)
+        return pcv.morphology.skeletonize(mask=img)
+
     def skel_to_graph(self, skel_img_path):
         """
         @param skel_img_path:
         @return:
         """
-        return sknw.build_sknw(imageio.imread(skel_img_path), multi=True, iso=False)
+        fname_suffix = skel_img_path.split('/')[-1].split('.')[0].split('_')[-1]
+        if fname_suffix == 'skel':
+            return sknw.build_sknw(imageio.imread(skel_img_path), multi=True, iso=False)
+        elif fname_suffix == 'filt':
+            skel = self.get_skeleton(skel_img_path)
+            return sknw.build_sknw(skel, multi=True, iso=False)
     
     # node_connector
     def get_junctions(self, path_er, path_skel):
@@ -83,7 +98,7 @@ class JunctionAnalysis:
         # pr
         group_pref = {'ATL':'A', 'Climp':'C', 'Control':'Ct', 'RTN':'R'}
 
-        mean_er = f'{self.confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{num_series}_er_mean.png'
+        # mean_er = f'{self.confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{num_series}_er_mean.png'
 
         mean_skel = f'{self.confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_proc_skel.png'
 
