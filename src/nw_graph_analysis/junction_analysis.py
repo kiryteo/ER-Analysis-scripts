@@ -22,8 +22,9 @@ from junction_analysis_modules import JunctionAnalysis as JA
 import graph_connector_modules as gcm
 
 max_val = 999
-confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
-junc_analysis = JA(confocal_data_path)
+confocal_data_path = '/localhome/asa420/MIAL/data/confocal-data/'
+sted_data_path = '/localhome/asa420/MIAL/data/sted-data/'
+junc_analysis = JA('sted')
 
 
 
@@ -69,16 +70,17 @@ def get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, region
     return label_id_junctions
 
 
-ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions('ATL', 1)
-label_ids, assigned_components = junc_analysis.get_ref_junc_per_CC_id(ref_junctions, labelled_img)
-label_id_junctions = get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, 'fuz')
+# ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions('ATL', 1)
+# label_ids, assigned_components = junc_analysis.get_ref_junc_per_CC_id(ref_junctions, labelled_img)
+# label_id_junctions = get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, 'fuz')
 
 
 # get pixel data per CC id
-def get_CC_patch_data(junction, group, num):
+def get_CC_patch_data(junction, group, num, channel):
     """
     Get pixel data per CC id
 
+    modalities: confocal or sted
     junction: junction
     group: 'ATL', 'Climp', 'Control', 'RTN'
     num: number of series
@@ -87,26 +89,23 @@ def get_CC_patch_data(junction, group, num):
     """
     
     group_prefixes = {'ATL': 'A', 'Climp': 'C', 'Control': 'Ct', 'RTN': 'R'}
-
-    pixel_data_egfp = []
-    pixel_data_mch = []
-
-    for i in range(100): # Get data for all 100 images
-        file_name_egfp = f'{group_prefixes[group]}{num}_decon_t0{i:02d}_ch00_std.png'
-        file_path_egfp = os.path.join(confocal_data_path, group, 'new_op_jul', 'std_egfp', file_name_egfp)
-        input_egfp = imageio.imread(file_path_egfp)
-        pixel_data_egfp.append(input_egfp[junction])
-
-        if group != 'Control': # Control group does not have MCH data
-            file_name_mch = f'{group_prefixes[group]}{num}_decon_t0{i:02d}_ch01_std.png'
-            file_path_mch = os.path.join(confocal_data_path, group, 'new_op_jul', 'std_mch', file_name_mch)
-            input_mch = imageio.imread(file_path_mch)
-            pixel_data_mch.append(input_mch[junction])
-
-    return pixel_data_egfp, pixel_data_mch
+    pixel_data = []
+    
+    ch_id = 0 if channel == 'egfp' else 1
+    
+    for frame in range(100):
+        file_name = f'{group_prefixes[group]}{num}_decon_t0{frame:02d}_ch0{ch_id}_std.png'
+        
+        if channel == 'egfp':
+            file_path = os.path.join(confocal_data_path, group, 'std', file_name)
+        else:
+            file_path = os.path.join(confocal_data_path, group, 'std_mch', file_name)
+        img = imageio.imread(file_path)
+        pixel_data.append(img[junction])
+    return pixel_data
 
 
-def get_sequence_CC_pixel_data(label_id_junctions, group, num):
+def get_sequence_CC_pixel_data(label_id_junctions, group, num, channel):
     """
     Get pixel data per CC id
     @param label_id_junctions: dict of CC ids and junctions
@@ -116,20 +115,17 @@ def get_sequence_CC_pixel_data(label_id_junctions, group, num):
     """
 
     #Get the patch data for all junctions in the image
-    sequence_data_egfp = []
-    sequence_data_mch = []
+    sequence_data = []
 
     for idx, junctions in label_id_junctions.items():
         junctions = list(junctions)
         for junction in junctions:
-            pixel_data_egfp, pixel_data_mch = get_CC_patch_data(junction, group, num)
-            sequence_data_egfp.append(pixel_data_egfp)
-            if pixel_data_mch:
-                sequence_data_mch.append(pixel_data_mch)
-    return sequence_data_egfp, sequence_data_mch
+            pixel_data = get_CC_patch_data(junction, group, num, channel)
+            sequence_data.append(pixel_data)
+    return sequence_data
 
 
-def get_per_CC_pixel_data(group, num_series, region):
+def get_per_CC_pixel_data(group, num_series, region, channel):
     """
     Get pixel data per CC id
     @param group: 'ATL', 'Climp', 'Control', 'RTN'
@@ -138,19 +134,16 @@ def get_per_CC_pixel_data(group, num_series, region):
     @return: list of lists of lists of lists of pixel values
     """
 
-    group_data_egfp = []
-    group_data_mch = []
+    group_data = []
 
     for num in range(1, num_series + 1):
         ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions(group, num)
         label_ids, assigned_components = junc_analysis.get_ref_junc_per_CC_id(ref_junctions, labelled_img)
         label_id_junctions = get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, region)
 
-        sequence_data_egfp, sequence_data_mch = get_sequence_CC_pixel_data(label_id_junctions, group, num)
-        group_data_egfp.append(sequence_data_egfp)
-        if sequence_data_mch:
-            group_data_mch.append(sequence_data_mch)
-    return group_data_egfp, group_data_mch
+        sequence_data = get_sequence_CC_pixel_data(label_id_junctions, group, num, channel)
+        group_data.append(sequence_data)
+    return group_data
 
 
 def get_mean_std_per_CC_pixel_data(data, measure):
@@ -170,28 +163,20 @@ def get_mean_std_per_CC_pixel_data(data, measure):
         return measure_data
 
 
-def create_per_CC_pixel_data_pickles(group, num_series, region):
+def create_per_CC_pixel_data_pickles(group, num_series, region, channel):
     """
     Create pickles of pixel data per CC id
     @param group: 'ATL', 'Climp', 'Control', 'RTN'
     @param num_series: number of sequences per group
     @param region: 'isolated' or 'fuzzy'
     """
-    egfp_data, mch_data = get_per_CC_pixel_data(group, num_series, region)
+    data = get_per_CC_pixel_data(group, num_series, region, channel)
     
-    pickle.dump(egfp_data, open(f'{group}_egfp_{region}_data.pkl', 'wb'))
-    if mch_data:
-        pickle.dump(mch_data, open(f'{group}_mch_{region}_data.pkl', 'wb'))
+    pickle.dump(data, open(f'{group}_{channel}_{region}_data.pkl', 'wb'))
 
 
-# create_per_CC_pixel_data_pickles('ATL', 26, 'iso')
-# create_per_CC_pixel_data_pickles('Climp', 31, 'iso')
-# create_per_CC_pixel_data_pickles('RTN', 29, 'iso')
-# create_per_CC_pixel_data_pickles('Control', 31, 'iso')
-# create_per_CC_pixel_data_pickles('ATL', 26, 'fuz')
-# create_per_CC_pixel_data_pickles('Climp', 31, 'fuz')
-# create_per_CC_pixel_data_pickles('RTN', 29, 'fuz')
-# create_per_CC_pixel_data_pickles('Control', 31, 'fuz')
+# create_per_CC_pixel_data_pickles('ATL', 26, 'iso', 'egfp')
+# create_per_CC_pixel_data_pickles('ATL', 26, 'iso', 'mch')
 
 # exit()
 
@@ -204,9 +189,11 @@ def get_region_areas(label_id_junctions):
     @return: list of areas
     """
     areas = []
+    # for id, juncs in label_id_junctions.items():
+    #     if len(juncs) < 500:
+    #         areas.append(len(juncs))
     for id, juncs in label_id_junctions.items():
-        if len(juncs) < 500:
-            areas.append(len(juncs))
+        areas.append(len(juncs))
 
     return areas
 
@@ -281,11 +268,15 @@ def get_region_areas_per_group(group, num_series, region):
     """
     area_data = []
     for num in range(1, num_series + 1):
-        ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions(group, num)
-        label_ids, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
-        label_id_junctions = get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, region)
-        area_vals = get_region_areas(label_id_junctions)
-        area_data.append(area_vals)
+        try:
+            ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions(group, num)
+            label_ids, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
+            label_id_junctions = get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, region)
+            area_vals = get_region_areas(label_id_junctions)
+            area_data.append(area_vals)
+        except Exception:
+            print(f'Series {num} not available')
+            continue
 
     return area_data
 
