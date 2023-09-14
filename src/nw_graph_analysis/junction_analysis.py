@@ -76,7 +76,7 @@ def get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, region
 
 
 # get pixel data per CC id
-def get_CC_patch_data(junction, group, num, channel):
+def get_CC_patch_data(cc_id, group, num, channel):
     """
     Get pixel data per CC id
 
@@ -101,7 +101,7 @@ def get_CC_patch_data(junction, group, num, channel):
         else:
             file_path = os.path.join(confocal_data_path, group, 'std_mch', file_name)
         img = imageio.imread(file_path)
-        pixel_data.append(img[junction])
+        pixel_data.append(img[cc_id])
     return pixel_data
 
 

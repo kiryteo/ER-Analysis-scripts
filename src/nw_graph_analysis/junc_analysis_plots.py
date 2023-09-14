@@ -17,7 +17,8 @@ from statsmodels.stats.multicomp import MultiComparison
 from scipy.stats import kruskal, mannwhitneyu
 import pickle as pkl
 
-from structure_extraction import node_connector, get_updated_degree_nodes
+# from structure_extraction import node_connector, get_updated_degree_nodes
+
 from junction_analysis_modules import JunctionAnalysis as JA
 from junction_analysis import cc_area_measure, cc_signal, cc_signal_net_norm, get_per_CC_pixel_data, get_mean_std_per_CC_pixel_data, get_region_areas_per_group
 
@@ -31,8 +32,9 @@ VALID_CONNECTIONS = ['iso-iso', 'iso-fuz', 'fuz-fuz']
 VALID_CHANNELS = ['egfp', 'mch']
 VALID_MEASURES = ['tubules', 'tub-mean']
 
-junc_analysis = JA(confocal_data_path)
+# junc_analysis = JA(confocal_data_path)
 
+junc_analysis = JA('sted')
 
 def get_std_img(path):
     img = imageio.imread(path)
@@ -478,8 +480,8 @@ def plot_num_junctions():
     plt.savefig('num_juncs_iso_ver_v4.png', bbox_inches='tight', pad_inches=0.1)
     plt.close()
 
-# plot_num_junctions()
-# exit()
+plot_num_junctions()
+exit()
 
 def get_iso_fuz_ratio():
     atl_iso = pkl.load(open('pickles/ATL_egfp_iso_CC_mean.pkl', 'rb'))
@@ -538,8 +540,8 @@ def get_iso_fuz_ratio():
     # ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, whis=0.5, linewidth=2)
     ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, width=0.9)
 
-    ax.set_ylim(0, 0.99)
-    ax.set_xlim(-1, 4.0)
+    # ax.set_ylim(0, 0.99)
+    # ax.set_xlim(-1, 4.0)
 
     yt = ax.get_yticks()
     yt = [f'{y:.1f}' for y in yt]
@@ -569,7 +571,34 @@ def get_iso_fuz_ratio():
 # get_iso_fuz_ratio()
 # exit()
 
+
 def get_iso_fuz_area_ratio():
+
+    # climp_iso_sted = get_region_areas_per_group('Climp', 10, 'iso')
+    # with open('Climp_iso_area_sted.pkl', 'wb') as f:
+    #     pkl.dump(climp_iso_sted, f)
+
+    # climp_fuz_sted = get_region_areas_per_group('Climp', 10, 'fuz')
+    # with open('Climp_fuz_area_sted.pkl', 'wb') as f:
+    #     pkl.dump(climp_fuz_sted, f)
+
+    # control_iso_sted = get_region_areas_per_group('Control', 16, 'iso')
+    # with open('Control_iso_area_sted.pkl', 'wb') as f:
+    #     pkl.dump(control_iso_sted, f)
+
+    # control_fuz_sted = get_region_areas_per_group('Control', 16, 'fuz')
+    # with open('Control_fuz_area_sted.pkl', 'wb') as f:
+    #     pkl.dump(control_fuz_sted, f)
+
+    # rtn_iso_sted = get_region_areas_per_group('RTN', 16,
+    #  'iso')
+    # with open('RTN_iso_area_sted.pkl', 'wb') as f:
+    #     pkl.dump(rtn_iso_sted, f)
+
+    # rtn_fuz_sted = get_region_areas_per_group('RTN', 16, 'fuz')
+    # with open('RTN_fuz_area_sted.pkl', 'wb') as f:
+    #     pkl.dump(rtn_fuz_sted, f)
+
     # atl_iso = get_region_areas_per_group('ATL', 26, 'iso')
     # with open('ATL_iso_area.pkl', 'wb') as f:
     #     pkl.dump(atl_iso, f)
@@ -602,15 +631,22 @@ def get_iso_fuz_area_ratio():
     # with open('Control_fuz_area.pkl', 'wb') as f:
     #     pkl.dump(control_fuz, f)
 
-    atl_iso = pkl.load(open('pickles/ATL_iso_area.pkl', 'rb'))
-    climp_iso = pkl.load(open('pickles/Climp_iso_area.pkl', 'rb'))
-    rtn_iso = pkl.load(open('pickles/RTN_iso_area.pkl', 'rb'))
-    control_iso = pkl.load(open('pickles/Control_iso_area.pkl', 'rb'))
+    climp_iso_sted = pkl.load(open('pickles/Climp_iso_area_sted.pkl', 'rb'))
+    climp_fuz_sted = pkl.load(open('pickles/Climp_fuz_area_sted.pkl', 'rb'))
+    control_iso_sted = pkl.load(open('pickles/Control_iso_area_sted.pkl', 'rb'))
+    control_fuz_sted = pkl.load(open('pickles/Control_fuz_area_sted.pkl', 'rb'))
+    rtn_iso_sted = pkl.load(open('pickles/RTN_iso_area_sted.pkl', 'rb'))
+    rtn_fuz_sted = pkl.load(open('pickles/RTN_fuz_area_sted.pkl', 'rb'))
 
-    atl_fuz = pkl.load(open('pickles/ATL_fuz_area.pkl', 'rb'))
-    climp_fuz = pkl.load(open('pickles/Climp_fuz_area.pkl', 'rb'))
-    rtn_fuz = pkl.load(open('pickles/RTN_fuz_area.pkl', 'rb'))
-    control_fuz = pkl.load(open('pickles/Control_fuz_area.pkl', 'rb'))
+    # atl_iso = pkl.load(open('pickles/ATL_iso_area.pkl', 'rb'))
+    # climp_iso = pkl.load(open('pickles/Climp_iso_area.pkl', 'rb'))
+    # rtn_iso = pkl.load(open('pickles/RTN_iso_area.pkl', 'rb'))
+    # control_iso = pkl.load(open('pickles/Control_iso_area.pkl', 'rb'))
+
+    # atl_fuz = pkl.load(open('pickles/ATL_fuz_area.pkl', 'rb'))
+    # climp_fuz = pkl.load(open('pickles/Climp_fuz_area.pkl', 'rb'))
+    # rtn_fuz = pkl.load(open('pickles/RTN_fuz_area.pkl', 'rb'))
+    # control_fuz = pkl.load(open('pickles/Control_fuz_area.pkl', 'rb'))
 
 
 
@@ -619,10 +655,10 @@ def get_iso_fuz_area_ratio():
     # rtn_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(rtn_iso, rtn_fuz)]
     # control_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(control_iso, control_fuz) if sum(fuz) != 0]
 
-    atl_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(atl_fuz, atl_iso)]
-    climp_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(climp_fuz, climp_iso)]
-    rtn_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(rtn_fuz, rtn_iso)]
-    control_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(control_fuz, control_iso) if sum(iso) != 0]
+
+    climp_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(climp_fuz_sted, climp_iso_sted)]
+    rtn_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(rtn_fuz_sted, rtn_iso_sted)]
+    control_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(control_fuz_sted, control_iso_sted) if sum(iso) != 0]
 
 
     # print(atl_ratio)
@@ -637,14 +673,18 @@ def get_iso_fuz_area_ratio():
 
 
     df = pd.DataFrame()
-    df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_ratio), ['Reticulon'] * len(rtn_ratio), ['Climp'] * len(climp_ratio), ['Atlastin'] * len(atl_ratio))))
+    # df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_ratio), ['Reticulon'] * len(rtn_ratio), ['Climp'] * len(climp_ratio), ['Atlastin'] * len(atl_ratio))))
 
-    df['Ratio'] = pd.Series(np.concatenate((control_ratio, rtn_ratio, climp_ratio, atl_ratio)))
+    # df['Ratio'] = pd.Series(np.concatenate((control_ratio, rtn_ratio, climp_ratio, atl_ratio)))
+
+    df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_ratio), ['Reticulon'] * len(rtn_ratio), ['Climp'] * len(climp_ratio))))
+
+    df['Ratio'] = pd.Series(np.concatenate((control_ratio, rtn_ratio, climp_ratio)))
 
     ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, width=0.9)
 
-    ax.set_xlim(-1, 4.0)
-    ax.set_ylim(0, 5.95)
+    # ax.set_xlim(-1, 4.0)
+    # ax.set_ylim(0, 5.95)
 
     yt = ax.get_yticks()
     yt = [f'{y:.1f}' for y in yt]
@@ -660,18 +700,19 @@ def get_iso_fuz_area_ratio():
 
     # box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'),
     #              ('Reticulon', 'Control')]
+    box_pairs = [('Climp', 'Reticulon'), ('Climp', 'Control'), ('Reticulon', 'Control')]
 
-    # statannot.add_stat_annotation(ax, x='Group', y='Ratio', data=df, box_pairs=box_pairs,
-    #                               test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=10)
+    statannot.add_stat_annotation(ax, x='Group', y='Ratio', data=df, box_pairs=box_pairs,
+                                  test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=10)
 
     plt.gcf().set_size_inches(2.2, 6)
     # plt.savefig('overlap_iso_CC_area_ratio_hor.png', bbox_inches='tight', pad_inches=0.2)
-    plt.savefig('overlap_iso_CC_area_ratio_ver_v3.png', bbox_inches='tight', pad_inches=0.1)
+    plt.savefig('STED_overlap_iso_CC_area_ratio_ver_v3.png', bbox_inches='tight', pad_inches=0.1)
     plt.close()
     # plt.show()
 
-get_iso_fuz_area_ratio()
-exit()
+# get_iso_fuz_area_ratio()
+# exit()
 
 
 def get_variation_from_pickles():

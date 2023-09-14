@@ -10,11 +10,11 @@ from skimage.measure import label, regionprops
 from skimage.morphology import dilation, closing
 from junction_analysis_modules import JunctionAnalysis as JA
 
-confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
+# confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 
-sted_data_path = '/localhome/asa420/MIAL/data/live-cell-movies/Sep2023-sted-analysis/'
+# sted_data_path = '/localhome/asa420/MIAL/data/live-cell-movies/Sep2023-sted-analysis/'
 
-junc_analysis = JA(confocal_data_path)
+junc_analysis = JA('sted')
 
 
 def er_nodes_overlay():
@@ -28,12 +28,13 @@ def er_nodes_overlay():
 
     # graph = sknw.build_sknw(imageio.imread('/localhome/asa420/MIAL/data/live-cell-movies/Sep2023-sted-analysis/climp_mean/Series001_decon_converted_mean_proc_skel.png'), multi=True, iso=False)                                                
 
-    skel = pcv.morphology.skeletonize(mask=imageio.imread('/localhome/asa420/MIAL/data/live-cell-movies/Sep2023-sted-analysis/climp_mean/Series001_decon_converted_mean_proc_v2_enhance.png'))
+    # skel = pcv.morphology.skeletonize(mask=imageio.imread('/localhome/asa420/MIAL/data/live-cell-movies/Sep2023-sted-analysis/climp_mean/Series001_decon_converted_mean_proc_v2_enhance.png'))
 
+    skel = imageio.imread('/localhome/asa420/MIAL/data/sted-data/Control/er_mean_proc/control5_proc_skel.png')
     graph = sknw.build_sknw(skel, multi=True, iso=False)
 
 
-    mean_img = imageio.imread('/localhome/asa420/MIAL/data/live-cell-movies/Sep2023-sted-analysis/climp_mean/Series001_decon_converted_mean_proc.png')
+    mean_img = imageio.imread('/localhome/asa420/MIAL/data/sted-data/Control/er_mean/Series005_decon_converted_mean_proc.png')
 
     plt.imshow(mean_img, cmap='gray')
 
@@ -55,9 +56,9 @@ def er_nodes_overlay():
     nps = [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
     nps = np.array(nps)
 
-    # for (s,e) in graph.edges():
-    #     ps = graph[s][e][0]['pts']
-    #     plt.plot(ps[:,1], ps[:,0], 'green')
+    for (s,e) in graph.edges():
+        ps = graph[s][e][0]['pts']
+        plt.plot(ps[:,1], ps[:,0], 'green')
 
     plt.plot(nps[:,1], nps[:,0], '.', markerfacecolor='red', markeredgecolor='red', mew=2)
 
@@ -68,6 +69,73 @@ def er_nodes_overlay():
 
 # er_nodes_overlay()
 # exit()
+
+def skel_overlay():
+    for i in range(100):
+        er = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/Control/std/Ct5_decon_t0{i:02d}_ch00_std.png')
+
+        skel = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/Control/skel/Ct5/Ct5_decon_t0{i:02d}_ch00_proc_enhance_skel.png')
+
+        graph = sknw.build_sknw(skel, multi=True, iso=False)
+
+        node_set = graph.nodes
+        degree_list = graph.degree
+
+        node_coords = np.array([node_set[node]['o'] for node in node_set])
+
+        nps = [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
+
+        nps = np.array(nps)
+
+        plt.imshow(er, cmap='gray')
+
+        for (s,e) in graph.edges():
+            ps = graph[s][e][0]['pts']
+            plt.plot(ps[:,1], ps[:,0], 'green')
+        
+        plt.plot(nps[:,1], nps[:,0], '.', markerfacecolor='red', markeredgecolor='red', mew=2)
+
+        plt.axis('off')
+
+        # plt.show()
+        plt.savefig(f'/localhome/asa420/MIAL/data/sted-data/Control/overlay/Ct5_decon_t0{i:02d}_ch00_proc_enhance_skel_overlay.png', bbox_inches='tight', pad_inches=0.0)
+
+        plt.close()
+
+
+
+# for i in range(100):
+#     er = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/Control/std/Ct3_decon_t0{i:02d}_ch00_std.png')
+
+#     enh = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/Control/preproc/Ct3/Ct3_decon_t0{i:02d}_ch00_proc_enhance.png')
+
+#     plt.imshow(er, cmap='gray')
+
+#     skel = pcv.morphology.skeletonize(mask=enh)
+
+#     graph = sknw.build_sknw(skel, multi=True, iso=False)
+#     degree_list = graph.degree
+
+#     # for i, val in enumerate(degree_list):
+#     #     print(val)
+#     #     if val[1] < 3:
+#     #         tgraph.remove_node(i)
+
+
+#     node_set = graph.nodes
+
+#     degree_list = graph.degree
+#     node_coords = np.array([node_set[node]['o'] for node in node_set])
+#     nps = [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
+#     nps = np.array(nps)
+
+#     for (s,e) in graph.edges():
+#         ps = graph[s][e][0]['pts']
+#         plt.plot(ps[:,1], ps[:,0], 'green')
+
+#     plt.plot(nps[:,1], nps[:,0], '.', markerfacecolor='red', markeredgecolor='red', mew=2)
+
+#     plt.show()
 
 
 # for i in range(50, 100):
@@ -456,14 +524,19 @@ def plot_junc_areas_og(group, series_num, labelled_img, iso, fuz, skdata, iso_cc
 
     # mean_skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel_mean_proj/{group_dict[group]}{series_num}_mean_skel.png')
 
-    skel = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t005_ch00_skel.png')
+    ############
+    # skel = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t005_ch00_skel.png')
+
+    er = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/{group}/er_mean_proc/Series0{series_num:02d}_decon_converted_mean_proc_v2.png')
+
+    # skel = imageio.imread('/localhome/asa420/MIAL/data/sted-data/Control/er_mean_proc/control5_proc_skel.png')
 
     # resc_img = skimage.transform.rescale(img, 2, anti_aliasing=False)
 
     # plt.imshow(resc_img, cmap='gray', interpolation=None)
 
     # plt.imshow(mean_skel, cmap='gray', interpolation=None)
-    plt.imshow(skel, cmap='gray', interpolation=None)
+    plt.imshow(er, cmap='gray', interpolation=None)
 
     # plt.imshow(skel, cmap='Greens', interpolation=None, alpha=0.5)        
 
@@ -480,10 +553,12 @@ def plot_junc_areas_og(group, series_num, labelled_img, iso, fuz, skdata, iso_cc
     #     plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='green', mew=0.4)
     #
     if len(fuz) > 0:
-        plt.plot(fuz[:, 1], fuz[:, 0], 'o', markerfacecolor='None', markeredgecolor='white', mew=0.6)
+        plt.plot(fuz[:, 1], fuz[:, 0], 'o', markerfacecolor='None', markeredgecolor='white', mew=0.8)
     #
     # plt.plot(unk[:, 1], unk[:, 0], 'o', markerfacecolor='None', markeredgecolor='green')
-    plt.plot(iso[:, 1], iso[:, 0], 'o', markerfacecolor='None', markeredgecolor='yellow', mew=0.6)
+
+    if len(iso) > 0:
+        plt.plot(iso[:, 1], iso[:, 0], 'o', markerfacecolor='None', markeredgecolor='yellow', mew=0.8)
 
     #######################################
 
@@ -523,9 +598,15 @@ def plot_junc_areas_og(group, series_num, labelled_img, iso, fuz, skdata, iso_cc
     # plt.close()
     # plt.savefig(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/mean_skel_representation/{group_dict[group]}{series_num}_mean_skel_representation', bbox_inches='tight', pad_inches=0, dpi=700)
 
-    plt.savefig(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/{group_dict[group]}{series_num}_skel_repr_t05', bbox_inches='tight', pad_inches=0, dpi=700)
+    # plt.savefig(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/{group_dict[group]}{series_num}_skel_repr_t05', bbox_inches='tight', pad_inches=0, dpi=700)
+
+    # plt.close()
+
+    plt.savefig(f'/localhome/asa420/MIAL/data/sted-data/{group}/junc_repr/{group.lower()}{series_num}_junc_repr.png', bbox_inches='tight', pad_inches=0, dpi=700)
 
     plt.close()
+
+    # plt.show()
 
 
 def plot_ref_iso_fuz_junc(group, series_num, iso, fuz):
@@ -659,9 +740,38 @@ def get_mean_skel_representation(group):
 # get_mean_skel_representation('Control')
 # get_mean_skel_representation('RTN')
 
+def get_sted_junc_repr(group):
+    for num in range(1, 17):
+        try:
+            ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions(group, num)
+
+            # dict with ids as key and (x, y) as value
+            label_ids, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
+
+            # iso, fuz, unk: list of lists with x, y
+            iso, fuz, unk = junc_analysis.get_junction_areas(label_ids, unassigned_cc_dict)
 
 
+            iso_cc = get_cc_ids(labelled_img, iso)
+            fuz_cc = get_cc_ids(labelled_img, fuz)
 
+            iso_cc_coords = {each: np.where(labelled_img==each) for each in iso_cc}
+            fuz_cc_coords = {each: np.where(labelled_img==each) for each in fuz_cc}
+            # unk_cc_coords = {each: np.where(labelled_img==each) for each in unk_cc}
+            #
+            #
+            # iso_list = []
+            # for each in iso:
+            #     iso_list.append([each[0], each[1]])
+
+
+            plot_junc_areas_og(group, num, labelled_img, iso, fuz, per_frame_junctions, iso_cc_coords, fuz_cc_coords)
+        except FileNotFoundError:
+            continue
+
+# get_sted_junc_repr('RTN')
+
+exit()
 
 
 # from skimage import io, color
@@ -697,11 +807,11 @@ def plot_junc_through_fuz_CC(labelled_img):
 
         # plt.imshow(img, interpolation=None)
         
-        er = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/std_egfp/A2_decon_t0{i:02d}_ch00_std.png')
+        # er = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/std_egfp/A2_decon_t0{i:02d}_ch00_std.png')
 
-        skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t0{i:02d}_ch00_skel.png')
+        # skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t0{i:02d}_ch00_skel.png')
 
-        junc = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/junctions/A2/A2_decon_t0{i:02d}_ch00_junc.png')
+        # junc = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/junctions/A2/A2_decon_t0{i:02d}_ch00_junc.png')
 
 
 
@@ -720,7 +830,13 @@ def plot_junc_through_fuz_CC(labelled_img):
 
 
 
-ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions('ATL', 2)
+ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions('Climp', 3)
+
+
+# print(ref_junctions)
+# print(per_frame_junctions)
+
+# exit()
 
 
 # dict with ids as key and (x, y) as value
@@ -729,10 +845,15 @@ label_ids, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, pe
 # iso, fuz, unk: list of lists with x, y
 iso, fuz, unk = junc_analysis.get_junction_areas(label_ids, unassigned_cc_dict)
 
+print(iso)
+print(fuz)
+print(unk)
 
-# spread_img = np.zeros((128, 128))
-# for each in fuz:
-#     spread_img[each[0], each[1]] = 255.
+exit()
+
+spread_img = np.zeros((128, 128))
+for each in fuz:
+    spread_img[each[0], each[1]] = 255.
 
 # plt.imshow(spread_img, cmap='gray', interpolation=None)
 # plt.show()
@@ -762,10 +883,10 @@ spread_img = closing(spread_img)
 # spread_img = dilation(spread_img)
 
 lab_img = label(spread_img, connectivity=2)
-# plt.imshow(lab_img)
-# plt.show()
+plt.imshow(lab_img)
+plt.show()
 
-# exit()
+exit()
 #
 #
 # iso_list = []
