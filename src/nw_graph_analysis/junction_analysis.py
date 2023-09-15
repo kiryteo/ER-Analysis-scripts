@@ -508,15 +508,19 @@ def cc_area_measure(group, region, rstart, rend):
     cc_area_list = []
 
     for series_num in range(rstart, rend + 1):
-        region_cc, labelled_img = get_region_cc(group, series_num, region)
-        regions = regionprops(labelled_img)
+        try:
+            region_cc, labelled_img = get_region_cc(group, series_num, region)
+            regions = regionprops(labelled_img)
 
-        if len(regions) == 0:
-            print("No connected components in series %d" % series_num)
+            if len(regions) == 0:
+                print("No connected components in series %d" % series_num)
+                continue
+
+            cc_areas = [regions[each - 1]['Area'] for each in region_cc]
+            cc_area_list.extend(cc_areas)
+        except Exception:
+            print(f'Series {series_num} not available')
             continue
-
-        cc_areas = [regions[each - 1]['Area'] for each in region_cc]
-        cc_area_list.extend(cc_areas)
 
     # with open(f'cc_area_{group}_{region}.pkl', 'wb') as f:
     #     pickle.dump(cc_area_list, f)

@@ -237,16 +237,22 @@ def graph_diffusion():
 #     Structural features capture the overall topology or structure of the evolving graphs and their changes over time.
 #     Examples of structural features:
 #         Graph Similarity: Measure the similarity or dissimilarity between consecutive snapshots. Techniques like graph edit distance, Jaccard similarity, or cosine similarity can be used.
+#           Jaccard similarity done, cosine not possible due to different vector lengths
 #         Centrality Measures: Compute centrality measures (e.g., degree centrality, betweenness centrality) for nodes and track how they change over time.
+#            degree, betnness centrality done
 #         Clustering Coefficients: Calculate the clustering coefficient for nodes and observe how it evolves.
+#            clustering coeff done
 
 # Temporal Intergraph Features:
 
 #     Temporal features focus on the dynamics and temporal patterns of the evolving graphs.
 #     Examples of temporal features:
 #         Edge Creation/Deletion: Count the number of edges added or removed between consecutive snapshots.
+            # NOT Sure
 #         Graph Density: Measure the density of each graph snapshot, indicating how connected the nodes are at each time step.
+            # TODO
 #         Network Motifs: Identify and track the occurrence of specific network motifs or subgraphs.
+            # TODO
 
 # Dynamic Intergraph Features:
 
@@ -287,22 +293,30 @@ def graph_diffusion():
 #     Graph alignment techniques aim to find correspondences between nodes or subgraphs in different snapshots of evolving graphs.
 #     Alignment-based measures quantify the similarity by considering how well nodes or subgraphs align across time steps.
 #     Methods like GraRep and GEALIGN are examples of graph alignment approaches.
+            # Graph alignment for iso and fuzzy regions
 
 # Graphlet-Based Measures:
 
 #     Graphlet-based similarity measures capture evolving graph patterns or motifs.
 #     These methods consider the frequencies and distributions of specific subgraphs (graphlets) across different time steps.
 #     By comparing the graphlet profiles of evolving graphs, you can assess their similarity.
+            # NOT sure
 
 # Dynamic Graph Embeddings:
 
 #     Dynamic graph embeddings aim to project evolving graphs into lower-dimensional spaces while preserving structural and temporal information.
 #     Techniques like DynamicTriad and dynGEM provide embeddings that can be used for similarity computation.
 #     Once you have embeddings, you can apply traditional similarity measures in the embedding space.
+            # TODO
 
 # Dynamic Graph Edit Distance:
 
 #     Similar to traditional graph edit distance, dynamic graph edit distance measures quantify the dissimilarity between evolving graphs by considering the operations required to transform one graph into another.
 #     These measures account for changes in node and edge sets across time steps.
+            # Not feasible
 
-################################
+    # Graph Diffusion:
+    #     Graph diffusion methods capture how information or influence propagates through a graph over time.
+    #     You can model evolving graphs as time-dependent diffusion processes, where nodes exchange information based on the evolving connectivity.
+    #     Similarity between evolving graphs can be assessed by comparing the dynamics of information diffusion, such as the spread of influence or labels.
+        # TODO

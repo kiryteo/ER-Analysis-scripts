@@ -529,6 +529,40 @@ def get_iso_fuz_ratio_sted(group, num):
 
     # return iso_data, fuz_data
 
+def get_sted_cc_area():
+    control_data = cc_area_measure('Control', 'fuz', 1, 17)
+    rtn_data = cc_area_measure('RTN', 'fuz', 1, 17)
+    climp_data = cc_area_measure('Climp', 'fuz', 1, 10)
+
+    df = pd.DataFrame()
+    df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_data), ['Reticulon'] * len(rtn_data), ['Climp'] * len(climp_data))))
+    df['Area'] = pd.Series(np.concatenate((control_data, rtn_data, climp_data)))
+
+    ax = sns.boxplot(data=df, x='Group', y='Area', showfliers=False, width=0.9)
+
+    # ax.set_ylim(0, 0.99)
+
+    yt = ax.get_yticks()
+    yt = [f'{y:.2f}' for y in yt]
+    ax.set_yticklabels(yt, fontsize=13)
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=90,fontsize=13)
+
+    box_pairs = [('Climp', 'Reticulon'), ('Climp', 'Control'), ('Reticulon', 'Control')]
+    statannot.add_stat_annotation(ax, x='Group', y='Area', data=df, box_pairs=box_pairs,
+                                    test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=10)
+    
+    plt.grid(True)
+    plt.xlabel('Group', fontsize=15)
+    plt.ylabel('Area', fontsize=15)
+
+    plt.gcf().set_size_inches(2.2, 6)
+    plt.savefig('STED_fuz_cc_area_ver_v3.png', bbox_inches='tight', pad_inches=0.1)
+    plt.close()
+
+
+get_sted_cc_area()
+exit()
+
 
 def get_sted_iso_fuz_ratio():
     control_ratio = []
@@ -750,11 +784,11 @@ def get_iso_fuz_area_ratio():
     #     pkl.dump(control_fuz, f)
 
     climp_iso_sted = pkl.load(open('pickles/Climp_iso_area_sted.pkl', 'rb'))
-    # climp_fuz_sted = pkl.load(open('pickles/Climp_fuz_area_sted.pkl', 'rb'))
+    climp_fuz_sted = pkl.load(open('pickles/Climp_fuz_area_sted.pkl', 'rb'))
     control_iso_sted = pkl.load(open('pickles/Control_iso_area_sted.pkl', 'rb'))
-    # control_fuz_sted = pkl.load(open('pickles/Control_fuz_area_sted.pkl', 'rb'))
+    control_fuz_sted = pkl.load(open('pickles/Control_fuz_area_sted.pkl', 'rb'))
     rtn_iso_sted = pkl.load(open('pickles/RTN_iso_area_sted.pkl', 'rb'))
-    # rtn_fuz_sted = pkl.load(open('pickles/RTN_fuz_area_sted.pkl', 'rb'))
+    rtn_fuz_sted = pkl.load(open('pickles/RTN_fuz_area_sted.pkl', 'rb'))
 
     # atl_iso = pkl.load(open('pickles/ATL_iso_area.pkl', 'rb'))
     # climp_iso = pkl.load(open('pickles/Climp_iso_area.pkl', 'rb'))
@@ -768,9 +802,26 @@ def get_iso_fuz_area_ratio():
 
 
 
-    # climp_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(climp_fuz_sted, climp_iso_sted)]
-    # rtn_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(rtn_fuz_sted, rtn_iso_sted)]
-    # control_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(control_fuz_sted, control_iso_sted) if sum(iso) != 0]
+    # atl_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(atl_iso, atl_fuz)]
+    # climp_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(climp_iso, climp_fuz)]
+    # rtn_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(rtn_iso, rtn_fuz)]
+    # control_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(control_iso, control_fuz) if sum(fuz) != 0]
+
+
+    climp_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(climp_fuz_sted, climp_iso_sted)]
+    rtn_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(rtn_fuz_sted, rtn_iso_sted)]
+    control_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(control_fuz_sted, control_iso_sted) if sum(iso) != 0]
+
+
+    # print(atl_ratio)
+    # print(np.median(atl_ratio)) # 2
+    # print(climp_ratio)
+    # print(np.median(climp_ratio)) # 15
+    # print(rtn_ratio)
+    # print(np.median(rtn_ratio)) # 9
+    # print(control_ratio)
+    # print(np.median(control_ratio)) # 7
+    # exit()
 
 
     df = pd.DataFrame()
