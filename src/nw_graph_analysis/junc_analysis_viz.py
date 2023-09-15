@@ -2,6 +2,7 @@ import imageio
 import numpy as np
 import cv2
 import copy
+import itertools
 import sknw
 from plantcv import plantcv as pcv
 import matplotlib.pyplot as plt
@@ -770,6 +771,84 @@ def get_sted_junc_repr(group):
             continue
 
 # get_sted_junc_repr('RTN')
+
+def get_per_frame_junc_repr(group, num):
+    ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions(group, num)
+
+    # dict with ids as key and (x, y) as value
+    label_ids, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
+
+    # iso, fuz, unk: list of lists with x, y
+    iso, fuz, unk = junc_analysis.get_junction_areas(label_ids, unassigned_cc_dict)
+
+
+    iso_cc = get_cc_ids(labelled_img, iso)
+    fuz_cc = get_cc_ids(labelled_img, fuz)
+
+    iso_cc_coords = {each: np.where(labelled_img==each) for each in iso_cc}
+    fuz_cc_coords = {each: np.where(labelled_img==each) for each in fuz_cc}
+
+    im = np.zeros((128, 128))
+
+    for v in iso_cc_coords.values():
+        im[v[0], v[1]] = 255
+
+    for v in fuz_cc_coords.values():
+        im[v[0], v[1]] = 255
+
+    # find pixel locations where all 9 neighboring pixels have value 255, if yes make that pixel value 255
+
+    # for i, j in itertools.product(range(1, 127), range(1, 127)):
+    #     if im[i, j] == 0 and (im[i-1, j] == 255 and im[i+1, j] == 255 and im[i, j-1] == 255 and im[i, j+1] == 255 and im[i-1, j-1] == 255 and im[i-1, j+1] == 255 and im[i+1, j-1] == 255 and im[i+1, j+1] == 255):
+    #         im[i, j] = 255
+
+
+
+    lab = label(im, connectivity=2)
+
+    # perform area closing operation on lab
+    lab = closing(lab)
+
+    # plt.imshow(lab, cmap='gray', interpolation=None)
+
+    for i in range(100):
+        er = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/{group}/std/R4_decon_t0{i:02d}_ch00_std.png')
+
+        plt.axis('off')
+
+        plt.imshow(er, cmap='gray', interpolation=None)
+        cntrs = measure.find_contours(lab, 0.8)#, fully_connected='high')
+        for cntr in cntrs:
+            y, x = cntr.T
+            plt.plot(x, y, color='cyan', linewidth=0.6)
+
+        # plt.show()
+        plt.savefig(f'/localhome/asa420/MIAL/data/sted-data/{group}/r4_junc/r4_junc_repr_t{i:02d}.png', bbox_inches='tight', pad_inches=0, dpi=700)
+
+        plt.close()
+
+
+# get_per_frame_junc_repr('RTN', 4)
+
+# exit()
+
+for i in range(100):
+    img = imageio.imread(
+        f'/localhome/asa420/MIAL/data/sted-data/RTN/r4_junc/r4_junc_repr_t{i:02d}.png')
+    img = img[:, :, :3]
+    op = img[174:174+900, 1068:1068+900]#, 264:1164]
+    plt.axis('off')
+    plt.imshow(op, interpolation=None)
+    # plt.imshow(op, cmap='gray', interpolation=None)
+    # plt.savefig(
+        # f'/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/junction_crops/S13_j10_cc_area_v2/R13_decon_t0{i:02d}_ch01.png',
+        # bbox_inches='tight', pad_inches=0)
+
+    plt.savefig(f'/localhome/asa420/MIAL/data/sted-data/RTN/crops/R4_junc_repr_t{i:02d}.png', bbox_inches='tight', pad_inches=0)
+    # plt.show()
+    plt.close()
+
+
 
 exit()
 

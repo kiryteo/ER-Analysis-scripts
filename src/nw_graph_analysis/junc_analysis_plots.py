@@ -1,3 +1,4 @@
+import contextlib
 import numpy as np
 from skimage.measure import label, regionprops
 import imageio
@@ -20,7 +21,7 @@ import pickle as pkl
 # from structure_extraction import node_connector, get_updated_degree_nodes
 
 from junction_analysis_modules import JunctionAnalysis as JA
-from junction_analysis import cc_area_measure, cc_signal, cc_signal_net_norm, get_per_CC_pixel_data, get_mean_std_per_CC_pixel_data, get_region_areas_per_group
+from junction_analysis import cc_area_measure, cc_signal, cc_signal_net_norm, get_per_CC_pixel_data, get_mean_std_per_CC_pixel_data, get_region_areas_per_group, get_cc_ids
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies'
 # pickle_path_prefix = '/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/CC_junctions/'
@@ -79,6 +80,17 @@ def get_CC_mean_variation(channel, region, measure):
     # pkl.dump(rtn, open(f'RTN_{channel}_{region}_CC_mean.pkl', 'wb'))
     # control = cc_signal('Control', channel, region)
     # pkl.dump(control, open(f'Control_{channel}_{region}_CC_mean.pkl', 'wb'))
+
+    climp_sted = cc_signal('Climp', channel, region)
+    pkl.dump(climp_sted, open(f'Climp_{channel}_{region}_CC_mean_STED.pkl', 'wb'))
+
+    control_sted = cc_signal('Control', channel, region)
+    pkl.dump(control_sted, open(f'Control_{channel}_{region}_CC_mean_STED.pkl', 'wb'))
+
+    rtn_sted = cc_signal('RTN', channel, region)
+    pkl.dump(rtn_sted, open(f'RTN_{channel}_{region}_CC_mean_STED.pkl', 'wb'))
+
+    exit()
 
     atl = pkl.load(open(f'pickles/ATL_{channel}_{region}_CC_mean.pkl', 'rb'))
     climp = pkl.load(open(f'pickles/Climp_{channel}_{region}_CC_mean.pkl', 'rb'))
@@ -152,6 +164,7 @@ def get_CC_mean_variation(channel, region, measure):
     # plt.show()
 
 
+# get_CC_mean_variation()
 
 # get_CC_mean_variation('egfp', 'iso', 'mean')
 # get_CC_mean_variation('egfp', 'fuz', 'mean')
@@ -480,8 +493,107 @@ def plot_num_junctions():
     plt.savefig('num_juncs_iso_ver_v4.png', bbox_inches='tight', pad_inches=0.1)
     plt.close()
 
-plot_num_junctions()
-exit()
+# plot_num_junctions()
+# exit()
+
+def get_iso_fuz_ratio_sted(group, num):
+    ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions(group, num)
+
+    # dict with ids as key and (x, y) as value
+    label_ids, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
+
+    # iso, fuz, unk: list of lists with x, y
+    iso, fuz, unk = junc_analysis.get_junction_areas(label_ids, unassigned_cc_dict)
+
+
+    iso_cc = get_cc_ids(labelled_img, iso)
+    fuz_cc = get_cc_ids(labelled_img, fuz)
+
+    # print(iso_cc)
+    # print(fuz_cc)
+
+    # exit()
+
+    # iso_cc_coords = {each: np.where(labelled_img==each) for each in iso_cc}
+    # fuz_cc_coords = {each: np.where(labelled_img==each) for each in fuz_cc}
+
+    # # print((iso_cc_coords))
+    # # print((fuz_cc_coords))
+
+    return len(iso_cc), len(fuz_cc)
+
+    # for val in iso_cc_coords.values():
+    #     iso_data.append(len(val[0]))
+    # for val in fuz_cc_coords.values():
+    #     fuz_data.append(len(val[0]))
+
+    # return iso_data, fuz_data
+
+
+def get_sted_iso_fuz_ratio():
+    control_ratio = []
+
+    for i in range(1, 17):
+        with contextlib.suppress(Exception):
+            iso, fuz = get_iso_fuz_ratio_sted('Control', i)
+            control_ratio.append(fuz / iso)
+    rtn_ratio = []
+
+    for i in range(1, 17):
+        with contextlib.suppress(Exception):
+            iso, fuz = get_iso_fuz_ratio_sted('RTN', i)
+            rtn_ratio.append(fuz / iso)
+    climp_ratio = []
+
+    for i in range(1, 11):
+        with contextlib.suppress(Exception):
+            iso, fuz = get_iso_fuz_ratio_sted('Climp', i)
+            climp_ratio.append(fuz / iso)
+
+    df = pd.DataFrame()
+    df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_ratio), ['Reticulon'] * len(rtn_ratio), ['Climp'] * len(climp_ratio))))
+
+    df['Ratio'] = pd.Series(np.concatenate((control_ratio, rtn_ratio, climp_ratio)))
+
+    # ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, whis=0.5, linewidth=2)
+    ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, width=0.9)
+
+    # ax.set_ylim(0, 0.99)
+    # ax.set_xlim(-1, 4.0)
+
+    yt = ax.get_yticks()
+    yt = [f'{y:.1f}' for y in yt]
+    ax.set_yticklabels(yt, fontsize=13)
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=90,fontsize=13)
+
+    # box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'),
+    #              ('Reticulon', 'Control')]
+
+    box_pairs = [('Climp', 'Reticulon'), ('Climp', 'Control'), ('Reticulon', 'Control')]
+
+    statannot.add_stat_annotation(ax, x='Group', y='Ratio', data=df, box_pairs=box_pairs,
+                                  test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=10)
+
+    # statannot.add_stat_annotation(ax, x='Group', y='Ratio', data=df, box_pairs=box_pairs,
+    #                               test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=10)
+
+    # plt.rcParams['figure.figsize'] = (5, 20)
+    # plt.title(f'Isolated to Overlapping junctions ratio', fontsize=24)
+    # plt.title('Overlapping to Isolated \n junctions ratio', fontsize=15)
+    plt.grid(True)
+    plt.xlabel('Group', fontsize=15)
+    plt.ylabel('Ratio', fontsize=15)
+
+    # plt.gcf().set_size_inches(12, 12)
+    plt.gcf().set_size_inches(2.2, 6)
+    # plt.savefig('iso_overlap_juncs_ratio.png', bbox_inches='tight', pad_inches=0.4)
+
+
+    plt.savefig('STED_overlap_iso_juncs_ratio_ver_v3.png', bbox_inches='tight', pad_inches=0.1)
+    plt.close()
+    # plt.show()
+
+
 
 def get_iso_fuz_ratio():
     atl_iso = pkl.load(open('pickles/ATL_egfp_iso_CC_mean.pkl', 'rb'))
@@ -490,24 +602,30 @@ def get_iso_fuz_ratio():
     # print(atl_iso_num)
     # exit()
 
-    climp_iso = pkl.load(open('pickles/Climp_egfp_iso_CC_mean.pkl', 'rb'))
-    rtn_iso = pkl.load(open('pickles/RTN_egfp_iso_CC_mean.pkl', 'rb'))
-    control_iso = pkl.load(open('pickles/Control_egfp_iso_CC_mean.pkl', 'rb'))
+    # climp_iso = pkl.load(open('pickles/Climp_egfp_iso_CC_mean.pkl', 'rb'))
+    # rtn_iso = pkl.load(open('pickles/RTN_egfp_iso_CC_mean.pkl', 'rb'))
+    # control_iso = pkl.load(open('pickles/Control_egfp_iso_CC_mean.pkl', 'rb'))
 
     atl_fuz = pkl.load(open('pickles/ATL_egfp_fuz_CC_mean.pkl', 'rb'))
-    climp_fuz = pkl.load(open('pickles/Climp_egfp_fuz_CC_mean.pkl', 'rb'))
-    rtn_fuz = pkl.load(open('pickles/RTN_egfp_fuz_CC_mean.pkl', 'rb'))
-    control_fuz = pkl.load(open('pickles/Control_egfp_fuz_CC_mean.pkl', 'rb'))
+    # climp_fuz = pkl.load(open('pickles/Climp_egfp_fuz_CC_mean.pkl', 'rb'))
+    # rtn_fuz = pkl.load(open('pickles/RTN_egfp_fuz_CC_mean.pkl', 'rb'))
+    # control_fuz = pkl.load(open('pickles/Control_egfp_fuz_CC_mean.pkl', 'rb'))
 
     atl_iso_num = [len(series) for series in atl_iso]
-    climp_iso_num = [len(series) for series in climp_iso]
-    rtn_iso_num = [len(series) for series in rtn_iso]
-    control_iso_num = [len(series) for series in control_iso]
+    # climp_iso_num = [len(series) for series in climp_iso]
+    # rtn_iso_num = [len(series) for series in rtn_iso]
+    # control_iso_num = [len(series) for series in control_iso]
 
     atl_fuz_num = [len(series) for series in atl_fuz]
-    climp_fuz_num = [len(series) for series in climp_fuz]
-    rtn_fuz_num = [len(series) for series in rtn_fuz]
-    control_fuz_num = [len(series) for series in control_fuz]
+    # climp_fuz_num = [len(series) for series in climp_fuz]
+    # rtn_fuz_num = [len(series) for series in rtn_fuz]
+    # control_fuz_num = [len(series) for series in control_fuz]
+
+    print(atl_iso_num)
+    print(atl_fuz_num)
+    # print(climp_iso_num)
+
+    exit()
 
     # atl_ratio = [iso / fuz for iso, fuz in zip(atl_iso_num, atl_fuz_num)]
     # climp_ratio = [iso / fuz for iso, fuz in zip(climp_iso_num, climp_fuz_num)]
@@ -632,11 +750,11 @@ def get_iso_fuz_area_ratio():
     #     pkl.dump(control_fuz, f)
 
     climp_iso_sted = pkl.load(open('pickles/Climp_iso_area_sted.pkl', 'rb'))
-    climp_fuz_sted = pkl.load(open('pickles/Climp_fuz_area_sted.pkl', 'rb'))
+    # climp_fuz_sted = pkl.load(open('pickles/Climp_fuz_area_sted.pkl', 'rb'))
     control_iso_sted = pkl.load(open('pickles/Control_iso_area_sted.pkl', 'rb'))
-    control_fuz_sted = pkl.load(open('pickles/Control_fuz_area_sted.pkl', 'rb'))
+    # control_fuz_sted = pkl.load(open('pickles/Control_fuz_area_sted.pkl', 'rb'))
     rtn_iso_sted = pkl.load(open('pickles/RTN_iso_area_sted.pkl', 'rb'))
-    rtn_fuz_sted = pkl.load(open('pickles/RTN_fuz_area_sted.pkl', 'rb'))
+    # rtn_fuz_sted = pkl.load(open('pickles/RTN_fuz_area_sted.pkl', 'rb'))
 
     # atl_iso = pkl.load(open('pickles/ATL_iso_area.pkl', 'rb'))
     # climp_iso = pkl.load(open('pickles/Climp_iso_area.pkl', 'rb'))
@@ -650,26 +768,9 @@ def get_iso_fuz_area_ratio():
 
 
 
-    # atl_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(atl_iso, atl_fuz)]
-    # climp_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(climp_iso, climp_fuz)]
-    # rtn_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(rtn_iso, rtn_fuz)]
-    # control_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(control_iso, control_fuz) if sum(fuz) != 0]
-
-
-    climp_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(climp_fuz_sted, climp_iso_sted)]
-    rtn_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(rtn_fuz_sted, rtn_iso_sted)]
-    control_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(control_fuz_sted, control_iso_sted) if sum(iso) != 0]
-
-
-    # print(atl_ratio)
-    # print(np.median(atl_ratio)) # 2
-    # print(climp_ratio)
-    # print(np.median(climp_ratio)) # 15
-    # print(rtn_ratio)
-    # print(np.median(rtn_ratio)) # 9
-    # print(control_ratio)
-    # print(np.median(control_ratio)) # 7
-    # exit()
+    # climp_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(climp_fuz_sted, climp_iso_sted)]
+    # rtn_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(rtn_fuz_sted, rtn_iso_sted)]
+    # control_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(control_fuz_sted, control_iso_sted) if sum(iso) != 0]
 
 
     df = pd.DataFrame()
