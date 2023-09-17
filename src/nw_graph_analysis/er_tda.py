@@ -8,24 +8,146 @@ import grakel
 from grakel.kernels import RandomWalk
 from grakel.utils import graph_from_networkx
 import seaborn as sns
+import pickle as pkl
 import pandas as pd
+import community
+
+import tnetwork as tn
 
 
 group_data = {'ATL': 26, 'Climp': 31, 'Control': 31, 'RTN': 29}
 
 group_pref = {'ATL':'A', 'Climp':'C', 'Control':'Ct', 'RTN':'R'}
 
-# skel1 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t000_ch00_skel.png')
+skel1 = imageio.imread('/localhome/asa420/MIAL/data/other_data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t000_ch00_skel.png')
 
-# skel2 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t001_ch00_skel.png')
+skel2 = imageio.imread('/localhome/asa420/MIAL/data/other_data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t001_ch00_skel.png')
 
-# skel3 = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t002_ch00_skel.png')
+skel3 = imageio.imread('/localhome/asa420/MIAL/data/other_data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t002_ch00_skel.png')
 
 
-# g1 = sknw.build_sknw(skel1, multi=True, iso=False)
-# g2 = sknw.build_sknw(skel2, multi=True, iso=False)
-# g3 = sknw.build_sknw(skel3, multi=True, iso=False)
+g1 = sknw.build_sknw(skel1, multi=True, iso=False)
+g2 = sknw.build_sknw(skel2, multi=True, iso=False)
+g3 = sknw.build_sknw(skel3, multi=True, iso=False)
 
+
+graphs = [g1, g2, g3]
+
+def graph_density_evolution(graphs):
+    densities = []
+    for graph in graphs:
+        densities.append(nx.density(graph))
+    return densities
+
+# d = graph_density_evolution(graphs)
+# print(d)
+
+# Initialize a list to store node membership stability for each node
+# node_membership_stability = []
+
+# # Create NetworkX graphs from adjacency matrices
+# graphs = [nx.Graph(adj_matrix) for adj_matrix in adj_matrices]
+
+# # Define the 3x3 neighborhood proximity
+# neighborhood_size = 1  # Adjust as needed based on your data
+
+# # Function to check if two nodes are within the neighborhood proximity
+# def is_within_neighborhood(node1, node2):
+#     pos1 = graphs[i].nodes[node1]['pos']
+#     pos2 = graphs[i - 1].nodes[node2]['pos']
+#     return abs(pos1[0] - pos2[0]) <= neighborhood_size and abs(pos1[1] - pos2[1]) <= neighborhood_size
+
+# # Calculate node membership stability for each node
+# for node in graphs[0].nodes():
+#     membership = set([node])
+#     persistence = 1.0  # Initialize persistence to 1 for nodes present in the first time step
+
+#     for i in range(1, len(graphs)):
+#         for neighbor in graphs[i].nodes():
+#             if is_within_neighborhood(node, neighbor):
+#                 membership.add(neighbor)
+#             else:
+#                 persistence = persistence * (1 - 1 / (i + 1))
+
+#     node_membership_stability.append((node, membership, persistence))
+
+
+def calculate_graph_similarity(graph1, graph2):
+    # You can use various graph similarity metrics here
+    # For example, graph edit distance, structural similarity index, Jaccard index, etc.
+    # Here, we use the number of common edges as a simple example.
+    common_edges = len(set(graph1.edges()).intersection(set(graph2.edges())))
+    total_edges = len(set(graph1.edges()).union(set(graph2.edges())))
+    return common_edges / total_edges
+
+# # Calculate the graph evolution rate for each pair of consecutive time steps
+# for i in range(1, len(graphs)):
+#     similarity = calculate_graph_similarity(graphs[i - 1], graphs[i])
+#     evolution_rate = 1 - similarity  # You can also normalize this value if needed
+#     graph_evolution_rates.append(evolution_rate)
+
+
+def degree_centrality_evolution(graphs):
+    pass
+
+def betweenness_centrality_evolution(graphs):
+    pass
+
+def closeness_centrality_evolution(graphs):
+    pass
+
+def eigenvector_centrality_evolution(graphs):
+    pass
+
+def katz_centrality_evolution(graphs):
+    pass
+
+
+# communities_generator = nx.community.girvan_newman(graphs[0])
+
+# top_level_communities = next(communities_generator)
+# print(top_level_communities)
+# next_level_communities = next(communities_generator)
+
+# print(sorted(map(sorted, next_level_communities)))
+
+# all_communities = []
+
+# for graph in graphs:
+#     partition = community.best_partition(graph)
+#     all_communities.append(partition)
+
+# jaccard_threshold = 0.5
+
+# stable_communities = []
+
+# for i in range(1, len(all_communities)):
+#     for j in range(i):
+#         jaccard_index = len(set(all_communities[i].values()).intersection(set(all_communities[j].values()))) / len(set(all_communities[i].values()).union(set(all_communities[j].values())))
+#         if jaccard_index >= jaccard_threshold:
+#             stable_communities.append((i, j, set(all_communities[i].values())))
+
+# # Print the communities and stable communities
+# for i, communities in enumerate(all_communities):
+#     print(f"Communities at Time {i}: {communities}")
+
+# for i, j, stable_community in stable_communities:
+#     print(f"Stable Community between Time {j} and Time {i}: {stable_community}")
+
+
+
+# dg_sn = tn.DynGraphSN()
+# dg_sn.add_interactions_from(graphs[0])
+# dg_sn.add_interactions_from(graphs[1])
+# dg_sn.add_interactions_from(graphs[2])
+
+# print(dg_sn.interactions())
+
+
+
+
+
+exit()
 
 
 # def kernel_similarity(graphs):
@@ -62,11 +184,10 @@ def jaccard_similarity(graph1, graph2):
     return intersection / union
 
 def get_jaccard_similarity(graphs):
-    similarities = []
-    for i in range(len(graphs)-1):
-        similarities.append(jaccard_similarity(graphs[i], graphs[i+1]))
-
-    return similarities
+    return [
+        jaccard_similarity(graphs[i], graphs[i + 1])
+        for i in range(len(graphs) - 1)
+    ]
 
 
 def get_jaccard_edge_similarity(evolving_graphs):
@@ -79,19 +200,6 @@ def get_jaccard_edge_similarity(evolving_graphs):
 
     return jaccard_edge_similarity
 
-# def plot_jaccard_similarity(group):
-#     var_data = []
-#     for num in range(1, group_data[group]+1):
-#         graphs = []
-#         for frame in range(100):
-#             skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/skel/{group_pref[group]}{num}/{group_pref[group]}{num}_decon_t0{frame:02d}_ch00_skel.png')
-#             graph = sknw.build_sknw(skel, multi=True, iso=False)
-#             graphs.append(graph)
-#         sim = get_jaccard_similarity(graphs)
-#         var_data.append(sim)
-#     return var_data
-
-import pickle as pkl
 
 def get_jaccard_similarity_data(group):
     var_data = []
@@ -105,10 +213,10 @@ def get_jaccard_similarity_data(group):
 
 def plot_jaccard_similarity():
     
-    atl = plot_jaccard_similarity('ATL')
-    climp = plot_jaccard_similarity('Climp')
-    control = plot_jaccard_similarity('Control')
-    rtn = plot_jaccard_similarity('RTN')
+    atl = get_jaccard_similarity_data('ATL')
+    climp = get_jaccard_similarity_data('Climp')
+    control = get_jaccard_similarity_data('Control')
+    rtn = get_jaccard_similarity_data('RTN')
 
     # atl = np.array(atl).T
     # climp = np.array(climp).T
@@ -125,10 +233,13 @@ def plot_jaccard_similarity():
     plt.show()
 
 
-def get_degree_centrality():
-    var_data = []
-    graph_data = pkl.load(open(f'atl_graph_data.pkl', 'rb'))
-    for series in graph_data:
+# def get_degree_centrality():
+#     var_data = []
+#     graph_data = pkl.load(open('atl_graph_data.pkl', 'rb'))
+#     for series in graph_data:
+
+
+
         
 
 
@@ -158,8 +269,7 @@ def get_degree_centrality():
 
 
 
-import networkx as nx
-import numpy as np
+
 
 def graph_diffusion():
     # Number of time steps or diffusion iterations
@@ -320,3 +430,104 @@ def graph_diffusion():
     #     You can model evolving graphs as time-dependent diffusion processes, where nodes exchange information based on the evolving connectivity.
     #     Similarity between evolving graphs can be assessed by comparing the dynamics of information diffusion, such as the spread of influence or labels.
         # TODO
+
+
+
+
+# Temporal Metrics:
+
+#     Graph Density: The ratio of actual edges to possible edges in a graph at each time step.
+
+#     Edge Turnover Rate: The rate at which edges are added or removed between consecutive time steps. -> jaccaard similarity
+
+#     Node Membership Stability: Measures the persistence of nodes across time frames.
+
+#     Graph Evolution Rate: Measures the overall change in the graph structure over time.
+
+#     Graph Growth: The increase in the number of nodes and edges over time.
+
+#     Graph Lifespan: The duration between the first and last time step of the graph.
+
+# Centrality Metrics:
+
+#     Degree Centrality: The number of edges connected to a node.
+
+#     Betweenness Centrality: Measures the extent to which a node lies on paths between other nodes.
+
+#     Closeness Centrality: Measures how close a node is to all other nodes in terms of shortest paths.
+
+#     Eigenvector Centrality: Takes into account a node's connections to high-degree nodes.
+
+#     Katz Centrality: Incorporates the number of paths of different lengths to assess node importance.
+
+# Community Detection Metrics:
+
+#     Modularity: Measures the strength of the division of a network into communities.
+
+#     Community Size: The number of nodes within each community over time.
+
+#     Community Evolution: How communities change or merge over time.
+
+#     Community Persistence: Measures the lifespan of communities in the evolving graph.
+
+#     Overlap Coefficient: Measures the degree to which nodes belong to multiple communities.
+
+# Link Prediction Metrics:
+
+#     Common Neighbors: Counts the number of common neighbors between two nodes.
+
+#     Jaccard Similarity: Measures the similarity of sets of neighbors between two nodes.
+
+#     Adamic-Adar Index: Assigns higher importance to common neighbors with lower degrees.
+
+#     Resource Allocation Index: Similar to Adamic-Adar but accounts for neighbor degree.
+
+#     Preferential Attachment: Measures the likelihood of forming a new edge based on node degrees.
+
+# Clustering Metrics:
+
+#     Clustering Coefficient: Measures the extent to which nodes in a neighborhood form cliques.
+
+#     Transitivity: A global measure of clustering in the graph.
+
+#     Local Clustering Coefficient: Measures clustering at the node level.
+
+# Network Robustness Metrics:
+
+#     Connectivity: Measures the degree to which a graph remains connected as edges are removed.
+
+#     Diameter: The maximum shortest path length in the graph.
+
+#     Average Path Length: The average length of the shortest paths in the graph.
+
+#     Network Resilience: Measures the ability of the graph to withstand random failures or targeted attacks.
+
+# Information Diffusion Metrics:
+
+#     Influence Spread: Measures how information or influence propagates through the graph.
+
+#     Cascade Size: The number of nodes affected by a contagion or information cascade.
+
+#     Time to Cascade: Measures how quickly a cascade spreads through the network.
+
+# Graph Similarity Metrics:
+
+#     Graph Edit Distance: Measures the dissimilarity between two graphs.
+
+#     Graph Alignment: Aligning nodes and edges between two graphs to assess their similarity.
+
+# Other Metrics:
+
+#     Assortativity: Measures the tendency of nodes to connect to nodes with similar characteristics.
+
+#     Assortative Mixing: Measures the correlation between the degrees of connected nodes.
+
+#     Core-Periphery Structure: Identifies nodes that form a densely connected core and a sparsely connected periphery.
+
+#     Motif Analysis: Identifies recurring subgraph patterns within the evolving graph.
+
+#     Temporal Motif Analysis: Extends motif analysis to account for temporal patterns.
+
+#     Graph Entropy: Measures the randomness or predictability of the graph structure over time.
+
+#     Graph Similarity Indices: Various indices (e.g., graph edit distance, structural similarity) for comparing graphs.
