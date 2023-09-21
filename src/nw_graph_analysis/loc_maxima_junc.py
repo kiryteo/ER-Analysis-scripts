@@ -5,14 +5,13 @@ from skimage import exposure
 from skimage import morphology, segmentation
 import matplotlib.pyplot as plt
 import numpy as np
-import numpy as np
-import matplotlib.pyplot as plt
 from skimage import io, feature, color
 from skimage.filters import gaussian
 from skimage.feature import peak_local_max
 from skimage.filters import difference_of_gaussians, window
 
 import graph_connector_modules as gcm
+import networkx as nx
 
 import copy
 from plantcv import plantcv as pcv
@@ -20,22 +19,101 @@ import sknw
 
 # img = io.imread('/localhome/asa420/MIAL/data/confocal-data/Climp/preproc/C1/C1_decon_t000_ch00_proc.png')
 
-ref_skel = io.imread('/localhome/asa420/MIAL/data/confocal-data/ATL/er_mean_proc/atl2_proc_skel.png')
 
-ref_graph = sknw.build_sknw(ref_skel, multi=True)
+def get_local_max_junc():
+    ref_skel = io.imread('/localhome/asa420/MIAL/data/confocal-data/ATL/er_mean_proc/atl2_proc_skel.png')
 
-ref_nodes, ref_degree_list = ref_graph.nodes(), ref_graph.degree
+    ref_graph = sknw.build_sknw(ref_skel, multi=True)
 
-# get only the nodes with degree > 2
-ref_node_coords = np.array([ref_nodes[node]['o'] for node in ref_nodes])
+    ref_nodes, ref_degree_list = ref_graph.nodes(), ref_graph.degree
 
-ref_node_set = np.array([ref_node_coords[i] for i, val in enumerate(ref_degree_list) if val[1] > 2])
+    # get only the nodes with degree > 2
+    ref_node_coords = np.array([ref_nodes[node]['o'] for node in ref_nodes])
 
-for i in range(90, 100):
+    ref_node_set = np.array([ref_node_coords[i] for i, val in enumerate(ref_degree_list) if val[1] > 2])
 
-    er = io.imread(f'/localhome/asa420/MIAL/data/confocal-data/ATL/preproc/A2/A2_decon_t0{i:02d}_ch00_proc.png')
+    for i in range(90, 100):
 
-    skel = io.imread(f'/localhome/asa420/MIAL/data/other_data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t0{i:02d}_ch00_skel.png')    
+        er = io.imread(f'/localhome/asa420/MIAL/data/confocal-data/ATL/preproc/A2/A2_decon_t0{i:02d}_ch00_proc.png')
+
+        skel = io.imread(f'/localhome/asa420/MIAL/data/other_data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t0{i:02d}_ch00_skel.png')    
+
+        graph = sknw.build_sknw(skel, multi=True)
+
+        nodes, degree_list = graph.nodes(), graph.degree
+
+        # get only the nodes with degree > 2
+        node_coords = np.array([nodes[node]['o'] for node in nodes])
+
+        node_set = np.array([node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2])
+
+        local_max_coords = peak_local_max(er, min_distance=5, threshold_abs=0, indices=True)
+
+        plt.imshow(er, cmap='gray')
+        plt.plot(ref_node_set[:, 1], ref_node_set[:, 0], 'o', markerfacecolor='None', markeredgecolor='green', mew=2)
+        plt.plot(node_set[:, 1], node_set[:, 0], 'r.')
+        plt.plot(local_max_coords[:, 1], local_max_coords[:, 0], 'b.')
+
+        plt.show()
+
+
+        # updated_dict, g_nodes_array = gcm.get_updated_neighbor_dict(graph)
+
+
+        # # Create a copy of the graph for node connection
+        # temp_graph = copy.deepcopy(graph)
+
+        # er_input = io.imread(er)
+        # cost_arr = np.ones((128, 128))
+
+        # for node in dict(graph.degree()):
+        #     # Access the first element of graph.neighbors
+        #     neighbor = next(iter(graph.neighbors(node)))
+
+        # #     # Connect the node to its neighbor
+        #     gcm.connect_nodes(er_input, temp_graph, node, neighbor, updated_dict, cost_arr, g_nodes_array)
+
+        # # # Create a copy of the graph
+        # temp_graph_2 = copy.deepcopy(temp_graph)
+
+        # # # Go through each node and adjust the degree
+        # for node in temp_graph.nodes():
+        #     gcm.process_node(temp_graph_2, node)
+
+        # temp_graph_3 = copy.deepcopy(temp_graph_2)
+        # for node in temp_graph_2.nodes():
+        #     gcm.process_node(temp_graph_3, node)
+
+        # node_set, degree_list = temp_graph_3.nodes, temp_graph_3.degree
+
+        # node_coords = np.array([node_set[node]['o'] for node in node_set])
+
+        # # return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2], temp_graph_3
+
+        # return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2], graph
+
+
+# get_local_max_junc()
+# exit()
+
+
+def add_new_nodes():
+    # get reference junctions from reference skel
+
+    ref_skel = io.imread('/localhome/asa420/MIAL/data/confocal-data/ATL/er_mean_proc/atl2_proc_skel.png')
+
+    ref_graph = sknw.build_sknw(ref_skel, multi=True)
+
+    ref_nodes, ref_degree_list = ref_graph.nodes(), ref_graph.degree
+
+    # get only the nodes with degree > 2
+    ref_node_coords = np.array([ref_nodes[node]['o'] for node in ref_nodes])
+
+    ref_node_set = np.array([ref_node_coords[i] for i, val in enumerate(ref_degree_list) if val[1] > 2])
+
+    # get current frame junctions from current frame skel
+
+    skel = io.imread('/localhome/asa420/MIAL/data/other_data/confocal_movies/ATL/new_op_jul/skel/A2/A2_decon_t070_ch00_skel.png')
 
     graph = sknw.build_sknw(skel, multi=True)
 
@@ -44,53 +122,94 @@ for i in range(90, 100):
     # get only the nodes with degree > 2
     node_coords = np.array([nodes[node]['o'] for node in nodes])
 
-    node_set = np.array([node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2])
+    # node_set = np.array([node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2])
 
+    # node_set = [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
+
+    node_set = [node_coords[i] for i, val in enumerate(degree_list)]# if val[1] > 2]
+
+    # get local maxima from current frame
+
+    er = io.imread('/localhome/asa420/MIAL/data/confocal-data/ATL/preproc/A2/A2_decon_t070_ch00_proc.png')
+
+    # local_max_coords: ndarray
     local_max_coords = peak_local_max(er, min_distance=5, threshold_abs=0, indices=True)
 
+
+    # Find the local max which are within the neighborhood of the reference junctions and there is no junction from node set within the neighborhood
+    # For such local max, find the closest coordinate in the graph and add a node there
+    # connect the nearest local max nodes.
+
+
+    result = []
+
+    for lmc in local_max_coords:
+        is_within_nbr = False
+
+        for node in node_set:
+            if abs(lmc[0] - node[0]) <= 5//2 and abs(lmc[1] - node[1]) <= 5//2:
+                is_within_nbr = True
+                break
+
+        if any(abs(ref_node[0] - lmc[0]) <= 5//2 and abs(ref_node[1] - lmc[1]) <= 5//2 for ref_node in ref_node_set):
+            result.append(lmc)
+
+    # for res in result:
+    #     node_set.append([res[0], res[1]])
+
+    node_set = np.array(node_set)
+
+    # current_nodes_len = len(nodes)
+
+    # for i, res in enumerate(result):
+    #     graph.add_node(current_nodes_len + i, pts=res)
+
+
     plt.imshow(er, cmap='gray')
-    plt.plot(ref_node_set[:, 1], ref_node_set[:, 0], 'o', markerfacecolor='None', markeredgecolor='green', mew=2)
+
+    for (s, e) in graph.edges():
+        ps = graph[s][e][0]['pts']
+        plt.plot(ps[:, 1], ps[:, 0], 'green')
+
+    # for node in nodes:
+    #     print(nodes[node]['pts'])
+        # plt.plot(nodes[node]['pts'][1], nodes[node]['pts'][0], 'r.')
+
+    plt.plot(ref_node_set[:, 1], ref_node_set[:, 0], 'o', markerfacecolor='None', markeredgecolor='yellow', mew=2)
+
+    # plt.plot(node_set[:, 1], node_set[:, 0], 'b.')
+
+    # # plt.plot(ps[:,1], ps[:,0], 'r.')
+
     plt.plot(node_set[:, 1], node_set[:, 0], 'r.')
+
     plt.plot(local_max_coords[:, 1], local_max_coords[:, 0], 'b.')
 
     plt.show()
 
 
-    # updated_dict, g_nodes_array = gcm.get_updated_neighbor_dict(graph)
+    exit()
+
+    # # print(local_max_coords)
+    # # Define the coordinates list
+    # coordinates = [(1, 2), (3, 4), (5, 6), (7, 8), (9, 10)]
+
+    # # Define the location (x, y)
+    # x, y = 4, 5  # Replace with your desired location
+
+    # # Define the size of the neighborhood (5x5 square)
+    # neighborhood_size = 5
+
+    # # Find coordinates within the 5x5 neighborhood
+    # result = [(a, b) for a, b in coordinates if abs(a - x) <= neighborhood_size // 2 and abs(b - y) <= neighborhood_size // 2]
+
+    # print("Coordinates within a {}x{} neighborhood centered at ({}, {}):".format(neighborhood_size, neighborhood_size, x, y))
+    # print(result)
 
 
-    # # Create a copy of the graph for node connection
-    # temp_graph = copy.deepcopy(graph)
 
-    # er_input = io.imread(er)
-    # cost_arr = np.ones((128, 128))
 
-    # for node in dict(graph.degree()):
-    #     # Access the first element of graph.neighbors
-    #     neighbor = next(iter(graph.neighbors(node)))
-
-    # #     # Connect the node to its neighbor
-    #     gcm.connect_nodes(er_input, temp_graph, node, neighbor, updated_dict, cost_arr, g_nodes_array)
-
-    # # # Create a copy of the graph
-    # temp_graph_2 = copy.deepcopy(temp_graph)
-
-    # # # Go through each node and adjust the degree
-    # for node in temp_graph.nodes():
-    #     gcm.process_node(temp_graph_2, node)
-
-    # temp_graph_3 = copy.deepcopy(temp_graph_2)
-    # for node in temp_graph_2.nodes():
-    #     gcm.process_node(temp_graph_3, node)
-
-    # node_set, degree_list = temp_graph_3.nodes, temp_graph_3.degree
-
-    # node_coords = np.array([node_set[node]['o'] for node in node_set])
-
-    # # return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2], temp_graph_3
-
-    # return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2], graph
-
+add_new_nodes()
 
 
 exit()

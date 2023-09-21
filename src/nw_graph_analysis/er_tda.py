@@ -11,6 +11,7 @@ import seaborn as sns
 import pickle as pkl
 import pandas as pd
 import community
+import math
 
 import tnetwork as tn
 
@@ -33,14 +34,94 @@ g3 = sknw.build_sknw(skel3, multi=True, iso=False)
 
 graphs = [g1, g2, g3]
 
+
+
+
+def graph_entropy_evolution(graphs):
+    for graph in graphs:
+        # Calculate the degree distribution
+        degree_sequence = sorted([d for n, d in graph.degree()], reverse=True)
+
+        # Calculate the probabilities of each degree
+        degree_counts = {}
+        total_degrees = len(degree_sequence)
+        for degree in degree_sequence:
+            if degree in degree_counts:
+                degree_counts[degree] += 1
+            else:
+                degree_counts[degree] = 1
+
+        degree_probabilities = [count / total_degrees for count in degree_counts.values()]
+
+        # Calculate the Shannon entropy
+        entropy = -sum(p * math.log2(p) for p in degree_probabilities)
+
+        print("Graph Entropy:", entropy)
+
+
+def assortativity_evolution(graphs):
+    assortativities = []
+    for graph in graphs:
+        assortativities.append(nx.degree_assortativity_coefficient(graph))
+    return assortativities
+
+
+def clustering_coefficient_evolution(graphs):
+    clustering_coefficients = []
+    for graph in graphs:
+        clustering_coefficients.append(nx.average_clustering(graph))
+    return clustering_coefficients
+
+
+def pearson_correlation_evolution(graphs):
+    pearson_correlations = []
+    for graph in graphs:
+        pearson_correlations.append(nx.degree_pearson_correlation_coefficient(graph))
+    return pearson_correlations
+
+
+def local_efficiency_evolution(graphs):
+    local_efficiencies = []
+    for graph in graphs:
+        local_efficiencies.append(nx.local_efficiency(graph))
+    return local_efficiencies
+
+
+def global_efficiency_evolution(graphs):
+    global_efficiencies = []
+    for graph in graphs:
+        global_efficiencies.append(nx.global_efficiency(graph))
+    return global_efficiencies
+
+
+def avg_degree_connectivity_evolution(graphs):
+    avg_degree_connectivities = []
+    for graph in graphs:
+        avg_degree_connectivities.append(nx.average_degree_connectivity(graph))
+    return avg_degree_connectivities
+
+
 def graph_density_evolution(graphs):
     densities = []
     for graph in graphs:
         densities.append(nx.density(graph))
     return densities
 
-# d = graph_density_evolution(graphs)
-# print(d)
+
+def avg_degree_evolution(graphs):
+    avg_degrees = []
+    for graph in graphs:
+        avg_degrees.append(sum(dict(graph.degree()).values()) / len(graph))
+    return avg_degrees
+
+
+def transitivity_evolution(graphs):
+    transitivities = []
+    for graph in graphs:
+        transitivities.append(nx.transitivity(graph))
+    return transitivities
+
+
 
 # Initialize a list to store node membership stability for each node
 # node_membership_stability = []
@@ -88,19 +169,34 @@ def calculate_graph_similarity(graph1, graph2):
 
 
 def degree_centrality_evolution(graphs):
-    pass
+    degree_centralities = []
+    for graph in graphs:
+        degree_centralities.append(nx.degree_centrality(graph))
+    return degree_centralities
 
 def betweenness_centrality_evolution(graphs):
-    pass
+    betweenness_centralities = []
+    for graph in graphs:
+        betweenness_centralities.append(nx.betweenness_centrality(graph))
+    return betweenness_centralities
 
 def closeness_centrality_evolution(graphs):
-    pass
+    closeness_centralities = []
+    for graph in graphs:
+        closeness_centralities.append(nx.closeness_centrality(graph))
+    return closeness_centralities
 
 def eigenvector_centrality_evolution(graphs):
-    pass
+    eigenvector_centralities = []
+    for graph in graphs:
+        eigenvector_centralities.append(nx.eigenvector_centrality(graph))
+    return eigenvector_centralities
 
 def katz_centrality_evolution(graphs):
-    pass
+    katz_centralities = []
+    for graph in graphs:
+        katz_centralities.append(nx.katz_centrality(graph))
+    return katz_centralities
 
 
 # communities_generator = nx.community.girvan_newman(graphs[0])
@@ -360,7 +456,7 @@ def graph_diffusion():
 #         Edge Creation/Deletion: Count the number of edges added or removed between consecutive snapshots.
             # NOT Sure
 #         Graph Density: Measure the density of each graph snapshot, indicating how connected the nodes are at each time step.
-            # TODO
+            # DONE
 #         Network Motifs: Identify and track the occurrence of specific network motifs or subgraphs.
             # TODO
 
@@ -368,9 +464,9 @@ def graph_diffusion():
 
 #     Dynamic features consider how individual nodes or edges change their properties over time.
 #     Examples of dynamic features:
-#         Node Degree Evolution: Track how the degree (number of connections) of specific nodes changes over time.
-#         Edge Weight Evolution: If your graphs have weighted edges, analyze how edge weights change.
-#         Community Evolution: Detect communities in each snapshot and track how nodes move between communities.
+#         Node Degree Evolution: Track how the degree (number of connections) of specific nodes changes over time. -> DONE
+#         Edge Weight Evolution: If your graphs have weighted edges, analyze how edge weights change. -> NOT Sure
+#         Community Evolution: Detect communities in each snapshot and track how nodes move between communities. -> TODO
 
 # Feature Extraction:
 
@@ -386,16 +482,6 @@ def graph_diffusion():
 
 
 
-
-
-
-
-
-
-
-
-
-
 ################################
 
 # Graph Alignment:
@@ -403,11 +489,11 @@ def graph_diffusion():
 #     Graph alignment techniques aim to find correspondences between nodes or subgraphs in different snapshots of evolving graphs.
 #     Alignment-based measures quantify the similarity by considering how well nodes or subgraphs align across time steps.
 #     Methods like GraRep and GEALIGN are examples of graph alignment approaches.
-            # Graph alignment for iso and fuzzy regions
+            # Graph alignment for iso and fuzzy regions -> TODO
 
 # Graphlet-Based Measures:
 
-#     Graphlet-based similarity measures capture evolving graph patterns or motifs.
+#     Graphlet-based similarity measures capture evolving graph patterns or motifs. -> TODO
 #     These methods consider the frequencies and distributions of specific subgraphs (graphlets) across different time steps.
 #     By comparing the graphlet profiles of evolving graphs, you can assess their similarity.
             # NOT sure
@@ -436,29 +522,96 @@ def graph_diffusion():
 
 # Temporal Metrics:
 
-#     Graph Density: The ratio of actual edges to possible edges in a graph at each time step.
+#     Graph Density: The ratio of actual edges to possible edges in a graph at each time step. -> DONE
 
 #     Edge Turnover Rate: The rate at which edges are added or removed between consecutive time steps. -> jaccaard similarity
 
-#     Node Membership Stability: Measures the persistence of nodes across time frames.
+#     Node Membership Stability: Measures the persistence of nodes across time frames. -> TODO
 
 #     Graph Evolution Rate: Measures the overall change in the graph structure over time.
 
 #     Graph Growth: The increase in the number of nodes and edges over time.
 
-#     Graph Lifespan: The duration between the first and last time step of the graph.
 
 # Centrality Metrics:
 
-#     Degree Centrality: The number of edges connected to a node.
+#     Degree Centrality: The number of edges connected to a node. -> DONE
 
-#     Betweenness Centrality: Measures the extent to which a node lies on paths between other nodes.
+#     Betweenness Centrality: Measures the extent to which a node lies on paths between other nodes. -> DONE
 
-#     Closeness Centrality: Measures how close a node is to all other nodes in terms of shortest paths.
+#     Closeness Centrality: Measures how close a node is to all other nodes in terms of shortest paths. -> DONE
 
-#     Eigenvector Centrality: Takes into account a node's connections to high-degree nodes.
+#     Eigenvector Centrality: Takes into account a node's connections to high-degree nodes. -> DONE
 
-#     Katz Centrality: Incorporates the number of paths of different lengths to assess node importance.
+#     Katz Centrality: Incorporates the number of paths of different lengths to assess node importance. -> DONE
+
+
+
+# Link Prediction Metrics:
+
+#     Common Neighbors: Counts the number of common neighbors between two nodes. -> TODO
+
+#     Jaccard Similarity: Measures the similarity of sets of neighbors between two nodes. -> TODO
+
+#     Adamic-Adar Index: Assigns higher importance to common neighbors with lower degrees. -> TODO
+
+#     Resource Allocation Index: Similar to Adamic-Adar but accounts for neighbor degree. -> TODO
+
+#     Preferential Attachment: Measures the likelihood of forming a new edge based on node degrees. -> NOT SURE
+
+# Clustering Metrics:
+
+#     Clustering Coefficient: Measures the extent to which nodes in a neighborhood form cliques. -> DONE
+
+#     Transitivity: A global measure of clustering in the graph. -> DONE
+
+#     Local Clustering Coefficient: Measures clustering at the node level. -> DONE
+
+
+
+
+# Network Robustness Metrics:
+
+#     Connectivity: Measures the degree to which a graph remains connected as edges are removed.
+
+#     Diameter: The maximum shortest path length in the graph.
+
+#     Average Path Length: The average length of the shortest paths in the graph.
+
+#     Network Resilience: Measures the ability of the graph to withstand random failures or targeted attacks. -> NOT SURE
+
+
+
+
+# Information Diffusion Metrics:
+
+#     Influence Spread: Measures how information or influence propagates through the graph.
+
+#     Cascade Size: The number of nodes affected by a contagion or information cascade.
+
+#     Time to Cascade: Measures how quickly a cascade spreads through the network.
+
+
+
+
+# Graph Similarity Metrics:
+
+#     Graph Alignment: Aligning nodes and edges between two graphs to assess their similarity.
+
+
+
+
+# Other Metrics:
+
+#     Assortative Mixing: Measures the correlation between the degrees of connected nodes.
+
+#     Core-Periphery Structure: Identifies nodes that form a densely connected core and a sparsely connected periphery.
+
+#     Motif Analysis: Identifies recurring subgraph patterns within the evolving graph.
+
+#     Temporal Motif Analysis: Extends motif analysis to account for temporal patterns.
+
+#     Graph Entropy: Measures the randomness or predictability of the graph structure over time. - DONE
 
 # Community Detection Metrics:
 
@@ -471,63 +624,3 @@ def graph_diffusion():
 #     Community Persistence: Measures the lifespan of communities in the evolving graph.
 
 #     Overlap Coefficient: Measures the degree to which nodes belong to multiple communities.
-
-# Link Prediction Metrics:
-
-#     Common Neighbors: Counts the number of common neighbors between two nodes.
-
-#     Jaccard Similarity: Measures the similarity of sets of neighbors between two nodes.
-
-#     Adamic-Adar Index: Assigns higher importance to common neighbors with lower degrees.
-
-#     Resource Allocation Index: Similar to Adamic-Adar but accounts for neighbor degree.
-
-#     Preferential Attachment: Measures the likelihood of forming a new edge based on node degrees.
-
-# Clustering Metrics:
-
-#     Clustering Coefficient: Measures the extent to which nodes in a neighborhood form cliques.
-
-#     Transitivity: A global measure of clustering in the graph.
-
-#     Local Clustering Coefficient: Measures clustering at the node level.
-
-# Network Robustness Metrics:
-
-#     Connectivity: Measures the degree to which a graph remains connected as edges are removed.
-
-#     Diameter: The maximum shortest path length in the graph.
-
-#     Average Path Length: The average length of the shortest paths in the graph.
-
-#     Network Resilience: Measures the ability of the graph to withstand random failures or targeted attacks.
-
-# Information Diffusion Metrics:
-
-#     Influence Spread: Measures how information or influence propagates through the graph.
-
-#     Cascade Size: The number of nodes affected by a contagion or information cascade.
-
-#     Time to Cascade: Measures how quickly a cascade spreads through the network.
-
-# Graph Similarity Metrics:
-
-#     Graph Edit Distance: Measures the dissimilarity between two graphs.
-
-#     Graph Alignment: Aligning nodes and edges between two graphs to assess their similarity.
-
-# Other Metrics:
-
-#     Assortativity: Measures the tendency of nodes to connect to nodes with similar characteristics.
-
-#     Assortative Mixing: Measures the correlation between the degrees of connected nodes.
-
-#     Core-Periphery Structure: Identifies nodes that form a densely connected core and a sparsely connected periphery.
-
-#     Motif Analysis: Identifies recurring subgraph patterns within the evolving graph.
-
-#     Temporal Motif Analysis: Extends motif analysis to account for temporal patterns.
-
-#     Graph Entropy: Measures the randomness or predictability of the graph structure over time.
-
-#     Graph Similarity Indices: Various indices (e.g., graph edit distance, structural similarity) for comparing graphs.
