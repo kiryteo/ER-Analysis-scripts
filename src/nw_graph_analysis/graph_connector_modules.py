@@ -284,7 +284,7 @@ def process_node(temp_graph, node):
     if len(nbrs) != 2:
         return
 
-    # Get the neighbors of the neighbors
+    # Get the individual neighbors
     nbr1, nbr2 = nbrs
     deg1, deg2 = temp_graph.degree(nbr1), temp_graph.degree(nbr2)
 

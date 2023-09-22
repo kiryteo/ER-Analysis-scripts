@@ -20,24 +20,27 @@ group_data = {'ATL': 26, 'Climp': 31, 'Control': 31, 'RTN': 29}
 
 group_pref = {'ATL':'A', 'Climp':'C', 'Control':'Ct', 'RTN':'R'}
 
-skel1 = imageio.imread('/localhome/asa420/MIAL/data/other_data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t000_ch00_skel.png')
+# skel1 = imageio.imread('/localhome/asa420/MIAL/data/other_data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t000_ch00_skel.png')
 
-skel2 = imageio.imread('/localhome/asa420/MIAL/data/other_data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t001_ch00_skel.png')
+# skel2 = imageio.imread('/localhome/asa420/MIAL/data/other_data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t001_ch00_skel.png')
 
-skel3 = imageio.imread('/localhome/asa420/MIAL/data/other_data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t002_ch00_skel.png')
-
-
-g1 = sknw.build_sknw(skel1, multi=True, iso=False)
-g2 = sknw.build_sknw(skel2, multi=True, iso=False)
-g3 = sknw.build_sknw(skel3, multi=True, iso=False)
+# skel3 = imageio.imread('/localhome/asa420/MIAL/data/other_data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t002_ch00_skel.png')
 
 
-graphs = [g1, g2, g3]
+# g1 = sknw.build_sknw(skel1, multi=True, iso=False)
+# g2 = sknw.build_sknw(skel2, multi=True, iso=False)
+# g3 = sknw.build_sknw(skel3, multi=True, iso=False)
+
+
+# graphs = [g1, g2, g3]
+
+
 
 
 
 
 def graph_entropy_evolution(graphs):
+    data = []
     for graph in graphs:
         # Calculate the degree distribution
         degree_sequence = sorted([d for n, d in graph.degree()], reverse=True)
@@ -56,101 +59,61 @@ def graph_entropy_evolution(graphs):
         # Calculate the Shannon entropy
         entropy = -sum(p * math.log2(p) for p in degree_probabilities)
 
-        print("Graph Entropy:", entropy)
+        data.append(entropy)
+    
+    return data
 
 
 def assortativity_evolution(graphs):
-    assortativities = []
-    for graph in graphs:
-        assortativities.append(nx.degree_assortativity_coefficient(graph))
-    return assortativities
+    return [nx.degree_assortativity_coefficient(graph) for graph in graphs]
 
 
 def clustering_coefficient_evolution(graphs):
-    clustering_coefficients = []
-    for graph in graphs:
-        clustering_coefficients.append(nx.average_clustering(graph))
-    return clustering_coefficients
+    return [nx.average_clustering(graph) for graph in graphs]
 
 
 def pearson_correlation_evolution(graphs):
-    pearson_correlations = []
-    for graph in graphs:
-        pearson_correlations.append(nx.degree_pearson_correlation_coefficient(graph))
-    return pearson_correlations
+    return [nx.degree_pearson_correlation_coefficient(graph) for graph in graphs]
 
 
 def local_efficiency_evolution(graphs):
-    local_efficiencies = []
-    for graph in graphs:
-        local_efficiencies.append(nx.local_efficiency(graph))
-    return local_efficiencies
+    return [nx.local_efficiency(graph) for graph in graphs]
 
 
 def global_efficiency_evolution(graphs):
-    global_efficiencies = []
-    for graph in graphs:
-        global_efficiencies.append(nx.global_efficiency(graph))
-    return global_efficiencies
+    return [nx.global_efficiency(graph) for graph in graphs]
 
 
 def avg_degree_connectivity_evolution(graphs):
-    avg_degree_connectivities = []
-    for graph in graphs:
-        avg_degree_connectivities.append(nx.average_degree_connectivity(graph))
-    return avg_degree_connectivities
+    return [nx.average_degree_connectivity(graph) for graph in graphs]
 
 
 def graph_density_evolution(graphs):
-    densities = []
-    for graph in graphs:
-        densities.append(nx.density(graph))
-    return densities
+    return [nx.density(graph) for graph in graphs]
 
 
 def avg_degree_evolution(graphs):
-    avg_degrees = []
-    for graph in graphs:
-        avg_degrees.append(sum(dict(graph.degree()).values()) / len(graph))
-    return avg_degrees
+    return [sum(dict(graph.degree()).values()) / len(graph) for graph in graphs]
 
 
 def transitivity_evolution(graphs):
-    transitivities = []
-    for graph in graphs:
-        transitivities.append(nx.transitivity(graph))
-    return transitivities
+    return [nx.transitivity(graph) for graph in graphs]
 
 
+def degree_centrality_evolution(graphs):
+    return [nx.degree_centrality(graph) for graph in graphs]
 
-# Initialize a list to store node membership stability for each node
-# node_membership_stability = []
+def betweenness_centrality_evolution(graphs):
+    return [nx.betweenness_centrality(graph) for graph in graphs]
 
-# # Create NetworkX graphs from adjacency matrices
-# graphs = [nx.Graph(adj_matrix) for adj_matrix in adj_matrices]
+def closeness_centrality_evolution(graphs):
+    return [nx.closeness_centrality(graph) for graph in graphs]
 
-# # Define the 3x3 neighborhood proximity
-# neighborhood_size = 1  # Adjust as needed based on your data
+def eigenvector_centrality_evolution(graphs):
+    return [nx.eigenvector_centrality(graph) for graph in graphs]
 
-# # Function to check if two nodes are within the neighborhood proximity
-# def is_within_neighborhood(node1, node2):
-#     pos1 = graphs[i].nodes[node1]['pos']
-#     pos2 = graphs[i - 1].nodes[node2]['pos']
-#     return abs(pos1[0] - pos2[0]) <= neighborhood_size and abs(pos1[1] - pos2[1]) <= neighborhood_size
-
-# # Calculate node membership stability for each node
-# for node in graphs[0].nodes():
-#     membership = set([node])
-#     persistence = 1.0  # Initialize persistence to 1 for nodes present in the first time step
-
-#     for i in range(1, len(graphs)):
-#         for neighbor in graphs[i].nodes():
-#             if is_within_neighborhood(node, neighbor):
-#                 membership.add(neighbor)
-#             else:
-#                 persistence = persistence * (1 - 1 / (i + 1))
-
-#     node_membership_stability.append((node, membership, persistence))
+def katz_centrality_evolution(graphs):
+    return [nx.katz_centrality(graph) for graph in graphs]
 
 
 def calculate_graph_similarity(graph1, graph2):
@@ -166,111 +129,6 @@ def calculate_graph_similarity(graph1, graph2):
 #     similarity = calculate_graph_similarity(graphs[i - 1], graphs[i])
 #     evolution_rate = 1 - similarity  # You can also normalize this value if needed
 #     graph_evolution_rates.append(evolution_rate)
-
-
-def degree_centrality_evolution(graphs):
-    degree_centralities = []
-    for graph in graphs:
-        degree_centralities.append(nx.degree_centrality(graph))
-    return degree_centralities
-
-def betweenness_centrality_evolution(graphs):
-    betweenness_centralities = []
-    for graph in graphs:
-        betweenness_centralities.append(nx.betweenness_centrality(graph))
-    return betweenness_centralities
-
-def closeness_centrality_evolution(graphs):
-    closeness_centralities = []
-    for graph in graphs:
-        closeness_centralities.append(nx.closeness_centrality(graph))
-    return closeness_centralities
-
-def eigenvector_centrality_evolution(graphs):
-    eigenvector_centralities = []
-    for graph in graphs:
-        eigenvector_centralities.append(nx.eigenvector_centrality(graph))
-    return eigenvector_centralities
-
-def katz_centrality_evolution(graphs):
-    katz_centralities = []
-    for graph in graphs:
-        katz_centralities.append(nx.katz_centrality(graph))
-    return katz_centralities
-
-
-# communities_generator = nx.community.girvan_newman(graphs[0])
-
-# top_level_communities = next(communities_generator)
-# print(top_level_communities)
-# next_level_communities = next(communities_generator)
-
-# print(sorted(map(sorted, next_level_communities)))
-
-# all_communities = []
-
-# for graph in graphs:
-#     partition = community.best_partition(graph)
-#     all_communities.append(partition)
-
-# jaccard_threshold = 0.5
-
-# stable_communities = []
-
-# for i in range(1, len(all_communities)):
-#     for j in range(i):
-#         jaccard_index = len(set(all_communities[i].values()).intersection(set(all_communities[j].values()))) / len(set(all_communities[i].values()).union(set(all_communities[j].values())))
-#         if jaccard_index >= jaccard_threshold:
-#             stable_communities.append((i, j, set(all_communities[i].values())))
-
-# # Print the communities and stable communities
-# for i, communities in enumerate(all_communities):
-#     print(f"Communities at Time {i}: {communities}")
-
-# for i, j, stable_community in stable_communities:
-#     print(f"Stable Community between Time {j} and Time {i}: {stable_community}")
-
-
-
-# dg_sn = tn.DynGraphSN()
-# dg_sn.add_interactions_from(graphs[0])
-# dg_sn.add_interactions_from(graphs[1])
-# dg_sn.add_interactions_from(graphs[2])
-
-# print(dg_sn.interactions())
-
-
-
-
-
-exit()
-
-
-# def kernel_similarity(graphs):
-#     # Create a random walk kernel instance
-#     # random_walk_kernel = RandomWalk()
-
-#     # graphlet_sampling = grakel.kernels.GraphletSampling(4)
-#     subgraph_matching = grakel.kernels.SubgraphMatching()
-
-#     # Fit and transform your evolving graphs
-#     # kernel_matrix = random_walk_kernel.fit_transform(graphs)
-#     # kernel_matrix = graphlet_sampling.fit_transform(graphs)
-#     kernel_matrix = subgraph_matching.fit_transform(graphs)
-
-#     # Print the kernel matrix
-#     print(kernel_matrix)
-
-#     return kernel_matrix[0][1]
-
-# evolving_graphs = [g1, g2, g3]
-# grakel_graphs = graph_from_networkx(evolving_graphs)
-
-# k = kernel_similarity(grakel_graphs)
-# print(k)
-
-# exit()
-
 
 def jaccard_similarity(graph1, graph2):
     nodes1 = set(graph1.nodes)
@@ -329,14 +187,18 @@ def plot_jaccard_similarity():
     plt.show()
 
 
-# def get_degree_centrality():
-#     var_data = []
-#     graph_data = pkl.load(open('atl_graph_data.pkl', 'rb'))
-#     for series in graph_data:
 
 
+# atl_graph_data shape: (26, 100)
+atl_graph_data = pkl.load(open('atl_graph_data.pkl', 'rb'))
 
-        
+for series in atl_graph_data:
+    entropy_evolution = [graph_entropy_evolution(series)]
+
+# plot the entropy evolution
+plt.plot(entropy_evolution)
+plt.show()
+
 
 
 
@@ -405,34 +267,7 @@ def graph_diffusion():
             print(f"Node {node}: {score}")
 
 
-# import networkx as nx
-# import numpy as np
-# from scipy.optimize import linear_sum_assignment
 
-
-
-# # Initialize an alignment matrix for each pair of evolving graphs
-# alignment_matrices = []
-
-# # Compute alignment between each pair of evolving graphs
-# for i in range(len(evolving_graphs)):
-#     alignment_matrix = np.zeros((len(evolving_graphs[i]), len(evolving_graphs[i])))
-#     for j in range(len(evolving_graphs)):
-#         if i == j:
-#             continue  # Skip self-alignment
-#         # Calculate a similarity/distance matrix (e.g., Jaccard similarity, graph edit distance)
-#         # You can choose a suitable similarity measure based on your graph data
-#         similarity_matrix = np.zeros((len(evolving_graphs[i]), len(evolving_graphs[j])))
-#         # Compute the optimal node mapping using the Hungarian algorithm
-#         row_ind, col_ind = linear_sum_assignment(-similarity_matrix)
-#         for r, c in zip(row_ind, col_ind):
-#             alignment_matrix[r, c] = 1  # Mark nodes as aligned
-#     alignment_matrices.append(alignment_matrix)
-
-# # Print the alignment matrices
-# for i, matrix in enumerate(alignment_matrices):
-#     print(f"Alignment Matrix for Evolving Graph {i + 1}:")
-#     print(matrix)
 
 
 
@@ -624,3 +459,136 @@ def graph_diffusion():
 #     Community Persistence: Measures the lifespan of communities in the evolving graph.
 
 #     Overlap Coefficient: Measures the degree to which nodes belong to multiple communities.
+
+
+
+
+
+
+
+
+# communities_generator = nx.community.girvan_newman(graphs[0])
+
+# top_level_communities = next(communities_generator)
+# print(top_level_communities)
+# next_level_communities = next(communities_generator)
+
+# print(sorted(map(sorted, next_level_communities)))
+
+# all_communities = []
+
+# for graph in graphs:
+#     partition = community.best_partition(graph)
+#     all_communities.append(partition)
+
+# jaccard_threshold = 0.5
+
+# stable_communities = []
+
+# for i in range(1, len(all_communities)):
+#     for j in range(i):
+#         jaccard_index = len(set(all_communities[i].values()).intersection(set(all_communities[j].values()))) / len(set(all_communities[i].values()).union(set(all_communities[j].values())))
+#         if jaccard_index >= jaccard_threshold:
+#             stable_communities.append((i, j, set(all_communities[i].values())))
+
+# # Print the communities and stable communities
+# for i, communities in enumerate(all_communities):
+#     print(f"Communities at Time {i}: {communities}")
+
+# for i, j, stable_community in stable_communities:
+#     print(f"Stable Community between Time {j} and Time {i}: {stable_community}")
+
+
+
+# dg_sn = tn.DynGraphSN()
+# dg_sn.add_interactions_from(graphs[0])
+# dg_sn.add_interactions_from(graphs[1])
+# dg_sn.add_interactions_from(graphs[2])
+
+# print(dg_sn.interactions())
+
+# import networkx as nx
+# import numpy as np
+# from scipy.optimize import linear_sum_assignment
+
+
+
+# # Initialize an alignment matrix for each pair of evolving graphs
+# alignment_matrices = []
+
+# # Compute alignment between each pair of evolving graphs
+# for i in range(len(evolving_graphs)):
+#     alignment_matrix = np.zeros((len(evolving_graphs[i]), len(evolving_graphs[i])))
+#     for j in range(len(evolving_graphs)):
+#         if i == j:
+#             continue  # Skip self-alignment
+#         # Calculate a similarity/distance matrix (e.g., Jaccard similarity, graph edit distance)
+#         # You can choose a suitable similarity measure based on your graph data
+#         similarity_matrix = np.zeros((len(evolving_graphs[i]), len(evolving_graphs[j])))
+#         # Compute the optimal node mapping using the Hungarian algorithm
+#         row_ind, col_ind = linear_sum_assignment(-similarity_matrix)
+#         for r, c in zip(row_ind, col_ind):
+#             alignment_matrix[r, c] = 1  # Mark nodes as aligned
+#     alignment_matrices.append(alignment_matrix)
+
+# # Print the alignment matrices
+# for i, matrix in enumerate(alignment_matrices):
+#     print(f"Alignment Matrix for Evolving Graph {i + 1}:")
+#     print(matrix)
+
+
+
+# def kernel_similarity(graphs):
+#     # Create a random walk kernel instance
+#     # random_walk_kernel = RandomWalk()
+
+#     # graphlet_sampling = grakel.kernels.GraphletSampling(4)
+#     subgraph_matching = grakel.kernels.SubgraphMatching()
+
+#     # Fit and transform your evolving graphs
+#     # kernel_matrix = random_walk_kernel.fit_transform(graphs)
+#     # kernel_matrix = graphlet_sampling.fit_transform(graphs)
+#     kernel_matrix = subgraph_matching.fit_transform(graphs)
+
+#     # Print the kernel matrix
+#     print(kernel_matrix)
+
+#     return kernel_matrix[0][1]
+
+# evolving_graphs = [g1, g2, g3]
+# grakel_graphs = graph_from_networkx(evolving_graphs)
+
+# k = kernel_similarity(grakel_graphs)
+# print(k)
+
+# exit()
+
+
+# Initialize a list to store node membership stability for each node
+# node_membership_stability = []
+
+# # Create NetworkX graphs from adjacency matrices
+# graphs = [nx.Graph(adj_matrix) for adj_matrix in adj_matrices]
+
+# # Define the 3x3 neighborhood proximity
+# neighborhood_size = 1  # Adjust as needed based on your data
+
+# # Function to check if two nodes are within the neighborhood proximity
+# def is_within_neighborhood(node1, node2):
+#     pos1 = graphs[i].nodes[node1]['pos']
+#     pos2 = graphs[i - 1].nodes[node2]['pos']
+#     return abs(pos1[0] - pos2[0]) <= neighborhood_size and abs(pos1[1] - pos2[1]) <= neighborhood_size
+
+# # Calculate node membership stability for each node
+# for node in graphs[0].nodes():
+#     membership = set([node])
+#     persistence = 1.0  # Initialize persistence to 1 for nodes present in the first time step
+
+#     for i in range(1, len(graphs)):
+#         for neighbor in graphs[i].nodes():
+#             if is_within_neighborhood(node, neighbor):
+#                 membership.add(neighbor)
+#             else:
+#                 persistence = persistence * (1 - 1 / (i + 1))
+
+#     node_membership_stability.append((node, membership, persistence))
