@@ -38,6 +38,69 @@ class JunctionAnalysis:
         return sknw.build_sknw(skel, multi=True, iso=False)
     
     # node_connector
+    # def get_junctions(self, path_er, path_skel):
+    #     """
+    #     @param path_er: path to er image
+    #     @param path_skel: path to skeleton image
+    #     @return: junctions (list) - provides all junctions with degree > 2 from the mean projection proc skeleton
+    #     """
+
+    #     graph = self.skel_to_graph(path_skel)
+
+    #     updated_dict, g_nodes_array = gcm.get_updated_neighbor_dict(graph)
+    #     # node_set, degree_list = graph.nodes, graph.degree
+
+    #     # node_coords = np.array([node_set[node]['o'] for node in node_set])
+    #     # nps = [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
+    #     # nps = np.array(nps)
+
+    #     # for (s,e) in graph.edges():
+    #     #     ps = graph[s][e][0]['pts']
+    #     #     plt.plot(ps[:,1], ps[:,0], 'green')
+
+    #     # plt.plot(nps[:,1], nps[:,0], '.', markerfacecolor='red', markeredgecolor='red', mew=2)
+
+    #     # plt.show()
+
+    #     # updated_dict, g_nodes_array = gcm.get_updated_neighbor_dict(graph)
+
+    #     # print(np.array([graph.nodes[i]['o'] for i in graph.nodes]).tolist())
+    #     # print(g_nodes_array)
+
+    #     # exit()
+
+    #     # Create a copy of the graph for node connection
+    #     temp_graph = copy.deepcopy(graph)
+
+    #     er_input = imageio.imread(path_er)
+    #     cost_arr = np.ones((128, 128))
+
+    #     for node in dict(graph.degree()):
+    #         # Access the first element of graph.neighbors
+    #         neighbor = next(iter(graph.neighbors(node)))
+
+    #     #     # Connect the node to its neighbor
+    #         gcm.connect_nodes(er_input, temp_graph, node, neighbor, updated_dict, cost_arr, g_nodes_array)
+
+    #     # # Create a copy of the graph
+    #     temp_graph_2 = copy.deepcopy(temp_graph)
+
+    #     # # Go through each node and adjust the degree
+    #     for node in temp_graph.nodes():
+    #         gcm.process_node(temp_graph_2, node)
+
+    #     temp_graph_3 = copy.deepcopy(temp_graph_2)
+    #     for node in temp_graph_2.nodes():
+    #         gcm.process_node(temp_graph_3, node)
+
+    #     node_set, degree_list = temp_graph_3.nodes, temp_graph_3.degree
+
+    #     node_coords = np.array([node_set[node]['o'] for node in node_set])
+
+    #     # return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2], temp_graph_3
+    
+    #     return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2], graph
+
     def get_junctions(self, path_skel):
         """
         @param path_er: path to er image
@@ -49,56 +112,9 @@ class JunctionAnalysis:
 
         node_set, degree_list = graph.nodes, graph.degree
 
-        # node_coords = np.array([node_set[node]['o'] for node in node_set])
-        # nps = [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
-        # nps = np.array(nps)
-
-        # for (s,e) in graph.edges():
-        #     ps = graph[s][e][0]['pts']
-        #     plt.plot(ps[:,1], ps[:,0], 'green')
-
-        # plt.plot(nps[:,1], nps[:,0], '.', markerfacecolor='red', markeredgecolor='red', mew=2)
-
-        # plt.show()
-
-        # updated_dict, g_nodes_array = gcm.get_updated_neighbor_dict(graph)
-
-        # print(np.array([graph.nodes[i]['o'] for i in graph.nodes]).tolist())
-        # print(g_nodes_array)
-
-        # exit()
-
-        # Create a copy of the graph for node connection
-        # temp_graph = copy.deepcopy(graph)
-
-        # er_input = imageio.imread(path_er)
-        # cost_arr = np.ones((128, 128))
-
-        # for node in dict(graph.degree()):
-        #     # Access the first element of graph.neighbors
-        #     neighbor = next(iter(graph.neighbors(node)))
-
-        #     # Connect the node to its neighbor
-        #     gcm.connect_nodes(er_input, temp_graph, node, neighbor, updated_dict, cost_arr, g_nodes_array)
-
-        # # Create a copy of the graph
-        # temp_graph_2 = copy.deepcopy(temp_graph)
-
-        # # Go through each node and adjust the degree
-        # for node in temp_graph.nodes():
-        #     gcm.process_node(temp_graph_2, node)
-
-        # temp_graph_3 = copy.deepcopy(temp_graph_2)
-        # for node in temp_graph_2.nodes():
-        #     gcm.process_node(temp_graph_3, node)
-
-        # node_set, degree_list = temp_graph_3.nodes, temp_graph_3.degree
-
         node_coords = np.array([node_set[node]['o'] for node in node_set])
-
-        # return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2], temp_graph_3
     
-        return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2], graph
+        return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
     
     def get_ref_junctions(self, graph):
         node_set, degree_list = graph.nodes, graph.degree
@@ -137,7 +153,7 @@ class JunctionAnalysis:
 
             skeleton_path = f'{self.data_path}{group}/preproc/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_proc_enhance.png'
 
-            junctions, temp_graph_3 = self.get_junctions(skeleton_path)
+            junctions = self.get_junctions(skeleton_path)
 
             junc_array = [[junc[0], junc[1]] for junc in junctions]
             per_frame_junctions.extend(junc_array)
