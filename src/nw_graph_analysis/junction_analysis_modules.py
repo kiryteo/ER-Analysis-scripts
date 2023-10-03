@@ -37,6 +37,9 @@ class JunctionAnalysis:
         skel = self.get_skeleton(skel_img_path)
         return sknw.build_sknw(skel, multi=True, iso=False)
     
+    def get_nodes_degree_set(self, graph):
+        return 
+
     # node_connector
     # def get_junctions(self, path_er, path_skel):
     #     """
@@ -115,14 +118,6 @@ class JunctionAnalysis:
         node_coords = np.array([node_set[node]['o'] for node in node_set])
     
         return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
-    
-    def get_ref_junctions(self, graph):
-        node_set, degree_list = graph.nodes, graph.degree
-
-        node_coords = np.array([node_set[node]['o'] for node in node_set])
-
-        # return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
-        return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
 
     def get_all_junc(self, group, num_series):
         # get reference junctions based on mean projection frame and per frame junctions for each series, all groups
@@ -141,7 +136,8 @@ class JunctionAnalysis:
         # mean_skel = f'{self.confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_proc_skel.png'
         mean_skel = f'{self.data_path}{group}/er_mean_proc/{group.lower()}{num_series}_proc_skel.png'
 
-        ref_junctions = self.get_ref_junctions(self.skel_to_graph(mean_skel))
+        # ref_junctions = self.get_ref_junctions(self.skel_to_graph(mean_skel))
+        ref_junctions = self.get_junctions(mean_skel)
         ref_junctions = [[each[0], each[1]] for each in ref_junctions]
 
         per_frame_junctions = []
@@ -149,9 +145,11 @@ class JunctionAnalysis:
         # for frame in range(fr_start, fr_end):
         for frame in range(100):
 
-            er_path = f'{self.data_path}{group}/std/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_std.png'
+            # er_path = f'{self.data_path}{group}/std/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_std.png'
 
-            skeleton_path = f'{self.data_path}{group}/preproc/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_proc_enhance.png'
+            # skeleton_path = f'{self.data_path}{group}/preproc/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_proc_enhance.png'
+            
+            skeleton_path = f'{self.data_path}{group}/skel/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
 
             junctions = self.get_junctions(skeleton_path)
 
