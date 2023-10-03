@@ -18,13 +18,14 @@ from scipy import ndimage
 from skimage.measure import label, regionprops
 from skimage import measure
 
-from junction_analysis_modules import JunctionAnalysis as JA
+from junction_analysis_modules import JunctionAnalysisModules as JAM
 import graph_connector_modules as gcm
 
 max_val = 999
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal-data/'
 sted_data_path = '/localhome/asa420/MIAL/data/sted-data/'
-junc_analysis = JA('sted')
+# junc_analysis = JAM('sted')
+junc_analysis = JAM('confocal')
 
 
 
@@ -107,7 +108,8 @@ def get_CC_patch_data(cc_id, group, num, channel):
 
 def get_sequence_CC_pixel_data(label_id_junctions, group, num, channel):
     """
-    Get pixel data per CC id
+    Get pixel data for all CC id in a sequence
+
     @param label_id_junctions: dict of CC ids and junctions
     @param group: 'ATL', 'Climp', 'Control', 'RTN'
     @param num: number of series
@@ -125,9 +127,11 @@ def get_sequence_CC_pixel_data(label_id_junctions, group, num, channel):
     return sequence_data
 
 
-def get_per_CC_pixel_data(group, num_series, region, channel):
+# def get_per_CC_pixel_data(group, num_series, region, channel):
+def get_group_CC_pixel_data(group, num_series, region, channel):
     """
-    Get pixel data per CC id
+    Get CC intensity variation for all CCs across sequences in a group
+    
     @param group: 'ATL', 'Climp', 'Control', 'RTN'
     @param num_series: number of series
     @param channel: 'egfp' or 'mch'
@@ -170,7 +174,7 @@ def create_per_CC_pixel_data_pickles(group, num_series, region, channel):
     @param num_series: number of sequences per group
     @param region: 'isolated' or 'fuzzy'
     """
-    data = get_per_CC_pixel_data(group, num_series, region, channel)
+    data = get_group_CC_pixel_data(group, num_series, region, channel)
     
     pickle.dump(data, open(f'{group}_{channel}_{region}_data.pkl', 'wb'))
 
