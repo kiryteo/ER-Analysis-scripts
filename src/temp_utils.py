@@ -2,7 +2,7 @@ import glob
 import os
 import shutil
 from skan import draw
-import numpy
+import numpy as np
 import skimage.io as io
 import skimage
 from skimage import exposure
@@ -13,6 +13,23 @@ import cv2
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 
+
+skel_path = '/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/skel/'
+
+
+def get_mean_img():
+    for ser_num in range(1, 32):
+        img_list = []
+        for frame in range(100):            
+            skel = imageio.imread(f'{skel_path}/R{ser_num}/R{ser_num}_decon_t0{frame:02d}_ch00_skel.png')
+            img_list.append(skel)
+            img_list = np.array(img_list)
+            mean_img = np.mean(img_list, axis=0)
+            imageio.imsave(f'/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/R{ser_num}_mean_skel.png', mean_img)
+
+# get_mean_img()
+
+
 def get_std_samples(group, num_series):
     for i in range(1, num_series+1):
         for j in range(100):
@@ -21,10 +38,12 @@ def get_std_samples(group, num_series):
             cv2.imwrite(f'/localhome/asa420/MIAL/data/confocal_movies/{group}/new_op_jul/std_mch/{group[0]}{i}_decon_t0{j:02d}_ch01_std.png', op*255)
 
 
-get_std_samples('ATL', 26)
-get_std_samples('RTN', 29)
-get_std_samples('Climp', 31)
-exit()
+# get_std_samples('ATL', 26)
+# get_std_samples('RTN', 29)
+# get_std_samples('Climp', 31)
+# exit()
+
+
 
 
 def preproc_individual_sample(img_path):
