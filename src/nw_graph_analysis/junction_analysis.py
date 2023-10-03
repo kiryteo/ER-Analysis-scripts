@@ -294,12 +294,12 @@ def cc_signal(group, channel, region):
     @return: list of lists of deposits
     """
 
-    # groups = {'ATL': 26, 'Climp': 31, 'Control': 31, 'RTN': 29}
-    groups = {'ATL': 26, 'Climp': 31, 'RTN': 29}
+    groups = {'ATL': ('A', 26), 'Climp': ('C', 31), 'Control': ('Ct', 31), 'RTN': ('R', 29)}
+    # groups = {'ATL': 26, 'Climp': 31, 'RTN': 29}
     channel_idx = 0 if channel == 'egfp' else 1
 
     group_data = []
-    for series_num in range(1, groups[group] + 1):
+    for series_num in range(1, groups[group][1] + 1):
         region_cc, labelled_img = get_region_cc(group, series_num, region)
 
         # CC coords per series
@@ -308,11 +308,14 @@ def cc_signal(group, channel, region):
         # Data: num_cc * 100
         series_values = []
         for i in range(100):
-            # if group == 'Control':
-            #     path = f'{confocal_data_path}/Control/files/img_{series_num}_decon_t0{i:02d}.tif'
-            # else:
-            #     path = f'{confocal_data_path}/{group}/files/{group[0]}{series_num}_decon_t0{i:02d}_ch0{channel_idx}.tif'
-            path = f'{confocal_data_path}/{group}/files/{group[0]}{series_num}_decon_t0{i:02d}_ch0{channel_idx}.tif'
+            if group == 'Control':
+                path = f'{confocal_data_path}/Control/files/img_{series_num}_decon_t0{i:02d}.tif'
+            else:
+                path = f'{confocal_data_path}/{group}/files/{groups[group][0]}{series_num}_decon_t0{i:02d}_ch0{channel_idx}.tif'
+
+            # path = f'{confocal_data_path}/{group}/files/{group[0]}{series_num}_decon_t0{i:02d}_ch0{channel_idx}.tif'
+            # path = f'{confocal_data_path}/{group}/files/{groups[group][0]}{series_num}_decon_t0{i:02d}_ch0{channel_idx}.tif'
+
             img = get_std_img(path)
             region_means = [np.mean(img[coords]) for coords in region_cc_coords.values()]
             series_values.append(region_means)

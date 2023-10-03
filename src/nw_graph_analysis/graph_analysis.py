@@ -306,26 +306,43 @@ def get_evolution_plots(measure):
     # Calculate the mean and standard deviation for each dataset
     # mean_atl = atl.mean(axis=0)
     # # qcd_atl = qcd(atl.flatten())
-    mean_atl = abs(np.fft.fftshift(np.fft.fft(atl.mean(axis=0))))
+    # mean_atl = abs(np.fft.fftshift(np.fft.fft(atl.mean(axis=0))))
+
+    fft_atl = [abs(np.fft.fftshift(np.fft.fft(series))) for series in atl]
+
+    mean_atl = np.mean(fft_atl, axis=0)
+
     # # std_atl = atl.std(axis=1)
 
     # mean_climp = climp.mean(axis=0)
     # # qcd_climp = qcd(climp.flatten())
-    mean_climp = abs(np.fft.fftshift(np.fft.fft(climp.mean(axis=0))))
+    # mean_climp = abs(np.fft.fftshift(np.fft.fft(climp.mean(axis=0))))
     # # std_climp = climp.std(axis=1)
+
+    fft_climp = [abs(np.fft.fftshift(np.fft.fft(series))) for series in climp]
+
+    mean_climp = np.mean(fft_climp, axis=0)
 
     # mean_control = control.mean(axis=0)
     # # qcd_control = qcd(control.flatten())
-    mean_control = abs(np.fft.fftshift(np.fft.fft(control.mean(axis=0))))
+    # mean_control = abs(np.fft.fftshift(np.fft.fft(control.mean(axis=0))))
     # # std_control = control.std(axis=1)
+
+    fft_control = [abs(np.fft.fftshift(np.fft.fft(series))) for series in control]
+
+    mean_control = np.mean(fft_control, axis=0)
 
     # mean_rtn = rtn.mean(axis=0)
     # # qcd_rtn = qcd(rtn.flatten())
-    mean_rtn = abs(np.fft.fftshift(np.fft.fft(rtn.mean(axis=0))))
+    # mean_rtn = abs(np.fft.fftshift(np.fft.fft(rtn.mean(axis=0))))
     # std_rtn = rtn.std(axis=1)
 
+    fft_rtn = [abs(np.fft.fftshift(np.fft.fft(series))) for series in rtn]
+
+    mean_rtn = np.mean(fft_rtn, axis=0)
+
     # Create a figure and axis for the plot
-    # plt.figure(figsize=(12, 6))
+    plt.figure(figsize=(12, 6))
 
     # Plot the mean data as a line plot
     # sns.lineplot(x=range(len(mean_atl)), y=mean_atl, label='ATL')
@@ -359,10 +376,20 @@ def get_evolution_plots(measure):
 
     plt.legend()
 
-    # Show the plot
-    plt.show()
+    measure_name = str(measure).split('_evolution')[0][10:]
 
-get_evolution_plots(assortativity_coefficient_evolution)
+    # plt.xlabel('Time (frames)', fontsize=16)
+    plt.ylabel(measure_name, fontsize=16)
+    plt.title(f'{measure_name} fft evolution across groups', fontsize=18)
+
+    plt.savefig(f'graph_evolution_plots/{measure_name}_fft_evolution.png', dpi=300, bbox_inches='tight', pad_inches=0.1)
+
+    plt.close()
+
+    # Show the plot
+    # plt.show()
+
+# get_evolution_plots(assortativity_coefficient_evolution)
 # get_evolution_plots(clustering_coefficient_evolution)
 # get_evolution_plots(pearson_correlation_coefficient_evolution)
 # get_evolution_plots(local_efficiency_evolution)
@@ -395,7 +422,7 @@ get_evolution_plots(assortativity_coefficient_evolution)
 
 
 
-
+exit()
 
 
 

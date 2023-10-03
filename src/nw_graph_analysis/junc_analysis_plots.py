@@ -20,10 +20,11 @@ import pickle as pkl
 
 # from structure_extraction import node_connector, get_updated_degree_nodes
 
-from junction_analysis_modules import JunctionAnalysis as JA
-from junction_analysis import cc_area_measure, cc_signal, cc_signal_net_norm, get_per_CC_pixel_data, get_mean_std_per_CC_pixel_data, get_region_areas_per_group, get_cc_ids
+from junction_analysis_modules import JunctionAnalysisModules as JAM
+from junction_analysis import cc_area_measure, cc_signal, cc_signal_net_norm, get_group_CC_pixel_data, get_mean_std_per_CC_pixel_data, get_region_areas_per_group, get_cc_ids
 
-confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies'
+confocal_data_path = '/localhome/asa420/MIAL/data/confocal-data/'
+sted_data_path = '/localhome/asa420/MIAL/data/sted-data/'
 # pickle_path_prefix = '/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/CC_junctions/'
 pickle_path_prefix = '/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/'
 
@@ -35,7 +36,7 @@ VALID_MEASURES = ['tubules', 'tub-mean']
 
 # junc_analysis = JA(confocal_data_path)
 
-junc_analysis = JA('sted')
+junc_analysis = JAM('confocal')
 
 def get_std_img(path):
     img = imageio.imread(path)
@@ -72,29 +73,30 @@ def get_mean_group_data(data, measure):
 
 
 def get_CC_mean_variation(channel, region, measure):
-    # atl = cc_signal('ATL', channel, region)
-    # pkl.dump(atl, open(f'ATL_{channel}_{region}_CC_mean.pkl', 'wb'))
-    # climp = cc_signal('Climp', channel, region)
-    # pkl.dump(climp, open(f'Climp_{channel}_{region}_CC_mean.pkl', 'wb'))
-    # rtn = cc_signal('RTN', channel, region)
-    # pkl.dump(rtn, open(f'RTN_{channel}_{region}_CC_mean.pkl', 'wb'))
+    atl = cc_signal('ATL', channel, region)
+    pkl.dump(atl, open(f'ATL_{channel}_{region}_CC_mean_unet.pkl', 'wb'))
+    climp = cc_signal('Climp', channel, region)
+    pkl.dump(climp, open(f'Climp_{channel}_{region}_CC_mean_unet.pkl', 'wb'))
+    rtn = cc_signal('RTN', channel, region)
+    pkl.dump(rtn, open(f'RTN_{channel}_{region}_CC_mean_unet.pkl', 'wb'))
+
     # control = cc_signal('Control', channel, region)
-    # pkl.dump(control, open(f'Control_{channel}_{region}_CC_mean.pkl', 'wb'))
+    # pkl.dump(control, open(f'Control_{channel}_{region}_CC_mean_unet.pkl', 'wb'))
 
-    climp_sted = cc_signal('Climp', channel, region)
-    pkl.dump(climp_sted, open(f'Climp_{channel}_{region}_CC_mean_STED.pkl', 'wb'))
+    # climp_sted = cc_signal('Climp', channel, region)
+    # pkl.dump(climp_sted, open(f'Climp_{channel}_{region}_CC_mean_STED.pkl', 'wb'))
 
-    control_sted = cc_signal('Control', channel, region)
-    pkl.dump(control_sted, open(f'Control_{channel}_{region}_CC_mean_STED.pkl', 'wb'))
+    # control_sted = cc_signal('Control', channel, region)
+    # pkl.dump(control_sted, open(f'Control_{channel}_{region}_CC_mean_STED.pkl', 'wb'))
 
-    rtn_sted = cc_signal('RTN', channel, region)
-    pkl.dump(rtn_sted, open(f'RTN_{channel}_{region}_CC_mean_STED.pkl', 'wb'))
+    # rtn_sted = cc_signal('RTN', channel, region)
+    # pkl.dump(rtn_sted, open(f'RTN_{channel}_{region}_CC_mean_STED.pkl', 'wb'))
 
-    exit()
+    # exit()
 
-    atl = pkl.load(open(f'pickles/ATL_{channel}_{region}_CC_mean.pkl', 'rb'))
-    climp = pkl.load(open(f'pickles/Climp_{channel}_{region}_CC_mean.pkl', 'rb'))
-    rtn = pkl.load(open(f'pickles/RTN_{channel}_{region}_CC_mean.pkl', 'rb'))
+    # atl = pkl.load(open(f'pickles/ATL_{channel}_{region}_CC_mean.pkl', 'rb'))
+    # climp = pkl.load(open(f'pickles/Climp_{channel}_{region}_CC_mean.pkl', 'rb'))
+    # rtn = pkl.load(open(f'pickles/RTN_{channel}_{region}_CC_mean.pkl', 'rb'))
     
     atl = get_mean_group_data(atl, measure)
     climp = get_mean_group_data(climp, measure)
@@ -103,22 +105,36 @@ def get_CC_mean_variation(channel, region, measure):
     df = pd.DataFrame()
 
     if channel == 'egfp':
-        control = pkl.load(open(f'pickles/Control_{channel}_{region}_CC_mean.pkl', 'rb'))
+        # control = pkl.load(open(f'pickles/Control_{channel}_{region}_CC_mean.pkl', 'rb'))
         control = get_mean_group_data(control, measure)
 
         df['CC_mean'] = pd.Series(np.concatenate((control, rtn, climp, atl)))
         df['Group'] = pd.Series(np.concatenate((['Control'] * len(control), ['Reticulon'] * len(rtn), ['Climp'] * len(climp), ['Atlastin'] * len(atl) )))
+
+        ax = sns.boxplot(data=df, x='Group', y='CC_mean', showfliers=False, whis=0.5, linewidth=2)
+
+        box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'), ('Reticulon', 'Control')]
     else:
         df['CC_mean'] = pd.Series(np.concatenate((rtn, climp, atl)))
         df['Group'] = pd.Series(np.concatenate((['Reticulon'] * len(rtn), ['Climp'] * len(climp), ['Atlastin'] * len(atl))))
 
-    # ax = sns.boxplot(data=df, x='Group', y='CC_mean', showfliers=False, whis=0.5, linewidth=2)
+        colors = sns.color_palette(n_colors=4)
 
-    colors = sns.color_palette(n_colors=4)
+        pal = {'Reticulon': colors[1], 'Climp': colors[2], 'Atlastin': colors[3]}
 
-    pal = {'Reticulon': colors[1], 'Climp': colors[2], 'Atlastin': colors[3]}
+        ax = sns.boxplot(data=df, x='Group', y='CC_mean', showfliers=False, width=0.9, palette=pal)
+        
+        box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Climp', 'Reticulon')]
 
-    ax = sns.boxplot(data=df, x='Group', y='CC_mean', showfliers=False, width=0.9, palette=pal)
+    # if channel == 'egfp':
+    #     ax = sns.boxplot(data=df, x='Group', y='CC_mean', showfliers=False, whis=0.5, linewidth=2)
+    # else:
+    #     colors = sns.color_palette(n_colors=4)
+
+    #     pal = {'Reticulon': colors[1], 'Climp': colors[2], 'Atlastin': colors[3]}
+
+    #     ax = sns.boxplot(data=df, x='Group', y='CC_mean', showfliers=False, width=0.9, palette=pal)
+
     # sns.set_palette(pal)
     # plt.show()
     # plt.yscale('log')
@@ -126,8 +142,8 @@ def get_CC_mean_variation(channel, region, measure):
     # ax.set_ylim(0, 0.12) # for egfp std
     # ax.set_ylim(0, 0.15)
 
-    ax.set_xlim(-1, 3.0)
-    ax.set_ylim(0, 0.59)
+    # ax.set_xlim(-1, 3.0)
+    # ax.set_ylim(0, 0.59)
 
     # ax.set_ylim(0, 0.85) # for egfp
     #ax.set_ylim(0, 0.5) # for mch
@@ -137,12 +153,11 @@ def get_CC_mean_variation(channel, region, measure):
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=90)
     ax.set_yticklabels(yt, fontsize=13)
 
-    # box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'), ('Reticulon', 'Control')]
-    # box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Climp', 'Reticulon')]
+
     # # box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
 
-    # statannot.add_stat_annotation(ax, x='Group', y='CC_mean', data=df, box_pairs=box_pairs,
-                                #   test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=15)
+    statannot.add_stat_annotation(ax, x='Group', y='CC_mean', data=df, box_pairs=box_pairs,
+                                  test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=15)
 
     region_name = 'Isolated' if region == 'iso' else 'Overlapping'
     ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
@@ -158,8 +173,9 @@ def get_CC_mean_variation(channel, region, measure):
     # plt.subplots_adjust(hspace = 1, wspace = 0)
     plt.xlabel('Group', fontsize=15)
     plt.ylabel(f'{measure_name} over sequence per CC mean', fontsize=15)
-    plt.gcf().set_size_inches(2.2, 6)
-    plt.savefig(f'Seq_{measure_name}_CC_mean_{region_name}_{channel}_v4', bbox_inches='tight', pad_inches=0.1)
+    # plt.gcf().set_size_inches(2.2, 6)
+    plt.gcf().set_size_inches(2.5, 8)
+    plt.savefig(f'UNet_Seq_{measure_name}_CC_mean_{region_name}_{channel}_v4', bbox_inches='tight', pad_inches=0.1)
     plt.close()
     # plt.show()
 
@@ -184,13 +200,21 @@ def get_correlation(l1, l2):
 
 
 def get_CC_mean_correlation(region):
-    atl_egfp = pkl.load(open(f'pickles/ATL_egfp_{region}_CC_mean.pkl', 'rb'))
-    climp_egfp = pkl.load(open(f'pickles/Climp_egfp_{region}_CC_mean.pkl', 'rb'))
-    rtn_egfp = pkl.load(open(f'pickles/RTN_egfp_{region}_CC_mean.pkl', 'rb'))
+    # atl_egfp = pkl.load(open(f'pickles/ATL_egfp_{region}_CC_mean.pkl', 'rb'))
+    # climp_egfp = pkl.load(open(f'pickles/Climp_egfp_{region}_CC_mean.pkl', 'rb'))
+    # rtn_egfp = pkl.load(open(f'pickles/RTN_egfp_{region}_CC_mean.pkl', 'rb'))
 
-    atl_mch = pkl.load(open(f'pickles/ATL_mch_{region}_CC_mean.pkl', 'rb'))
-    climp_mch = pkl.load(open(f'pickles/Climp_mch_{region}_CC_mean.pkl', 'rb'))
-    rtn_mch = pkl.load(open(f'pickles/RTN_mch_{region}_CC_mean.pkl', 'rb'))
+    # atl_mch = pkl.load(open(f'pickles/ATL_mch_{region}_CC_mean.pkl', 'rb'))
+    # climp_mch = pkl.load(open(f'pickles/Climp_mch_{region}_CC_mean.pkl', 'rb'))
+    # rtn_mch = pkl.load(open(f'pickles/RTN_mch_{region}_CC_mean.pkl', 'rb'))
+
+    atl_egfp = pkl.load(open(f'ATL_egfp_{region}_CC_mean_unet.pkl', 'rb'))
+    climp_egfp = pkl.load(open(f'Climp_egfp_{region}_CC_mean_unet.pkl', 'rb'))
+    rtn_egfp = pkl.load(open(f'RTN_egfp_{region}_CC_mean_unet.pkl', 'rb'))
+
+    atl_mch = pkl.load(open(f'ATL_mch_{region}_CC_mean_unet.pkl', 'rb'))
+    climp_mch = pkl.load(open(f'Climp_mch_{region}_CC_mean_unet.pkl', 'rb'))
+    rtn_mch = pkl.load(open(f'RTN_mch_{region}_CC_mean_unet.pkl', 'rb'))
 
     atl_corr = get_correlation(atl_egfp, atl_mch)
     climp_corr = get_correlation(climp_egfp, climp_mch)
@@ -206,8 +230,8 @@ def get_CC_mean_correlation(region):
 
     ax = sns.boxplot(data=df, x='Group', y='Cross-Correlation', showfliers=False, width=0.9, palette=pal)
 
-    ax.set_ylim(-0.31, 0.65)
-    ax.set_xlim(-1, 3.0)
+    # ax.set_ylim(-0.31, 0.65)
+    # ax.set_xlim(-1, 3.0)
 
     yt = ax.get_yticks()
     yt = [f'{y:.2f}' for y in yt]
@@ -216,10 +240,10 @@ def get_CC_mean_correlation(region):
 
     # region_name = 'Isolated' if region == 'iso' else 'Overlapping'
 
-    # box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Climp', 'Reticulon')]
+    box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Climp', 'Reticulon')]
 
-    # statannot.add_stat_annotation(ax, x='Group', y='Cross-Correlation', data=df, box_pairs=box_pairs,
-    #                               test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=15)
+    statannot.add_stat_annotation(ax, x='Group', y='Cross-Correlation', data=df, box_pairs=box_pairs,
+                                  test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=15)
 
     # plt.title(f'{region_name} CC mean cross-correlation between ERmoxGFP and mCherry over 100 frames', fontsize=20)
     plt.grid(True)
@@ -228,9 +252,9 @@ def get_CC_mean_correlation(region):
     plt.ylabel('Correlation coefficient', fontsize=15)
     # plt.show()
     # plt.gcf().set_size_inches(16, 4)
-    plt.gcf().set_size_inches(2.5, 6)
+    plt.gcf().set_size_inches(2.5, 8)
     # plt.savefig('num_juncs_iso_norm.png', bbox_inches='tight', pad_inches=0.6)
-    plt.savefig(f'CC_mean_cross_corr_{region}_v3.png', bbox_inches='tight', pad_inches=0.1)
+    plt.savefig(f'UNet_CC_mean_cross_corr_{region}_v3.png', bbox_inches='tight', pad_inches=0.1)
     plt.close()
 
 
@@ -413,10 +437,15 @@ def plot_num_junctions():
     """
     Plot number of junctions per group
     """
-    atl = pkl.load(open('pickles/ATL_egfp_iso_CC_mean.pkl', 'rb'))
-    climp = pkl.load(open('pickles/Climp_egfp_iso_CC_mean.pkl', 'rb'))
-    rtn = pkl.load(open('pickles/RTN_egfp_iso_CC_mean.pkl', 'rb'))
-    control = pkl.load(open('pickles/Control_egfp_iso_CC_mean.pkl', 'rb'))
+    # atl = pkl.load(open('pickles/ATL_egfp_iso_CC_mean.pkl', 'rb'))
+    # climp = pkl.load(open('pickles/Climp_egfp_iso_CC_mean.pkl', 'rb'))
+    # rtn = pkl.load(open('pickles/RTN_egfp_iso_CC_mean.pkl', 'rb'))
+    # control = pkl.load(open('pickles/Control_egfp_iso_CC_mean.pkl', 'rb'))
+
+    atl = pkl.load(open('ATL_egfp_iso_CC_mean_unet.pkl', 'rb'))
+    climp = pkl.load(open('Climp_egfp_iso_CC_mean_unet.pkl', 'rb'))
+    rtn = pkl.load(open('RTN_egfp_iso_CC_mean_unet.pkl', 'rb'))
+    control = pkl.load(open('Control_egfp_iso_CC_mean_unet.pkl', 'rb'))
 
     # atl_area = pkl.load(open('ATL_er_area.pkl', 'rb'))
     # climp_area = pkl.load(open('Climp_er_area.pkl', 'rb'))
@@ -446,8 +475,8 @@ def plot_num_junctions():
 
     ax = sns.boxplot(data=df, x='Group', y='Num_junctions', showfliers=False, width=0.98)
 
-    ax.set_ylim(0, 165.0) # for egfp std
-    ax.set_xlim(-1, 4.0)
+    # ax.set_ylim(0, 165.0) # for egfp std
+    # ax.set_xlim(-1, 4.0)
 
     # ax = sns.boxplot(data=df, x='Group', y='Num_junctions', showfliers=False, whis=0.5, linewidth=2)
 
@@ -474,11 +503,11 @@ def plot_num_junctions():
 
     # plt.errorbar(x=[0, 1, 2, 3], y=[np.mean(control_num), np.mean(rtn_num), np.mean(climp_num), np.mean(atl_num)], yerr=[ctrl_sem, rtn_sem, climp_sem, atl_sem], fmt='o', color='black', capsize=5, markersize=8)
 
-    # box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'),
-    #              ('Reticulon', 'Control')]
+    box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'),
+                 ('Reticulon', 'Control')]
 
-    # statannot.add_stat_annotation(ax, x='Group', y='Num_junctions', data=df, box_pairs=box_pairs,
-    #                               test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=10)
+    statannot.add_stat_annotation(ax, x='Group', y='Num_junctions', data=df, box_pairs=box_pairs,
+                                  test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=13)
 
     # plt.rcParams['figure.figsize'] = (5, 20)
     # plt.title('Number of isolated junctions per sequence (normalized by ER area)', fontsize=24)
@@ -488,9 +517,9 @@ def plot_num_junctions():
     # plt.ylabel('Number of junctions (normalized)', fontsize=24)
     plt.ylabel('Number of junctions', fontsize=15)
     # plt.show()
-    plt.gcf().set_size_inches(2.2, 6)
+    plt.gcf().set_size_inches(2.5, 8)
     # plt.savefig('num_juncs_iso_norm.png', bbox_inches='tight', pad_inches=0.6)
-    plt.savefig('num_juncs_iso_ver_v4.png', bbox_inches='tight', pad_inches=0.1)
+    plt.savefig('UNet_num_juncs_iso_ver_v4.png', bbox_inches='tight', pad_inches=0.1)
     plt.close()
 
 # plot_num_junctions()
@@ -529,14 +558,46 @@ def get_iso_fuz_ratio_sted(group, num):
 
     # return iso_data, fuz_data
 
-def get_sted_cc_area():
-    control_data = cc_area_measure('Control', 'fuz', 1, 17)
-    rtn_data = cc_area_measure('RTN', 'fuz', 1, 17)
-    climp_data = cc_area_measure('Climp', 'fuz', 1, 10)
+# def get_sted_cc_area():
+#     control_data = cc_area_measure('Control', 'fuz', 1, 17)
+#     rtn_data = cc_area_measure('RTN', 'fuz', 1, 17)
+#     climp_data = cc_area_measure('Climp', 'fuz', 1, 10)
+
+#     df = pd.DataFrame()
+#     df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_data), ['Reticulon'] * len(rtn_data), ['Climp'] * len(climp_data))))
+#     df['Area'] = pd.Series(np.concatenate((control_data, rtn_data, climp_data)))
+
+#     ax = sns.boxplot(data=df, x='Group', y='Area', showfliers=False, width=0.9)
+
+#     # ax.set_ylim(0, 0.99)
+
+#     yt = ax.get_yticks()
+#     yt = [f'{y:.2f}' for y in yt]
+#     ax.set_yticklabels(yt, fontsize=13)
+#     ax.set_xticklabels(ax.get_xticklabels(), rotation=90,fontsize=13)
+
+#     box_pairs = [('Climp', 'Reticulon'), ('Climp', 'Control'), ('Reticulon', 'Control')]
+#     statannot.add_stat_annotation(ax, x='Group', y='Area', data=df, box_pairs=box_pairs,
+#                                     test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=10)
+    
+#     plt.grid(True)
+#     plt.xlabel('Group', fontsize=15)
+#     plt.ylabel('Area', fontsize=15)
+
+#     plt.gcf().set_size_inches(2.2, 6)
+#     plt.savefig('STED_fuz_cc_area_ver_v3.png', bbox_inches='tight', pad_inches=0.1)
+#     plt.close()
+
+
+def get_cc_area():
+    control_data = cc_area_measure('Control', 'iso', 1, 31)
+    rtn_data = cc_area_measure('RTN', 'iso', 1, 29)
+    climp_data = cc_area_measure('Climp', 'iso', 1, 31)
+    atl_data = cc_area_measure('ATL', 'iso', 1, 26)
 
     df = pd.DataFrame()
-    df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_data), ['Reticulon'] * len(rtn_data), ['Climp'] * len(climp_data))))
-    df['Area'] = pd.Series(np.concatenate((control_data, rtn_data, climp_data)))
+    df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_data), ['Reticulon'] * len(rtn_data), ['Climp'] * len(climp_data), ['Atlastin'] * len(atl_data))))
+    df['Area'] = pd.Series(np.concatenate((control_data, rtn_data, climp_data, atl_data)))
 
     ax = sns.boxplot(data=df, x='Group', y='Area', showfliers=False, width=0.9)
 
@@ -549,19 +610,21 @@ def get_sted_cc_area():
 
     box_pairs = [('Climp', 'Reticulon'), ('Climp', 'Control'), ('Reticulon', 'Control')]
     statannot.add_stat_annotation(ax, x='Group', y='Area', data=df, box_pairs=box_pairs,
-                                    test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=10)
+                                    test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=13)
     
     plt.grid(True)
     plt.xlabel('Group', fontsize=15)
     plt.ylabel('Area', fontsize=15)
 
-    plt.gcf().set_size_inches(2.2, 6)
-    plt.savefig('STED_fuz_cc_area_ver_v3.png', bbox_inches='tight', pad_inches=0.1)
+    plt.gcf().set_size_inches(2.5, 8)
+    plt.savefig('UNet_iso_cc_area_ver_v3.png', bbox_inches='tight', pad_inches=0.1)
     plt.close()
 
+# get_sted_cc_area()
+# exit()
 
-get_sted_cc_area()
-exit()
+# get_cc_area()
+# exit()
 
 
 def get_sted_iso_fuz_ratio():
@@ -630,36 +693,31 @@ def get_sted_iso_fuz_ratio():
 
 
 def get_iso_fuz_ratio():
-    atl_iso = pkl.load(open('pickles/ATL_egfp_iso_CC_mean.pkl', 'rb'))
+    atl_iso = pkl.load(open('ATL_egfp_iso_CC_mean_unet.pkl', 'rb'))
+    climp_iso = pkl.load(open('Climp_egfp_iso_CC_mean_unet.pkl', 'rb'))
+    rtn_iso = pkl.load(open('RTN_egfp_iso_CC_mean_unet.pkl', 'rb'))
+    control_iso = pkl.load(open('Control_egfp_iso_CC_mean_unet.pkl', 'rb'))
 
-    # atl_iso_num = [len(series) for series in atl_iso]
-    # print(atl_iso_num)
-    # exit()
-
-    # climp_iso = pkl.load(open('pickles/Climp_egfp_iso_CC_mean.pkl', 'rb'))
-    # rtn_iso = pkl.load(open('pickles/RTN_egfp_iso_CC_mean.pkl', 'rb'))
-    # control_iso = pkl.load(open('pickles/Control_egfp_iso_CC_mean.pkl', 'rb'))
-
-    atl_fuz = pkl.load(open('pickles/ATL_egfp_fuz_CC_mean.pkl', 'rb'))
-    # climp_fuz = pkl.load(open('pickles/Climp_egfp_fuz_CC_mean.pkl', 'rb'))
-    # rtn_fuz = pkl.load(open('pickles/RTN_egfp_fuz_CC_mean.pkl', 'rb'))
-    # control_fuz = pkl.load(open('pickles/Control_egfp_fuz_CC_mean.pkl', 'rb'))
+    atl_fuz = pkl.load(open('ATL_egfp_fuz_CC_mean_unet.pkl', 'rb'))
+    climp_fuz = pkl.load(open('Climp_egfp_fuz_CC_mean_unet.pkl', 'rb'))
+    rtn_fuz = pkl.load(open('RTN_egfp_fuz_CC_mean_unet.pkl', 'rb'))
+    control_fuz = pkl.load(open('Control_egfp_fuz_CC_mean_unet.pkl', 'rb'))
 
     atl_iso_num = [len(series) for series in atl_iso]
-    # climp_iso_num = [len(series) for series in climp_iso]
-    # rtn_iso_num = [len(series) for series in rtn_iso]
-    # control_iso_num = [len(series) for series in control_iso]
+    climp_iso_num = [len(series) for series in climp_iso]
+    rtn_iso_num = [len(series) for series in rtn_iso]
+    control_iso_num = [len(series) for series in control_iso]
 
     atl_fuz_num = [len(series) for series in atl_fuz]
-    # climp_fuz_num = [len(series) for series in climp_fuz]
-    # rtn_fuz_num = [len(series) for series in rtn_fuz]
-    # control_fuz_num = [len(series) for series in control_fuz]
+    climp_fuz_num = [len(series) for series in climp_fuz]
+    rtn_fuz_num = [len(series) for series in rtn_fuz]
+    control_fuz_num = [len(series) for series in control_fuz]
 
-    print(atl_iso_num)
-    print(atl_fuz_num)
-    # print(climp_iso_num)
+    # print(atl_iso_num)
+    # print(atl_fuz_num)
+    # # print(climp_iso_num)
 
-    exit()
+    # exit()
 
     # atl_ratio = [iso / fuz for iso, fuz in zip(atl_iso_num, atl_fuz_num)]
     # climp_ratio = [iso / fuz for iso, fuz in zip(climp_iso_num, climp_fuz_num)]
@@ -700,11 +758,11 @@ def get_iso_fuz_ratio():
     ax.set_yticklabels(yt, fontsize=13)
     ax.set_xticklabels(ax.get_xticklabels(), rotation=90,fontsize=13)
 
-    # box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'),
-    #              ('Reticulon', 'Control')]
+    box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'),
+                 ('Reticulon', 'Control')]
 
-    # statannot.add_stat_annotation(ax, x='Group', y='Ratio', data=df, box_pairs=box_pairs,
-    #                               test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=10)
+    statannot.add_stat_annotation(ax, x='Group', y='Ratio', data=df, box_pairs=box_pairs,
+                                  test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=12)
 
     # plt.rcParams['figure.figsize'] = (5, 20)
     # plt.title(f'Isolated to Overlapping junctions ratio', fontsize=24)
@@ -714,9 +772,9 @@ def get_iso_fuz_ratio():
     plt.ylabel('Ratio', fontsize=15)
 
     # plt.gcf().set_size_inches(12, 12)
-    plt.gcf().set_size_inches(2.2, 6)
+    plt.gcf().set_size_inches(2.5, 8)
     # plt.savefig('iso_overlap_juncs_ratio.png', bbox_inches='tight', pad_inches=0.4)
-    plt.savefig('overlap_iso_juncs_ratio_ver_v3.png', bbox_inches='tight', pad_inches=0.1)
+    plt.savefig('UNet_overlap_iso_juncs_ratio_ver_v3.png', bbox_inches='tight', pad_inches=0.1)
     plt.close()
     # plt.show()
 
@@ -725,7 +783,6 @@ def get_iso_fuz_ratio():
 
 
 def get_iso_fuz_area_ratio():
-
     # climp_iso_sted = get_region_areas_per_group('Climp', 10, 'iso')
     # with open('Climp_iso_area_sted.pkl', 'wb') as f:
     #     pkl.dump(climp_iso_sted, f)
@@ -751,44 +808,44 @@ def get_iso_fuz_area_ratio():
     # with open('RTN_fuz_area_sted.pkl', 'wb') as f:
     #     pkl.dump(rtn_fuz_sted, f)
 
-    # atl_iso = get_region_areas_per_group('ATL', 26, 'iso')
-    # with open('ATL_iso_area.pkl', 'wb') as f:
-    #     pkl.dump(atl_iso, f)
+    atl_iso = get_region_areas_per_group('ATL', 26, 'iso')
+    with open('ATL_iso_area_unet.pkl', 'wb') as f:
+        pkl.dump(atl_iso, f)
     
-    # climp_iso = get_region_areas_per_group('Climp', 31, 'iso')
-    # with open('Climp_iso_area.pkl', 'wb') as f:
-    #     pkl.dump(climp_iso, f)
+    climp_iso = get_region_areas_per_group('Climp', 31, 'iso')
+    with open('Climp_iso_area_unet.pkl', 'wb') as f:
+        pkl.dump(climp_iso, f)
 
-    # rtn_iso = get_region_areas_per_group('RTN', 29, 'iso')
-    # with open('RTN_iso_area.pkl', 'wb') as f:
-    #     pkl.dump(rtn_iso, f)
+    rtn_iso = get_region_areas_per_group('RTN', 29, 'iso')
+    with open('RTN_iso_area_unet.pkl', 'wb') as f:
+        pkl.dump(rtn_iso, f)
 
-    # control_iso = get_region_areas_per_group('Control', 31, 'iso')
-    # with open('Control_iso_area.pkl', 'wb') as f:
-    #     pkl.dump(control_iso, f)
+    control_iso = get_region_areas_per_group('Control', 31, 'iso')
+    with open('Control_iso_area_unet.pkl', 'wb') as f:
+        pkl.dump(control_iso, f)
 
-    # atl_fuz = get_region_areas_per_group('ATL', 26, 'fuz')
-    # with open('ATL_fuz_area.pkl', 'wb') as f:
-    #     pkl.dump(atl_fuz, f)
+    atl_fuz = get_region_areas_per_group('ATL', 26, 'fuz')
+    with open('ATL_fuz_area_unet.pkl', 'wb') as f:
+        pkl.dump(atl_fuz, f)
 
-    # climp_fuz = get_region_areas_per_group('Climp', 31, 'fuz')
-    # with open('Climp_fuz_area.pkl', 'wb') as f:
-    #     pkl.dump(climp_fuz, f)
+    climp_fuz = get_region_areas_per_group('Climp', 31, 'fuz')
+    with open('Climp_fuz_area_unet.pkl', 'wb') as f:
+        pkl.dump(climp_fuz, f)
 
-    # rtn_fuz = get_region_areas_per_group('RTN', 29, 'fuz')
-    # with open('RTN_fuz_area.pkl', 'wb') as f:
-    #     pkl.dump(rtn_fuz, f)
+    rtn_fuz = get_region_areas_per_group('RTN', 29, 'fuz')
+    with open('RTN_fuz_area_unet.pkl', 'wb') as f:
+        pkl.dump(rtn_fuz, f)
 
-    # control_fuz = get_region_areas_per_group('Control', 31, 'fuz')
-    # with open('Control_fuz_area.pkl', 'wb') as f:
-    #     pkl.dump(control_fuz, f)
+    control_fuz = get_region_areas_per_group('Control', 31, 'fuz')
+    with open('Control_fuz_area_unet.pkl', 'wb') as f:
+        pkl.dump(control_fuz, f)
 
-    climp_iso_sted = pkl.load(open('pickles/Climp_iso_area_sted.pkl', 'rb'))
-    climp_fuz_sted = pkl.load(open('pickles/Climp_fuz_area_sted.pkl', 'rb'))
-    control_iso_sted = pkl.load(open('pickles/Control_iso_area_sted.pkl', 'rb'))
-    control_fuz_sted = pkl.load(open('pickles/Control_fuz_area_sted.pkl', 'rb'))
-    rtn_iso_sted = pkl.load(open('pickles/RTN_iso_area_sted.pkl', 'rb'))
-    rtn_fuz_sted = pkl.load(open('pickles/RTN_fuz_area_sted.pkl', 'rb'))
+    # climp_iso_sted = pkl.load(open('pickles/Climp_iso_area_sted.pkl', 'rb'))
+    # climp_fuz_sted = pkl.load(open('pickles/Climp_fuz_area_sted.pkl', 'rb'))
+    # control_iso_sted = pkl.load(open('pickles/Control_iso_area_sted.pkl', 'rb'))
+    # control_fuz_sted = pkl.load(open('pickles/Control_fuz_area_sted.pkl', 'rb'))
+    # rtn_iso_sted = pkl.load(open('pickles/RTN_iso_area_sted.pkl', 'rb'))
+    # rtn_fuz_sted = pkl.load(open('pickles/RTN_fuz_area_sted.pkl', 'rb'))
 
     # atl_iso = pkl.load(open('pickles/ATL_iso_area.pkl', 'rb'))
     # climp_iso = pkl.load(open('pickles/Climp_iso_area.pkl', 'rb'))
@@ -807,10 +864,10 @@ def get_iso_fuz_area_ratio():
     # rtn_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(rtn_iso, rtn_fuz)]
     # control_ratio = [sum(iso) / sum(fuz) for iso, fuz in zip(control_iso, control_fuz) if sum(fuz) != 0]
 
-
-    climp_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(climp_fuz_sted, climp_iso_sted)]
-    rtn_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(rtn_fuz_sted, rtn_iso_sted)]
-    control_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(control_fuz_sted, control_iso_sted) if sum(iso) != 0]
+    atl_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(atl_fuz, atl_iso)]
+    climp_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(climp_fuz, climp_iso)]
+    rtn_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(rtn_fuz, rtn_iso)]
+    control_ratio = [sum(fuz) / sum(iso) for fuz, iso in zip(control_fuz, control_iso) if sum(iso) != 0]
 
 
     # print(atl_ratio)
@@ -829,9 +886,9 @@ def get_iso_fuz_area_ratio():
 
     # df['Ratio'] = pd.Series(np.concatenate((control_ratio, rtn_ratio, climp_ratio, atl_ratio)))
 
-    df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_ratio), ['Reticulon'] * len(rtn_ratio), ['Climp'] * len(climp_ratio))))
+    df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_ratio), ['Reticulon'] * len(rtn_ratio), ['Climp'] * len(climp_ratio), ['Atlastin'] * len(atl_ratio))))
 
-    df['Ratio'] = pd.Series(np.concatenate((control_ratio, rtn_ratio, climp_ratio)))
+    df['Ratio'] = pd.Series(np.concatenate((control_ratio, rtn_ratio, climp_ratio, atl_ratio)))
 
     ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, width=0.9)
 
@@ -850,16 +907,16 @@ def get_iso_fuz_area_ratio():
     plt.xlabel('Group', fontsize=15)
     plt.ylabel('Ratio', fontsize=15)
 
-    # box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'),
-    #              ('Reticulon', 'Control')]
-    box_pairs = [('Climp', 'Reticulon'), ('Climp', 'Control'), ('Reticulon', 'Control')]
+    box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'),
+                 ('Reticulon', 'Control')]
+    # box_pairs = [('Climp', 'Reticulon'), ('Climp', 'Control'), ('Reticulon', 'Control')]
 
     statannot.add_stat_annotation(ax, x='Group', y='Ratio', data=df, box_pairs=box_pairs,
-                                  test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=10)
+                                  test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=12)
 
-    plt.gcf().set_size_inches(2.2, 6)
+    plt.gcf().set_size_inches(2.5, 8)
     # plt.savefig('overlap_iso_CC_area_ratio_hor.png', bbox_inches='tight', pad_inches=0.2)
-    plt.savefig('STED_overlap_iso_CC_area_ratio_ver_v3.png', bbox_inches='tight', pad_inches=0.1)
+    plt.savefig('UNet_overlap_iso_CC_area_ratio_ver_v3.png', bbox_inches='tight', pad_inches=0.1)
     plt.close()
     # plt.show()
 

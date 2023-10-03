@@ -12,7 +12,7 @@ confocal_data_path = '/localhome/asa420/MIAL/data/confocal-data/'
 sted_data_path = '/localhome/asa420/MIAL/data/sted-data/'
 
 
-class JunctionAnalysis:
+class JunctionAnalysisModules:
 
     def __init__(self, modality):
         self.data_path = sted_data_path if modality == 'sted' else confocal_data_path
@@ -37,9 +37,6 @@ class JunctionAnalysis:
         skel = self.get_skeleton(skel_img_path)
         return sknw.build_sknw(skel, multi=True, iso=False)
     
-    def get_nodes_degree_set(self, graph):
-        return 
-
     # node_connector
     # def get_junctions(self, path_er, path_skel):
     #     """
@@ -149,6 +146,10 @@ class JunctionAnalysis:
 
             # skeleton_path = f'{self.data_path}{group}/preproc/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_proc_enhance.png'
             
+            # pipeline
+            # skeleton_path = f'{self.data_path}{group}/skel/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
+
+            # UNet pipeline
             skeleton_path = f'{self.data_path}{group}/skel/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
 
             junctions = self.get_junctions(skeleton_path)

@@ -286,23 +286,6 @@ def viz_regionprops(labelled_img, spread_img):
     plotly.io.show(fig)
 
 
-# for i in range(10):
-
-# img = imageio.imread('/localhome/asa420/ER-Analysis-scripts/Figure3-FuzIso/C12_junc_projection.png')
-####### lab = label(img)
-# lab = imageio.imread('/localhome/asa420/ER-Analysis-scripts/Figure3-FuzIso/Climp12_junc_labelled_cc.png')
-
-# img = np.stack((img, img, img, img), axis=2)
-
-# print(img.shape)
-# print(lab.shape)
-
-# viz_regionprops(lab, img)
-
-# exit()
-
-
-
 def separate_junc_cc(nps, skdata, labelled_img):
     regions = regionprops(labelled_img)
 
