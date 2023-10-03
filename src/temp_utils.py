@@ -381,5 +381,71 @@ def preprocess_samples(group):
             loc = threshold_local(loc, 3)
             cv2.imwrite(f'{new_pref}Series{i:03d}_decon_converted/new_op_sept/preproc/C{i}/C{i}_decon_t0{j:02d}_ch00_proc.png', loc)
 
+"""
+Get the mean, max projection of input sequences
+"""
+
+import os
+import glob
+import imageio
+import numpy as np
+import scipy.io
+from scipy import stats
+from plantcv import plantcv as pcv
+
+home = os.path.expanduser('~')
+# path = home + '/MIAL/live-cell-movies/COSKDELRTN/COSKDELRTN/Decon/'
+# path = home + '/Desktop/Climp/brpts/'
+
+
+
+def Agg(path):
+    for i in range(30, 32):
+        files = glob.glob(f'{path}C{i}/*')
+        imgstack = []
+        img_mean = np.zeros((128, 128))
+        for each in files:
+            img = imageio.imread(each)
+            img_mean += img
+            imgstack.append(img)
+        pcv.print_image(img=img_mean / len(files), filename=f'{home}/Desktop/Climp/' + f'C{i}-mean-brpts.png')
+
+        # imageio.imwrite(home + '/Desktop/ATL/' + 'A%s-mean.png'%(f'{i}'), img_mean/len(files))
+        new = np.stack(imgstack, axis=2)
+        maximg = np.amax(new, axis=2)
+        pcv.print_image(img=maximg, filename=f'{home}/Desktop/Climp/' + f'C{i}-max-brpts.png')
+        # imageio.imwrite(home + '/Desktop/ATL/' + 'A%s-max.png'%(f'{i}'), maximg)
+
+
+def Aggregate(path):
+    for i in range(12, 13):
+        # dirc = glob.glob(path + 'Series%s_decon_converted/std/*'%(f'{i:03d}'))
+        dirc = glob.glob(f'{path}Series{i:03d}_decon_converted/brpts/*')
+        imgstack = []
+        img_avg = np.zeros((128, 128))
+
+        for each in dirc:
+            img = imageio.imread(each)
+            img_avg += img
+            imgstack.append(img)
+        #
+        # # imageio.imwrite('RTN-series%s-avg.png'%(i), img_avg/len(dirc))
+        # imageio.imwrite(path + 'Ctrl-brpts%s-avg.png'%(i), img_avg/len(dirc))
+
+        new = np.stack(imgstack, axis=2)
+        maximg = np.amax(new, axis=2)
+        scipy.io.savemat(f'{path}RTN-brpts{i}-max.mat', {'npy':maximg})
+        # imageio.imwrite(path + 'Ctrl-brpts%s-max.png'%(i), maximg)
+
+        # modeimg = stats.mode(new, axis=None)
+
+        # medimg = np.median(new, axis=2)
+        # imageio.imwrite('RTN-series%s-max.png'%(i), maximg)
+
+        # imageio.imwrite('RTN-series%s-median.png'%(i), medimg)
+        # imageio.imwrite(path + 'CLimp-brpts%s-median.png'%(i), medimg)
+
+# Agg(path)
+# Aggregate()
 
 
