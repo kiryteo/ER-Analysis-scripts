@@ -3,6 +3,7 @@ import numpy as np
 import sknw
 import matplotlib.pyplot as plt
 from skimage.filters import threshold_otsu
+from skimage import restoration
 
 from PIL import Image
 
@@ -33,3 +34,15 @@ class SegmentationMetrics:
         op[np.where(op==mval)] = 0
         op[np.where(op!=mval) and np.where(op!=0)] = 255
         op = op/255
+
+
+    def intersection_over_union(self, pred_mask, true_mask):
+        intersection = np.logical_and(pred_mask, true_mask)
+        union = np.logical_or(pred_mask, true_mask)
+        return np.sum(intersection) / np.sum(union)
+
+    def dice_coefficient(self, pred_mask, true_mask):
+        intersection = np.logical_and(pred_mask, true_mask)
+        return (2. * np.sum(intersection)) / ((np.sum(pred_mask) + np.sum(true_mask)))
+
+    
