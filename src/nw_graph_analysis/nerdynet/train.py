@@ -7,6 +7,12 @@ from torchvision import transforms
 from model import NerdyNet
 from dataloader import ERDataset
 
+import numpy as np
+
+np.random.seed(34)
+torch.manual_seed(34)
+
+
 
 in_channels = 1
 out_channels = 1  # Assuming binary segmentation
@@ -15,6 +21,9 @@ model = NerdyNet(in_channels, out_channels)
 # Define your loss function and optimizer
 criterion = nn.BCEWithLogitsLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+#TODO: Add data augmentation
+
 
 # Define your transformation
 transform = transforms.Compose([
@@ -39,7 +48,7 @@ train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
 # Training loop
-num_epochs = 50
+num_epochs = 100
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
 
@@ -78,4 +87,4 @@ average_test_loss = test_loss / len(test_loader)
 print(f"Average Test Loss: {average_test_loss}")
 
 # Save the trained model
-torch.save(model.state_dict(), 'unet_model.pth')
+torch.save(model.state_dict(), 'unet_model_oct17.pth')
