@@ -29,6 +29,8 @@ optimizer = optim.Adam(model.parameters(), lr=0.001)
 transform = transforms.Compose([
 #     transforms.Resize((128, 128)),
     transforms.ToTensor(),
+    #transforms.GaussianBlur(3),
+    #transforms.RandomHorizontalFlip(p=0.6)
 ])
 
 # Define your dataset
@@ -39,11 +41,11 @@ dataset = ERDataset(root_dir, transform=transform)
 
 
 # Assuming an 80-20 train-test split
-train_size = int(0.8 * len(dataset))
+train_size = int(0.85 * len(dataset))
 test_size = len(dataset) - train_size
 train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
 
-batch_size = 4
+batch_size = 32
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
