@@ -18,19 +18,48 @@ from skimage import exposure
 from skimage.exposure import match_histograms
 import mclahe as mc
 
+group = 'RTN'
+
+
+for i in range(100):
+    img = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/Control/preproc/Ct5/Ct5_decon_t0{i:02d}_ch00_proc_enhance.png')
+    sk = pcv.morphology.skeletonize(mask=img)
+    imageio.imsave(f'/localhome/asa420/MIAL/data/sted-data/Control/skel/Ct5/Ct5_decon_t0{i:02d}_ch00_proc_enhance_skel.png', sk)
+
+
+exit()
 
 
 for i in range(1, 17):
     try:
-        enh = imageio.imread(f'/localhome/asa420/MIAL/data/live-cell-movies/rtn_mean/er_mean_proc/Series0{i:02d}_decon_converted_mean_proc_v2_enhance.png')
-        skel = pcv.morphology.skeletonize(mask=enh)
+        # img = imageio.imread(f'/localhome/asa420/MIAL/data/other_data/live-cell-movies/{group}/Series0{i:02d}_decon_converted/files/Series0{i:02d}_decon_converted_t{num:02d}_ch00.tif')
+        # img = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/Climp/std/Series0{i:02d}_decon_converted_t{num:02d}_ch00_std.png')
 
-        imageio.imsave(f'/localhome/asa420/MIAL/data/live-cell-movies/rtn_mean/er_mean_proc/Series0{i:02d}_decon_converted_mean_proc_v2_enhance_skel.png', skel)
+        os.rename(f'/localhome/asa420/MIAL/data/sted-data/RTN/er_mean_proc/R{i}_proc_skel.png', f'/localhome/asa420/MIAL/data/sted-data/RTN/er_mean_proc/rtn{i}_proc_skel.png')
+
+        # for num in range(100):
+        #     os.rename(f'/localhome/asa420/MIAL/data/sted-data/{group}/preproc/C{i}/Series0{i:02d}_decon_converted_t{num:02d}_ch00_proc_filt.png', f'/localhome/asa420/MIAL/data/sted-data/{group}/preproc/C{i}/C{i}_decon_t0{num:02d}_ch00_proc_enhance.png')
+
+        # img = (img - img.min()) / (img.max() - img.min())
+        # img = img * 255
+        # imageio.imsave(f'/localhome/asa420/MIAL/data/sted-data/{group}/std/Series0{i:02d}_decon_converted_t{num:02d}_ch00_std.png', img)        
     except Exception:
         pass
 
 
 exit()
+
+# for i in range(1, 17):
+#     try:
+#         enh = imageio.imread(f'/localhome/asa420/MIAL/data/live-cell-movies/rtn_mean/er_mean_proc/Series0{i:02d}_decon_converted_mean_proc_v2_enhance.png')
+#         skel = pcv.morphology.skeletonize(mask=enh)
+
+#         imageio.imsave(f'/localhome/asa420/MIAL/data/live-cell-movies/rtn_mean/er_mean_proc/Series0{i:02d}_decon_converted_mean_proc_v2_enhance_skel.png', skel)
+#     except Exception:
+#         pass
+
+
+# exit()
 
 # group = 'Control'
 

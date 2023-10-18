@@ -33,9 +33,13 @@ import plotly.graph_objects as go
 
 from sklearn.decomposition import PCA
 
+from junction_analysis_modules import JunctionAnalysisModules as JAM
+
 
 max_val = 999
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
+
+junc_analysis = JAM(confocal_data_path)
 
 
 def get_std_img(path):

@@ -9,8 +9,8 @@ import networkx as nx
 
 class GraphMetrics:
 
-    def __init__(self, data_path):
-        self.data_path = data_path
+    def __init__(self):
+        pass
 
     def get_graph(self, skel):
         return sknw.build_sknw(skel, multi=False, iso=False)
@@ -71,12 +71,12 @@ class GraphMetrics:
             compo
         ]
     
-    def seg_to_graph(self, data_path):
+    def seg_to_graph(self, seg_img):
         """
         Convert segmentation output to a graph per frame
         """
-        ernet_enh = imageio.imread(data_path)
-        ernet_skel = skeletonize(ernet_enh).astype(np.uint16)
+        # ernet_enh = imageio.imread(data_path)
+        ernet_skel = skeletonize(seg_img).astype(np.uint16)
         return self.get_graph(ernet_skel)
 
     # ernet: /localhome/asa420/MIAL/data/sted-data/vess_enh_unet/climp/ernet_op/sted_climp1_er_mean_out.png
