@@ -16,14 +16,16 @@ class NerdyNet(nn.Module):
         self.bottleneck = nn.Sequential(
             nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1),
             nn.ReLU(inplace=True),
-            nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(128, 192, kernel_size=3, stride=1, padding=1),
             nn.ReLU(inplace=True),
-            nn.Conv2d(128, 256, kernel_size=3, stride=1, padding=1),
+            nn.Conv2d(192, 256, kernel_size=3, stride=1, padding=1),
             nn.ReLU(inplace=True),
         )
 
         self.decoder = nn.Sequential(
-            nn.Conv2d(256, 128, kernel_size=3, padding=1),
+            nn.Conv2d(256, 192, kernel_size=3, padding=1),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(192, 128, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
             nn.Conv2d(128, 64, kernel_size=3, padding=1),
             nn.ReLU(inplace=True),
