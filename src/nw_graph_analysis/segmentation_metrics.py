@@ -26,8 +26,8 @@ class SegmentationMetrics:
         return bin_out
 
     def resize_analyzer_bin_op(self, analyzer_op):
-        bin_img = self.process_analyzer_output(analyzer_op)
-        img = Image.fromarray(bin_img)
+        # bin_img = self.process_analyzer_output(analyzer_op)
+        img = Image.fromarray(analyzer_op)
         img = img.resize((128, 128), Image.LANCZOS)
         return np.array(img)
 

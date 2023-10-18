@@ -53,6 +53,34 @@ def qualitative_comparison():
     save_comparison_plot(img, mask, analyzer, erv2, ernet, nerdy, nerdynet, 'ER_segmentation_qualitative_comparison.png')
 
 
+# def load_image(file_path):
+#     with contextlib.suppress(Exception):
+#         return imageio.imread(file_path)
+#     return None
+
+# def load_and_erode(file_path):
+#     image = load_image(file_path)
+#     return erosion(image) if image is not None else None
+
+# def load_data(data_list, file_format, group, num, operation, erode=False):
+#     file_path = f'{prefix}{group}/{operation}/{file_format.format(group=group, num=num)}'
+#     data_list.append(load_and_erode(file_path))
+
+# gt_data = []
+# analyzer_data = []
+# erv2_data = []
+# ernet_data = []
+# nerdy_data = []
+# nerdynet_data = []
+
+# for group in groups:
+#     for num in range(1, 17):
+#         load_data(gt_data, 'sted_{group}{num}_er_mean_mask.png', group, num, 'masks')
+#         load_data(analyzer_data, '{group}{num}_out.png', group, num, 'analyzer_op')
+#         load_data(erv2_data, 'sted_{group}{num}_er_mean_out_bin.png', group, num, 'erv2_op')
+#         load_data(ernet_data, 'sted_{group}{num}_er_mean_out.png', group, num, 'ernet_op')
+#         load_data(nerdy_data, 'Series0{num:02d}_decon_converted_mean_proc_v2_enhance.png', group, num, 'nerdy_op')
+#         load_data(nerdynet_data, 'sted_{group}{num}_er_mean_pred.png', group, num, 'nerdynet_v2')
 
 
 
@@ -91,40 +119,37 @@ def load_all_data():
 
     return gt_data, analyzer_data, erv2_data, ernet_data, nerdy_data, nerdynet_data
 
-# analyzer = []
-# erv2 = []
-# ernet = []
-# nerdy = []
-# nerdynet = []
 
+def compute_iou_metrics(pred_data, gt_data, process_pred_fn=None):
+    metrics = []
 
-# for pred, gt in zip(analyzer_data, gt_data):
-#     pred = SMet.resize_analyzer_bin_op(pred)
-#     pred = erosion(pred)
-#     analyzer.append(SMet.intersection_over_union(pred, gt))
+    for pred, gt in zip(pred_data, gt_data):
+        if process_pred_fn:
+            pred = process_pred_fn(pred)
+        metrics.append(SMet.intersection_over_union(pred, gt))
 
+    return np.mean(metrics)
 
-# for pred, gt in zip(erv2_data, gt_data):
-#     pred = SMet.process_erv2_output(pred)
-#     erv2.append(SMet.intersection_over_union(pred, gt))
+def print_metric_results(metric_name, metric_value):
+    print(f'{metric_name}: {metric_value}')
 
-# for pred, gt in zip(ernet_data, gt_data):
-#     ernet.append(SMet.intersection_over_union(pred, gt))
+def get_segmentation_metrics(analyzer_data, erv2_data, ernet_data, nerdy_data, nerdynet_data, gt_data):
+    analyzer_iou = compute_iou_metrics(analyzer_data, gt_data, SMet.resize_analyzer_bin_op)
+    erv2_iou = compute_iou_metrics(erv2_data, gt_data, SMet.process_erv2_output)
+    ernet_iou = compute_iou_metrics(ernet_data, gt_data)
+    nerdy_iou = compute_iou_metrics(nerdy_data, gt_data)
+    nerdynet_iou = compute_iou_metrics(nerdynet_data, gt_data)
 
-# for pred, gt in zip(nerdy_data, gt_data):
-#     nerdy.append(SMet.intersection_over_union(pred, gt))
+    print_metric_results('Analyzer', analyzer_iou)
+    print_metric_results('ERnet', ernet_iou)
+    print_metric_results('ERnet_v2', erv2_iou)
+    print_metric_results('Nerdy', nerdy_iou)
+    print_metric_results('Nerdynet', nerdynet_iou)
 
-# for pred, gt in zip(nerdynet_data, gt_data):
-#     nerdynet.append(SMet.intersection_over_union(pred, gt))
+gt_data, analyzer_data, erv2_data, ernet_data, nerdy_data, nerdynet_data = load_all_data()
 
-
-# import numpy as np
-
-# print(f'Analyzer: {np.mean(analyzer)}')
-# print(f'ERV2: {np.mean(erv2)}')
-# print(f'Ernet: {np.mean(ernet)}')
-# print(f'Nerdy: {np.mean(nerdy)}')
-# print(f'Nerdynet: {np.mean(nerdynet)}')
+# Assuming the function is called with the required arguments
+get_segmentation_metrics(analyzer_data, erv2_data, ernet_data, nerdy_data, nerdynet_data, gt_data)
 
 
 def get_graph_metrics(data_list):
@@ -138,24 +163,24 @@ def get_graph_metrics(data_list):
     return graph_metrics
 
 
-# gt_data, analyzer_data, erv2_data, ernet_data, nerdy_data, nerdynet_data = load_all_data()
+
 
 def get_all_metrics():
     gt_graph_metrics = get_graph_metrics(gt_data)
     analyzer_graph_metrics = get_graph_metrics(analyzer_data)
-    # erv2_graph_metrics = get_graph_metrics(erv2_data)
-    # ernet_graph_metrics = get_graph_metrics(ernet_data)
-    # nerdy_graph_metrics = get_graph_metrics(nerdy_data)
-    # nerdynet_graph_metrics = get_graph_metrics(nerdynet_data)
+    erv2_graph_metrics = get_graph_metrics(erv2_data)
+    ernet_graph_metrics = get_graph_metrics(ernet_data)
+    nerdy_graph_metrics = get_graph_metrics(nerdy_data)
+    nerdynet_graph_metrics = get_graph_metrics(nerdynet_data)
 
-    # return gt_graph_metrics, analyzer_graph_metrics, erv2_graph_metrics, ernet_graph_metrics, nerdy_graph_metrics, nerdynet_graph_metrics
+    return gt_graph_metrics, analyzer_graph_metrics, erv2_graph_metrics, ernet_graph_metrics, nerdy_graph_metrics, nerdynet_graph_metrics
 
-    return gt_graph_metrics, analyzer_graph_metrics
+    # return gt_graph_metrics, analyzer_graph_metrics
 
-# gt_graph_metrics, analyzer_graph_metrics, erv2_graph_metrics, ernet_graph_metrics, nerdy_graph_metrics, nerdynet_graph_metrics = get_all_metrics()
+gt_graph_metrics, analyzer_graph_metrics, erv2_graph_metrics, ernet_graph_metrics, nerdy_graph_metrics, nerdynet_graph_metrics = get_all_metrics()
 
 
-gt_graph_metrics, analyzer_graph_metrics = get_all_metrics()
+
 
 print(gt_graph_metrics)
 print(analyzer_graph_metrics)
