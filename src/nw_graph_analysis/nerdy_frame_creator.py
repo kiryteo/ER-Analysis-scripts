@@ -101,11 +101,11 @@ def runner(writer, group, seq):
         writer.append_data(file)
 
 def create_sequence(group, seq):
-    with imageio.get_writer(f'STED_{group}{seq}_junc_repr_new.mp4', mode='I', fps=1) as writer:
+    with imageio.get_writer(f'STED_{group}{seq}_junc_repr_new.gif', mode='I', fps=1, subrectangles=True) as writer:
         runner(writer, group, seq)
 
-# create_sequence('Control', 6)
-
+create_sequence('Control', 6)
+exit()
 
 
 # img = imageio.imread('/localhome/asa420/MIAL/data/sted-data/Control/control6_er_mean.png')
