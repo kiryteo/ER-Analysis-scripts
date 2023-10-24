@@ -53,11 +53,6 @@ def qualitative_comparison():
     save_comparison_plot(img, mask, analyzer, erv2, ernet, nerdy, nerdynet, 'ER_segmentation_qualitative_comparison.png')
 
 
-<<<<<<< Updated upstream
-=======
-<<<<<<< HEAD
-=======
->>>>>>> Stashed changes
 # def load_image(file_path):
 #     with contextlib.suppress(Exception):
 #         return imageio.imread(file_path)
@@ -88,11 +83,6 @@ def qualitative_comparison():
 #         load_data(nerdynet_data, 'sted_{group}{num}_er_mean_pred.png', group, num, 'nerdynet_v2')
 
 
-
-<<<<<<< Updated upstream
-=======
->>>>>>> e6642af358aed5455995d963371f26e2c2e39419
->>>>>>> Stashed changes
 def load_all_data():
     gt_data = []
     analyzer_data = []
@@ -128,7 +118,6 @@ def load_all_data():
 
     return gt_data, analyzer_data, erv2_data, ernet_data, nerdy_data, nerdynet_data
 
-<<<<<<< Updated upstream
 
 def compute_iou_metrics(pred_data, gt_data, process_pred_fn=None):
     metrics = []
@@ -156,78 +145,11 @@ def get_segmentation_metrics(analyzer_data, erv2_data, ernet_data, nerdy_data, n
     print_metric_results('Nerdy', nerdy_iou)
     print_metric_results('Nerdynet', nerdynet_iou)
 
-gt_data, analyzer_data, erv2_data, ernet_data, nerdy_data, nerdynet_data = load_all_data()
+# gt_data, analyzer_data, erv2_data, ernet_data, nerdy_data, nerdynet_data = load_all_data()
 
 # Assuming the function is called with the required arguments
-get_segmentation_metrics(analyzer_data, erv2_data, ernet_data, nerdy_data, nerdynet_data, gt_data)
-=======
-<<<<<<< HEAD
+# get_segmentation_metrics(analyzer_data, erv2_data, ernet_data, nerdy_data, nerdynet_data, gt_data)
 
-def compute_iou_metrics(pred_data, gt_data, process_pred_fn=None):
-    metrics = []
-
-    for pred, gt in zip(pred_data, gt_data):
-        if process_pred_fn:
-            pred = process_pred_fn(pred)
-        metrics.append(SMet.intersection_over_union(pred, gt))
-
-    return np.mean(metrics)
-
-def print_metric_results(metric_name, metric_value):
-    print(f'{metric_name}: {metric_value}')
-
-def get_segmentation_metrics(analyzer_data, erv2_data, ernet_data, nerdy_data, nerdynet_data, gt_data):
-    analyzer_iou = compute_iou_metrics(analyzer_data, gt_data, SMet.resize_analyzer_bin_op)
-    erv2_iou = compute_iou_metrics(erv2_data, gt_data, SMet.process_erv2_output)
-    ernet_iou = compute_iou_metrics(ernet_data, gt_data)
-    nerdy_iou = compute_iou_metrics(nerdy_data, gt_data)
-    nerdynet_iou = compute_iou_metrics(nerdynet_data, gt_data)
-
-    print_metric_results('Analyzer', analyzer_iou)
-    print_metric_results('ERnet', ernet_iou)
-    print_metric_results('ERnet_v2', erv2_iou)
-    print_metric_results('Nerdy', nerdy_iou)
-    print_metric_results('Nerdynet', nerdynet_iou)
-
-gt_data, analyzer_data, erv2_data, ernet_data, nerdy_data, nerdynet_data = load_all_data()
-
-# Assuming the function is called with the required arguments
-get_segmentation_metrics(analyzer_data, erv2_data, ernet_data, nerdy_data, nerdynet_data, gt_data)
-
-=======
-
-def compute_iou_metrics(pred_data, gt_data, process_pred_fn=None):
-    metrics = []
-
-    for pred, gt in zip(pred_data, gt_data):
-        if process_pred_fn:
-            pred = process_pred_fn(pred)
-        metrics.append(SMet.intersection_over_union(pred, gt))
-
-    return np.mean(metrics)
-
-def print_metric_results(metric_name, metric_value):
-    print(f'{metric_name}: {metric_value}')
->>>>>>> Stashed changes
-
-def get_segmentation_metrics(analyzer_data, erv2_data, ernet_data, nerdy_data, nerdynet_data, gt_data):
-    analyzer_iou = compute_iou_metrics(analyzer_data, gt_data, SMet.resize_analyzer_bin_op)
-    erv2_iou = compute_iou_metrics(erv2_data, gt_data, SMet.process_erv2_output)
-    ernet_iou = compute_iou_metrics(ernet_data, gt_data)
-    nerdy_iou = compute_iou_metrics(nerdy_data, gt_data)
-    nerdynet_iou = compute_iou_metrics(nerdynet_data, gt_data)
-
-    print_metric_results('Analyzer', analyzer_iou)
-    print_metric_results('ERnet', ernet_iou)
-    print_metric_results('ERnet_v2', erv2_iou)
-    print_metric_results('Nerdy', nerdy_iou)
-    print_metric_results('Nerdynet', nerdynet_iou)
-
-gt_data, analyzer_data, erv2_data, ernet_data, nerdy_data, nerdynet_data = load_all_data()
-
-# Assuming the function is called with the required arguments
-get_segmentation_metrics(analyzer_data, erv2_data, ernet_data, nerdy_data, nerdynet_data, gt_data)
->>>>>>> e6642af358aed5455995d963371f26e2c2e39419
 
 def get_graph_metrics(data_list, method):
     # sourcery skip: inline-immediately-returned-variable
@@ -243,15 +165,6 @@ def get_graph_metrics(data_list, method):
     return graph_metrics
 
 
-<<<<<<< Updated upstream
-
-=======
-<<<<<<< HEAD
-=======
->>>>>>> Stashed changes
-
-
->>>>>>> e6642af358aed5455995d963371f26e2c2e39419
 def get_all_metrics():
     gt_graph_metrics = get_graph_metrics(gt_data)
     analyzer_graph_metrics = get_graph_metrics(analyzer_data)
@@ -264,10 +177,27 @@ def get_all_metrics():
 
     # return gt_graph_metrics, analyzer_graph_metrics
 
-gt_graph_metrics, analyzer_graph_metrics, erv2_graph_metrics, ernet_graph_metrics, nerdy_graph_metrics, nerdynet_graph_metrics = get_all_metrics()
+# gt_graph_metrics, analyzer_graph_metrics, erv2_graph_metrics, ernet_graph_metrics, nerdy_graph_metrics, nerdynet_graph_metrics = get_all_metrics()
 
 
 
 
-print(gt_graph_metrics)
-print(analyzer_graph_metrics)
+# print(gt_graph_metrics)
+# print(analyzer_graph_metrics)
+
+method = ['AnalyzER', 'ERnet', 'ERnet-v2', 'nERdy', 'nERdy+']
+data = [0.302, 0.524, 0.458, 0.687, 0.745]
+
+# Analyzer: 0.3027548722647748
+# ERnet: 0.5249320744721783
+# ERnet_v2: 0.4587372268867602
+# # Nerdy: 0.6877634174096008
+# Nerdy: 0.7454739562927578
+
+plt.bar(method, data)
+plt.xlabel('Segmentation Method', fontsize=14)
+plt.ylabel('mean IoU', fontsize=14)
+plt.title('Segmentation Performance', fontsize=16)
+plt.savefig('segmentation_method_vs_iou.png', bbox_inches='tight', pad_inches=0.1)
+# plt.show()
+plt.close()
