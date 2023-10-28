@@ -40,4 +40,27 @@ class SegmentationMetrics:
         intersection = np.logical_and(pred_mask, true_mask)
         return (2. * np.sum(intersection)) / ((np.sum(pred_mask) + np.sum(true_mask)))
 
+    def f1_score(self, pred_mask, true_mask):
+        intersection = np.logical_and(pred_mask, true_mask)
+        precision = np.sum(intersection) / np.sum(pred_mask)
+        recall = np.sum(intersection) / np.sum(true_mask)
+        return 2 * ((precision * recall) / (precision + recall))
     
+    def accuracy(self, pred_mask, true_mask):
+        return np.sum(pred_mask == true_mask) / np.prod(pred_mask.shape)
+    
+    def jaccard_edge_similarity(g1, g2):
+        jaccard_edge_similarity = []
+        edge_set1 = set(g1.edges)
+        edge_set2 = set(g2.edges)
+        jaccard_index = len(edge_set1.intersection(edge_set2)) / len(edge_set1.union(edge_set2))
+        jaccard_edge_similarity.append(jaccard_index)
+
+        return jaccard_edge_similarity
+
+    def jaccard_similarity(graph1, graph2):
+        nodes1 = set(graph1.nodes)
+        nodes2 = set(graph2.nodes)
+        intersection = len(nodes1.intersection(nodes2))
+        union = len(nodes1.union(nodes2))
+        return intersection / union
