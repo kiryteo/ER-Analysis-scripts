@@ -236,10 +236,10 @@ def get_region_cc(group, series_num, region):
     ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions(group, series_num)
 
     # dict with ids as key and (x, y) as value
-    label_ids, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
+    label_ids = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
 
     # iso, fuz, unk: list of lists with x, y
-    iso, fuz, unk = junc_analysis.get_junction_areas(label_ids, unassigned_cc_dict)
+    iso, fuz = junc_analysis.get_junction_areas(label_ids)
 
     if region == 'iso':
         return get_cc_ids(labelled_img, iso), labelled_img
@@ -306,25 +306,40 @@ def cc_signal(group, channel, region):
         region_cc_coords = {each: np.where(labelled_img == each) for each in region_cc}
 
         # Data: num_cc * 100
+        if region_cc is None or labelled_img is None:
+            print(f"Error: Unable to get region connected components for {group} series {series_num}. Skipping.")
+            continue
+
+        # CC coords per series
+        region_cc_coords = {label: np.where(labelled_img == label) for label in region_cc}
+
+        # Data: num_cc * 100
         series_values = []
+
         for i in range(100):
             if group == 'Control':
-                path = f'{confocal_data_path}/Control/files/img_{series_num}_decon_t0{i:02d}.tif'
+                path = os.path.join(confocal_data_path, 'Control', 'files', f'img_{series_num}_decon_t0{i:02d}.tif')
             else:
-                path = f'{confocal_data_path}/{group}/files/{groups[group][0]}{series_num}_decon_t0{i:02d}_ch0{channel_idx}.tif'
+                path = os.path.join(confocal_data_path, group, 'files', f'{groups.get(group, ("", ""))[0]}{series_num}_decon_t0{i:02d}_ch0{channel_idx}.tif')
 
-            # path = f'{confocal_data_path}/{group}/files/{group[0]}{series_num}_decon_t0{i:02d}_ch0{channel_idx}.tif'
-            # path = f'{confocal_data_path}/{group}/files/{groups[group][0]}{series_num}_decon_t0{i:02d}_ch0{channel_idx}.tif'
+            # if not os.path.exists(path):
+            #     print(f"Error: File not found - {path}. Skipping.")
+            #     continue
 
             img = get_std_img(path)
+
+            # if img is None:
+            #     print(f"Error: Unable to read image from {path}. Skipping.")
+            #     continue
+
             region_means = [np.mean(img[coords]) for coords in region_cc_coords.values()]
             series_values.append(region_means)
 
-        series_values = np.array(series_values)
+        if series_values:
+            series_values = np.array(series_values)
+            group_data.append(series_values.T)
 
-        group_data.append(series_values.T)
-
-    return group_data
+    return group_data        
 
 
 # calc_deposit_net_norm

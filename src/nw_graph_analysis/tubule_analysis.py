@@ -11,12 +11,12 @@ import scipy.stats as stats
 import scipy.ndimage as ndimage
 from skimage.measure import label
 
-from structure_extraction import *
-from junction_analysis_modules import JunctionAnalysis as JA
+# from structure_extraction import *
+from junction_analysis_modules import JunctionAnalysisModules as JAM
 
 
-confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
-junc_analysis = JA(confocal_data_path)
+confocal_data_path = '/localhome/asa420/MIAL/data/confocal-data/'
+junc_analysis = JAM(confocal_data_path)
 
 
 def get_edges(conn_graph, iso_ids, fuz_ids, connection):
@@ -64,14 +64,19 @@ def get_tubule_data(group, series_num, connection):
 
     # sourcery skip: inline-immediately-returned-variable
     # mean_er_path = f'{confocal_data_path}/{group}/new_op_jul/er_mean/{group.lower()}{series_num}_er_mean.png'
-    mean_skel_path = f'{confocal_data_path}/{group}/new_op_jul/er_mean_proc/{group.lower()}{series_num}_proc_skel.png'
+    mean_skel_path = f'{confocal_data_path}/vess_enh_unet/{group.lower()}/skel/{group.lower()}{series_num}_proc_skel.png'
+
 
     # ref_junctions = junc_analysis.get_junctions(er_input_path, skel_path)
 
-    conn_graph = junc_analysis.skel_to_graph(mean_skel_path)
-    ref_junctions = junc_analysis.get_ref_junctions(conn_graph)
+    # conn_graph = junc_analysis.skel_to_graph(mean_skel_path)
+    # ref_junctions = junc_analysis.get_junctions(conn_graph)
 
-    deg_one_nodes, deg_two_nodes, high_deg_nodes = get_updated_degree_nodes(conn_graph)
+    conn_graph = junc_analysis.skel_to_graph(mean_skel_path)
+
+    ref_junctions = junc_analysis.get_junctions(mean_skel_path)
+
+    # deg_one_nodes, deg_two_nodes, high_deg_nodes = JAM.get_updated_degree_nodes(conn_graph)
 
     # graph = junc_analysis.skel_to_graph(mean_img)
     # ref_junctions = junc_analysis.get_junctions(conn_graph)
@@ -80,14 +85,14 @@ def get_tubule_data(group, series_num, connection):
 
     per_frame_junctions = []
     for frame in range(100):
-        er_path = f'{confocal_data_path}/{group}/new_op_jul/std_egfp/{group_pref[group]}{series_num}_decon_t0{frame:02d}_ch00_std.png'
+
         skeleton_path = f'{confocal_data_path}/{group}/new_op_jul/skel/{group_pref[group]}{series_num}/{group_pref[group]}{series_num}_decon_t0{frame:02d}_ch00_skel.png'
 
         # graph = node_connector(er_path, skeleton_path)
 
         # # create_tubule_junc_plot(er_path, skeleton_path)
 
-        junctions, graph = junc_analysis.get_junctions(er_path, skeleton_path)
+        junctions, graph = junc_analysis.get_junctions(skeleton_path)
 
         junc_array = [[junc[0], junc[1]] for junc in junctions]
         per_frame_junctions.extend(junc_array)
@@ -107,28 +112,36 @@ def get_tubule_data(group, series_num, connection):
     # iso, fuz, unk: list of lists with x, y
     iso, fuz, unk = junc_analysis.get_junction_areas(label_vals, unassigned_cc_dict)
 
+    print(iso)
+
+    exit()
+
     # Find the iso and fuz from high_deg_nodes
-    intersection_iso = get_intersection(iso, high_deg_nodes)
-    intersection_fuz = get_intersection(fuz, high_deg_nodes)
+    # intersection_iso = get_intersection(iso, high_deg_nodes)
+    # intersection_fuz = get_intersection(fuz, high_deg_nodes)
 
     # Find the iso/ fuz nodes in conn_graph
 
-    if len(intersection_iso) > 0:
-        iso_ids = [k for k in conn_graph.nodes if (
-                conn_graph.nodes[k]['o'][0] in intersection_iso[:, 0] and conn_graph.nodes[k]['o'][
-            1] in intersection_iso[:, 1])]
-    else:
-        iso_ids = []
-    if len(intersection_fuz) > 0:
-        fuz_ids = [k for k in conn_graph.nodes if (
-                conn_graph.nodes[k]['o'][0] in intersection_fuz[:, 0] and conn_graph.nodes[k]['o'][
-            1] in intersection_fuz[:, 1])]
-    else:
-        fuz_ids = []
+    # if len(iso) > 0:
+    #     iso_ids = [k for k in conn_graph.nodes if (
+    #             conn_graph.nodes[k]['o'][0] in intersection_iso[:, 0] and conn_graph.nodes[k]['o'][
+    #         1] in intersection_iso[:, 1])]
+    # else:
+    #     iso_ids = []
+    # if len(intersection_fuz) > 0:
+    #     fuz_ids = [k for k in conn_graph.nodes if (
+    #             conn_graph.nodes[k]['o'][0] in intersection_fuz[:, 0] and conn_graph.nodes[k]['o'][
+    #         1] in intersection_fuz[:, 1])]
+    # else:
+    #     fuz_ids = []
 
     edges = get_edges(conn_graph, iso_ids, fuz_ids, connection)
 
     return edges, conn_graph
+
+get_tubule_data('ATL', 1, 'iso-iso')
+
+exit()
 
 
 import imageio

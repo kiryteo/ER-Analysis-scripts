@@ -73,15 +73,15 @@ def get_mean_group_data(data, measure):
 
 
 def get_CC_mean_variation(channel, region, measure):
-    atl = cc_signal('ATL', channel, region)
-    pkl.dump(atl, open(f'ATL_{channel}_{region}_CC_mean_unet.pkl', 'wb'))
-    climp = cc_signal('Climp', channel, region)
-    pkl.dump(climp, open(f'Climp_{channel}_{region}_CC_mean_unet.pkl', 'wb'))
-    rtn = cc_signal('RTN', channel, region)
-    pkl.dump(rtn, open(f'RTN_{channel}_{region}_CC_mean_unet.pkl', 'wb'))
+    # atl = cc_signal('ATL', channel, region)
+    # pkl.dump(atl, open(f'ATL_{channel}_{region}_CC_mean_nerdy.pkl', 'wb'))
+    # climp = cc_signal('Climp', channel, region)
+    # pkl.dump(climp, open(f'Climp_{channel}_{region}_CC_mean_nerdy.pkl', 'wb'))
+    # rtn = cc_signal('RTN', channel, region)
+    # pkl.dump(rtn, open(f'RTN_{channel}_{region}_CC_mean_nerdy.pkl', 'wb'))
 
     # control = cc_signal('Control', channel, region)
-    # pkl.dump(control, open(f'Control_{channel}_{region}_CC_mean_unet.pkl', 'wb'))
+    # pkl.dump(control, open(f'Control_{channel}_{region}_CC_mean_nerdy.pkl', 'wb'))
 
     # climp_sted = cc_signal('Climp', channel, region)
     # pkl.dump(climp_sted, open(f'Climp_{channel}_{region}_CC_mean_STED.pkl', 'wb'))
@@ -94,9 +94,9 @@ def get_CC_mean_variation(channel, region, measure):
 
     # exit()
 
-    # atl = pkl.load(open(f'pickles/ATL_{channel}_{region}_CC_mean.pkl', 'rb'))
-    # climp = pkl.load(open(f'pickles/Climp_{channel}_{region}_CC_mean.pkl', 'rb'))
-    # rtn = pkl.load(open(f'pickles/RTN_{channel}_{region}_CC_mean.pkl', 'rb'))
+    atl = pkl.load(open(f'ATL_{channel}_{region}_CC_mean_nerdy.pkl', 'rb'))
+    climp = pkl.load(open(f'Climp_{channel}_{region}_CC_mean_nerdy.pkl', 'rb'))
+    rtn = pkl.load(open(f'RTN_{channel}_{region}_CC_mean_nerdy.pkl', 'rb'))
     
     atl = get_mean_group_data(atl, measure)
     climp = get_mean_group_data(climp, measure)
@@ -105,7 +105,7 @@ def get_CC_mean_variation(channel, region, measure):
     df = pd.DataFrame()
 
     if channel == 'egfp':
-        # control = pkl.load(open(f'pickles/Control_{channel}_{region}_CC_mean.pkl', 'rb'))
+        control = pkl.load(open(f'Control_{channel}_{region}_CC_mean_nerdy.pkl', 'rb'))
         control = get_mean_group_data(control, measure)
 
         df['CC_mean'] = pd.Series(np.concatenate((control, rtn, climp, atl)))
@@ -143,21 +143,22 @@ def get_CC_mean_variation(channel, region, measure):
     # ax.set_ylim(0, 0.15)
 
     # ax.set_xlim(-1, 3.0)
-    # ax.set_ylim(0, 0.59)
+    ax.set_ylim(0, 0.2)
 
     # ax.set_ylim(0, 0.85) # for egfp
     #ax.set_ylim(0, 0.5) # for mch
     # ax.set_ylim(0, ymax+0.01)
     yt = ax.get_yticks()
     yt = [f'{y:.2f}' for y in yt]
+
     ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=90)
     ax.set_yticklabels(yt, fontsize=13)
 
 
     # # box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
 
-    statannot.add_stat_annotation(ax, x='Group', y='CC_mean', data=df, box_pairs=box_pairs,
-                                  test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=15)
+    # statannot.add_stat_annotation(ax, x='Group', y='CC_mean', data=df, box_pairs=box_pairs,
+                                #   test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=15)
 
     region_name = 'Isolated' if region == 'iso' else 'Overlapping'
     ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
@@ -171,11 +172,13 @@ def get_CC_mean_variation(channel, region, measure):
     # plt.grid(True)
     # plt.tight_layout()
     # plt.subplots_adjust(hspace = 1, wspace = 0)
-    plt.xlabel('Group', fontsize=15)
+    # plt.xlabel('Group', fontsize=15)
     plt.ylabel(f'{measure_name} over sequence per CC mean', fontsize=15)
+
     # plt.gcf().set_size_inches(2.2, 6)
-    plt.gcf().set_size_inches(2.5, 8)
-    plt.savefig(f'UNet_Seq_{measure_name}_CC_mean_{region_name}_{channel}_v4', bbox_inches='tight', pad_inches=0.1)
+    plt.gcf().set_size_inches(2, 6)
+    # plt.savefig(f'nERdy_Seq_{measure_name}_CC_mean_{region_name}_{channel}_v4', bbox_inches='tight', pad_inches=0.1)
+    plt.savefig(f'nERdy_Seq_{measure_name}_CC_mean_{region_name}_{channel}_no_annot', bbox_inches='tight', pad_inches=0.1)
     plt.close()
     # plt.show()
 
@@ -442,10 +445,10 @@ def plot_num_junctions():
     # rtn = pkl.load(open('pickles/RTN_egfp_iso_CC_mean.pkl', 'rb'))
     # control = pkl.load(open('pickles/Control_egfp_iso_CC_mean.pkl', 'rb'))
 
-    atl = pkl.load(open('ATL_egfp_iso_CC_mean_unet.pkl', 'rb'))
-    climp = pkl.load(open('Climp_egfp_iso_CC_mean_unet.pkl', 'rb'))
-    rtn = pkl.load(open('RTN_egfp_iso_CC_mean_unet.pkl', 'rb'))
-    control = pkl.load(open('Control_egfp_iso_CC_mean_unet.pkl', 'rb'))
+    atl = pkl.load(open('ATL_egfp_iso_CC_mean_nerdy.pkl', 'rb'))
+    climp = pkl.load(open('Climp_egfp_iso_CC_mean_nerdy.pkl', 'rb'))
+    rtn = pkl.load(open('RTN_egfp_iso_CC_mean_nerdy.pkl', 'rb'))
+    control = pkl.load(open('Control_egfp_iso_CC_mean_nerdy.pkl', 'rb'))
 
     # atl_area = pkl.load(open('ATL_er_area.pkl', 'rb'))
     # climp_area = pkl.load(open('Climp_er_area.pkl', 'rb'))
@@ -519,11 +522,11 @@ def plot_num_junctions():
     # plt.show()
     plt.gcf().set_size_inches(2.5, 8)
     # plt.savefig('num_juncs_iso_norm.png', bbox_inches='tight', pad_inches=0.6)
-    plt.savefig('UNet_num_juncs_iso_ver_v4.png', bbox_inches='tight', pad_inches=0.1)
+    plt.savefig('nERdy_num_juncs_iso_ver_v4.png', bbox_inches='tight', pad_inches=0.1)
     plt.close()
 
-# plot_num_junctions()
-# exit()
+plot_num_junctions()
+exit()
 
 def get_iso_fuz_ratio_sted(group, num):
     ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions(group, num)

@@ -8,14 +8,14 @@ from plantcv import plantcv as pcv
 import matplotlib.pyplot as plt
 from skimage import measure
 from skimage.measure import label, regionprops
-from skimage.morphology import dilation, closing
-from junction_analysis_modules import JunctionAnalysis as JA
+from skimage.morphology import dilation, closing, skeletonize
+from junction_analysis_modules import JunctionAnalysisModules as JAM
 
 # confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 
 # sted_data_path = '/localhome/asa420/MIAL/data/live-cell-movies/Sep2023-sted-analysis/'
 
-junc_analysis = JA('sted')
+junc_analysis = JAM('confocal')
 
 
 def er_nodes_overlay():
@@ -72,37 +72,58 @@ def er_nodes_overlay():
 # exit()
 
 def skel_overlay():
-    for i in range(100):
-        er = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/Control/std/Ct5_decon_t0{i:02d}_ch00_std.png')
+    # for i in range(100):
+    # er = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/Control/std/Ct5_decon_t0{i:02d}_ch00_std.png')
 
-        skel = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/Control/skel/Ct5/Ct5_decon_t0{i:02d}_ch00_proc_enhance_skel.png')
+    er = imageio.imread('/localhome/asa420/MIAL/data/confocal-data/Climp/er_mean/climp12_er_mean.png')
 
-        graph = sknw.build_sknw(skel, multi=True, iso=False)
+    # skel = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/Control/skel/Ct5/Ct5_decon_t0{i:02d}_ch00_proc_enhance_skel.png')
 
-        node_set = graph.nodes
-        degree_list = graph.degree
+    mask = imageio.imread('/localhome/asa420/MIAL/data/confocal-data/vess_enh_unet/climp/predictions/climp12_er_mean_pred.png')
 
-        node_coords = np.array([node_set[node]['o'] for node in node_set])
+    # print(np.unique(mask))
 
-        nps = [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
+    # skel = imageio.imread('/localhome/asa420/MIAL/data/confocal-data/vess_enh_unet/climp/skel/climp12_proc_skel.png')
 
-        nps = np.array(nps)
+    skel = skeletonize(mask/255)
 
-        plt.imshow(er, cmap='gray')
+    imageio.imsave('')
 
-        for (s,e) in graph.edges():
-            ps = graph[s][e][0]['pts']
-            plt.plot(ps[:,1], ps[:,0], 'green')
-        
-        plt.plot(nps[:,1], nps[:,0], '.', markerfacecolor='red', markeredgecolor='red', mew=2)
+    # plt.imshow(skel)
+    # plt.show()
 
-        plt.axis('off')
+    exit()
 
-        # plt.show()
-        plt.savefig(f'/localhome/asa420/MIAL/data/sted-data/Control/overlay/Ct5_decon_t0{i:02d}_ch00_proc_enhance_skel_overlay.png', bbox_inches='tight', pad_inches=0.0)
+    graph = sknw.build_sknw(skel, multi=True, iso=False)
 
-        plt.close()
+    node_set = graph.nodes
+    degree_list = graph.degree
 
+    node_coords = np.array([node_set[node]['o'] for node in node_set])
+
+    nps = [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
+
+    nps = np.array(nps)
+
+    plt.imshow(er, cmap='gray')
+
+    for (s,e) in graph.edges():
+        ps = graph[s][e][0]['pts']
+        plt.plot(ps[:,1], ps[:,0], 'green')
+    
+    plt.plot(nps[:,1], nps[:,0], '.', markerfacecolor='red', markeredgecolor='red', mew=2)
+
+    plt.axis('off')
+
+    plt.show()
+
+        # plt.savefig(f'/localhome/asa420/MIAL/data/sted-data/Control/overlay/Ct5_decon_t0{i:02d}_ch00_proc_enhance_skel_overlay.png', bbox_inches='tight', pad_inches=0.0)
+
+        # plt.close()
+
+skel_overlay()
+
+exit()
 
 
 # for i in range(100):

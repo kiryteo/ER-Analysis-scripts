@@ -1,3 +1,4 @@
+import contextlib
 import imageio
 import numpy as np
 from scipy import ndimage as ndi
@@ -5,25 +6,48 @@ from skimage import morphology
 import matplotlib.pyplot as plt
 
 
-img = imageio.imread('/localhome/asa420/MIAL/data/confocal-data/vess_enh_unet/climp/images/climp4_er_mean.png')
-skel = imageio.imread('/localhome/asa420/MIAL/data/confocal-data/vess_enh_unet/climp/skel/climp4_proc_skel.png')
+# img = imageio.imread('/localhome/asa420/MIAL/data/confocal-data/vess_enh_unet/climp/images/climp4_er_mean.png')
+# skel = imageio.imread('/localhome/asa420/MIAL/data/confocal-data/vess_enh_unet/climp/skel/climp4_proc_skel.png')
 
-inv = np.logical_not(skel)
-# distance = ndi.distance_transform_edt(inv)
-# labels = morphology.label(distance)
-# invlab = morphology.label(inv, connectivity=1)
-# bin_invlab = (invlab > 0).astype(np.uint8)
+# inv = np.logical_not(skel)
+# # distance = ndi.distance_transform_edt(inv)
+# # labels = morphology.label(distance)
+# # invlab = morphology.label(inv, connectivity=1)
+# # bin_invlab = (invlab > 0).astype(np.uint8)
 
-dilskel = morphology.dilation(skel)
-# roi = morphology.area_closing(skel) - bin_invlab
-closed_skel = morphology.area_closing(skel)
-roi = closed_skel - inv
+# dilskel = morphology.dilation(skel)
+# # roi = morphology.area_closing(skel) - bin_invlab
+# closed_skel = morphology.area_closing(skel)
+# roi = closed_skel - inv
 
-roi[np.where(roi==255)] = 0.
-roi[np.where(roi==254)] = 255.
+# roi[np.where(roi==255)] = 0.
+# roi[np.where(roi==254)] = 255.
 
-op = dilskel - roi
+# op = dilskel - roi
 
+
+def create_adaptive_mask(group):
+    for frame in range(1, 17):
+        try:
+            # skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal-data/vess_enh_unet/{group}/skel/{group}{frame}_proc_skel.png')
+            skel = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/{group}/skel/sted_{group}{frame}_proc_skel.png')
+            inv = np.logical_not(skel)
+            dilskel = morphology.dilation(skel)
+            closed_skel = morphology.area_closing(skel)
+            roi = closed_skel - inv
+
+            roi[np.where(roi==255)] = 0.
+            roi[np.where(roi==254)] = 255.
+
+            op = dilskel - roi
+            imageio.imsave(f'/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/{group}/adaptive_mask/{group}{frame}_er_mean_mask.png', op)
+            # imageio.imsave(f'/localhome/asa420/MIAL/data/confocal-data/vess_enh_unet/{group}/adaptive_mask/{group}{frame}_er_mean_mask.png', op)
+        except:
+            pass
+
+create_adaptive_mask('climp')
+
+exit()
 
 plt.figure(figsize=(16,12))
 

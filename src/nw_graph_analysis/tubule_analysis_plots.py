@@ -5,8 +5,17 @@ import seaborn as sns
 import statannot
 import itertools
 import matplotlib.pyplot as plt
+import imageio
+import sknw
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies'
+
+def get_iso_tub_len():
+    iso_tub_len = []
+    for seq in range(1, 27):
+        skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal-data/vess_enh_unet/atl/skel/atl{seq}_proc_skel.png')
+        graph = sknw.build_sknw(skel, multi=False, iso=False)
+        
 
 
 def get_group_box_pairs(channel):

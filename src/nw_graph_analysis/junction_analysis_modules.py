@@ -150,7 +150,7 @@ class JunctionAnalysisModules:
             # skeleton_path = f'{self.data_path}{group}/skel/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
 
             # UNet pipeline
-            skeleton_path = f'{self.data_path}{group}/skel/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
+            skeleton_path = f'{self.data_path}/vess_enh_unet/{group.lower()}/skel/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
 
             junctions = self.get_junctions(skeleton_path)
 
@@ -195,7 +195,7 @@ class JunctionAnalysisModules:
                  assigned_components (list) provides cc with at least 1 reference junction
         """
         label_ids = {}
-        assigned_components = []
+        # assigned_components = []
 
         for junction in reference_junctions:
             if connected_components[junction[0], junction[1]] != 0:
@@ -203,9 +203,9 @@ class JunctionAnalysisModules:
                 if cc_id not in label_ids:
                     label_ids[cc_id] = []
                 label_ids[cc_id].append([junction[0], junction[1]])
-                assigned_components.append(cc_id)
+                # assigned_components.append(cc_id)
 
-        return label_ids, assigned_components
+        return label_ids#, assigned_components
 
     def get_uncertain_junctions(self, labelled_img, per_frame_junctions, num_components, assigned_components):
         """
@@ -236,44 +236,45 @@ class JunctionAnalysisModules:
         Return ref junctions per CC and CCs without reference junction dicts.
 
         """
-        regions = regionprops(labelled_img)
+        # regions = regionprops(labelled_img)
 
-        num_components = np.unique(labelled_img)
+        # num_components = np.unique(labelled_img)
 
-        label_ids, assigned_components = self.get_ref_junc_per_CC_id(ref_junctions, labelled_img)
+        # label_ids, assigned_components = self.get_ref_junc_per_CC_id(ref_junctions, labelled_img)
+        label_ids = self.get_ref_junc_per_CC_id(ref_junctions, labelled_img)
         # print(label_vals)
 
-        unassigned_cc_dict = self.get_uncertain_junctions(labelled_img, per_frame_junctions, num_components, assigned_components)
+        # unassigned_cc_dict = self.get_uncertain_junctions(labelled_img, per_frame_junctions, num_components, assigned_components)
 
         # return label_vals, cc_area_dict, unassigned_cc_dict
-        return label_ids, unassigned_cc_dict
+        return label_ids#, unassigned_cc_dict
 
-    def get_junction_areas(self, label_ids, unassigned_cc_dict):
+    # def get_junction_areas(self, label_ids, unassigned_cc_dict):
+    def get_junction_areas(self, label_ids):
         """
         Returns junctions arrays for iso, fuz and unknown classes
         """
 
         isolated_junctions = []
         fuzzy_junctions = []
-        unknown_junctions = []
+        # unknown_junctions = []
 
         for cc_id, junctions in label_ids.items():
             if cc_id != 0:
                 if len(junctions) == 1:
                     isolated_junctions.append(junctions[0])
-                    #isolated_junc_area.append(cc_area_dict[k])
                 else:
                     fuzzy_junctions.append(junctions)
 
-        for junctions in unassigned_cc_dict.values():
-            unknown_junctions.extend(junctions)
+        # for junctions in unassigned_cc_dict.values():
+        #     unknown_junctions.extend(junctions)
 
         isolated_junctions = np.array(isolated_junctions)
 
         fuzzy_junctions = list(itertools.chain.from_iterable(fuzzy_junctions))
         fuzzy_junctions = np.array(fuzzy_junctions)
 
-        unknown_junctions = list(itertools.chain.from_iterable(unknown_junctions))
-        unknown_junctions = np.array(unknown_junctions)
+        # unknown_junctions = list(itertools.chain.from_iterable(unknown_junctions))
+        # unknown_junctions = np.array(unknown_junctions)
 
-        return isolated_junctions, fuzzy_junctions, unknown_junctions
+        return isolated_junctions, fuzzy_junctions#, unknown_junctions

@@ -7,6 +7,18 @@ import numpy as np
 from skimage.measure import regionprops
 from PIL import Image
 
+from skimage import morphology
+
+
+# for i in range(1, 17):
+#     try:
+#         img = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/rtn/skel/sted_rtn{i}_proc_skel.png')
+#         op = morphology.dilation(img)
+#         imageio.imsave(f'/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/rtn/updated_masks/sted_rtn{i}_er_mean_mask.png', op)
+#     except:
+#         pass
+
+# exit()
 
 
 
