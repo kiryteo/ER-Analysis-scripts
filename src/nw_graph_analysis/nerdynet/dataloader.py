@@ -28,8 +28,8 @@ class ERDataset(Dataset):
         mask_name = os.path.splitext(img_name)[0] + '_mask.png'  # Assuming mask files have the same name as images with '_mask' appended
         mask_path = os.path.join(mask_folder, mask_name)
 
-        image = Image.open(img_path)#.convert("RGB")
-        mask = Image.open(mask_path)#.convert("L")  # Convert to grayscale mask
+        image = Image.open(img_path)
+        mask = Image.open(mask_path)
 
         if self.transform:
             image = self.transform(image)

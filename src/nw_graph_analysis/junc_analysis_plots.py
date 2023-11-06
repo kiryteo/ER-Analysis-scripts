@@ -525,8 +525,8 @@ def plot_num_junctions():
     plt.savefig('nERdy_num_juncs_iso_ver_v4.png', bbox_inches='tight', pad_inches=0.1)
     plt.close()
 
-plot_num_junctions()
-exit()
+# plot_num_junctions()
+# exit()
 
 def get_iso_fuz_ratio_sted(group, num):
     ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions(group, num)
@@ -535,7 +535,7 @@ def get_iso_fuz_ratio_sted(group, num):
     label_ids, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
 
     # iso, fuz, unk: list of lists with x, y
-    iso, fuz, unk = junc_analysis.get_junction_areas(label_ids, unassigned_cc_dict)
+    iso, fuz = junc_analysis.get_junction_areas(label_ids)#, unassigned_cc_dict)
 
 
     iso_cc = get_cc_ids(labelled_img, iso)
@@ -1430,38 +1430,65 @@ def cc_area_plotter(region):
 
 
 
-def load_annot_tub_pickles(group, connection, channel):
-    return pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/{group.lower()}_{connection}_tubules_{channel}.pkl', 'rb'))
+# def load_annot_tub_pickles(group, connection, channel):
+def load_annot_tub_pickles(group, connection):
+    # return pkl.load(open(f'/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/pickles/{group.lower()}_{connection}_tubules_{channel}.pkl', 'rb'))
+    return pkl.load(open(f'{group.lower()}_{connection}_tubule_len.pkl', 'rb'))
 
 def filter_data(data):
     new_list = [arr for arr in data if arr is not None and not np.all(arr == None)]
     return new_list
 
+# def get_length_per_tubule(data):
+#     all_tubules = []
+#     data = filter_data(data)
+#     for series in data:
+#         lengths = [len(tubule_seq[0]) for tubule_seq in series if len(tubule_seq[0]) > 3]
+#         all_tubules.append(sum(lengths))
+#     return all_tubules
+
 def get_length_per_tubule(data):
-    all_tubules = []
-    data = filter_data(data)
+    # data shape: (26, number of tubules)
+    length_data = []
     for series in data:
-        lengths = [len(tubule_seq[0]) for tubule_seq in series if len(tubule_seq[0]) > 3]
-        all_tubules.append(sum(lengths))
-    return all_tubules
+        total_tub_len = [x for x in series if x >= 3]
+        length_data.append(sum(total_tub_len))
+    return length_data
+
+
+# atl_ii = load_annot_tub_pickles('ATL', 'iso-iso')
+# # print(atl_ii)
+# atl_lengths = get_length_per_tubule(atl_ii)
+
+# print(atl_lengths)
+# exit()
 
 
 def plot_num_junc_tub_len_all():
 
-    atl = pkl.load(open('pickles/ATL_egfp_iso_CC_mean.pkl', 'rb'))
-    climp = pkl.load(open('pickles/Climp_egfp_iso_CC_mean.pkl', 'rb'))
-    rtn = pkl.load(open('pickles/RTN_egfp_iso_CC_mean.pkl', 'rb'))
-    control = pkl.load(open('pickles/Control_egfp_iso_CC_mean.pkl', 'rb'))
+    atl = pkl.load(open('ATL_egfp_iso_CC_mean_nerdy.pkl', 'rb'))
+    climp = pkl.load(open('Climp_egfp_iso_CC_mean_nerdy.pkl', 'rb'))
+    rtn = pkl.load(open('RTN_egfp_iso_CC_mean_nerdy.pkl', 'rb'))
+    control = pkl.load(open('Control_egfp_iso_CC_mean_nerdy.pkl', 'rb'))
+    # atl = pkl.load(open('pickles/ATL_egfp_iso_CC_mean.pkl', 'rb'))
+    # climp = pkl.load(open('pickles/Climp_egfp_iso_CC_mean.pkl', 'rb'))
+    # rtn = pkl.load(open('pickles/RTN_egfp_iso_CC_mean.pkl', 'rb'))
+    # control = pkl.load(open('pickles/Control_egfp_iso_CC_mean.pkl', 'rb'))
 
     atl_num = [len(series) for series in atl]
     climp_num = [len(series) for series in climp]
     rtn_num = [len(series) for series in rtn]
     control_num = [len(series) for series in control]
 
-    atl_ii = load_annot_tub_pickles('ATL', 'iso-iso', 'egfp')
-    climp_ii = load_annot_tub_pickles('Climp', 'iso-iso', 'egfp')
-    rtn_ii = load_annot_tub_pickles('RTN', 'iso-iso', 'egfp')
-    ctr_ii = load_annot_tub_pickles('Control', 'iso-iso', 'egfp')
+    # atl_ii = load_annot_tub_pickles('ATL', 'iso-iso', 'egfp')
+    # climp_ii = load_annot_tub_pickles('Climp', 'iso-iso', 'egfp')
+    # rtn_ii = load_annot_tub_pickles('RTN', 'iso-iso', 'egfp')
+    # ctr_ii = load_annot_tub_pickles('Control', 'iso-iso', 'egfp')
+
+    atl_ii = load_annot_tub_pickles('ATL', 'iso-iso')
+    climp_ii = load_annot_tub_pickles('Climp', 'iso-iso')
+    rtn_ii = load_annot_tub_pickles('RTN', 'iso-iso')
+    ctr_ii = load_annot_tub_pickles('Control', 'iso-iso')
 
     atl_lengths = get_length_per_tubule(atl_ii)
     climp_lengths = get_length_per_tubule(climp_ii)
@@ -1486,20 +1513,23 @@ def plot_num_junc_tub_len_all():
     yt = [f'{y:.2f}' for y in yt]
     ax.set_yticklabels(yt, fontsize=13)
 
-    # box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'),
-    #              ('Reticulon', 'Control')]
+    box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'),
+                 ('Reticulon', 'Control')]
 
-    # statannot.add_stat_annotation(ax, x='Group', y='ratio', data=df, box_pairs=box_pairs,
-    #                               test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=10)
+    statannot.add_stat_annotation(ax, x='Group', y='ratio', data=df, box_pairs=box_pairs,
+                                  test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=10)
 
     # plt.title('Number of junctions over total tubule length per sequence', fontsize=18)
-    plt.grid(True)
-    plt.xlabel('Group', fontsize=15)
+    # plt.grid(True)
+
+    ax.grid(axis='y')
+
+    # plt.xlabel('Group', fontsize=15)
     plt.ylabel('Ratio', fontsize=15)
 
     # plt.gcf().set_size_inches(8, 10)
     plt.gcf().set_size_inches(2.2, 6)
-    plt.savefig('num_junc_vs_tub_len_ratio_v4', bbox_inches='tight', pad_inches=0.1)
+    plt.savefig('nerdy_num_junc_vs_tub_len_ratio_v4', bbox_inches='tight', pad_inches=0.1)
     plt.close()
     # plt.show()
 

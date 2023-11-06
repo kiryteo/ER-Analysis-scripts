@@ -231,7 +231,8 @@ class JunctionAnalysisModules:
                 unassigned_cc_dict[(labelled_img[each[0], each[1]])].append([each[0], each[1]])
         return unassigned_cc_dict
 
-    def separate_junc_cc(self, ref_junctions, per_frame_junctions, labelled_img):
+    # def separate_junc_cc(self, ref_junctions, per_frame_junctions, labelled_img):
+    def separate_junc_cc(self, ref_junctions, labelled_img):
         """
         Return ref junctions per CC and CCs without reference junction dicts.
 

@@ -287,7 +287,7 @@ def get_region_areas_per_group(group, num_series, region):
 
 def cc_signal(group, channel, region):
     """
-    Calculate deposit
+    Calculate deposit info per iso/ non-iso CC
     @param num_series: number of series
     @param group: 'ATL', 'Climp', 'Control', 'RTN'
     @param region: 'iso' or 'non-iso'

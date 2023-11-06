@@ -16,6 +16,8 @@ class NerdyNet(nn.Module):
         self.mid_level = nn.Sequential(
             nn.Conv2d(64, 128, kernel_size=3, stride=1, padding=1),
             nn.ReLU(inplace=True),
+            nn.Conv2d(128, 128, kernel_size=3, stride=1, padding=1),
+            nn.ReLU(inplace=True),
             nn.Conv2d(128, 192, kernel_size=3, stride=1, padding=1),
             nn.ReLU(inplace=True),
         )

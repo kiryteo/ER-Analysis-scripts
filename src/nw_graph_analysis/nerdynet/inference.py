@@ -70,56 +70,55 @@ model.load_state_dict(torch.load('/localhome/asa420/unet_oct17.pth'))
 #         imageio.imsave(f'{sted_data_prefix}/{group}/nerdynet_v2/sted_{group}{i}_er_mean_pred.png', subt2)
 
 
-def get_temporal_seg():
-    # for seq in range(1, 17):
-        # try:
-    for num in range(1):
-        # imgpath = f'/localhome/asa420/MIAL/data/sted-data/Climp/std/C{seq}_decon_t0{num:02d}_ch00_std.png'
-        # imgpath = f'/localhome/asa420/MIAL/data/sted-data/Control/std/Ct6_decon_t0{num:02d}_ch00_std.png'
-        imgpath = '/localhome/asa420/MIAL/data/sted-data/Control/control6_er_mean.png'
+def get_temporal_seg(group):
+    for seq in range(1, 17):
+        try:
 
-        image = Image.open(imgpath)
-        transform = transforms.Compose([
-            transforms.ToTensor(),
-        ])
+            imgpath = f'/localhome/asa420/MIAL/data/sted-data/{group}/er_mean_blur/{group.lower()}{seq}_er_mean_blur.png'
 
+            image = Image.open(imgpath)
+            transform = transforms.Compose([
+                transforms.ToTensor(),
+            ])
 
+            image = transform(image)
+            image = image.unsqueeze(0)  # Add batch dimension
 
-        image = transform(image)
-        image = image.unsqueeze(0)  # Add batch dimension
+            # Forward pass through the model
+            model.eval()
+            with torch.no_grad():
+                output = model(image)
 
-        # Forward pass through the model
-        model.eval()
-        with torch.no_grad():
-            output = model(image)
+            # Convert the output to probabilities by applying the sigmoid activation
+            output_probs = torch.sigmoid(output)
 
-        # Convert the output to probabilities by applying the sigmoid activation
-        output_probs = torch.sigmoid(output)
+            # Convert tensors to numpy arrays for visualization
+            output_probs_np = output_probs.cpu().squeeze().numpy()
 
-        # Convert tensors to numpy arrays for visualization
-        output_probs_np = output_probs.cpu().squeeze().numpy()
+            norm = (output_probs_np - output_probs_np.min()) / (output_probs_np.max() - output_probs_np.min())
 
-        norm = (output_probs_np - output_probs_np.min()) / (output_probs_np.max() - output_probs_np.min())
+            rb = restoration.rolling_ball(norm)
+            subt = norm - rb
 
-        rb = restoration.rolling_ball(norm)
-        subt = norm - rb
+            thr = threshold_otsu(subt)
 
-        thr = threshold_otsu(subt)
+            subt2 = copy.deepcopy(subt)
 
-        subt2 = copy.deepcopy(subt)
+            subt2[subt < thr] = 0.
+            subt2[subt >= thr] = 255.
 
-        subt2[subt < thr] = 0.
-        subt2[subt >= thr] = 255.
+            # imageio.imsave(f'/localhome/asa420/MIAL/data/sted-data/Control/nerdynet_seg/Ct6_decon_t0{num:02d}_ch00_std_seg.png', subt2)
+            imageio.imsave(f'/localhome/asa420/MIAL/data/sted-data/{group}/er_mean_blur/{group.lower()}{seq}_er_mean_blur_pred_seg.png', subt2)
 
-        # imageio.imsave(f'/localhome/asa420/MIAL/data/sted-data/Control/nerdynet_seg/Ct6_decon_t0{num:02d}_ch00_std_seg.png', subt2)
-        imageio.imsave('/localhome/asa420/MIAL/data/sted-data/Control/control6_er_mean_pred_seg.png', subt2)
+            # op = erosion(subt2/255.)
 
-        # op = erosion(subt2/255.)
+            skel = skeletonize(subt2/255.)
 
-        skel = skeletonize(subt2/255.)
+            imageio.imsave(f'/localhome/asa420/MIAL/data/sted-data/{group}/er_mean_blur/{group.lower()}{seq}_er_mean_blur_pred_skel.png', img_as_uint(skel))
 
-        imageio.imsave('/localhome/asa420/MIAL/data/sted-data/Control/control6_er_mean_pred_skel.png', img_as_uint(skel))
+        except Exception:
+            pass
 
-        # imageio.imsave(f'/localhome/asa420/MIAL/data/sted-data/Control/nerdynet_skel_no_erosion/Ct6_decon_t0{num:02d}_ch00_std_skel.png', img_as_uint(skel))
-
-# get_temporal_seg()
+get_temporal_seg('Climp')
+# get_temporal_seg('Control')
+get_temporal_seg('RTN')

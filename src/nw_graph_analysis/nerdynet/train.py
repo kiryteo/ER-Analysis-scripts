@@ -13,27 +13,21 @@ np.random.seed(34)
 torch.manual_seed(34)
 
 
-
 in_channels = 1
-out_channels = 1  # Assuming binary segmentation
+out_channels = 1
 model = NerdyNet(in_channels, out_channels)
 
 # Define your loss function and optimizer
 criterion = nn.BCEWithLogitsLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-#TODO: Add data augmentation
 
-
-# Define your transformation
+# Define transformation for dataset
 transform = transforms.Compose([
-#     transforms.Resize((128, 128)),
-    transforms.ToTensor(),
-    #transforms.GaussianBlur(3),
-    #transforms.RandomHorizontalFlip(p=0.6)
+    transforms.ToTensor()
 ])
 
-# Define your dataset
+# Define path and dataset
 
 root_dir = '/localhome/asa420/MIAL/data/confocal-data/vess_enh_unet/'
 
@@ -41,7 +35,7 @@ dataset = ERDataset(root_dir, transform=transform)
 
 
 # Assuming an 80-20 train-test split
-train_size = int(0.85 * len(dataset))
+train_size = int(0.8 * len(dataset))
 test_size = len(dataset) - train_size
 train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
 
@@ -89,4 +83,4 @@ average_test_loss = test_loss / len(test_loader)
 print(f"Average Test Loss: {average_test_loss}")
 
 # Save the trained model
-torch.save(model.state_dict(), 'unet_model_oct17.pth')
+torch.save(model.state_dict(), 'nerdy_model.pth')

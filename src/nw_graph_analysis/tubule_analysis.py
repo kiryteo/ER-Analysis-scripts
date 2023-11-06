@@ -10,6 +10,7 @@ import seaborn as sns
 import scipy.stats as stats
 import scipy.ndimage as ndimage
 from skimage.measure import label
+import statannot
 
 # from structure_extraction import *
 from junction_analysis_modules import JunctionAnalysisModules as JAM
@@ -64,7 +65,7 @@ def get_tubule_data(group, series_num, connection):
 
     # sourcery skip: inline-immediately-returned-variable
     # mean_er_path = f'{confocal_data_path}/{group}/new_op_jul/er_mean/{group.lower()}{series_num}_er_mean.png'
-    mean_skel_path = f'{confocal_data_path}/vess_enh_unet/{group.lower()}/skel/{group.lower()}{series_num}_proc_skel.png'
+    mean_skel_path = f'{confocal_data_path}/vess_enh_unet/{group.lower()}/gt_skel/{group.lower()}{series_num}_proc_skel.png'
 
 
     # ref_junctions = junc_analysis.get_junctions(er_input_path, skel_path)
@@ -86,13 +87,13 @@ def get_tubule_data(group, series_num, connection):
     per_frame_junctions = []
     for frame in range(100):
 
-        skeleton_path = f'{confocal_data_path}/{group}/new_op_jul/skel/{group_pref[group]}{series_num}/{group_pref[group]}{series_num}_decon_t0{frame:02d}_ch00_skel.png'
+        skeleton_path = f'{confocal_data_path}/vess_enh_unet/{group.lower()}/skel/{group_pref[group]}{series_num}_decon_t0{frame:02d}_ch00_skel.png'
 
         # graph = node_connector(er_path, skeleton_path)
 
         # # create_tubule_junc_plot(er_path, skeleton_path)
 
-        junctions, graph = junc_analysis.get_junctions(skeleton_path)
+        junctions = junc_analysis.get_junctions(skeleton_path)
 
         junc_array = [[junc[0], junc[1]] for junc in junctions]
         per_frame_junctions.extend(junc_array)
@@ -107,14 +108,15 @@ def get_tubule_data(group, series_num, connection):
     labelled_img = label(spread_img, connectivity=2)
 
     # label_vals: dict with ids as key and (x, y) as value
-    label_vals, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
+    # label_vals, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
+    label_vals = junc_analysis.separate_junc_cc(ref_junctions, labelled_img)
 
     # iso, fuz, unk: list of lists with x, y
-    iso, fuz, unk = junc_analysis.get_junction_areas(label_vals, unassigned_cc_dict)
+    iso, fuz = junc_analysis.get_junction_areas(label_vals)
 
-    print(iso)
+    # print(iso)
 
-    exit()
+    # exit()
 
     # Find the iso and fuz from high_deg_nodes
     # intersection_iso = get_intersection(iso, high_deg_nodes)
@@ -135,13 +137,101 @@ def get_tubule_data(group, series_num, connection):
     # else:
     #     fuz_ids = []
 
-    edges = get_edges(conn_graph, iso_ids, fuz_ids, connection)
+    # edges = get_edges(conn_graph, iso_ids, fuz_ids, connection)
+    edges = get_edges(conn_graph, iso, fuz, connection)
 
     return edges, conn_graph
 
-get_tubule_data('ATL', 1, 'iso-iso')
+
+def get_tubule_len_data(group, series_num, connection):
+    data = []
+    for seq in range(1, series_num + 1):
+        edges, conn_graph = get_tubule_data(group, seq, connection)
+
+        seq_data = [len(conn_graph[edge[0]][edge[1]][0]['pts']) for edge in edges]
+        data.append(seq_data)
+        # data.extend(len(conn_graph[edge[0]][edge[1]][0]['pts']) for edge in edges)
+        # try:
+            # data.extend(len(conn_graph[edge[0]][edge[1]][1]['pts']) for edge in edges)
+        # except:
+            # pass
+    return data
+
+atl_data = get_tubule_len_data('ATL', 26, 'iso-iso')
+climp_data = get_tubule_len_data('Climp', 31, 'iso-iso')
+control_data = get_tubule_len_data('Control', 31, 'iso-iso')
+rtn_data = get_tubule_len_data('RTN', 29, 'iso-iso')
+
+with open('atl_iso-iso_tubule_len.pkl', 'wb') as f:
+    pkl.dump(atl_data, f)
+
+with open('climp_iso-iso_tubule_len.pkl', 'wb') as f:
+    pkl.dump(climp_data, f)
+
+with open('control_iso-iso_tubule_len.pkl', 'wb') as f:
+    pkl.dump(control_data, f)
+
+with open('rtn_iso-iso_tubule_len.pkl', 'wb') as f:
+    pkl.dump(rtn_data, f)
+
 
 exit()
+
+# with open('atl_iso-iso_tubule_len.pkl', 'rb') as f:
+#     atl_data = pkl.load(f)
+
+# with open('climp_iso-iso_tubule_len.pkl', 'rb') as f:
+#     climp_data = pkl.load(f)
+
+# with open('control_iso-iso_tubule_len.pkl', 'rb') as f:
+#     control_data = pkl.load(f)
+
+# with open('rtn_iso-iso_tubule_len.pkl', 'rb') as f:
+#     rtn_data = pkl.load(f)
+
+
+
+
+df = pd.DataFrame()
+df['data_tubule_len'] = pd.Series(np.concatenate((control_data, rtn_data, climp_data, atl_data)))
+df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_data), ['Reticulon'] * len(rtn_data), ['Climp'] * len(climp_data), ['Atlastin'] * len(atl_data))))
+
+ax = sns.boxplot(data=df, x='Group', y='data_tubule_len', showfliers=False, width=0.9)
+ax.set_xticklabels(ax.get_xticklabels(), fontsize=16)
+
+yt = ax.get_yticks()
+
+ymax = max(yt)
+
+yt = [f'{y:.2f}' for y in yt]
+
+ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=90)
+ax.set_yticklabels(yt, fontsize=13)
+
+ax.set_ylim(0, ymax+0.2)
+
+box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('ATL', 'Control'), ('Climp', 'Control'), ('Climp', 'RTN'),
+                ('Control', 'RTN')]
+
+# statannot.add_stat_annotation(ax, x='Group', y='data_tubule_len', data=df, box_pairs=box_pairs,
+                                # test='Mann-Whitney', text_format='simple', loc='inside', verbose=2, fontsize='large')
+
+# plt.title('Tubule length in iso-iso edges', fontsize=18)
+ax.grid(axis='y')
+# plt.xlabel('Group', fontsize=20)
+plt.ylabel('Tubule length', fontsize=15)
+
+plt.gcf().set_size_inches(2.5, 8)
+
+plt.savefig('tubule_len_iso-iso.png', bbox_inches='tight', pad_inches=0.1, dpi=300)
+
+plt.close()
+# plt.show()
+
+exit()
+
+
+
 
 
 import imageio
