@@ -35,7 +35,7 @@ class JunctionAnalysisModules:
         #     return sknw.build_sknw(imageio.imread(skel_img_path), multi=True, iso=False)
         # elif fname_suffix == 'filt':
         skel = self.get_skeleton(skel_img_path)
-        return sknw.build_sknw(skel, multi=True, iso=False)
+        return sknw.build_sknw(skel, multi=False, iso=False)
     
     # node_connector
     # def get_junctions(self, path_er, path_skel):
@@ -112,8 +112,10 @@ class JunctionAnalysisModules:
 
         node_set, degree_list = graph.nodes, graph.degree
 
+        # get node coordinates
         node_coords = np.array([node_set[node]['o'] for node in node_set])
-    
+
+        # return coordinates of junctions with degree > 2    
         return [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
 
     def get_all_junc(self, group, num_series):
@@ -131,10 +133,14 @@ class JunctionAnalysisModules:
         # mean_er = f'{self.confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{num_series}_er_mean.png'
 
         # mean_skel = f'{self.confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_proc_skel.png'
-        mean_skel = f'{self.data_path}{group}/er_mean_proc/{group.lower()}{num_series}_proc_skel.png'
+        # mean_skel = f'{self.data_path}{group}/er_mean_proc/{group.lower()}{num_series}_proc_skel.png'
+
+        mean_skel_path = f'{self.data_path}vess_enh_unet/{group.lower()}/gt_skel/{group.lower()}{num_series}_proc_skel.png'
+
+        ref_graph = self.skel_to_graph(mean_skel_path)
 
         # ref_junctions = self.get_ref_junctions(self.skel_to_graph(mean_skel))
-        ref_junctions = self.get_junctions(mean_skel)
+        ref_junctions = self.get_junctions(mean_skel_path)
         ref_junctions = [[each[0], each[1]] for each in ref_junctions]
 
         per_frame_junctions = []
@@ -157,21 +163,25 @@ class JunctionAnalysisModules:
             junc_array = [[junc[0], junc[1]] for junc in junctions]
             per_frame_junctions.extend(junc_array)
 
-        return ref_junctions, per_frame_junctions
+        return ref_junctions, per_frame_junctions, ref_graph
 
     def label_junctions(self, group, series_num):
+        """
+        Get connected component output for junction classification
+        """
 
-        # fig, ax = plt.subplots()
-        ref_junctions, per_frame_junctions = self.get_all_junc(group, series_num)
+
+        ref_junctions, per_frame_junctions, ref_graph = self.get_all_junc(group, series_num)
 
         ref_junctions = np.array(ref_junctions)
         per_frame_junctions = np.array(per_frame_junctions)
 
-        spread_img = np.zeros((128, 128))
-        for each in per_frame_junctions:
-            spread_img[each[0], each[1]] = 255.
+        junc_spread_img = np.zeros((128, 128))
 
-        labelled_img = label(spread_img, connectivity=2)
+        for junction in per_frame_junctions:
+            junc_spread_img[junction[0], junction[1]] = 255.
+
+        labelled_img = label(junc_spread_img, connectivity=2)
         # imageio.imsave('Climp12_junc_labelled.png', labelled_img)
         # fig.add_subplot(1,2,2)
         # plt.axis('off')
@@ -181,7 +191,7 @@ class JunctionAnalysisModules:
         # plt.show()
         # exit()
 
-        return ref_junctions, per_frame_junctions, labelled_img
+        return ref_junctions, per_frame_junctions, labelled_img, ref_graph
 
     def get_ref_junc_per_CC_id(self, reference_junctions, connected_components):
         # get CC_id and corresponding junctions, get CC_ids with at

@@ -15,13 +15,15 @@ import os
 from scipy.stats import pearsonr, sem
 import statannot
 from statsmodels.stats.multicomp import MultiComparison
+
+from statannotations.Annotator import Annotator
 from scipy.stats import kruskal, mannwhitneyu
 import pickle as pkl
 
 # from structure_extraction import node_connector, get_updated_degree_nodes
 
 from junction_analysis_modules import JunctionAnalysisModules as JAM
-from junction_analysis import cc_area_measure, cc_signal, cc_signal_net_norm, get_group_CC_pixel_data, get_mean_std_per_CC_pixel_data, get_region_areas_per_group, get_cc_ids
+from junction_analysis import cc_area_measure, cc_signal, cc_signal_net_norm, get_group_CC_pixel_data, get_mean_std_per_CC_pixel_data, get_region_areas_per_group, get_cc_ids, get_junctions_per_cc_id
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal-data/'
 sted_data_path = '/localhome/asa420/MIAL/data/sted-data/'
@@ -62,6 +64,368 @@ def filter_data(data):
 #     return corr_vals
 
 
+# def get_num_iso_ref_per_seq(group, total_seq):
+#     data = []
+#     for seq in range(1, total_seq+1):
+#         ref_junctions, per_frame_junctions, labelled_img, ref_graph = junc_analysis.label_junctions(group, seq)
+
+#         label_ids = junc_analysis.get_ref_junc_per_CC_id(ref_junctions, labelled_img)
+
+#         # label_id_junctions = get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, 'iso')
+
+#         # print(f'ATL{seq} has {len(label_id_junctions)} isolated junctions')
+#         iso, fuz = junc_analysis.get_junction_areas(label_ids)
+
+#         # iso_ids = [(u, v) for (u, v) in ref_graph.edges() if (u in iso and v in iso)]
+
+#         # edge[0]][edge[1]][0] if multi='True'
+
+#         tub_len = [len(ref_graph[edge[0]][edge[1]]['pts'])
+#             for edge in list(ref_graph.edges()) if len(ref_graph[edge[0]][edge[1]]['pts']) > 3]
+
+#         total_tub_len = sum(tub_len)
+#         # print(total_tub_len)
+
+#         # print(len(iso))
+
+#         data.append(len(iso) / total_tub_len)
+
+#     return data
+
+
+# atl_data = get_num_iso_ref_per_seq('ATL', 26)
+# climp_data = get_num_iso_ref_per_seq('Climp', 31)
+# control_data = get_num_iso_ref_per_seq('Control', 31)
+# rtn_data = get_num_iso_ref_per_seq('RTN', 29)
+
+# with open('atl_iso_ref_tub_len_ratio.pkl', 'wb') as f:
+#     pkl.dump(atl_data, f)
+
+# with open('climp_iso_ref_tub_len_ratio.pkl', 'wb') as f:
+#     pkl.dump(climp_data, f)
+
+# with open('control_iso_ref_tub_len_ratio.pkl', 'wb') as f:
+#     pkl.dump(control_data, f)
+
+# with open('rtn_iso_ref_tub_len_ratio.pkl', 'wb') as f:
+#     pkl.dump(rtn_data, f)
+
+atl_data = pkl.load(open('atl_iso_ref_tub_len_ratio.pkl', 'rb'))
+climp_data = pkl.load(open('climp_iso_ref_tub_len_ratio.pkl', 'rb'))
+control_data = pkl.load(open('control_iso_ref_tub_len_ratio.pkl', 'rb'))
+rtn_data = pkl.load(open('rtn_iso_ref_tub_len_ratio.pkl', 'rb'))
+
+df = pd.DataFrame()
+df['Ratio'] = pd.Series(np.concatenate((control_data, rtn_data, climp_data, atl_data)))
+
+df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_data), ['Reticulon'] * len(rtn_data), ['Climp'] * len(climp_data), ['Atlastin'] * len(atl_data))))
+
+ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, width=0.9)
+
+plt.ylim(0, 0.07)
+plt.xlim(-1, 4.0)
+
+yt = ax.get_yticks()
+yt = [f'{y:.2f}' for y in yt]
+ax.set_yticklabels(yt, fontsize=13)
+ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=45)
+
+box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'),
+                ('Reticulon', 'Control')]
+
+# statannot.add_stat_annotation(ax, x='Group', y='Ratio', data=df, box_pairs=box_pairs,
+#                                 test='Mann-Whitney', text_format='star', loc='inside', verbose=0, fontsize=11, line_height=0.01, linewidth=1.0)
+
+# order = ['Control', 'Reticulon', 'Climp', 'Atlastin']
+
+# annot_params = {
+#     'test': 'Mann-Whitney',
+#     'text_format': 'star',
+#     'loc': 'inside',
+#     # 'use_fixed_offset': True,
+#     'verbose': 1,
+#     'fontsize': 11,
+#     'line_height': 0.01,
+#     'line_offset': 0.001,
+#     'line_offset_to_group': 0,
+#     'line_width': 0.5
+# }
+
+# annotator = Annotator(ax, box_pairs, data=df, x='Group', y='Ratio', order=order)
+# # annotator.configure(test='Mann-Whitney', text_format='star', loc='inside', use_fixed_offset=True, verbose=1, fontsize=11, line_height=0.01, line_offset=0.001, line_offset_to_group=0, line_width=0.5)#, hide_non_significant=True)
+# annotator.configure(**annot_params)
+# annotator.apply_and_annotate()
+
+x1, x2 = 1, 2
+y, col = df['Ratio'].max()+0.002, 'k'
+
+plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
+plt.text((x1+x2)*.5, y, "***", ha='center', va='bottom', color=col, fontsize=10)
+
+x1, x2 = 0, 1
+y, col = df['Ratio'].max()+0.004, 'k'
+
+plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
+plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+
+x1, x2 = 0, 2
+y, col = df['Ratio'].max()+0.006, 'k'
+
+plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
+plt.text((x1+x2)*.5, y, "**", ha='center', va='bottom', color=col, fontsize=10)
+
+x1, x2 = 0, 3
+y, col = df['Ratio'].max()+0.008, 'k'
+
+plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
+plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+
+
+# plt.grid(True)
+ax.grid(axis='y')
+# plt.xlabel('Group', fontsize=15)
+# plt.ylabel('Ratio', fontsize=15)
+plt.gcf().set_size_inches(2.5, 8)
+
+plt.savefig(f'nERdy_iso_ref_ratio_v4', bbox_inches='tight', pad_inches=0.1)
+# plt.show()
+
+plt.close()
+
+exit()
+
+def get_cc_count(label_ids):
+    isolated_cc = 0
+    fuzzy_cc = 0
+    # unknown_junctions = []
+
+    for cc_id, junctions in label_ids.items():
+        if cc_id != 0:
+            if len(junctions) == 1:
+                isolated_cc += 1
+            else:
+                fuzzy_cc += 1
+
+    return isolated_cc, fuzzy_cc
+
+
+def get_fuz_iso_cc_ratio(group, total_seq):
+    # new method to only get one contribution per cc
+    # from fuzzy CCs
+    data = []
+    for seq in range(1, total_seq+1):
+        ref_junctions, per_frame_junctions, labelled_img, ref_graph = junc_analysis.label_junctions(group, seq)
+
+        label_ids = junc_analysis.get_ref_junc_per_CC_id(ref_junctions, labelled_img)
+        # iso_junc, fuz_junc = junc_analysis.get_junction_areas(label_ids)
+        iso_junc, fuz_junc = get_cc_count(label_ids)
+        # data.append(len(fuz_junc) / len(iso_junc))
+        data.append(fuz_junc / iso_junc)
+
+    return data
+
+def get_fuz_iso_junc_ratio(group, total_seq):
+    # original method - used all the junctions within 
+    # fuzzy cc so leading to multiple junctions per cc
+    data = []
+    for seq in range(1, total_seq+1):
+        ref_junctions, per_frame_junctions, labelled_img, ref_graph = junc_analysis.label_junctions(group, seq)
+
+        label_ids = junc_analysis.get_ref_junc_per_CC_id(ref_junctions, labelled_img)
+        iso_junc, fuz_junc = junc_analysis.get_junction_areas(label_ids)
+        # iso_junc, fuz_junc = get_cc_count(label_ids)
+        data.append(len(fuz_junc) / len(iso_junc))
+
+    return data
+
+
+def get_cc_area(group, total_seq):
+    iso_data = []
+    fuz_data = []
+    for seq in range(1, total_seq+1):
+        ref_junctions, per_frame_junctions, labelled_img, ref_graph = junc_analysis.label_junctions(group, seq)
+
+        label_ids = junc_analysis.get_ref_junc_per_CC_id(ref_junctions, labelled_img)
+        # iso_junc, fuz_junc = junc_analysis.get_junction_areas(label_ids)
+
+        label_id_junctions_iso = get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, 'iso')
+
+        label_id_junctions_fuz = get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, 'fuz')
+
+        for ref, junctions in label_id_junctions_iso.items():
+            iso_data.append(len(junctions))
+        
+        for ref, junctions in label_id_junctions_fuz.items():
+            fuz_data.append(len(junctions))
+
+
+        # iso_data.append(len(iso_junc))
+        # fuz_data.append(len(fuz_junc))
+
+    return iso_data, fuz_data
+
+
+def get_cc_area_ratio(group, total_seq):
+    ratio_data = []
+    for seq in range(1, total_seq+1):
+        iso_data = []
+        fuz_data = []
+        ref_junctions, per_frame_junctions, labelled_img, ref_graph = junc_analysis.label_junctions(group, seq)
+
+        label_ids = junc_analysis.get_ref_junc_per_CC_id(ref_junctions, labelled_img)
+
+        label_id_junctions_iso = get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, 'iso')
+
+        label_id_junctions_fuz = get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, 'fuz')
+
+        for ref, junctions in label_id_junctions_iso.items():
+            iso_data.append(len(junctions))
+        
+        for ref, junctions in label_id_junctions_fuz.items():
+            fuz_data.append(len(junctions))
+    
+        ratio_data.append(sum(fuz_data) / sum(iso_data))
+
+    return ratio_data
+
+# atl_iso_area, atl_fuz_area = get_cc_area('ATL', 26)
+# climp_iso_area, climp_fuz_area = get_cc_area('Climp', 31)
+# control_iso_area, control_fuz_area = get_cc_area('Control', 31)
+# rtn_iso_area, rtn_fuz_area = get_cc_area('RTN', 29)
+
+# with open('atl_iso_CC_area.pkl', 'wb') as f:
+#     pkl.dump(atl_iso_area, f)
+
+# with open('atl_fuz_CC_area.pkl', 'wb') as f:
+#     pkl.dump(atl_fuz_area, f)
+
+# with open('climp_iso_CC_area.pkl', 'wb') as f:
+#     pkl.dump(climp_iso_area, f)
+
+# with open('climp_fuz_CC_area.pkl', 'wb') as f:
+#     pkl.dump(climp_fuz_area, f)
+
+# with open('control_iso_CC_area.pkl', 'wb') as f:
+#     pkl.dump(control_iso_area, f)
+
+# with open('control_fuz_CC_area.pkl', 'wb') as f:
+#     pkl.dump(control_fuz_area, f)
+
+# with open('rtn_iso_CC_area.pkl', 'wb') as f:
+#     pkl.dump(rtn_iso_area, f)
+
+# with open('rtn_fuz_CC_area.pkl', 'wb') as f:
+#     pkl.dump(rtn_fuz_area, f)
+
+
+# atl_iso_area = pkl.load(open('atl_iso_CC_area.pkl', 'rb'))
+# atl_fuz_area = pkl.load(open('atl_fuz_CC_area.pkl', 'rb'))
+# climp_iso_area = pkl.load(open('climp_iso_CC_area.pkl', 'rb'))
+# # climp_fuz_area = pkl.load(open('climp_fuz_CC_area.pkl', 'rb'))
+# control_iso_area = pkl.load(open('control_iso_CC_area.pkl', 'rb'))
+# # control_fuz_area = pkl.load(open('control_fuz_CC_area.pkl', 'rb'))
+# rtn_iso_area = pkl.load(open('rtn_iso_CC_area.pkl', 'rb'))
+# rtn_fuz_area = pkl.load(open('rtn_fuz_CC_area.pkl', 'rb'))
+
+
+# atl_fuz_iso_ratio = get_cc_area_ratio('ATL', 26)
+# climp_fuz_iso_ratio = get_cc_area_ratio('Climp', 31)
+# control_fuz_iso_ratio = get_cc_area_ratio('Control', 31)
+# rtn_fuz_iso_ratio = get_cc_area_ratio('RTN', 29)
+
+# with open('atl_fuz_iso_ratio.pkl', 'wb') as f:
+#     pkl.dump(atl_fuz_iso_ratio, f)
+
+# with open('climp_fuz_iso_ratio.pkl', 'wb') as f:
+#     pkl.dump(climp_fuz_iso_ratio, f)
+
+# with open('control_fuz_iso_ratio.pkl', 'wb') as f:
+#     pkl.dump(control_fuz_iso_ratio, f)
+
+# with open('rtn_fuz_iso_ratio.pkl', 'wb') as f:
+#     pkl.dump(rtn_fuz_iso_ratio, f)
+
+
+# atl_fuz_iso_ratio = pkl.load(open('atl_fuz_iso_ratio.pkl', 'rb'))
+# climp_fuz_iso_ratio = pkl.load(open('climp_fuz_iso_ratio.pkl', 'rb'))
+# control_fuz_iso_ratio = pkl.load(open('control_fuz_iso_ratio.pkl', 'rb'))
+# rtn_fuz_iso_ratio = pkl.load(open('rtn_fuz_iso_ratio.pkl', 'rb'))
+
+# atl_fuz_iso_junc_ratio = get_fuz_iso_junc_ratio('ATL', 26)
+# climp_fuz_iso_junc_ratio = get_fuz_iso_junc_ratio('Climp', 31)
+# control_fuz_iso_junc_ratio = get_fuz_iso_junc_ratio('Control', 31)
+# rtn_fuz_iso_junc_ratio = get_fuz_iso_junc_ratio('RTN', 29)
+
+# with open('atl_fuz_iso_junc_ratio.pkl', 'wb') as f:
+#     pkl.dump(atl_fuz_iso_junc_ratio, f)
+
+# with open('climp_fuz_iso_junc_ratio.pkl', 'wb') as f:
+#     pkl.dump(climp_fuz_iso_junc_ratio, f)
+
+# with open('control_fuz_iso_junc_ratio.pkl', 'wb') as f:
+#     pkl.dump(control_fuz_iso_junc_ratio, f)
+
+# with open('rtn_fuz_iso_junc_ratio.pkl', 'wb') as f:
+#     pkl.dump(rtn_fuz_iso_junc_ratio, f)
+
+control_fuz_iso_junc_ratio = pkl.load(open('control_fuz_iso_junc_ratio.pkl', 'rb'))
+
+atl_fuz_iso_junc_ratio = pkl.load(open('atl_fuz_iso_junc_ratio.pkl', 'rb'))
+climp_fuz_iso_junc_ratio = pkl.load(open('climp_fuz_iso_junc_ratio.pkl', 'rb'))
+rtn_fuz_iso_junc_ratio = pkl.load(open('rtn_fuz_iso_junc_ratio.pkl', 'rb'))
+
+df = pd.DataFrame()
+
+df['Ratio'] = pd.Series(np.concatenate((control_fuz_iso_junc_ratio, rtn_fuz_iso_junc_ratio, climp_fuz_iso_junc_ratio, atl_fuz_iso_junc_ratio)))
+
+df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_fuz_iso_junc_ratio), ['Reticulon'] * len(rtn_fuz_iso_junc_ratio), ['Climp'] * len(climp_fuz_iso_junc_ratio), ['Atlastin'] * len(atl_fuz_iso_junc_ratio))))
+
+# df['Ratio'] = pd.Series(np.concatenate((control_fuz_iso_ratio, rtn_fuz_iso_ratio, climp_fuz_iso_ratio, atl_fuz_iso_ratio)))
+
+# df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_fuz_iso_ratio), ['Reticulon'] * len(rtn_fuz_iso_ratio), ['Climp'] * len(climp_fuz_iso_ratio), ['Atlastin'] * len(atl_fuz_iso_ratio))))
+
+# df['CC_area'] = pd.Series(np.concatenate((control_iso_area, rtn_iso_area,climp_iso_area, atl_iso_area)))
+# df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_iso_area), ['Reticulon'] * len(rtn_iso_area), ['Climp'] * len(climp_iso_area), ['Atlastin'] * len(atl_iso_area))))
+
+# df['CC_area'] = pd.Series(np.concatenate((control_fuz_area, rtn_fuz_area,climp_fuz_area, atl_fuz_area)))
+# df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_fuz_area), ['Reticulon'] * len(rtn_fuz_area), ['Climp'] * len(climp_fuz_area), ['Atlastin'] * len(atl_fuz_area))))
+
+ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, width=0.9)
+
+# ax.set_ylim(ymin=0, ymax=160)
+
+plt.ylim(0, 4.0)
+# plt.xlim(-1, 4.0)
+
+yt = ax.get_yticks()
+yt = [f'{y:.1f}' for y in yt]
+ax.set_yticklabels(yt, fontsize=13)
+ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=90)
+
+box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'),
+                ('Reticulon', 'Control')]
+
+# statannot.add_stat_annotation(ax, x='Group', y='Ratio', data=df, box_pairs=box_pairs,
+                                # test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=13)
+
+# plt.grid(True)
+
+# ax.set_ylim(ymin=0, ymax=160)
+# ax.set_ylim(bottom=0, top=160)
+
+ax.grid(axis='y')
+# plt.xlabel('Group', fontsize=15)
+# plt.ylabel('Ratio', fontsize=15)
+ 
+plt.gcf().set_size_inches(2, 8)
+
+plt.savefig(f'nERdy_fuz_iso_junc_CC_ratio_v4_no_annot', bbox_inches='tight', pad_inches=0.1)
+# plt.show()
+
+plt.close()
+
+
+exit()
 
 
 def get_mean_group_data(data, measure):
