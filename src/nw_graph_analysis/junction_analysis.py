@@ -233,10 +233,10 @@ def get_region_cc(group, series_num, region):
     @param region: isolated or fuzzy
     @return: list of CC ids
     """
-    ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions(group, series_num)
+    ref_junctions, per_frame_junctions, labelled_img, ref_graph = junc_analysis.label_junctions(group, series_num)
 
     # dict with ids as key and (x, y) as value
-    label_ids = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
+    label_ids = junc_analysis.separate_junc_cc(ref_junctions, labelled_img)
 
     # iso, fuz, unk: list of lists with x, y
     iso, fuz = junc_analysis.get_junction_areas(label_ids)

@@ -110,89 +110,166 @@ def filter_data(data):
 # with open('rtn_iso_ref_tub_len_ratio.pkl', 'wb') as f:
 #     pkl.dump(rtn_data, f)
 
-atl_data = pkl.load(open('atl_iso_ref_tub_len_ratio.pkl', 'rb'))
-climp_data = pkl.load(open('climp_iso_ref_tub_len_ratio.pkl', 'rb'))
-control_data = pkl.load(open('control_iso_ref_tub_len_ratio.pkl', 'rb'))
-rtn_data = pkl.load(open('rtn_iso_ref_tub_len_ratio.pkl', 'rb'))
+def plot_iso_ref_ratio():
+    atl_data = pkl.load(open('atl_iso_ref_tub_len_ratio.pkl', 'rb'))
 
-df = pd.DataFrame()
-df['Ratio'] = pd.Series(np.concatenate((control_data, rtn_data, climp_data, atl_data)))
+    df = pd.DataFrame()
+    df['Ratio'] = pd.Series(np.concatenate((control_data, rtn_data, climp_data, atl_data)))
 
-df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_data), ['Reticulon'] * len(rtn_data), ['Climp'] * len(climp_data), ['Atlastin'] * len(atl_data))))
+    df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_data), ['Reticulon'] * len(rtn_data), ['Climp'] * len(climp_data), ['Atlastin'] * len(atl_data))))
 
-ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, width=0.9)
+    ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, width=0.9)
 
-plt.ylim(0, 0.07)
-plt.xlim(-1, 4.0)
+    plt.ylim(0, 0.07)
+    plt.xlim(-1, 4.0)
 
-yt = ax.get_yticks()
-yt = [f'{y:.2f}' for y in yt]
-ax.set_yticklabels(yt, fontsize=13)
-ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=45)
+    yt = ax.get_yticks()
+    yt = [f'{y:.2f}' for y in yt]
+    ax.set_yticklabels(yt, fontsize=13)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=45)
 
-box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'),
-                ('Reticulon', 'Control')]
+    box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'),
+                    ('Reticulon', 'Control')]
 
-# statannot.add_stat_annotation(ax, x='Group', y='Ratio', data=df, box_pairs=box_pairs,
-#                                 test='Mann-Whitney', text_format='star', loc='inside', verbose=0, fontsize=11, line_height=0.01, linewidth=1.0)
+    # statannot.add_stat_annotation(ax, x='Group', y='Ratio', data=df, box_pairs=box_pairs,
+    #                                 test='Mann-Whitney', text_format='star', loc='inside', verbose=0, fontsize=11, line_height=0.01, linewidth=1.0)
 
-# order = ['Control', 'Reticulon', 'Climp', 'Atlastin']
+    # order = ['Control', 'Reticulon', 'Climp', 'Atlastin']
 
-# annot_params = {
-#     'test': 'Mann-Whitney',
-#     'text_format': 'star',
-#     'loc': 'inside',
-#     # 'use_fixed_offset': True,
-#     'verbose': 1,
-#     'fontsize': 11,
-#     'line_height': 0.01,
-#     'line_offset': 0.001,
-#     'line_offset_to_group': 0,
-#     'line_width': 0.5
-# }
+    # annot_params = {
+    #     'test': 'Mann-Whitney',
+    #     'text_format': 'star',
+    #     'loc': 'inside',
+    #     # 'use_fixed_offset': True,
+    #     'verbose': 1,
+    #     'fontsize': 11,
+    #     'line_height': 0.01,
+    #     'line_offset': 0.001,
+    #     'line_offset_to_group': 0,
+    #     'line_width': 0.5
+    # }
 
-# annotator = Annotator(ax, box_pairs, data=df, x='Group', y='Ratio', order=order)
-# # annotator.configure(test='Mann-Whitney', text_format='star', loc='inside', use_fixed_offset=True, verbose=1, fontsize=11, line_height=0.01, line_offset=0.001, line_offset_to_group=0, line_width=0.5)#, hide_non_significant=True)
-# annotator.configure(**annot_params)
-# annotator.apply_and_annotate()
+    # annotator = Annotator(ax, box_pairs, data=df, x='Group', y='Ratio', order=order)
+    # # annotator.configure(test='Mann-Whitney', text_format='star', loc='inside', use_fixed_offset=True, verbose=1, fontsize=11, line_height=0.01, line_offset=0.001, line_offset_to_group=0, line_width=0.5)#, hide_non_significant=True)
+    # annotator.configure(**annot_params)
+    # annotator.apply_and_annotate()
 
-x1, x2 = 1, 2
-y, col = df['Ratio'].max()+0.002, 'k'
+    x1, x2 = 1, 2
+    y, col = df['Ratio'].max()+0.0015, 'k'
 
-plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
-plt.text((x1+x2)*.5, y, "***", ha='center', va='bottom', color=col, fontsize=10)
+    plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
+    plt.text((x1+x2)*.5, y, "***", ha='center', va='bottom', color=col, fontsize=10)
 
-x1, x2 = 0, 1
-y, col = df['Ratio'].max()+0.004, 'k'
+    x1, x2 = 0, 1
+    y, col = df['Ratio'].max()+0.0030, 'k'
 
-plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
-plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+    plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
+    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
 
-x1, x2 = 0, 2
-y, col = df['Ratio'].max()+0.006, 'k'
+    x1, x2 = 0, 2
+    y, col = df['Ratio'].max()+0.0045, 'k'
 
-plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
-plt.text((x1+x2)*.5, y, "**", ha='center', va='bottom', color=col, fontsize=10)
+    plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
+    plt.text((x1+x2)*.5, y, "**", ha='center', va='bottom', color=col, fontsize=10)
 
-x1, x2 = 0, 3
-y, col = df['Ratio'].max()+0.008, 'k'
+    x1, x2 = 0, 3
+    y, col = df['Ratio'].max()+0.006, 'k'
 
-plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
-plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+    plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
+    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
 
 
-# plt.grid(True)
-ax.grid(axis='y')
-# plt.xlabel('Group', fontsize=15)
-# plt.ylabel('Ratio', fontsize=15)
-plt.gcf().set_size_inches(2.5, 8)
+    # plt.grid(True)
+    ax.grid(axis='y')
+    # plt.xlabel('Group', fontsize=15)
+    # plt.ylabel('Ratio', fontsize=15)
+    plt.gcf().set_size_inches(2.5, 8)
 
-plt.savefig(f'nERdy_iso_ref_ratio_v4', bbox_inches='tight', pad_inches=0.1)
-# plt.show()
+    plt.savefig(f'nERdy_iso_ref_ratio_v4', bbox_inches='tight', pad_inches=0.1)
+    # plt.show()
 
-plt.close()
+    plt.close()
 
-exit()
+
+def plot_tub_len_ratio():
+    # with open('atl_iso_ref_tub_len_ratio.pkl', 'wb') as f:
+    #     pkl.dump(atl_data, f)
+
+    # with open('climp_iso_ref_tub_len_ratio.pkl', 'wb') as f:
+    #     pkl.dump(climp_data, f)
+
+    # with open('control_iso_ref_tub_len_ratio.pkl', 'wb') as f:
+    #     pkl.dump(control_data, f)
+
+    # with open('rtn_iso_ref_tub_len_ratio.pkl', 'wb') as f:
+    #     pkl.dump(rtn_data, f)
+
+    # atl_data = pkl.load(open('atl_iso_ref_tub_len_ratio.pkl', 'rb'))
+    atl_data = pkl.load(open('atl_iso_iso_tub_len.pkl', 'rb'))
+    climp_data = pkl.load(open('climp_iso_iso_tub_len.pkl', 'rb'))
+    control_data = pkl.load(open('control_iso_iso_tub_len.pkl', 'rb'))
+    rtn_data = pkl.load(open('rtn_iso_iso_tub_len.pkl', 'rb'))
+
+    df = pd.DataFrame()
+    df['Ratio'] = pd.Series(np.concatenate((control_data, rtn_data, climp_data, atl_data)))
+
+    df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_data), ['Reticulon'] * len(rtn_data), ['Climp'] * len(climp_data), ['Atlastin'] * len(atl_data))))
+
+    ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, width=0.9)
+
+    plt.ylim(0, 28.0)
+    plt.xlim(-1, 4.0)
+
+    yt = ax.get_yticks()
+    yt = [f'{y:.2f}' for y in yt]
+    ax.set_yticklabels(yt, fontsize=13)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=45)
+
+    x1, x2 = 2, 3
+    y, col = 23.6, 'k'
+
+    plt.plot([x1, x1, x2, x2], [y, y+0.1, y+0.1, y], lw=1, c=col)
+    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+
+    x1, x2 = 1, 2
+    y, col = 24.4, 'k'
+
+    plt.plot([x1, x1, x2, x2], [y, y+0.1, y+0.1, y], lw=1, c=col)
+    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+
+    x1, x2 = 0, 1
+    y, col = 25.2, 'k'
+
+    plt.plot([x1, x1, x2, x2], [y, y+0.1, y+0.1, y], lw=1, c=col)
+    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+
+    x1, x2 = 0, 2
+    y, col = 26, 'k'
+
+    plt.plot([x1, x1, x2, x2], [y, y+0.1, y+0.1, y], lw=1, c=col)
+    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+
+    x1, x2 = 0, 3
+    y, col = 26.8, 'k'
+
+    plt.plot([x1, x1, x2, x2], [y, y+0.1, y+0.1, y], lw=1, c=col)
+    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+
+
+    # plt.grid(True)
+    ax.grid(axis='y')
+    # plt.xlabel('Group', fontsize=15)
+    # plt.ylabel('Ratio', fontsize=15)
+    plt.gcf().set_size_inches(2.5, 8)
+
+    plt.savefig(f'nERdy_iso_iso_tub_len_ratio_v5', bbox_inches='tight', pad_inches=0.1)
+    # plt.show()
+
+    plt.close()
+
+# plot_tub_len_ratio()
+# exit()
+
 
 def get_cc_count(label_ids):
     isolated_cc = 0
@@ -320,14 +397,75 @@ def get_cc_area_ratio(group, total_seq):
 
 # atl_iso_area = pkl.load(open('atl_iso_CC_area.pkl', 'rb'))
 # atl_fuz_area = pkl.load(open('atl_fuz_CC_area.pkl', 'rb'))
-# climp_iso_area = pkl.load(open('climp_iso_CC_area.pkl', 'rb'))
-# # climp_fuz_area = pkl.load(open('climp_fuz_CC_area.pkl', 'rb'))
-# control_iso_area = pkl.load(open('control_iso_CC_area.pkl', 'rb'))
-# # control_fuz_area = pkl.load(open('control_fuz_CC_area.pkl', 'rb'))
-# rtn_iso_area = pkl.load(open('rtn_iso_CC_area.pkl', 'rb'))
+# # climp_iso_area = pkl.load(open('climp_iso_CC_area.pkl', 'rb'))
+# climp_fuz_area = pkl.load(open('climp_fuz_CC_area.pkl', 'rb'))
+# # control_iso_area = pkl.load(open('control_iso_CC_area.pkl', 'rb'))
+# control_fuz_area = pkl.load(open('control_fuz_CC_area.pkl', 'rb'))
+# # rtn_iso_area = pkl.load(open('rtn_iso_CC_area.pkl', 'rb'))
 # rtn_fuz_area = pkl.load(open('rtn_fuz_CC_area.pkl', 'rb'))
 
+# df = pd.DataFrame()
+# # df['CC_area'] = pd.Series(np.concatenate((control_iso_area, rtn_iso_area,climp_iso_area, atl_iso_area)))
 
+# df['CC_area'] = pd.Series(np.concatenate((control_fuz_area, rtn_fuz_area,climp_fuz_area, atl_fuz_area)))
+
+# # df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_iso_area), ['Reticulon'] * len(rtn_iso_area), ['Climp'] * len(climp_iso_area), ['Atlastin'] * len(atl_iso_area))))
+
+# df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_fuz_area), ['Reticulon'] * len(rtn_fuz_area), ['Climp'] * len(climp_fuz_area), ['Atlastin'] * len(atl_fuz_area))))
+
+# ax = sns.boxplot(data=df, x='Group', y='CC_area', showfliers=False, width=0.9)
+
+# plt.ylim(0, 178)
+# plt.xlim(-1, 4.0)
+
+# yt = ax.get_yticks()
+# yt = [f'{y:.2f}' for y in yt]
+# ax.set_yticklabels(yt, fontsize=13)
+# ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=45)
+
+# x1, x2 = 2, 3 
+# y, col = 154, 'k'
+
+# plt.plot([x1, x1, x2, x2], [y, y+0.5, y+0.5, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "***", ha='center', va='bottom', color=col, fontsize=10)
+
+# x1, x2 = 1, 2
+# y, col = 158, 'k'
+
+# plt.plot([x1, x1, x2, x2], [y, y+0.5, y+0.5, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+
+# x1, x2 = 0, 1
+# y, col = 162, 'k'
+
+# plt.plot([x1, x1, x2, x2], [y, y+0.5, y+0.5, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+
+# x1, x2 = 0, 2
+# y, col = 166, 'k'
+
+# plt.plot([x1, x1, x2, x2], [y, y+0.5, y+0.5, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "**", ha='center', va='bottom', color=col, fontsize=10)
+
+# x1, x2 = 0, 3
+# y, col = 170, 'k'
+
+# plt.plot([x1, x1, x2, x2], [y, y+0.5, y+0.5, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+
+
+# # plt.grid(True)
+# ax.grid(axis='y')
+# # plt.xlabel('Group', fontsize=15)
+# # plt.ylabel('Ratio', fontsize=15)
+# plt.gcf().set_size_inches(2.5, 8)
+
+# plt.savefig(f'nERdy_fuz_CC_area_v5', bbox_inches='tight', pad_inches=0.1)
+# # plt.show()
+
+# plt.close()
+
+# exit()
 # atl_fuz_iso_ratio = get_cc_area_ratio('ATL', 26)
 # climp_fuz_iso_ratio = get_cc_area_ratio('Climp', 31)
 # control_fuz_iso_ratio = get_cc_area_ratio('Control', 31)
@@ -351,6 +489,67 @@ def get_cc_area_ratio(group, total_seq):
 # control_fuz_iso_ratio = pkl.load(open('control_fuz_iso_ratio.pkl', 'rb'))
 # rtn_fuz_iso_ratio = pkl.load(open('rtn_fuz_iso_ratio.pkl', 'rb'))
 
+# df = pd.DataFrame()
+# df['Ratio'] = pd.Series(np.concatenate((control_fuz_iso_ratio, rtn_fuz_iso_ratio, climp_fuz_iso_ratio, atl_fuz_iso_ratio)))
+
+# # df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_data), ['Reticulon'] * len(rtn_data), ['Climp'] * len(climp_data), ['Atlastin'] * len(atl_data))))
+
+# df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_fuz_iso_ratio), ['Reticulon'] * len(rtn_fuz_iso_ratio), ['Climp'] * len(climp_fuz_iso_ratio), ['Atlastin'] * len(atl_fuz_iso_ratio))))
+
+# ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, width=0.9)
+
+# plt.ylim(0, 8.7)
+# plt.xlim(-1, 4.0)
+
+# yt = ax.get_yticks()
+# yt = [f'{y:.2f}' for y in yt]
+# ax.set_yticklabels(yt, fontsize=13)
+# ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=45)
+
+# x1, x2 = 2, 3
+# y, col = 7.4, 'k'
+
+# plt.plot([x1, x1, x2, x2], [y, y+0.01, y+0.01, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "**", ha='center', va='bottom', color=col, fontsize=10)
+
+# x1, x2 = 1, 2
+# y, col = 7.65, 'k'
+
+# plt.plot([x1, x1, x2, x2], [y, y+0.01, y+0.01, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "***", ha='center', va='bottom', color=col, fontsize=10)
+
+# x1, x2 = 0, 1
+# y, col = 7.9, 'k'
+
+# plt.plot([x1, x1, x2, x2], [y, y+0.01, y+0.01, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+
+# x1, x2 = 0, 2
+# y, col = 8.15, 'k'
+
+# plt.plot([x1, x1, x2, x2], [y, y+0.01, y+0.01, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+
+# x1, x2 = 0, 3
+# y, col = 8.4, 'k'
+
+# plt.plot([x1, x1, x2, x2], [y, y+0.01, y+0.01, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+
+
+# # plt.grid(True)
+# ax.grid(axis='y')
+# # plt.xlabel('Group', fontsize=15)
+# # plt.ylabel('Ratio', fontsize=15)
+# plt.gcf().set_size_inches(2.5, 8)
+
+# plt.savefig(f'nERdy_fuz_iso_CC_area_ratio_v5', bbox_inches='tight', pad_inches=0.1)
+# # plt.show()
+
+# plt.close()
+
+# exit()
+
 # atl_fuz_iso_junc_ratio = get_fuz_iso_junc_ratio('ATL', 26)
 # climp_fuz_iso_junc_ratio = get_fuz_iso_junc_ratio('Climp', 31)
 # control_fuz_iso_junc_ratio = get_fuz_iso_junc_ratio('Control', 31)
@@ -368,64 +567,115 @@ def get_cc_area_ratio(group, total_seq):
 # with open('rtn_fuz_iso_junc_ratio.pkl', 'wb') as f:
 #     pkl.dump(rtn_fuz_iso_junc_ratio, f)
 
-control_fuz_iso_junc_ratio = pkl.load(open('control_fuz_iso_junc_ratio.pkl', 'rb'))
+# control_fuz_iso_junc_ratio = pkl.load(open('control_fuz_iso_junc_ratio.pkl', 'rb'))
 
-atl_fuz_iso_junc_ratio = pkl.load(open('atl_fuz_iso_junc_ratio.pkl', 'rb'))
-climp_fuz_iso_junc_ratio = pkl.load(open('climp_fuz_iso_junc_ratio.pkl', 'rb'))
-rtn_fuz_iso_junc_ratio = pkl.load(open('rtn_fuz_iso_junc_ratio.pkl', 'rb'))
+# atl_fuz_iso_junc_ratio = pkl.load(open('atl_fuz_iso_junc_ratio.pkl', 'rb'))
+# climp_fuz_iso_junc_ratio = pkl.load(open('climp_fuz_iso_junc_ratio.pkl', 'rb'))
+# rtn_fuz_iso_junc_ratio = pkl.load(open('rtn_fuz_iso_junc_ratio.pkl', 'rb'))
 
-df = pd.DataFrame()
+# df = pd.DataFrame()
 
-df['Ratio'] = pd.Series(np.concatenate((control_fuz_iso_junc_ratio, rtn_fuz_iso_junc_ratio, climp_fuz_iso_junc_ratio, atl_fuz_iso_junc_ratio)))
+# df['Ratio'] = pd.Series(np.concatenate((control_fuz_iso_junc_ratio, rtn_fuz_iso_junc_ratio, climp_fuz_iso_junc_ratio, atl_fuz_iso_junc_ratio)))
 
-df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_fuz_iso_junc_ratio), ['Reticulon'] * len(rtn_fuz_iso_junc_ratio), ['Climp'] * len(climp_fuz_iso_junc_ratio), ['Atlastin'] * len(atl_fuz_iso_junc_ratio))))
+# df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_fuz_iso_junc_ratio), ['Reticulon'] * len(rtn_fuz_iso_junc_ratio), ['Climp'] * len(climp_fuz_iso_junc_ratio), ['Atlastin'] * len(atl_fuz_iso_junc_ratio))))
 
-# df['Ratio'] = pd.Series(np.concatenate((control_fuz_iso_ratio, rtn_fuz_iso_ratio, climp_fuz_iso_ratio, atl_fuz_iso_ratio)))
+# # df['Ratio'] = pd.Series(np.concatenate((control_fuz_iso_ratio, rtn_fuz_iso_ratio, climp_fuz_iso_ratio, atl_fuz_iso_ratio)))
 
-# df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_fuz_iso_ratio), ['Reticulon'] * len(rtn_fuz_iso_ratio), ['Climp'] * len(climp_fuz_iso_ratio), ['Atlastin'] * len(atl_fuz_iso_ratio))))
+# # df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_fuz_iso_ratio), ['Reticulon'] * len(rtn_fuz_iso_ratio), ['Climp'] * len(climp_fuz_iso_ratio), ['Atlastin'] * len(atl_fuz_iso_ratio))))
 
-# df['CC_area'] = pd.Series(np.concatenate((control_iso_area, rtn_iso_area,climp_iso_area, atl_iso_area)))
-# df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_iso_area), ['Reticulon'] * len(rtn_iso_area), ['Climp'] * len(climp_iso_area), ['Atlastin'] * len(atl_iso_area))))
+# # df['CC_area'] = pd.Series(np.concatenate((control_iso_area, rtn_iso_area,climp_iso_area, atl_iso_area)))
+# # df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_iso_area), ['Reticulon'] * len(rtn_iso_area), ['Climp'] * len(climp_iso_area), ['Atlastin'] * len(atl_iso_area))))
 
-# df['CC_area'] = pd.Series(np.concatenate((control_fuz_area, rtn_fuz_area,climp_fuz_area, atl_fuz_area)))
-# df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_fuz_area), ['Reticulon'] * len(rtn_fuz_area), ['Climp'] * len(climp_fuz_area), ['Atlastin'] * len(atl_fuz_area))))
+# # df['CC_area'] = pd.Series(np.concatenate((control_fuz_area, rtn_fuz_area,climp_fuz_area, atl_fuz_area)))
+# # df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_fuz_area), ['Reticulon'] * len(rtn_fuz_area), ['Climp'] * len(climp_fuz_area), ['Atlastin'] * len(atl_fuz_area))))
 
-ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, width=0.9)
+# ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, width=0.9)
 
-# ax.set_ylim(ymin=0, ymax=160)
-
-plt.ylim(0, 4.0)
+# plt.ylim(0, 4.2)
 # plt.xlim(-1, 4.0)
 
-yt = ax.get_yticks()
-yt = [f'{y:.1f}' for y in yt]
-ax.set_yticklabels(yt, fontsize=13)
-ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=90)
+# yt = ax.get_yticks()
+# yt = [f'{y:.2f}' for y in yt]
+# ax.set_yticklabels(yt, fontsize=13)
+# ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=45)
 
-box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'),
-                ('Reticulon', 'Control')]
+# x1, x2 = 2, 3
+# y, col = 3.45, 'k'
 
-# statannot.add_stat_annotation(ax, x='Group', y='Ratio', data=df, box_pairs=box_pairs,
-                                # test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=13)
+# plt.plot([x1, x1, x2, x2], [y, y+0.005, y+0.005, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
 
-# plt.grid(True)
+# x1, x2 = 1, 2
+# y, col = 3.55, 'k'
+
+# plt.plot([x1, x1, x2, x2], [y, y+0.005, y+0.005, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+
+# x1, x2 = 0, 1
+# y, col = 3.65, 'k'
+
+# plt.plot([x1, x1, x2, x2], [y, y+0.005, y+0.005, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+
+# x1, x2 = 0, 2
+# y, col = 3.75, 'k'
+
+# plt.plot([x1, x1, x2, x2], [y, y+0.005, y+0.005, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+
+# x1, x2 = 0, 3
+# y, col = 3.85, 'k'
+
+# plt.plot([x1, x1, x2, x2], [y, y+0.005, y+0.005, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+
+
+# # plt.grid(True)
+# ax.grid(axis='y')
+# # plt.xlabel('Group', fontsize=15)
+# # plt.ylabel('Ratio', fontsize=15)
+# plt.gcf().set_size_inches(2.5, 8)
+
+# plt.savefig(f'nERdy_fuz_iso_CC_num_ratio_v5', bbox_inches='tight', pad_inches=0.1)
+# # plt.show()
+
+# plt.close()
+# exit()
 
 # ax.set_ylim(ymin=0, ymax=160)
-# ax.set_ylim(bottom=0, top=160)
 
-ax.grid(axis='y')
-# plt.xlabel('Group', fontsize=15)
-# plt.ylabel('Ratio', fontsize=15)
+# plt.ylim(0, 4.0)
+# # plt.xlim(-1, 4.0)
+
+# yt = ax.get_yticks()
+# yt = [f'{y:.1f}' for y in yt]
+# ax.set_yticklabels(yt, fontsize=13)
+# ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=90)
+
+# box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'),
+#                 ('Reticulon', 'Control')]
+
+# # statannot.add_stat_annotation(ax, x='Group', y='Ratio', data=df, box_pairs=box_pairs,
+#                                 # test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=13)
+
+# # plt.grid(True)
+
+# # ax.set_ylim(ymin=0, ymax=160)
+# # ax.set_ylim(bottom=0, top=160)
+
+# ax.grid(axis='y')
+# # plt.xlabel('Group', fontsize=15)
+# # plt.ylabel('Ratio', fontsize=15)
  
-plt.gcf().set_size_inches(2, 8)
+# plt.gcf().set_size_inches(2, 8)
 
-plt.savefig(f'nERdy_fuz_iso_junc_CC_ratio_v4_no_annot', bbox_inches='tight', pad_inches=0.1)
-# plt.show()
+# plt.savefig(f'nERdy_fuz_iso_junc_CC_ratio_v4_no_annot', bbox_inches='tight', pad_inches=0.1)
+# # plt.show()
 
-plt.close()
+# plt.close()
 
 
-exit()
+# exit()
 
 
 def get_mean_group_data(data, measure):
@@ -434,6 +684,7 @@ def get_mean_group_data(data, measure):
     for series in data:
         group_data.extend(func(cc) for cc in series)
     return group_data
+
 
 
 def get_CC_mean_variation(channel, region, measure):
@@ -475,7 +726,9 @@ def get_CC_mean_variation(channel, region, measure):
         df['CC_mean'] = pd.Series(np.concatenate((control, rtn, climp, atl)))
         df['Group'] = pd.Series(np.concatenate((['Control'] * len(control), ['Reticulon'] * len(rtn), ['Climp'] * len(climp), ['Atlastin'] * len(atl) )))
 
-        ax = sns.boxplot(data=df, x='Group', y='CC_mean', showfliers=False, whis=0.5, linewidth=2)
+        # ax = sns.boxplot(data=df, x='Group', y='CC_mean', showfliers=False, whis=0.5, linewidth=2)
+
+        ax = sns.boxplot(data=df, x='Group', y='CC_mean', showfliers=False, width=0.9)#, whis=0.5, linewidth=2)
 
         box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'), ('Reticulon', 'Control')]
     else:
@@ -503,48 +756,106 @@ def get_CC_mean_variation(channel, region, measure):
     # plt.show()
     # plt.yscale('log')
 
-    # ax.set_ylim(0, 0.12) # for egfp std
-    # ax.set_ylim(0, 0.15)
 
-    # ax.set_xlim(-1, 3.0)
-    ax.set_ylim(0, 0.2)
+    ax.set_xlim(-1, 3.0)
+    ax.set_ylim(0, 0.113)
 
-    # ax.set_ylim(0, 0.85) # for egfp
-    #ax.set_ylim(0, 0.5) # for mch
-    # ax.set_ylim(0, ymax+0.01)
     yt = ax.get_yticks()
     yt = [f'{y:.2f}' for y in yt]
-
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=90)
     ax.set_yticklabels(yt, fontsize=13)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=45)
 
+    # x1, x2 = 2, 3
+    # y, col = 0.46, 'k'
+
+    # plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
+    # plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+
+    x1, x2 = 1, 2
+    y, col = 0.102, 'k'
+
+    plt.plot([x1, x1, x2, x2], [y, y+0.0005, y+0.0005, y], lw=1, c=col)
+    plt.text((x1+x2)*.5, y, "**", ha='center', va='bottom', color=col, fontsize=10)
+
+    x1, x2 = 0, 1
+    y, col = 0.105, 'k'
+
+    plt.plot([x1, x1, x2, x2], [y, y+0.0005, y+0.0005, y], lw=1, c=col)
+    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+
+    # x1, x2 = 1, 3
+    # y, col = 0.074, 'k'
+
+    # plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
+    # plt.text((x1+x2)*.5, y, "**", ha='center', va='bottom', color=col, fontsize=10)
+
+    x1, x2 = 0, 2
+    y, col = 0.108, 'k'
+
+    plt.plot([x1, x1, x2, x2], [y, y+0.0005, y+0.0005, y], lw=1, c=col)
+    plt.text((x1+x2)*.5, y, "***", ha='center', va='bottom', color=col, fontsize=10)
+
+    # x1, x2 = 0, 3
+    # y, col = 0.076, 'k'
+
+    # plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
+    # plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+
+
+    # plt.grid(True)
+    ax.grid(axis='y')
+    # plt.xlabel('Group', fontsize=15)
+    # plt.ylabel('Ratio', fontsize=15)
+    plt.gcf().set_size_inches(2.5, 8)
+
+    plt.savefig(f'nERdy_Seq_{measure}_CC_mean_{region}_{channel}_v5', bbox_inches='tight', pad_inches=0.1)
+    # plt.show()
+
+    plt.close()
+
+
+
+    # # ax.set_ylim(0, 0.85) # for egfp
+    # #ax.set_ylim(0, 0.5) # for mch
+    # # ax.set_ylim(0, ymax+0.01)
+    # yt = ax.get_yticks()
+    # yt = [f'{y:.2f}' for y in yt]
+
+    # ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=90)
+    # ax.set_yticklabels(yt, fontsize=13)
 
     # # box_pairs = [('ATL', 'Climp'), ('ATL', 'RTN'), ('Climp', 'RTN')]
 
     # statannot.add_stat_annotation(ax, x='Group', y='CC_mean', data=df, box_pairs=box_pairs,
-                                #   test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=15)
+    #                               test='Mann-Whitney', text_format='star', loc='inside', verbose=1, fontsize=15)
 
-    region_name = 'Isolated' if region == 'iso' else 'Overlapping'
-    ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
-    measure_name = 'Mean' if measure == 'mean' else 'Standard Deviation'
+    # region_name = 'Isolated' if region == 'iso' else 'Overlapping'
+    # ch_name = 'ERmoxGFP' if channel == 'egfp' else 'mCherry'
+    # measure_name = 'Mean' if measure == 'mean' else 'Standard Deviation'
 
-    # plt.suptitle(f'{region_name} CC, per junction correlation across conditions', fontsize=20)
-    # plt.title(f'{measure_name} over 100 frames for Junction CC mean \n in {region_name} CC ({ch_name})', fontsize=18)
+    # # plt.suptitle(f'{region_name} CC, per junction correlation across conditions', fontsize=20)
+    # # plt.title(f'{measure_name} over 100 frames for Junction CC mean \n in {region_name} CC ({ch_name})', fontsize=18)
 
-    ax.grid(axis='y')
+    # ax.grid(axis='y')
 
-    # plt.grid(True)
-    # plt.tight_layout()
-    # plt.subplots_adjust(hspace = 1, wspace = 0)
-    # plt.xlabel('Group', fontsize=15)
-    plt.ylabel(f'{measure_name} over sequence per CC mean', fontsize=15)
+    # # plt.grid(True)
+    # # plt.tight_layout()
+    # # plt.subplots_adjust(hspace = 1, wspace = 0)
+    # # plt.xlabel('Group', fontsize=15)
+    # plt.ylabel(f'{measure_name} over sequence per CC mean', fontsize=15)
 
-    # plt.gcf().set_size_inches(2.2, 6)
-    plt.gcf().set_size_inches(2, 6)
-    # plt.savefig(f'nERdy_Seq_{measure_name}_CC_mean_{region_name}_{channel}_v4', bbox_inches='tight', pad_inches=0.1)
-    plt.savefig(f'nERdy_Seq_{measure_name}_CC_mean_{region_name}_{channel}_no_annot', bbox_inches='tight', pad_inches=0.1)
-    plt.close()
+    # # plt.gcf().set_size_inches(2.2, 6)
+    # plt.gcf().set_size_inches(2.5, 8)
+    # # plt.savefig(f'nERdy_Seq_{measure_name}_CC_mean_{region_name}_{channel}_v4', bbox_inches='tight', pad_inches=0.1)
+    # plt.savefig(f'nERdy_Seq_{measure_name}_CC_mean_{region_name}_{channel}_no_annot', bbox_inches='tight', pad_inches=0.1)
+    # plt.close()
     # plt.show()
+
+
+# plt.ylim(0, 4.2)
+# plt.xlim(-1, 4.0)
+
+
 
 
 # get_CC_mean_variation()
@@ -556,8 +867,8 @@ def get_CC_mean_variation(channel, region, measure):
 # get_CC_mean_variation('mch', 'iso', 'mean')
 # get_CC_mean_variation('mch', 'fuz', 'mean')
 # get_CC_mean_variation('mch', 'iso', 'std')
-# get_CC_mean_variation('mch', 'fuz', 'std')
-# exit()
+get_CC_mean_variation('mch', 'fuz', 'std')
+exit()
 
 def get_correlation(l1, l2):
     corr = []

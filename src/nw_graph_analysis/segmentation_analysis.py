@@ -33,9 +33,6 @@ prefix = '/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/'
 analyzer_prefix = {'control': 'ct', 'climp': 'c', 'rtn': 'r'}
 
 
-/localhome/asa420/Videos/S2023-11-03_01:07:08.webm
-
-S2023-11-03_01:07:41
 
 def plot_subplot(subplot_num, data, title):
     plt.subplot(1, 7, subplot_num)
@@ -184,43 +181,45 @@ def load_all_data():
     p4m, p4m_adaptive = load_models()
 
     gt_data = []
-    # analyzer_data = []
-    # erv2_data = []
-    # ernet_data = []
-    # nerdy_data = []
+    analyzer_data = []
+    erv2_data = []
+    ernet_data = []
+    nerdy_data = []
     # nerdynet_data = []
     # nerdy_adapt_data = []
     # eq_nerdy = []
     # eq_p4m = []
-    p4m_adaptive_data = []
+    # p4m_adaptive_data = []
 
-    nerdy150_data = []
+    # nerdy150_data = []
     # p4m_v2_blur_data = []
 
     p4m_vecadam_data = []
-    p4m_vecadam_adaptive_data = []
+    # p4m_vecadam_adaptive_data = []
 
     for group in groups:
         for num in range(1, 17):
             with contextlib.suppress(Exception):
-                # file = f'{prefix}{group}/updated_masks/sted_{group}{num}_er_mean_mask.png'
+                file = f'{prefix}{group}/updated_masks/sted_{group}{num}_er_mean_mask.png'
                 # file = f'{prefix}{group}/blur_masks/sted_{group}{num}_er_mean_blur_mask.png'
-                file = f'{prefix}{group}/adaptive_mask/{group}{num}_er_mean_mask.png'
+
+                # file = f'{prefix}{group}/adaptive_mask/{group}{num}_er_mean_mask.png'
                 gt_data.append(imageio.imread(file))
 
                 # file = f'{prefix}{group}/analyzer_op/ER_{analyzer_prefix[group]}e{num}.png'
                 
-                # file = f'{prefix}{group}/analyzer_op/{group}{num}_out.png'
-                # analyzer_data.append(erosion(imageio.imread(file)))
+                file = f'{prefix}{group}/analyzer_op/{group}{num}_out.png'
+                # analyzer_data.append(SMet.resize_analyzer_bin_op(imageio.imread(file)))
+                analyzer_data.append(erosion(imageio.imread(file)))
 
-                # file = f'{prefix}{group}/erv2_op/sted_{group}{num}_er_mean_out_bin.png'
-                # erv2_data.append(erosion(imageio.imread(file)))
+                file = f'{prefix}{group}/erv2_op/sted_{group}{num}_er_mean_out_bin.png'
+                erv2_data.append(erosion(imageio.imread(file)))
 
-                # file = f'{prefix}{group}/ernet_op/sted_{group}{num}_er_mean_out.png'
-                # ernet_data.append(erosion(imageio.imread(file)))
+                file = f'{prefix}{group}/ernet_op/sted_{group}{num}_er_mean_out.png'
+                ernet_data.append(erosion(imageio.imread(file)))
 
-                # file = f'{prefix}{group}/nerdy_op/Series0{num:02d}_decon_converted_mean_proc_v2_enhance.png'
-                # nerdy_data.append(imageio.imread(file))
+                file = f'{prefix}{group}/nerdy_op/Series0{num:02d}_decon_converted_mean_proc_v2_enhance.png'
+                nerdy_data.append(imageio.imread(file))
 
                 # file = f'{prefix}{group}/nerdynet_op_seg/sted_{group}{num}_er_mean_pred.png'
                 # file = f'{prefix}{group}/nerdynet-op/sted_{group}{num}_er_mean_pred.png' # BESTTTT
@@ -256,7 +255,7 @@ def load_all_data():
                 p4m_vecadam_data.append(process_op(file, p4m))
 
 
-                p4m_vecadam_adaptive_data.append(process_op(file, p4m_adaptive))
+                # p4m_vecadam_adaptive_data.append(process_op(file, p4m_adaptive))
 
 
     # return gt_data, analyzer_data, erv2_data, ernet_data, nerdy_data, nerdynet_data, nerdy_adapt_data
@@ -264,7 +263,9 @@ def load_all_data():
     # return gt_data, nerdynet_data, eq_nerdy, eq_p4m
     # return gt_data, p4m_adaptive_data
     # return gt_data, p4m_v2_blur_data
-    return gt_data, p4m_vecadam_data, p4m_vecadam_adaptive_data
+    # return gt_data, p4m_vecadam_data, p4m_vecadam_adaptive_data
+
+    return gt_data, analyzer_data, erv2_data, ernet_data, nerdy_data, p4m_vecadam_data
 
 
 def compute_iou_metrics(pred_data, gt_data, process_pred_fn=None):
@@ -327,11 +328,14 @@ def print_metric_results(metric_name, metric_value):
 # def get_segmentation_metrics(analyzer_data, erv2_data, ernet_data, nerdy_data, nerdynet_data, nerdy_adapt_data, gt_data):
 
 # def get_segmentation_metrics(p4m_adaptive_data, gt_data):
-def get_segmentation_metrics(p4m_vecadam_data, p4m_vecadam_adaptive_data, gt_data):
+# def get_segmentation_metrics(p4m_vecadam_data, p4m_vecadam_adaptive_data, gt_data):
+def get_segmentation_metrics(analyzer_data, erv2_data, ernet_data, nerdy_data, p4m_vecadam_data, gt_data):
     # analyzer_iou = compute_iou_metrics(analyzer_data, gt_data, SMet.resize_analyzer_bin_op)
     # erv2_iou = compute_iou_metrics(erv2_data, gt_data, SMet.process_erv2_output)
-    # ernet_iou = compute_iou_metrics(ernet_data, gt_data)
-    # nerdy_iou = compute_iou_metrics(nerdy_data, gt_data)
+    analyzer_iou = compute_iou_metrics(analyzer_data, gt_data)
+    erv2_iou = compute_iou_metrics(erv2_data, gt_data)
+    ernet_iou = compute_iou_metrics(ernet_data, gt_data)
+    nerdy_iou = compute_iou_metrics(nerdy_data, gt_data)
     # nerdynet_iou = compute_iou_metrics(nerdynet_data, gt_data)
     # # nerdy_adapt_iou = compute_iou_metrics(nerdy_adapt_data, gt_data)
     # equi_nerdy_iou = compute_iou_metrics(equi_nerdy, gt_data)
@@ -345,12 +349,14 @@ def get_segmentation_metrics(p4m_vecadam_data, p4m_vecadam_adaptive_data, gt_dat
 
     p4m_vecadam_iou = compute_iou_metrics(p4m_vecadam_data, gt_data)
 
-    p4m_vecadam_adaptive_iou = compute_iou_metrics(p4m_vecadam_adaptive_data, gt_data)
+    # p4m_vecadam_adaptive_iou = compute_iou_metrics(p4m_vecadam_adaptive_data, gt_data)
 
     # analyzer_f1 = compute_f1_score(analyzer_data, gt_data, SMet.resize_analyzer_bin_op)
     # erv2_f1 = compute_f1_score(erv2_data, gt_data, SMet.process_erv2_output)
-    # ernet_f1 = compute_f1_score(ernet_data, gt_data)
-    # nerdy_f1 = compute_f1_score(nerdy_data, gt_data)
+    analyzer_f1 = compute_f1_score(analyzer_data, gt_data)
+    erv2_f1 = compute_f1_score(erv2_data, gt_data)
+    ernet_f1 = compute_f1_score(ernet_data, gt_data)
+    nerdy_f1 = compute_f1_score(nerdy_data, gt_data)
     # nerdynet_f1 = compute_f1_score(nerdynet_data, gt_data)
     # # nerdy_adapt_f1 = compute_f1_score(nerdy_adapt_data, gt_data)
     # equi_nerdy_f1 = compute_f1_score(equi_nerdy, gt_data)
@@ -364,12 +370,14 @@ def get_segmentation_metrics(p4m_vecadam_data, p4m_vecadam_adaptive_data, gt_dat
 
     p4m_vecadam_f1 = compute_f1_score(p4m_vecadam_data, gt_data)
 
-    p4m_vecadam_adaptive_f1 = compute_f1_score(p4m_vecadam_adaptive_data, gt_data)
+    # p4m_vecadam_adaptive_f1 = compute_f1_score(p4m_vecadam_adaptive_data, gt_data)
 
     # analyzer_dice = compute_dice_coefficient(analyzer_data, gt_data, SMet.resize_analyzer_bin_op)
     # erv2_dice = compute_dice_coefficient(erv2_data, gt_data, SMet.process_erv2_output)
-    # ernet_dice = compute_dice_coefficient(ernet_data, gt_data)
-    # nerdy_dice = compute_dice_coefficient(nerdy_data, gt_data)
+    analyzer_dice = compute_dice_coefficient(analyzer_data, gt_data)
+    erv2_dice = compute_dice_coefficient(erv2_data, gt_data)
+    ernet_dice = compute_dice_coefficient(ernet_data, gt_data)
+    nerdy_dice = compute_dice_coefficient(nerdy_data, gt_data)
     # nerdynet_dice = compute_dice_coefficient(nerdynet_data, gt_data)
     # # nerdy_adapt_dice = compute_dice_coefficient(nerdy_adapt_data, gt_data)
     # equi_nerdy_dice = compute_dice_coefficient(equi_nerdy, gt_data)
@@ -382,12 +390,14 @@ def get_segmentation_metrics(p4m_vecadam_data, p4m_vecadam_adaptive_data, gt_dat
 
     p4m_vecadam_dice = compute_dice_coefficient(p4m_vecadam_data, gt_data)
 
-    p4m_vecadam_adaptive_dice = compute_dice_coefficient(p4m_vecadam_adaptive_data, gt_data)
+    # p4m_vecadam_adaptive_dice = compute_dice_coefficient(p4m_vecadam_adaptive_data, gt_data)
 
     # analyzer_acc = compute_accuracy(analyzer_data, gt_data, SMet.resize_analyzer_bin_op)
     # erv2_acc = compute_accuracy(erv2_data, gt_data, SMet.process_erv2_output)
-    # ernet_acc = compute_accuracy(ernet_data, gt_data)
-    # nerdy_acc = compute_accuracy(nerdy_data, gt_data)
+    analyzer_acc = compute_accuracy(analyzer_data, gt_data)
+    erv2_acc = compute_accuracy(erv2_data, gt_data)
+    ernet_acc = compute_accuracy(ernet_data, gt_data)
+    nerdy_acc = compute_accuracy(nerdy_data, gt_data)
     # nerdynet_acc = compute_accuracy(nerdynet_data, gt_data)
     # # nerdy_adapt_acc = compute_accuracy(nerdy_adapt_data, gt_data)
     # equi_nerdy_acc = compute_accuracy(equi_nerdy, gt_data)
@@ -400,12 +410,12 @@ def get_segmentation_metrics(p4m_vecadam_data, p4m_vecadam_adaptive_data, gt_dat
 
     p4m_vecadam_acc = compute_accuracy(p4m_vecadam_data, gt_data)
 
-    p4m_vecadam_adaptive_acc = compute_accuracy(p4m_vecadam_adaptive_data, gt_data)
+    # p4m_vecadam_adaptive_acc = compute_accuracy(p4m_vecadam_adaptive_data, gt_data)
 
-    # print_metric_results('Analyzer f1', analyzer_f1)
-    # print_metric_results('ERnet', ernet_f1)
-    # print_metric_results('ERnet_v2', erv2_f1)
-    # print_metric_results('Nerdy', nerdy_f1)
+    print_metric_results('Analyzer f1', analyzer_f1)
+    print_metric_results('ERnet', ernet_f1)
+    print_metric_results('ERnet_v2', erv2_f1)
+    print_metric_results('Nerdy', nerdy_f1)
     # print_metric_results('Nerdynet', nerdynet_f1)
     # # print_metric_results('Nerdy Adaptive f1', nerdy_adapt_f1)
     # print_metric_results('Equi-Nerdy f1', equi_nerdy_f1)
@@ -418,12 +428,12 @@ def get_segmentation_metrics(p4m_vecadam_data, p4m_vecadam_adaptive_data, gt_dat
 
     print_metric_results('P4M v2 VecAdam f1', p4m_vecadam_f1)
 
-    print_metric_results('P4M v2 VecAdam Adaptive f1', p4m_vecadam_adaptive_f1)
+    # print_metric_results('P4M v2 VecAdam Adaptive f1', p4m_vecadam_adaptive_f1)
 
-    # print_metric_results('Analyzer dice', analyzer_dice)
-    # print_metric_results('ERnet', ernet_dice)
-    # print_metric_results('ERnet_v2', erv2_dice)
-    # print_metric_results('Nerdy', nerdy_dice)
+    print_metric_results('Analyzer dice', analyzer_dice)
+    print_metric_results('ERnet', ernet_dice)
+    print_metric_results('ERnet_v2', erv2_dice)
+    print_metric_results('Nerdy', nerdy_dice)
     # print_metric_results('Nerdynet', nerdynet_dice)
     # # print_metric_results('Nerdy Adaptive dice', nerdy_adapt_dice)
     # print_metric_results('Equi-Nerdy dice', equi_nerdy_dice)
@@ -436,12 +446,12 @@ def get_segmentation_metrics(p4m_vecadam_data, p4m_vecadam_adaptive_data, gt_dat
 
     print_metric_results('P4M v2 VecAdam dice', p4m_vecadam_dice)
 
-    print_metric_results('P4M v2 VecAdam Adaptive dice', p4m_vecadam_adaptive_dice)
+    # print_metric_results('P4M v2 VecAdam Adaptive dice', p4m_vecadam_adaptive_dice)
 
-    # print_metric_results('Analyzer acc', analyzer_acc)
-    # print_metric_results('ERnet', ernet_acc)
-    # print_metric_results('ERnet_v2', erv2_acc)
-    # print_metric_results('Nerdy', nerdy_acc)
+    print_metric_results('Analyzer acc', analyzer_acc)
+    print_metric_results('ERnet', ernet_acc)
+    print_metric_results('ERnet_v2', erv2_acc)
+    print_metric_results('Nerdy', nerdy_acc)
     # print_metric_results('Nerdynet', nerdynet_acc)
     # print_metric_results('Nerdy Adaptive acc', nerdy_adapt_acc)
     # print_metric_results('Equi-Nerdy acc', equi_nerdy_acc)
@@ -454,13 +464,13 @@ def get_segmentation_metrics(p4m_vecadam_data, p4m_vecadam_adaptive_data, gt_dat
 
     print_metric_results('P4M v2 VecAdam acc', p4m_vecadam_acc)
 
-    print_metric_results('P4M v2 VecAdam Adaptive acc', p4m_vecadam_adaptive_acc)
+    # print_metric_results('P4M v2 VecAdam Adaptive acc', p4m_vecadam_adaptive_acc)
 
 
-    # print_metric_results('Analyzer iou', analyzer_iou)
-    # print_metric_results('ERnet', ernet_iou)
-    # print_metric_results('ERnet_v2', erv2_iou)
-    # print_metric_results('Nerdy', nerdy_iou)
+    print_metric_results('Analyzer iou', analyzer_iou)
+    print_metric_results('ERnet', ernet_iou)
+    print_metric_results('ERnet_v2', erv2_iou)
+    print_metric_results('Nerdy', nerdy_iou)
     # print_metric_results('Nerdynet', nerdynet_iou)
     # print_metric_results('Nerdy Adaptive iou', nerdy_adapt_iou)
     # print_metric_results('Equi-Nerdy iou', equi_nerdy_iou)
@@ -473,7 +483,7 @@ def get_segmentation_metrics(p4m_vecadam_data, p4m_vecadam_adaptive_data, gt_dat
 
     print_metric_results('P4M v2 VecAdam iou', p4m_vecadam_iou)
 
-    print_metric_results('P4M v2 VecAdam Adaptive iou', p4m_vecadam_adaptive_iou)
+    # print_metric_results('P4M v2 VecAdam Adaptive iou', p4m_vecadam_adaptive_iou)
 
 # gt_data, analyzer_data, erv2_data, ernet_data, nerdy_data, nerdynet_data, nerdy_adapt_data = load_all_data()
 
@@ -487,7 +497,10 @@ def get_segmentation_metrics(p4m_vecadam_data, p4m_vecadam_adaptive_data, gt_dat
 
 # gt_data, p4m_v2_blur_data = load_all_data()
 
-gt_data, p4m_vecadam_data, p4m_vecadam_adaptive_data = load_all_data()
+# gt_data, p4m_vecadam_data, p4m_vecadam_adaptive_data = load_all_data()
+
+gt_data, analyzer_data, erv2_data, ernet_data, nerdy_data, p4m_vecadam_data = load_all_data()
+
 
 # Assuming the function is called with the required arguments
 # get_segmentation_metrics(analyzer_data, erv2_data, ernet_data, nerdy_data, nerdynet_data, nerdy_adapt_data, gt_data)
@@ -502,7 +515,9 @@ gt_data, p4m_vecadam_data, p4m_vecadam_adaptive_data = load_all_data()
 
 # get_segmentation_metrics(, gt_data)
 
-get_segmentation_metrics(p4m_vecadam_data, p4m_vecadam_adaptive_data, gt_data)
+# get_segmentation_metrics(p4m_vecadam_data, p4m_vecadam_adaptive_data, gt_data)
+
+get_segmentation_metrics(analyzer_data, erv2_data, ernet_data, nerdy_data, p4m_vecadam_data, gt_data)
 
 exit()
 
