@@ -7,6 +7,7 @@ from plantcv import plantcv as pcv
 import copy
 import graph_connector_modules as gcm
 import matplotlib.pyplot as plt
+import skimage
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal-data/'
 sted_data_path = '/localhome/asa420/MIAL/data/sted-data/'
@@ -23,6 +24,8 @@ class JunctionAnalysisModules:
         @return: skeleton (ndarray) - skeleton of the image
         """
         img = imageio.imread(img_path)
+        # # for blur sted
+        # img = skimage.transform.resize(img, (32, 32), anti_aliasing=True)
         return pcv.morphology.skeletonize(mask=img)
 
     def skel_to_graph(self, skel_img_path):
@@ -135,7 +138,10 @@ class JunctionAnalysisModules:
         # mean_skel = f'{self.confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_proc_skel.png'
         # mean_skel = f'{self.data_path}{group}/er_mean_proc/{group.lower()}{num_series}_proc_skel.png'
 
-        mean_skel_path = f'{self.data_path}vess_enh_unet/{group.lower()}/gt_skel/{group.lower()}{num_series}_proc_skel.png'
+        if self.data_path == sted_data_path:
+            mean_skel_path = f'{self.data_path}vess_enh_unet/{group.lower()}/gt_skel/sted_{group.lower()}{num_series}_proc_skel.png'
+        else:
+            mean_skel_path = f'{self.data_path}vess_enh_unet/{group.lower()}/gt_skel/{group.lower()}{num_series}_proc_skel.png'
 
         ref_graph = self.skel_to_graph(mean_skel_path)
 

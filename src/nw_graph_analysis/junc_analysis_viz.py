@@ -31,11 +31,14 @@ def er_nodes_overlay():
 
     # skel = pcv.morphology.skeletonize(mask=imageio.imread('/localhome/asa420/MIAL/data/live-cell-movies/Sep2023-sted-analysis/climp_mean/Series001_decon_converted_mean_proc_v2_enhance.png'))
 
-    skel = imageio.imread('/localhome/asa420/MIAL/data/sted-data/Control/er_mean_proc/control5_proc_skel.png')
+    ### STED DATA ###
+    # skel = imageio.imread('/localhome/asa420/MIAL/data/sted-data/Control/er_mean_proc/control5_proc_skel.png')
+    # graph = sknw.build_sknw(skel, multi=True, iso=False)
+
+    skel = imageio.imread('/localhome/asa420/MIAL/data/confocal-data/Climp/er_mean_proc/climp12_proc_skel.png')
     graph = sknw.build_sknw(skel, multi=True, iso=False)
 
-
-    mean_img = imageio.imread('/localhome/asa420/MIAL/data/sted-data/Control/er_mean/Series005_decon_converted_mean_proc.png')
+    mean_img = imageio.imread('/localhome/asa420/MIAL/data/confocal-data/Climp/er_mean/climp12_er_mean.png')
 
     plt.imshow(mean_img, cmap='gray')
 
@@ -50,23 +53,23 @@ def er_nodes_overlay():
 
 
     node_set = tgraph.nodes
-    print(node_set)
 
     degree_list = tgraph.degree
     node_coords = np.array([node_set[node]['o'] for node in node_set])
     nps = [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
     nps = np.array(nps)
 
-    for (s,e) in graph.edges():
-        ps = graph[s][e][0]['pts']
-        plt.plot(ps[:,1], ps[:,0], 'green')
+    # for (s,e) in graph.edges():
+    #     ps = graph[s][e][0]['pts']
+    #     plt.plot(ps[:,1], ps[:,0], 'green')
 
     plt.plot(nps[:,1], nps[:,0], '.', markerfacecolor='red', markeredgecolor='red', mew=2)
 
-    plt.show()
-    # plt.axis('off')
+    # plt.show()
+    plt.axis('off')
     # plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/er_mean/rtn4_overlay.png', bbox_inches='tight', pad_inches=0.0)
-    # plt.close()
+    plt.savefig('climp12_nodes_overlay.png', bbox_inches='tight', pad_inches=0.0)
+    plt.close()
 
 # er_nodes_overlay()
 # exit()
@@ -121,9 +124,9 @@ def skel_overlay():
 
         # plt.close()
 
-skel_overlay()
+# skel_overlay()
 
-exit()
+# exit()
 
 
 # for i in range(100):
@@ -524,6 +527,112 @@ def crop_img():
         # plt.close()
         plt.show()
 
+
+def get_cc_ids(labelled_img, region):
+    """
+    Get CC ids for the specified region
+    @param labelled_img: labelled image
+    @param region: isolated or fuzzy
+    @return: list of CC ids
+    """
+
+    # Create a dictionary to store per component data
+    cc_data = {cc_id: [] for cc_id in np.unique(labelled_img)}
+
+    # Populate the dictionary with locations for the specified region
+    for loc in region:
+        loc_x, loc_y = loc[0], loc[1]
+        cc_id = labelled_img[loc_x, loc_y]
+        cc_data[cc_id].append(loc)
+
+    # Extract CC ids for the specified region
+    cc_ids = [cc_id for cc_id, data in cc_data.items() if cc_id > 0 and len(data) > 0]
+
+    return cc_ids
+
+
+
+def plot_cc_outlines(iso, fuz, iso_cc_coords, fuz_cc_coords):#, frames, er_input_id):
+    plt.axis('off')
+
+    er = imageio.imread('/localhome/asa420/MIAL/data/confocal-data/Climp/er_mean/climp12_er_mean.png')
+
+    
+    plt.imshow(er, cmap='gray', interpolation=None)
+
+    # for k, v in iso_cc_coords.items():
+    #     plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='red', mew=0.4)
+    # #
+    # for k, v in fuz_cc_coords.items():
+    #     plt.plot(v[1], v[0], '.', markerfacecolor='None', markeredgecolor='blue', mew=0.4)
+
+    if len(fuz) > 0:
+        plt.plot(fuz[:, 1], fuz[:, 0], '.', markerfacecolor='magenta', markeredgecolor='None', mew=0.8)
+    #
+    # plt.plot(unk[:, 1], unk[:, 0], 'o', markerfacecolor='None', markeredgecolor='green')
+
+    if len(iso) > 0:
+        plt.plot(iso[:, 1], iso[:, 0], '.', markerfacecolor='Magenta', markeredgecolor='None', mew=0.8)
+
+    #######################################
+
+    nimg = np.zeros((128, 128))
+    nimg[iso[:, 0], iso[:, 1]] = 255
+    nimg[fuz[:, 0], fuz[:, 1]] = 255
+
+    # plot iso_cc_coords on nimg
+    for k, v in iso_cc_coords.items():
+        nimg[v[0], v[1]] = 255
+
+    # plot fuz_cc_coords on nimg
+    for k, v in fuz_cc_coords.items():
+        nimg[v[0], v[1]] = 255
+    
+
+    lab = label(nimg)
+
+    # plots contours
+    # regions = regionprops(labelled_img)
+    # for index in range(1, labelled_img.max()):
+    #     label_i = regions[index].label
+    #     contour = measure.find_contours(labelled_img == label_i, 0.8)[0]
+    #     y, x = contour.T
+    #     plt.plot(x, y, color='cyan')
+
+    # cntrs = measure.find_contours(labelled_img, 0.8, fully_connected='high')
+    cntrs = measure.find_contours(lab, 0.8, fully_connected='high')
+    for cntr in cntrs:
+        y, x = cntr.T
+        plt.plot(x, y, color='cyan', linewidth=0.8)
+
+    
+
+    plt.savefig('climp_12_cc_outlines', bbox_inches='tight', pad_inches=0, dpi=700)
+    # plt.show()
+
+    plt.close()
+
+ref_junctions, per_frame_junctions, labelled_img, ref_graph = junc_analysis.label_junctions('Climp', 12)
+# dict with ids as key and (x, y) as value
+
+label_ids = junc_analysis.separate_junc_cc(ref_junctions, labelled_img)
+
+# label_ids, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
+
+# iso, fuz, unk: list of lists with x, y
+iso, fuz = junc_analysis.get_junction_areas(label_ids)
+
+iso_cc = get_cc_ids(labelled_img, iso)
+fuz_cc = get_cc_ids(labelled_img, fuz)
+# # unk_cc = get_cc_ids(labelled_img, unk)
+
+iso_cc_coords = {each: np.where(labelled_img==each) for each in iso_cc}
+fuz_cc_coords = {each: np.where(labelled_img==each) for each in fuz_cc}
+
+plot_cc_outlines(iso, fuz, iso_cc_coords, fuz_cc_coords)
+
+exit()
+
 # def plot_junc_areas_og(group, series_num, labelled_img, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords, unk_cc_coords):
 def plot_junc_areas_og(group, series_num, labelled_img, iso, fuz, skdata, iso_cc_coords, fuz_cc_coords):#, frames, er_input_id):
 
@@ -549,7 +658,9 @@ def plot_junc_areas_og(group, series_num, labelled_img, iso, fuz, skdata, iso_cc
     ############
     # skel = imageio.imread('/localhome/asa420/MIAL/data/confocal_movies/ATL/new_op_jul/skel/A1/A1_decon_t005_ch00_skel.png')
 
-    er = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/{group}/er_mean_proc/Series0{series_num:02d}_decon_converted_mean_proc_v2.png')
+    er = imageio.imread('/localhome/asa420/MIAL/data/confocal-data/Climp/er_mean/climp12_er_mean.png')
+
+    # er = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/{group}/er_mean_proc/Series0{series_num:02d}_decon_converted_mean_proc_v2.png')
 
     # skel = imageio.imread('/localhome/asa420/MIAL/data/sted-data/Control/er_mean_proc/control5_proc_skel.png')
 
@@ -624,11 +735,35 @@ def plot_junc_areas_og(group, series_num, labelled_img, iso, fuz, skdata, iso_cc
 
     # plt.close()
 
-    plt.savefig(f'/localhome/asa420/MIAL/data/sted-data/{group}/junc_repr/{group.lower()}{series_num}_junc_repr.png', bbox_inches='tight', pad_inches=0, dpi=700)
+    # plt.savefig(f'/localhome/asa420/MIAL/data/sted-data/{group}/junc_repr/{group.lower()}{series_num}_junc_repr.png', bbox_inches='tight', pad_inches=0, dpi=700)
+
+    plt.savefig('climp_12_representation', bbox_inches='tight', pad_inches=0, dpi=700)
+    # plt.show()
 
     plt.close()
 
     # plt.show()
+
+ref_junctions, per_frame_junctions, labelled_img, ref_graph = junc_analysis.label_junctions('Climp', 12)
+# dict with ids as key and (x, y) as value
+
+label_ids = junc_analysis.separate_junc_cc(ref_junctions, labelled_img)
+
+# label_ids, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
+
+# iso, fuz, unk: list of lists with x, y
+iso, fuz = junc_analysis.get_junction_areas(label_ids)
+
+iso_cc = get_cc_ids(labelled_img, iso)
+fuz_cc = get_cc_ids(labelled_img, fuz)
+# # unk_cc = get_cc_ids(labelled_img, unk)
+
+iso_cc_coords = {each: np.where(labelled_img==each) for each in iso_cc}
+fuz_cc_coords = {each: np.where(labelled_img==each) for each in fuz_cc}
+
+plot_junc_areas_og('Climp', 12, labelled_img, iso, fuz, per_frame_junctions, iso_cc_coords, fuz_cc_coords)#, 5, 5)
+
+exit()
 
 
 def plot_ref_iso_fuz_junc(group, series_num, iso, fuz):
@@ -704,27 +839,7 @@ def plot_CC_area_junctions(group, series_num, iso_cc_coords, fuz_cc_coords, labe
     plt.show()
 
 
-def get_cc_ids(labelled_img, region):
-    """
-    Get CC ids for the specified region
-    @param labelled_img: labelled image
-    @param region: isolated or fuzzy
-    @return: list of CC ids
-    """
 
-    # Create a dictionary to store per component data
-    cc_data = {cc_id: [] for cc_id in np.unique(labelled_img)}
-
-    # Populate the dictionary with locations for the specified region
-    for loc in region:
-        loc_x, loc_y = loc[0], loc[1]
-        cc_id = labelled_img[loc_x, loc_y]
-        cc_data[cc_id].append(loc)
-
-    # Extract CC ids for the specified region
-    cc_ids = [cc_id for cc_id, data in cc_data.items() if cc_id > 0 and len(data) > 0]
-
-    return cc_ids
 
 
 def plot_tubules(group, series_num):    

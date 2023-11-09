@@ -64,39 +64,58 @@ def filter_data(data):
 #     return corr_vals
 
 
-# def get_num_iso_ref_per_seq(group, total_seq):
-#     data = []
-#     for seq in range(1, total_seq+1):
-#         ref_junctions, per_frame_junctions, labelled_img, ref_graph = junc_analysis.label_junctions(group, seq)
+def get_num_iso_ref_total_tub_len(group, total_seq):
+    data = []
 
-#         label_ids = junc_analysis.get_ref_junc_per_CC_id(ref_junctions, labelled_img)
 
-#         # label_id_junctions = get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, 'iso')
+    for seq in range(1, total_seq+1):
+        try:
+            ref_junctions, per_frame_junctions, labelled_img, ref_graph = junc_analysis.label_junctions(group, seq)
 
-#         # print(f'ATL{seq} has {len(label_id_junctions)} isolated junctions')
-#         iso, fuz = junc_analysis.get_junction_areas(label_ids)
+            label_ids = junc_analysis.get_ref_junc_per_CC_id(ref_junctions, labelled_img)
 
-#         # iso_ids = [(u, v) for (u, v) in ref_graph.edges() if (u in iso and v in iso)]
+            # label_id_junctions = get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, 'iso')
 
-#         # edge[0]][edge[1]][0] if multi='True'
+            # print(f'ATL{seq} has {len(label_id_junctions)} isolated junctions')
+            iso, fuz = junc_analysis.get_junction_areas(label_ids)
 
-#         tub_len = [len(ref_graph[edge[0]][edge[1]]['pts'])
-#             for edge in list(ref_graph.edges()) if len(ref_graph[edge[0]][edge[1]]['pts']) > 3]
+            # iso_ids = [(u, v) for (u, v) in ref_graph.edges() if (u in iso and v in iso)]
 
-#         total_tub_len = sum(tub_len)
-#         # print(total_tub_len)
+            # edge[0]][edge[1]][0] if multi='True'
 
-#         # print(len(iso))
+            tub_len = [len(ref_graph[edge[0]][edge[1]]['pts'])
+                for edge in list(ref_graph.edges()) if len(ref_graph[edge[0]][edge[1]]['pts']) > 3]
 
-#         data.append(len(iso) / total_tub_len)
+            total_tub_len = sum(tub_len)
+            # print(total_tub_len)
 
-#     return data
+            # print(len(iso))
+
+            data.append(len(iso) / total_tub_len)
+        except Exception as e:
+            pass
+
+    return data
 
 
 # atl_data = get_num_iso_ref_per_seq('ATL', 26)
-# climp_data = get_num_iso_ref_per_seq('Climp', 31)
-# control_data = get_num_iso_ref_per_seq('Control', 31)
-# rtn_data = get_num_iso_ref_per_seq('RTN', 29)
+# climp_data = get_num_iso_ref_total_tub_len('Climp', 16)
+# control_data = get_num_iso_ref_total_tub_len('Control', 16)
+# rtn_data = get_num_iso_ref_total_tub_len('RTN', 16)
+
+
+# with open('STED_climp_iso_ref_total_len_ratio_blur.pkl', 'wb') as f:
+#     pkl.dump(climp_data, f)
+
+# with open('STED_control_iso_ref_total_len_ratio_blur.pkl', 'wb') as f:
+#     pkl.dump(control_data, f)
+
+# with open('STED_rtn_iso_ref_total_len_ratio_blur.pkl', 'wb') as f:
+#     pkl.dump(rtn_data, f)
+
+# climp_data = pkl.load(open('STED_climp_iso_ref_total_len_ratio.pkl', 'rb'))
+# control_data = pkl.load(open('STED_control_iso_ref_total_len_ratio.pkl', 'rb'))
+# rtn_data = pkl.load(open('STED_rtn_iso_ref_total_len_ratio.pkl', 'rb'))
 
 # with open('atl_iso_ref_tub_len_ratio.pkl', 'wb') as f:
 #     pkl.dump(atl_data, f)
@@ -110,8 +129,76 @@ def filter_data(data):
 # with open('rtn_iso_ref_tub_len_ratio.pkl', 'wb') as f:
 #     pkl.dump(rtn_data, f)
 
+# df = pd.DataFrame()
+
+# df['Ratio'] = pd.Series(np.concatenate((control_data, rtn_data, climp_data)))
+
+# df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_data), ['Reticulon'] * len(rtn_data), ['Climp'] * len(climp_data))))
+
+# ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, width=0.9)
+
+# # plt.ylim(0, 0.054)
+
+# # plt.ylim(0, 0.02)
+# plt.xlim(-1, 3.0)
+
+
+# yt = ax.get_yticks()
+# yt = [f'{y:.2f}' for y in yt]
+# ax.set_yticklabels(yt, fontsize=13)
+# ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=45)
+
+# # x1, x2 = 1, 2
+# # y, col = 0.049, 'k'
+
+# # plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
+# # plt.text((x1+x2)*.5, y+0.00015, "*", ha='center', va='bottom', color=col, fontsize=10)
+
+# # x1, x2 = 0, 1
+# # y, col = 0.051, 'k'
+
+# # plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
+# # plt.text((x1+x2)*.5, y+0.00015, "***", ha='center', va='bottom', color=col, fontsize=10)
+
+# # x1, x2 = 0, 2
+# # y, col = df['Ratio'].max()+0.0045, 'k'
+
+# # plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
+# # plt.text((x1+x2)*.5, y, "**", ha='center', va='bottom', color=col, fontsize=10)
+
+
+# box_pairs = [('Climp', 'Reticulon'), ('Climp', 'Control'),
+#                 ('Reticulon', 'Control')]
+
+# # statannot.add_stat_annotation(ax, x='Group', y='Ratio', data=df, box_pairs=box_pairs,
+# #                                 test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=13)
+
+# order = ['Control', 'Reticulon', 'Climp']
+
+# annotator = Annotator(ax, box_pairs, data=df, x='Group', y='Ratio', order=order)
+# annotator.configure(test='Mann-Whitney', text_format='star', loc='inside', use_fixed_offset=True, verbose=1, fontsize=11, line_height=0.01, line_offset=0.001, line_offset_to_group=0, line_width=0.5)#, hide_non_significant=True)
+# # annotator.configure(**annot_params)
+# annotator.apply_and_annotate()
+
+# # plt.grid(True)
+# ax.grid(axis='y')
+# # plt.xlabel('Group', fontsize=15)
+# # plt.ylabel('Ratio', fontsize=15)
+# plt.gcf().set_size_inches(2.5, 8)
+
+# plt.savefig(f'STED_iso_ref_total_len_ratio_blur_v4', bbox_inches='tight', pad_inches=0.1)
+# # plt.show()
+
+# plt.close()
+
+# exit()
+
+
 def plot_iso_ref_ratio():
     atl_data = pkl.load(open('atl_iso_ref_tub_len_ratio.pkl', 'rb'))
+    climp_data = pkl.load(open('climp_iso_ref_tub_len_ratio.pkl', 'rb'))
+    control_data = pkl.load(open('control_iso_ref_tub_len_ratio.pkl', 'rb'))
+    rtn_data = pkl.load(open('rtn_iso_ref_tub_len_ratio.pkl', 'rb'))
 
     df = pd.DataFrame()
     df['Ratio'] = pd.Series(np.concatenate((control_data, rtn_data, climp_data, atl_data)))
@@ -120,7 +207,7 @@ def plot_iso_ref_ratio():
 
     ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, width=0.9)
 
-    plt.ylim(0, 0.07)
+    plt.ylim(0, 0.065)
     plt.xlim(-1, 4.0)
 
     yt = ax.get_yticks()
@@ -189,6 +276,9 @@ def plot_iso_ref_ratio():
     # plt.show()
 
     plt.close()
+
+# plot_iso_ref_ratio()
+# exit()
 
 
 def plot_tub_len_ratio():
@@ -300,6 +390,8 @@ def get_fuz_iso_cc_ratio(group, total_seq):
         data.append(fuz_junc / iso_junc)
 
     return data
+
+
 
 def get_fuz_iso_junc_ratio(group, total_seq):
     # original method - used all the junctions within 
