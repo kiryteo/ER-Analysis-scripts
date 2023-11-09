@@ -36,21 +36,45 @@ class SegmentationMetrics:
         return img
 
     def intersection_over_union(self, pred_mask, true_mask):
+        if pred_mask.max() == 255:
+            pred_mask = pred_mask / 255
+        if true_mask.max() == 255:
+            true_mask = true_mask / 255
+        assert pred_mask.shape == true_mask.shape
+        # assert pred_mask.max() == true_mask.max() == 1
         intersection = np.logical_and(pred_mask, true_mask)
         union = np.logical_or(pred_mask, true_mask)
         return np.sum(intersection) / np.sum(union)
 
     def dice_coefficient(self, pred_mask, true_mask):
+        if pred_mask.max() == 255:
+            pred_mask = pred_mask / 255
+        if true_mask.max() == 255:
+            true_mask = true_mask / 255
+        assert pred_mask.shape == true_mask.shape
+        assert pred_mask.max() == true_mask.max() == 1
         intersection = np.logical_and(pred_mask, true_mask)
         return (2. * np.sum(intersection)) / ((np.sum(pred_mask) + np.sum(true_mask)))
 
     def f1_score(self, pred_mask, true_mask):
+        if pred_mask.max() == 255:
+            pred_mask = pred_mask / 255
+        if true_mask.max() == 255:
+            true_mask = true_mask / 255
+        assert pred_mask.shape == true_mask.shape
+        assert pred_mask.max() == true_mask.max() == 1
         intersection = np.logical_and(pred_mask, true_mask)
         precision = np.sum(intersection) / np.sum(pred_mask)
         recall = np.sum(intersection) / np.sum(true_mask)
         return 2 * ((precision * recall) / (precision + recall))
     
     def accuracy(self, pred_mask, true_mask):
+        if pred_mask.max() == 255:
+            pred_mask = pred_mask / 255
+        if true_mask.max() == 255:
+            true_mask = true_mask / 255
+        assert pred_mask.shape == true_mask.shape
+        assert pred_mask.max() == true_mask.max() == 1
         return np.sum(pred_mask == true_mask) / np.prod(pred_mask.shape)
     
     def jaccard_edge_similarity(g1, g2):

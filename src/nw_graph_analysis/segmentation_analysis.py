@@ -19,6 +19,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import transforms
 
+import torchmetrics
+
 from groupy.gconv.pytorch_gconv.splitgconv2d import P4ConvZ2, P4ConvP4
 from groupy.gconv.pytorch_gconv import P4MConvZ2, P4MConvP4M
 from groupy.gconv.pytorch_gconv.pooling import plane_group_spatial_max_pooling
@@ -136,10 +138,11 @@ def load_models():
     p4m = NNet(1, 1)
     p4m.load_state_dict(torch.load('NNet_groupy_p4m_v2_VecAdam.pth'))
 
-    p4m_adaptive = NNet(1, 1)
-    p4m_adaptive.load_state_dict(torch.load('NNet_groupy_p4m_v2_VecAdam_adaptive.pth'))
+    # p4m_adaptive = NNet(1, 1)
+    # p4m_adaptive.load_state_dict(torch.load('NNet_groupy_p4m_v2_VecAdam_adaptive.pth'))
 
-    return p4m, p4m_adaptive
+    # return p4m, p4m_adaptive
+    return p4m
 
 def process_op(imgpath, model):
     image = Image.open(imgpath)
@@ -178,7 +181,7 @@ def process_op(imgpath, model):
 
 def load_all_data():
 
-    p4m, p4m_adaptive = load_models()
+    p4m = load_models()
 
     gt_data = []
     analyzer_data = []
@@ -208,8 +211,9 @@ def load_all_data():
 
                 # file = f'{prefix}{group}/analyzer_op/ER_{analyzer_prefix[group]}e{num}.png'
                 
-                file = f'{prefix}{group}/analyzer_op/{group}{num}_out.png'
+                file = f'{prefix}{group}/analyzer_op/resized_op/{group}{num}_out.png'
                 # analyzer_data.append(SMet.resize_analyzer_bin_op(imageio.imread(file)))
+                
                 analyzer_data.append(erosion(imageio.imread(file)))
 
                 file = f'{prefix}{group}/erv2_op/sted_{group}{num}_er_mean_out_bin.png'
@@ -272,11 +276,23 @@ def compute_iou_metrics(pred_data, gt_data, process_pred_fn=None):
     metrics = []
 
     for pred, gt in zip(pred_data, gt_data):
-        if process_pred_fn:
-            pred = process_pred_fn(pred)
-        metrics.append(SMet.intersection_over_union(pred, gt))
+    #     # if process_pred_fn:
+    #     #     pred = process_pred_fn(pred)
+    #     # metrics.append(SMet.intersection_over_union(pred, gt))
+        if pred.max() == 255:
+            pred = pred / 255
+        if gt.max() == 255:
+            gt = gt / 255
+        metrics.append(torchmetrics.classification.BinaryJaccardIndex()(torch.tensor(pred), torch.tensor(gt)))
 
     return np.mean(metrics)
+    # pred_data = np.array(pred_data)
+    # gt_data = np.array(gt_data)
+
+    # assert pred_data.shape == gt_data.shape
+    # assert pred_data.max() == gt_data.max()
+
+    # return torchmetrics.classification.BinaryJaccardIndex()(torch.tensor(pred_data/255.), torch.tensor(gt_data/255.))
 
 
 from sklearn.metrics import f1_score
@@ -284,10 +300,16 @@ from sklearn.metrics import f1_score
 def compute_f1_score(pred_data, gt_data):
     metrics = []
 
-    for pred, gt in zip(pred_data, gt_data):
-        pred = pred.flatten()/255
-        gt = gt.flatten()/255
-        metrics.append(f1_score(gt, pred))
+    for pred_mask, true_mask in zip(pred_data, gt_data):
+        # pred = pred.flatten()/255
+        # gt = gt.flatten()/255
+        # metrics.append(f1_score(gt, pred))
+        if pred_mask.max() == 255:
+            pred_mask = pred_mask / 255
+        if true_mask.max() == 255:
+            true_mask = true_mask / 255
+        # metrics.append(SMet.f1_score(pred, gt))
+        metrics.append(torchmetrics.classification.BinaryF1Score()(torch.tensor(pred_mask), torch.tensor(true_mask)))
 
     return np.mean(metrics)
 
@@ -305,280 +327,197 @@ def compute_f1_score(pred_data, gt_data):
 def compute_dice_coefficient(pred_data, gt_data, process_pred_fn=None):
     metrics = []
 
-    for pred, gt in zip(pred_data, gt_data):
-        if process_pred_fn:
-            pred = process_pred_fn(pred)
-        metrics.append(SMet.dice_coefficient(pred, gt))
+    for pred_mask, true_mask in zip(pred_data, gt_data):
+        # if process_pred_fn:
+        #     pred = process_pred_fn(pred)
+
+        if pred_mask.max() == 255.:
+            pred_mask = pred_mask / 255.
+        if true_mask.max() == 255.:
+            true_mask = true_mask / 255.
+        # metrics.append(SMet.dice_coefficient(pred, gt))
+        metrics.append(torchmetrics.classification.Dice()(torch.tensor(pred_mask.astype('int')), torch.tensor(true_mask.astype('int'))))
 
     return np.mean(metrics)
 
-def compute_accuracy(pred_data, gt_data, process_pred_fn=None):
-    metrics = []
+# def compute_accuracy(pred_data, gt_data, process_pred_fn=None):
+#     metrics = []
 
-    for pred, gt in zip(pred_data, gt_data):
-        if process_pred_fn:
-            pred = process_pred_fn(pred)
-        metrics.append(SMet.accuracy(pred, gt))
+#     for pred, gt in zip(pred_data, gt_data):
+#         # if process_pred_fn:
+#         #     pred = process_pred_fn(pred)
+#         if pred.max() == 255:
+#             pred = pred / 255
+#         if gt.max() == 255:
+#             gt = gt / 255
+#         metrics.append(SMet.accuracy(pred, gt))
 
-    return np.mean(metrics)
+#     return np.mean(metrics)
 
 def print_metric_results(metric_name, metric_value):
     print(f'{metric_name}: {metric_value}')
 
-# def get_segmentation_metrics(analyzer_data, erv2_data, ernet_data, nerdy_data, nerdynet_data, nerdy_adapt_data, gt_data):
-
-# def get_segmentation_metrics(p4m_adaptive_data, gt_data):
-# def get_segmentation_metrics(p4m_vecadam_data, p4m_vecadam_adaptive_data, gt_data):
 def get_segmentation_metrics(analyzer_data, erv2_data, ernet_data, nerdy_data, p4m_vecadam_data, gt_data):
-    # analyzer_iou = compute_iou_metrics(analyzer_data, gt_data, SMet.resize_analyzer_bin_op)
-    # erv2_iou = compute_iou_metrics(erv2_data, gt_data, SMet.process_erv2_output)
     analyzer_iou = compute_iou_metrics(analyzer_data, gt_data)
     erv2_iou = compute_iou_metrics(erv2_data, gt_data)
     ernet_iou = compute_iou_metrics(ernet_data, gt_data)
     nerdy_iou = compute_iou_metrics(nerdy_data, gt_data)
-    # nerdynet_iou = compute_iou_metrics(nerdynet_data, gt_data)
-    # # nerdy_adapt_iou = compute_iou_metrics(nerdy_adapt_data, gt_data)
-    # equi_nerdy_iou = compute_iou_metrics(equi_nerdy, gt_data)
-    # eq_p4m_iou = compute_iou_metrics(eq_p4m, gt_data)
-
-    # nerdy150_iou = compute_iou_metrics(nerdy150_data, gt_data)
-
-    # p4m_adaptive_iou = compute_iou_metrics(p4m_adaptive_data, gt_data)
-
-    # p4m_v2_blur_iou = compute_iou_metrics(p4m_v2_blur_data, gt_data)
-
     p4m_vecadam_iou = compute_iou_metrics(p4m_vecadam_data, gt_data)
 
-    # p4m_vecadam_adaptive_iou = compute_iou_metrics(p4m_vecadam_adaptive_data, gt_data)
-
-    # analyzer_f1 = compute_f1_score(analyzer_data, gt_data, SMet.resize_analyzer_bin_op)
-    # erv2_f1 = compute_f1_score(erv2_data, gt_data, SMet.process_erv2_output)
     analyzer_f1 = compute_f1_score(analyzer_data, gt_data)
     erv2_f1 = compute_f1_score(erv2_data, gt_data)
     ernet_f1 = compute_f1_score(ernet_data, gt_data)
     nerdy_f1 = compute_f1_score(nerdy_data, gt_data)
-    # nerdynet_f1 = compute_f1_score(nerdynet_data, gt_data)
-    # # nerdy_adapt_f1 = compute_f1_score(nerdy_adapt_data, gt_data)
-    # equi_nerdy_f1 = compute_f1_score(equi_nerdy, gt_data)
-    # eq_p4m_f1 = compute_f1_score(eq_p4m, gt_data)
-
-    # nerdy150_f1 = compute_f1_score(nerdy150_data, gt_data)
-
-    # p4m_adaptive_f1 = compute_f1_score(p4m_adaptive_data, gt_data)
-
-    # p4m_v2_blur_f1 = compute_f1_score(p4m_v2_blur_data, gt_data)
-
     p4m_vecadam_f1 = compute_f1_score(p4m_vecadam_data, gt_data)
 
-    # p4m_vecadam_adaptive_f1 = compute_f1_score(p4m_vecadam_adaptive_data, gt_data)
-
-    # analyzer_dice = compute_dice_coefficient(analyzer_data, gt_data, SMet.resize_analyzer_bin_op)
-    # erv2_dice = compute_dice_coefficient(erv2_data, gt_data, SMet.process_erv2_output)
     analyzer_dice = compute_dice_coefficient(analyzer_data, gt_data)
     erv2_dice = compute_dice_coefficient(erv2_data, gt_data)
     ernet_dice = compute_dice_coefficient(ernet_data, gt_data)
     nerdy_dice = compute_dice_coefficient(nerdy_data, gt_data)
-    # nerdynet_dice = compute_dice_coefficient(nerdynet_data, gt_data)
-    # # nerdy_adapt_dice = compute_dice_coefficient(nerdy_adapt_data, gt_data)
-    # equi_nerdy_dice = compute_dice_coefficient(equi_nerdy, gt_data)
-    # eq_p4m_dice = compute_dice_coefficient(eq_p4m, gt_data)
-    # nerdy150_dice = compute_dice_coefficient(nerdy150_data, gt_data)
-
-    # p4m_adaptive_dice = compute_dice_coefficient(p4m_adaptive_data, gt_data)
-
-    # p4m_v2_blur_dice = compute_dice_coefficient(p4m_v2_blur_data, gt_data)
-
     p4m_vecadam_dice = compute_dice_coefficient(p4m_vecadam_data, gt_data)
 
-    # p4m_vecadam_adaptive_dice = compute_dice_coefficient(p4m_vecadam_adaptive_data, gt_data)
-
-    # analyzer_acc = compute_accuracy(analyzer_data, gt_data, SMet.resize_analyzer_bin_op)
-    # erv2_acc = compute_accuracy(erv2_data, gt_data, SMet.process_erv2_output)
-    analyzer_acc = compute_accuracy(analyzer_data, gt_data)
-    erv2_acc = compute_accuracy(erv2_data, gt_data)
-    ernet_acc = compute_accuracy(ernet_data, gt_data)
-    nerdy_acc = compute_accuracy(nerdy_data, gt_data)
-    # nerdynet_acc = compute_accuracy(nerdynet_data, gt_data)
-    # # nerdy_adapt_acc = compute_accuracy(nerdy_adapt_data, gt_data)
-    # equi_nerdy_acc = compute_accuracy(equi_nerdy, gt_data)
-    # eq_p4m_acc = compute_accuracy(eq_p4m, gt_data)
-    # nerdy150_acc = compute_accuracy(nerdy150_data, gt_data)
-
-    # p4m_adaptive_acc = compute_accuracy(p4m_adaptive_data, gt_data)
-
-    # p4m_v2_blur_acc = compute_accuracy(p4m_v2_blur_data, gt_data)
-
-    p4m_vecadam_acc = compute_accuracy(p4m_vecadam_data, gt_data)
-
-    # p4m_vecadam_adaptive_acc = compute_accuracy(p4m_vecadam_adaptive_data, gt_data)
 
     print_metric_results('Analyzer f1', analyzer_f1)
     print_metric_results('ERnet', ernet_f1)
     print_metric_results('ERnet_v2', erv2_f1)
     print_metric_results('Nerdy', nerdy_f1)
-    # print_metric_results('Nerdynet', nerdynet_f1)
-    # # print_metric_results('Nerdy Adaptive f1', nerdy_adapt_f1)
-    # print_metric_results('Equi-Nerdy f1', equi_nerdy_f1)
-    # print_metric_results('P4M v1 f1', eq_p4m_f1)
-    # print_metric_results('Nerdy 150 f1', nerdy150_f1)
-
-    # print_metric_results('P4M Adaptive f1', p4m_adaptive_f1)
-
-    # print_metric_results('P4M v2 blur f1', p4m_v2_blur_f1)
 
     print_metric_results('P4M v2 VecAdam f1', p4m_vecadam_f1)
-
-    # print_metric_results('P4M v2 VecAdam Adaptive f1', p4m_vecadam_adaptive_f1)
 
     print_metric_results('Analyzer dice', analyzer_dice)
     print_metric_results('ERnet', ernet_dice)
     print_metric_results('ERnet_v2', erv2_dice)
     print_metric_results('Nerdy', nerdy_dice)
-    # print_metric_results('Nerdynet', nerdynet_dice)
-    # # print_metric_results('Nerdy Adaptive dice', nerdy_adapt_dice)
-    # print_metric_results('Equi-Nerdy dice', equi_nerdy_dice)
-    # print_metric_results('P4M v1 dice', eq_p4m_dice)
-    # print_metric_results('Nerdy 150 dice', nerdy150_dice)
-
-    # print_metric_results('P4M Adaptive dice', p4m_adaptive_dice)
-
-    # print_metric_results('P4M v2 blur dice', p4m_v2_blur_dice)
 
     print_metric_results('P4M v2 VecAdam dice', p4m_vecadam_dice)
-
-    # print_metric_results('P4M v2 VecAdam Adaptive dice', p4m_vecadam_adaptive_dice)
-
-    print_metric_results('Analyzer acc', analyzer_acc)
-    print_metric_results('ERnet', ernet_acc)
-    print_metric_results('ERnet_v2', erv2_acc)
-    print_metric_results('Nerdy', nerdy_acc)
-    # print_metric_results('Nerdynet', nerdynet_acc)
-    # print_metric_results('Nerdy Adaptive acc', nerdy_adapt_acc)
-    # print_metric_results('Equi-Nerdy acc', equi_nerdy_acc)
-    # print_metric_results('P4M v1 acc', eq_p4m_acc)
-    # print_metric_results('Nerdy 150 acc', nerdy150_acc)
-
-    # print_metric_results('P4M Adaptive acc', p4m_adaptive_acc)
-
-    # print_metric_results('P4M v2 blur acc', p4m_v2_blur_acc)
-
-    print_metric_results('P4M v2 VecAdam acc', p4m_vecadam_acc)
-
-    # print_metric_results('P4M v2 VecAdam Adaptive acc', p4m_vecadam_adaptive_acc)
-
 
     print_metric_results('Analyzer iou', analyzer_iou)
     print_metric_results('ERnet', ernet_iou)
     print_metric_results('ERnet_v2', erv2_iou)
     print_metric_results('Nerdy', nerdy_iou)
-    # print_metric_results('Nerdynet', nerdynet_iou)
-    # print_metric_results('Nerdy Adaptive iou', nerdy_adapt_iou)
-    # print_metric_results('Equi-Nerdy iou', equi_nerdy_iou)
-    # print_metric_results('P4M v1 iou', eq_p4m_iou)
-    # print_metric_results('Nerdy 150 iou', nerdy150_iou)
-
-    # print_metric_results('P4M Adaptive iou', p4m_adaptive_iou)
-
-    # print_metric_results('P4M v2 blur iou', p4m_v2_blur_iou)
 
     print_metric_results('P4M v2 VecAdam iou', p4m_vecadam_iou)
 
-    # print_metric_results('P4M v2 VecAdam Adaptive iou', p4m_vecadam_adaptive_iou)
 
-# gt_data, analyzer_data, erv2_data, ernet_data, nerdy_data, nerdynet_data, nerdy_adapt_data = load_all_data()
-
-# gt_data, nerdy_data, nerdynet_data, eq_nerdy = load_all_data()
-
-# gt_data, nerdynet_data, eq_nerdy, eq_p4m = load_all_data()
-
-# gt_data, nerdy150_data = load_all_data()
-
-# gt_data, p4m_adaptive_data = load_all_data()
-
-# gt_data, p4m_v2_blur_data = load_all_data()
-
-# gt_data, p4m_vecadam_data, p4m_vecadam_adaptive_data = load_all_data()
-
-gt_data, analyzer_data, erv2_data, ernet_data, nerdy_data, p4m_vecadam_data = load_all_data()
+# gt_data, analyzer_data, erv2_data, ernet_data, nerdy_data, p4m_vecadam_data = load_all_data()
 
 
-# Assuming the function is called with the required arguments
-# get_segmentation_metrics(analyzer_data, erv2_data, ernet_data, nerdy_data, nerdynet_data, nerdy_adapt_data, gt_data)
+def get_graphs():
 
-# get_segmentation_metrics(nerdy_data, nerdynet_data, eq_nerdy, gt_data)
+    p4m = load_models()
 
-# get_segmentation_metrics(nerdynet_data, eq_nerdy, eq_p4m, gt_data)
+    sym = {'climp':'c', 'control':'ct', 'rtn':'r'}
 
-# get_segmentation_metrics(nerdy150_data, gt_data)
+    gt_graphs = []
+    analyzer_graphs = []
+    erv2_graphs = []
+    ernet_graphs = []
+    nerdy_graphs = []
+    p4m_vecadam_graphs = []
 
-# get_segmentation_metrics(p4m_adaptive_data, gt_data)
+    for group in groups:
+        for seq in range(1, 17):
+            with contextlib.suppress(Exception):
+                gt_graph = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/{group}/skel/sted_{group}{seq}_proc_skel.png')
 
-# get_segmentation_metrics(, gt_data)
+                gt_graph = GMet.get_graph(gt_graph)
+                gt_graphs.append(gt_graph)
 
-# get_segmentation_metrics(p4m_vecadam_data, p4m_vecadam_adaptive_data, gt_data)
+                analyzer_skel = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/{group}/analyzer_skel/ER_{sym[group]}{seq}.png')
+                analyzer_skel = GMet.process_analyzer_skel(analyzer_skel)
+                analyzer_skel = GMet.get_graph(analyzer_skel)
+                analyzer_graphs.append(analyzer_skel)
 
-get_segmentation_metrics(analyzer_data, erv2_data, ernet_data, nerdy_data, p4m_vecadam_data, gt_data)
+                erv2_skel = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/{group}/erv2_op/sted_{group}{seq}_er_mean_out_bin.png')
 
-exit()
+                erv2_skel = GMet.seg_to_graph(erosion(erv2_skel/255.))
+                erv2_graphs.append(erv2_skel)
 
-def get_graph_metrics(data_list, method):
-    # sourcery skip: inline-immediately-returned-variable
-    """
-    Get graph metrics for each segmentation method
-    metrics: #nodes, #edges, assortativity, clustering, #components
-    """
-    if method in ['analyzer', 'ernet', 'erv2']:
-        graphs = [GMet.seg_to_graph(erosion(seg/255.)) for seg in data_list]
-    else:
-        graphs = [GMet.seg_to_graph(seg/255.) for seg in data_list]
-    graph_metrics = [GMet.simple_analysis(g) for g in graphs]
+                ernet_skel = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/{group}/ernet_op/sted_{group}{seq}_er_mean_out.png')
+
+                ernet_skel = GMet.seg_to_graph(erosion(ernet_skel/255.))
+                ernet_graphs.append(ernet_skel)
+
+                nerdy_skel = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/{group}/nerdy_op/Series0{seq:02d}_decon_converted_mean_proc_v2_enhance.png')
+
+                nerdy_skel = GMet.seg_to_graph(nerdy_skel/255.)
+                nerdy_graphs.append(nerdy_skel)
+
+                # p4m_vecadam_file = f'/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/{group}/p4m_vecadam_op/sted_{group}{seq}_er_mean_pred.png'
+                input_file = f'/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/{group}/images/sted_{group}{seq}_er_mean.png'
+
+                p4m_vecadam_seg = process_op(input_file, p4m)
+
+                p4m_vecadam_skel = GMet.seg_to_graph(p4m_vecadam_seg/255.)
+                p4m_vecadam_graphs.append(p4m_vecadam_skel)
+
+    return gt_graphs, analyzer_graphs, erv2_graphs, ernet_graphs, nerdy_graphs, p4m_vecadam_graphs
+
+
+# def get_graph_metrics(data_list, method):
+#     # sourcery skip: inline-immediately-returned-variable
+#     """
+#     Get graph metrics for each segmentation method
+#     metrics: #nodes, #edges, assortativity, clustering, #components
+#     """
+#     if method in ['analyzer', 'ernet', 'erv2']:
+#         graphs = [GMet.seg_to_graph(erosion(seg/255.)) for seg in data_list]
+#     else:
+#         graphs = [GMet.seg_to_graph(seg/255.) for seg in data_list]
+#     graph_metrics = [GMet.simple_analysis(g) for g in graphs]
+#     return graph_metrics
+
+
+def get_graph_metrics(data_list):
+    graph_metrics = [GMet.simple_analysis(g) for g in data_list]
     return graph_metrics
+
+gt_data, analyzer_data, erv2_data, ernet_data, nerdy_data, p4m_vecadam_data = get_graphs()
 
 
 def get_all_metrics():
-    gt_graph_metrics = get_graph_metrics(gt_data, None)
-    # analyzer_graph_metrics = get_graph_metrics(analyzer_data, 'analyzer')
-    # erv2_graph_metrics = get_graph_metrics(erv2_data, 'erv2')
-    # ernet_graph_metrics = get_graph_metrics(ernet_data, 'ernet')
-    # nerdy_graph_metrics = get_graph_metrics(nerdy_data, None)
+    gt_graph_metrics = get_graph_metrics(gt_data)
+    analyzer_graph_metrics = get_graph_metrics(analyzer_data)
+    erv2_graph_metrics = get_graph_metrics(erv2_data)
+    ernet_graph_metrics = get_graph_metrics(ernet_data)
+    nerdy_graph_metrics = get_graph_metrics(nerdy_data)
     # nerdynet_graph_metrics = get_graph_metrics(nerdynet_data, None)
     # adaptive_metrics = get_graph_metrics(nerdy_adapt_data, None)
     # nerdy_p4m_v2_metrics = get_graph_metrics(eq_p4m, None)
 
-    nerdy_150_metrics = get_graph_metrics(nerdy150_data, None)
+    p4m_vecadam_metrics = get_graph_metrics(p4m_vecadam_data)
 
-    # return gt_graph_metrics, analyzer_graph_metrics, erv2_graph_metrics, ernet_graph_metrics, nerdy_graph_metrics, nerdynet_graph_metrics, adaptive_metrics
+    return gt_graph_metrics, analyzer_graph_metrics, erv2_graph_metrics, ernet_graph_metrics, nerdy_graph_metrics, p4m_vecadam_metrics
 
-    # return gt_graph_metrics, analyzer_graph_metrics
-    return gt_graph_metrics, nerdy_150_metrics
+gt_graph_metrics, analyzer_graph_metrics, erv2_graph_metrics, ernet_graph_metrics, nerdy_graph_metrics, p4m_vecadam_metrics = get_all_metrics()
 
-# gt_graph_metrics, analyzer_graph_metrics, erv2_graph_metrics, ernet_graph_metrics, nerdy_graph_metrics, nerdynet_graph_metrics, adaptive_metrics = get_all_metrics()
-
-gt_graph_metrics, nerdy_150_metrics = get_all_metrics()
 
 def get_mean(nparr):
     return [np.mean(lt) for lt in nparr]
 
-gt_graph_metrics = get_all_metrics()
-
 def get_error(gt, method):
     err = []
-    for i in range(5):
+    for i in range(len(gt)):
         val = abs(gt[i] - method[i]) / abs(gt[i])
         err.append(val)
     return err
 
 gt_graph_metrics = get_mean(np.array(gt_graph_metrics).T)
-# analyzer_graph_metrics = get_mean(np.array(analyzer_graph_metrics).T)
-# erv2_graph_metrics = get_mean(np.array(erv2_graph_metrics).T)
-# ernet_graph_metrics = get_mean(np.array(ernet_graph_metrics).T)
-# nerdy_graph_metrics = get_mean(np.array(nerdy_graph_metrics).T)
-# nerdynet_graph_metrics = get_mean(np.array(nerdynet_graph_metrics).T)
-# adaptive_metrics = get_mean(np.array(adaptive_metrics).T)
+analyzer_graph_metrics = get_mean(np.array(analyzer_graph_metrics).T)
+erv2_graph_metrics = get_mean(np.array(erv2_graph_metrics).T)
+ernet_graph_metrics = get_mean(np.array(ernet_graph_metrics).T)
+nerdy_graph_metrics = get_mean(np.array(nerdy_graph_metrics).T)
+p4m_vecadam_metrics = get_mean(np.array(p4m_vecadam_metrics).T)
 
-# nerdy_p4m_v2_metrics = get_mean(np.array(nerdy_p4m_v2_metrics).T)
 
-nerdy_150_metrics = get_mean(np.array(nerdy_150_metrics).T)
+# print(gt_graph_metrics)
+# print(analyzer_graph_metrics)
+# print(erv2_graph_metrics)
+# print(ernet_graph_metrics)
+# print(nerdy_graph_metrics)
+# print(p4m_vecadam_metrics)
+
+# exit()
 
 # with open('sted_gt_graph_metrics.pkl', 'wb') as f:
 #     pickle.dump(gt_graph_metrics, f)
@@ -605,30 +544,22 @@ nerdy_150_metrics = get_mean(np.array(nerdy_150_metrics).T)
     # pickle.dump(nerdy_p4m_v2_metrics, f)
 
 
-with open('sted_nerdy_150_metrics.pkl', 'wb') as f:
-    pickle.dump(nerdy_150_metrics, f)
+analyzer_error = get_error(gt_graph_metrics, analyzer_graph_metrics)
+erv2_error = get_error(gt_graph_metrics, erv2_graph_metrics)
+ernet_error = get_error(gt_graph_metrics, ernet_graph_metrics)
+nerdy_error = get_error(gt_graph_metrics, nerdy_graph_metrics)
+p4m_vecadam_error = get_error(gt_graph_metrics, p4m_vecadam_metrics)
 
-# analyzer_error = get_error(gt_graph_metrics, analyzer_graph_metrics)
-# erv2_error = get_error(gt_graph_metrics, erv2_graph_metrics)
-# ernet_error = get_error(gt_graph_metrics, ernet_graph_metrics)
-# nerdy_error = get_error(gt_graph_metrics, nerdy_graph_metrics)
-# nerdynet_error = get_error(gt_graph_metrics, nerdynet_graph_metrics)
-# adaptive_error = get_error(gt_graph_metrics, adaptive_metrics)
 
-# nerdy_p4m_v2_error = get_error(gt_graph_metrics, nerdy_p4m_v2_metrics)
-
-nerdy150_error = get_error(gt_graph_metrics, nerdy_150_metrics)
-
-# print(analyzer_error)
-# print(erv2_error)
-# print(ernet_error)
-# print(nerdy_error)
+print(analyzer_error)
+print(erv2_error)
+print(ernet_error)
+print(nerdy_error)
 # print(nerdynet_error)
 # print(adaptive_error)
 
 # print(nerdy_p4m_v2_error)
-
-print(nerdy150_error)
+print(p4m_vecadam_error)
 
 
 # method = ['AnalyzER', 'ERnet', 'ERnet-v2', 'nERdy', 'nERdy+']
