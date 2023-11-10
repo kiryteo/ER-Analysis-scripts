@@ -64,6 +64,68 @@ def filter_data(data):
 #     return corr_vals
 
 
+
+# get_num_iso_ref_per_seq('ATL', 6)
+# exit()
+
+def get_iso_iso_tub_len(group, total_seq):
+    data = []
+    for seq in range(1, total_seq+1):
+        ref_junctions, per_frame_junctions, labelled_img, ref_graph = junc_analysis.label_junctions(group, seq)
+
+        label_ids = junc_analysis.get_ref_junc_per_CC_id(ref_junctions, labelled_img)
+
+        # label_id_junctions = get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, 'iso')
+
+        # print(f'ATL{seq} has {len(label_id_junctions)} isolated junctions')
+        iso, fuz = junc_analysis.get_junction_areas(label_ids)
+
+        iso_ids = [(u, v) for (u, v) in ref_graph.edges() if (u in iso and v in iso)]
+
+        # edge[0]][edge[1]][0] if multi='True'
+
+        # tub_len = [(u, v) for (u, v) in ref_graph.edges() if (u in iso_ids and v in iso_ids)]
+
+        tub_len = [len(ref_graph[edge[0]][edge[1]]['pts'])
+            for edge in iso_ids if len(ref_graph[edge[0]][edge[1]]['pts']) > 3]
+        
+        data.extend(tub_len)
+
+    return data
+
+def get_num_iso_ref_per_seq(group, total_seq):
+    data = []
+    for seq in range(4, total_seq+1):
+        ref_junctions, per_frame_junctions, labelled_img, ref_graph = junc_analysis.label_junctions(group, seq)
+
+        label_ids = junc_analysis.get_ref_junc_per_CC_id(ref_junctions, labelled_img)
+
+        # label_id_junctions = get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, 'iso')
+
+        # print(f'ATL{seq} has {len(label_id_junctions)} isolated junctions')
+        iso, fuz = junc_analysis.get_junction_areas(label_ids)
+
+        iso_ids = [(u, v) for (u, v) in ref_graph.edges() if (u in iso and v in iso)]
+
+        # edge[0]][edge[1]][0] if multi='True'
+
+        # tub_len = [(u, v) for (u, v) in ref_graph.edges() if (u in iso_ids and v in iso_ids)]
+
+        tub_len = [len(ref_graph[edge[0]][edge[1]]['pts'])
+            for edge in iso_ids if len(ref_graph[edge[0]][edge[1]]['pts']) > 3]
+
+        # print(tub_len)
+
+        total_tub_len = sum(tub_len)
+        # # print(total_tub_len)
+
+        # # print(len(iso))
+
+        data.append(len(iso) / total_tub_len)
+
+    return data
+
+
 def get_num_iso_ref_total_tub_len(group, total_seq):
     data = []
 
@@ -207,13 +269,13 @@ def plot_iso_ref_ratio():
 
     ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, width=0.9)
 
-    plt.ylim(0, 0.065)
+    plt.ylim(0.005, 0.063)
     plt.xlim(-1, 4.0)
 
     yt = ax.get_yticks()
     yt = [f'{y:.2f}' for y in yt]
-    ax.set_yticklabels(yt, fontsize=13)
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=45)
+    ax.set_yticklabels(yt, fontsize=12)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=12, rotation=45)
 
     box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'),
                     ('Reticulon', 'Control')]
@@ -242,25 +304,26 @@ def plot_iso_ref_ratio():
     # annotator.apply_and_annotate()
 
     x1, x2 = 1, 2
-    y, col = df['Ratio'].max()+0.0015, 'k'
+    y, col = df['Ratio'].max()+0.0010, 'k'
 
-    plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
+    plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
     plt.text((x1+x2)*.5, y, "***", ha='center', va='bottom', color=col, fontsize=10)
 
     x1, x2 = 0, 1
-    y, col = df['Ratio'].max()+0.0030, 'k'
+    # y, col = df['Ratio'].max()+0.0025, 'k'
+    y, col = df['Ratio'].max()+0.0010, 'k'
 
-    plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
+    plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
     plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
 
     x1, x2 = 0, 2
-    y, col = df['Ratio'].max()+0.0045, 'k'
+    y, col = df['Ratio'].max()+0.0028, 'k'
 
     plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
     plt.text((x1+x2)*.5, y, "**", ha='center', va='bottom', color=col, fontsize=10)
 
     x1, x2 = 0, 3
-    y, col = df['Ratio'].max()+0.006, 'k'
+    y, col = df['Ratio'].max()+0.0046, 'k'
 
     plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
     plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
@@ -270,7 +333,7 @@ def plot_iso_ref_ratio():
     ax.grid(axis='y')
     # plt.xlabel('Group', fontsize=15)
     # plt.ylabel('Ratio', fontsize=15)
-    plt.gcf().set_size_inches(2.5, 8)
+    plt.gcf().set_size_inches(2.5, 6)
 
     plt.savefig(f'nERdy_iso_ref_ratio_v4', bbox_inches='tight', pad_inches=0.1)
     # plt.show()
@@ -307,40 +370,40 @@ def plot_tub_len_ratio():
 
     ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, width=0.9)
 
-    plt.ylim(0, 28.0)
+    plt.ylim(2.0, 26.2)
     plt.xlim(-1, 4.0)
 
     yt = ax.get_yticks()
     yt = [f'{y:.2f}' for y in yt]
-    ax.set_yticklabels(yt, fontsize=13)
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=45)
+    ax.set_yticklabels(yt, fontsize=12)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=12, rotation=45)
 
     x1, x2 = 2, 3
     y, col = 23.6, 'k'
 
-    plt.plot([x1, x1, x2, x2], [y, y+0.1, y+0.1, y], lw=1, c=col)
+    plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.1, y+0.1, y], lw=1, c=col)
     plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
 
     x1, x2 = 1, 2
+    y, col = 23.6, 'k'
+
+    plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.1, y+0.1, y], lw=1, c=col)
+    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+
+    x1, x2 = 0, 1
+    y, col = 23.6, 'k'
+
+    plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.1, y+0.1, y], lw=1, c=col)
+    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+
+    x1, x2 = 0, 2
     y, col = 24.4, 'k'
 
     plt.plot([x1, x1, x2, x2], [y, y+0.1, y+0.1, y], lw=1, c=col)
     plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
 
-    x1, x2 = 0, 1
-    y, col = 25.2, 'k'
-
-    plt.plot([x1, x1, x2, x2], [y, y+0.1, y+0.1, y], lw=1, c=col)
-    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
-
-    x1, x2 = 0, 2
-    y, col = 26, 'k'
-
-    plt.plot([x1, x1, x2, x2], [y, y+0.1, y+0.1, y], lw=1, c=col)
-    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
-
     x1, x2 = 0, 3
-    y, col = 26.8, 'k'
+    y, col = 25.2, 'k'
 
     plt.plot([x1, x1, x2, x2], [y, y+0.1, y+0.1, y], lw=1, c=col)
     plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
@@ -350,7 +413,7 @@ def plot_tub_len_ratio():
     ax.grid(axis='y')
     # plt.xlabel('Group', fontsize=15)
     # plt.ylabel('Ratio', fontsize=15)
-    plt.gcf().set_size_inches(2.5, 8)
+    plt.gcf().set_size_inches(2.5, 6)
 
     plt.savefig(f'nERdy_iso_iso_tub_len_ratio_v5', bbox_inches='tight', pad_inches=0.1)
     # plt.show()
@@ -487,77 +550,81 @@ def get_cc_area_ratio(group, total_seq):
 #     pkl.dump(rtn_fuz_area, f)
 
 
-# atl_iso_area = pkl.load(open('atl_iso_CC_area.pkl', 'rb'))
+atl_iso_area = pkl.load(open('atl_iso_CC_area.pkl', 'rb'))
 # atl_fuz_area = pkl.load(open('atl_fuz_CC_area.pkl', 'rb'))
-# # climp_iso_area = pkl.load(open('climp_iso_CC_area.pkl', 'rb'))
+climp_iso_area = pkl.load(open('climp_iso_CC_area.pkl', 'rb'))
 # climp_fuz_area = pkl.load(open('climp_fuz_CC_area.pkl', 'rb'))
-# # control_iso_area = pkl.load(open('control_iso_CC_area.pkl', 'rb'))
+control_iso_area = pkl.load(open('control_iso_CC_area.pkl', 'rb'))
 # control_fuz_area = pkl.load(open('control_fuz_CC_area.pkl', 'rb'))
-# # rtn_iso_area = pkl.load(open('rtn_iso_CC_area.pkl', 'rb'))
+rtn_iso_area = pkl.load(open('rtn_iso_CC_area.pkl', 'rb'))
 # rtn_fuz_area = pkl.load(open('rtn_fuz_CC_area.pkl', 'rb'))
 
-# df = pd.DataFrame()
-# # df['CC_area'] = pd.Series(np.concatenate((control_iso_area, rtn_iso_area,climp_iso_area, atl_iso_area)))
+df = pd.DataFrame()
+# df['CC_area'] = pd.Series(np.concatenate((control_iso_area, rtn_iso_area,climp_iso_area, atl_iso_area)))
 
 # df['CC_area'] = pd.Series(np.concatenate((control_fuz_area, rtn_fuz_area,climp_fuz_area, atl_fuz_area)))
 
-# # df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_iso_area), ['Reticulon'] * len(rtn_iso_area), ['Climp'] * len(climp_iso_area), ['Atlastin'] * len(atl_iso_area))))
+df['CC_area'] = pd.Series(np.concatenate((control_iso_area, rtn_iso_area,climp_iso_area, atl_iso_area)))
+
+df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_iso_area), ['Reticulon'] * len(rtn_iso_area), ['Climp'] * len(climp_iso_area), ['Atlastin'] * len(atl_iso_area))))
 
 # df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_fuz_area), ['Reticulon'] * len(rtn_fuz_area), ['Climp'] * len(climp_fuz_area), ['Atlastin'] * len(atl_fuz_area))))
 
-# ax = sns.boxplot(data=df, x='Group', y='CC_area', showfliers=False, width=0.9)
+ax = sns.boxplot(data=df, x='Group', y='CC_area', showfliers=False, width=0.9)
 
-# plt.ylim(0, 178)
-# plt.xlim(-1, 4.0)
+# plt.ylim(0, 172) # fuz
+plt.ylim(0, 28.4) # iso
+plt.xlim(-1, 4.0)
 
-# yt = ax.get_yticks()
-# yt = [f'{y:.2f}' for y in yt]
-# ax.set_yticklabels(yt, fontsize=13)
-# ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=45)
+yt = ax.get_yticks()
+yt = [f'{y:.2f}' for y in yt]
+ax.set_yticklabels(yt, fontsize=12)
+ax.set_xticklabels(ax.get_xticklabels(), fontsize=12, rotation=45)
 
-# x1, x2 = 2, 3 
-# y, col = 154, 'k'
+x1, x2 = 2, 3 
+# y, col = 154, 'k' # fuz
+y, col = 25.4, 'k'
 
-# plt.plot([x1, x1, x2, x2], [y, y+0.5, y+0.5, y], lw=1, c=col)
-# plt.text((x1+x2)*.5, y, "***", ha='center', va='bottom', color=col, fontsize=10)
+plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.05, y+0.05, y], lw=1, c=col)
+plt.text((x1+x2)*.5, y, "***", ha='center', va='bottom', color=col, fontsize=10)
 
-# x1, x2 = 1, 2
-# y, col = 158, 'k'
+x1, x2 = 1, 2
+y, col = 25.4, 'k'
 
-# plt.plot([x1, x1, x2, x2], [y, y+0.5, y+0.5, y], lw=1, c=col)
-# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.05, y+0.05, y], lw=1, c=col)
+plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
 
-# x1, x2 = 0, 1
-# y, col = 162, 'k'
+x1, x2 = 0, 1
+y, col = 25.4, 'k'
 
-# plt.plot([x1, x1, x2, x2], [y, y+0.5, y+0.5, y], lw=1, c=col)
-# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.05, y+0.05, y], lw=1, c=col)
+plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
 
-# x1, x2 = 0, 2
-# y, col = 166, 'k'
+x1, x2 = 0, 2
+y, col = 26.4, 'k'
 
-# plt.plot([x1, x1, x2, x2], [y, y+0.5, y+0.5, y], lw=1, c=col)
-# plt.text((x1+x2)*.5, y, "**", ha='center', va='bottom', color=col, fontsize=10)
+plt.plot([x1, x1, x2, x2], [y, y+0.05, y+0.05, y], lw=1, c=col)
+plt.text((x1+x2)*.5, y, "**", ha='center', va='bottom', color=col, fontsize=10)
 
-# x1, x2 = 0, 3
-# y, col = 170, 'k'
+x1, x2 = 0, 3
+y, col = 27.4, 'k'
 
-# plt.plot([x1, x1, x2, x2], [y, y+0.5, y+0.5, y], lw=1, c=col)
-# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+plt.plot([x1, x1, x2, x2], [y, y+0.05, y+0.05, y], lw=1, c=col)
+plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
 
 
-# # plt.grid(True)
-# ax.grid(axis='y')
-# # plt.xlabel('Group', fontsize=15)
-# # plt.ylabel('Ratio', fontsize=15)
-# plt.gcf().set_size_inches(2.5, 8)
+# plt.grid(True)
+ax.grid(axis='y')
+# plt.xlabel('Group', fontsize=15)
+# plt.ylabel('Ratio', fontsize=15)
+plt.gcf().set_size_inches(2.5, 6)
 
-# plt.savefig(f'nERdy_fuz_CC_area_v5', bbox_inches='tight', pad_inches=0.1)
-# # plt.show()
+plt.savefig(f'nERdy_iso_CC_area_v5_fin', bbox_inches='tight', pad_inches=0.1)
+# plt.show()
 
-# plt.close()
+plt.close()
 
-# exit()
+exit()
 # atl_fuz_iso_ratio = get_cc_area_ratio('ATL', 26)
 # climp_fuz_iso_ratio = get_cc_area_ratio('Climp', 31)
 # control_fuz_iso_ratio = get_cc_area_ratio('Control', 31)
