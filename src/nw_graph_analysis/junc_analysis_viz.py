@@ -11,12 +11,61 @@ from skimage.measure import label, regionprops
 from skimage.morphology import dilation, closing, skeletonize
 from junction_analysis_modules import JunctionAnalysisModules as JAM
 
+from segmentation_analysis import process_op, load_models
+
 # confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 
 # sted_data_path = '/localhome/asa420/MIAL/data/live-cell-movies/Sep2023-sted-analysis/'
 
 junc_analysis = JAM('confocal')
 
+
+# nerdy_seg = imageio.imread(f'/localhome/asa420/MIAL/data/confocal-data/Climp/er_mean_proc/climp1_er_mean_proc_enhance.png')
+# ernet_skel = skeletonize(nerdy_seg/255.).astype(np.uint16)
+# nerdy_graph = sknw.build_sknw(ernet_skel, multi=True, iso=False)
+
+input_file = f'/localhome/asa420/MIAL/data/confocal-data/Climp/er_mean/climp1_er_mean.png'
+
+p4m = load_models()
+p4m_vecadam_seg = process_op(input_file, p4m)
+
+p4m_vecadam_skel = skeletonize(p4m_vecadam_seg/255.)
+nerdy_plus_graph = sknw.build_sknw(p4m_vecadam_skel, multi=True, iso=False)
+
+mean_img = imageio.imread('/localhome/asa420/MIAL/data/confocal-data/Climp/er_mean/climp1_er_mean.png')
+
+plt.imshow(mean_img, cmap='gray')
+
+degree_list = nerdy_plus_graph.degree
+
+tgraph = copy.deepcopy(nerdy_plus_graph)
+
+# for i, val in enumerate(degree_list):
+#     print(val)
+#     if val[1] < 3:
+#         tgraph.remove_node(i)
+
+
+node_set = tgraph.nodes
+
+degree_list = tgraph.degree
+node_coords = np.array([node_set[node]['o'] for node in node_set])
+nps = [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
+nps = np.array(nps)
+
+for (s,e) in nerdy_plus_graph.edges():
+    ps = nerdy_plus_graph[s][e][0]['pts']
+    plt.plot(ps[:,1], ps[:,0], 'green')
+
+plt.plot(nps[:,1], nps[:,0], '.', markerfacecolor='red', markeredgecolor='red', mew=1)
+
+# plt.show()
+plt.axis('off')
+# plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/er_mean/rtn4_overlay.png', bbox_inches='tight', pad_inches=0.0)
+plt.savefig('climp1_nerdy+_graph_overlay.png', bbox_inches='tight', pad_inches=0.0)
+plt.close()
+
+exit()
 
 def er_nodes_overlay():
     # if modality == 'sted':
@@ -35,10 +84,11 @@ def er_nodes_overlay():
     # skel = imageio.imread('/localhome/asa420/MIAL/data/sted-data/Control/er_mean_proc/control5_proc_skel.png')
     # graph = sknw.build_sknw(skel, multi=True, iso=False)
 
-    skel = imageio.imread('/localhome/asa420/MIAL/data/confocal-data/Climp/er_mean_proc/climp12_proc_skel.png')
+    # skel = imageio.imread('/localhome/asa420/MIAL/data/confocal-data/Climp/er_mean_proc/climp12_proc_skel.png')
+    skel = imageio.imread('/localhome/asa420/MIAL/data/confocal-data/Climp/er_mean_proc/climp1_er_mean_proc_enhance_skel.png')
     graph = sknw.build_sknw(skel, multi=True, iso=False)
 
-    mean_img = imageio.imread('/localhome/asa420/MIAL/data/confocal-data/Climp/er_mean/climp12_er_mean.png')
+    mean_img = imageio.imread('/localhome/asa420/MIAL/data/confocal-data/Climp/er_mean/climp1_er_mean.png')
 
     plt.imshow(mean_img, cmap='gray')
 
@@ -59,20 +109,20 @@ def er_nodes_overlay():
     nps = [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
     nps = np.array(nps)
 
-    # for (s,e) in graph.edges():
-    #     ps = graph[s][e][0]['pts']
-    #     plt.plot(ps[:,1], ps[:,0], 'green')
+    for (s,e) in graph.edges():
+        ps = graph[s][e][0]['pts']
+        plt.plot(ps[:,1], ps[:,0], 'green')
 
     plt.plot(nps[:,1], nps[:,0], '.', markerfacecolor='red', markeredgecolor='red', mew=2)
 
     # plt.show()
     plt.axis('off')
     # plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/er_mean/rtn4_overlay.png', bbox_inches='tight', pad_inches=0.0)
-    plt.savefig('climp12_nodes_overlay.png', bbox_inches='tight', pad_inches=0.0)
+    plt.savefig('climp12_nerdy_graph_overlay.png', bbox_inches='tight', pad_inches=0.0)
     plt.close()
 
-# er_nodes_overlay()
-# exit()
+er_nodes_overlay()
+exit()
 
 def skel_overlay():
     # for i in range(100):

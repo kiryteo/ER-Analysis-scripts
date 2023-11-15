@@ -25,7 +25,7 @@ from sklearn.neighbors import NearestNeighbors
 from statannotations.Annotator import Annotator
 
 import graph_connector_modules as gcm
-from junction_analysis_modules import JunctionAnalysis as JA
+from junction_analysis_modules import JunctionAnalysisModules as JAM
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 

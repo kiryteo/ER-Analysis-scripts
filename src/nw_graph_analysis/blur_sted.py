@@ -11,6 +11,33 @@ from scipy import ndimage as ndi
 
 # blur_img = 
 
+import matplotlib.pyplot as plt
+
+def get_crops():
+    img = imageio.imread('C3_decon_t025_ch00_std_green.png')
+    # op = img[30:46, 65:81]
+
+    op = img[44:60, 34:50]
+    plt.imshow(op)
+
+    # plt.plot([65, 65], [30, 45], color='white')
+    # plt.plot([80, 80], [30, 45], color='white')
+    # plt.plot([65, 80], [30, 30], color='white')
+    # plt.plot([65, 80], [45, 45], color='white')
+
+    # plt.plot([34, 34], [44, 60], color='white')
+    # plt.plot([50, 50], [44, 60], color='white')
+    # plt.plot([34, 50], [44, 44], color='white')
+    # plt.plot([34, 50], [60, 60], color='white')
+    # plt.show()
+    plt.axis('off')
+    plt.savefig('C3_decon_t025_ch00_std_green_crop2.png', dpi=300, bbox_inches='tight', pad_inches=0)
+    plt.close()
+
+
+get_crops()
+
+exit()
 
 import numpy as np
 

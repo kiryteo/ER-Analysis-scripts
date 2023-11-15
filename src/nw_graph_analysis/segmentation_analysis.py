@@ -6,7 +6,7 @@ from graph_metrics import GraphMetrics
 
 import matplotlib.pyplot as plt
 import numpy as np
-from skimage.filters import threshold_otsu
+from skimage.filters import threshold_otsu, threshold_mean
 from skimage.morphology import erosion
 from skimage import restoration
 import copy
@@ -169,7 +169,8 @@ def process_op(imgpath, model):
     rb = restoration.rolling_ball(norm)
     subt = norm - rb
 
-    thr = threshold_otsu(subt)
+    # thr = threshold_otsu(subt) # for STED data
+    thr = threshold_mean(subt) # in case of confocal data
 
     subt2 = copy.deepcopy(subt)
 
@@ -178,24 +179,94 @@ def process_op(imgpath, model):
 
     return subt2
 
+# from skimage.morphology import skeletonize
+# import skimage.io as io
+
+# p4m = load_models()
+
+# imgpath = '/localhome/asa420/MIAL/data/confocal-data/Climp/er_mean/climp12_er_mean.png'
+# op = process_op(imgpath, p4m) / 255
+# io.imsave('climp12_er_mean_pred_p4m.png', op)
+# skel = (skeletonize(op) * 255).astype('uint8')
+# io.imsave('climp12_er_mean_pred_skel_p4m.png', skel)
+
+# exit()
+
+# file = imageio.imread('/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/rtn/images/sted_rtn16_er_mean.png')
+
+# gt_mask = imageio.imread('/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/rtn/updated_masks/sted_rtn16_er_mean_mask.png')
+
+# analyzer_op = imageio.imread('/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/rtn/analyzer_op/resized_op/rtn16_out.png')
+
+# ernet_op = imageio.imread('/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/rtn/ernet_op/sted_rtn16_er_mean_out.png')
+
+# erv2_op = imageio.imread('/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/rtn/erv2_op/sted_rtn16_er_mean_out_bin.png')
+
+# nerdy_op = imageio.imread('/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/rtn/nerdy_op/Series016_decon_converted_mean_proc_v2_enhance.png')
+
+p4m = load_models()
+nerdy_plus_op = process_op('/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/control/images/sted_control8_er_mean.png', p4m)
+
+imageio.imsave('STED_control8_er_mean_pred_nerdy+.png', nerdy_plus_op)
+
+
+exit()
+
+# plt.subplot(1, 7, 1)
+# plt.axis('off')
+# plt.imshow(file, cmap='gray')
+# # plt.title('Input')
+
+# plt.subplot(1, 7, 2)
+# plt.axis('off')
+# plt.imshow(gt_mask, cmap='gray')
+# # plt.title('Mask')
+
+# plt.subplot(1, 7, 3)
+# plt.axis('off')
+# plt.imshow(analyzer_op, cmap='gray')
+# # plt.title('AnalyzER')
+
+# plt.subplot(1, 7, 4)
+# plt.axis('off')
+# plt.imshow(ernet_op, cmap='gray')
+# # plt.title('ERnet')
+
+# plt.subplot(1, 7, 5)
+# plt.axis('off')
+# plt.imshow(erv2_op, cmap='gray')
+# # plt.title('ERnet-v2')
+
+# plt.subplot(1, 7, 6)
+# plt.axis('off')
+# plt.imshow(nerdy_op, cmap='gray')
+# # plt.title('nERdy')
+
+# plt.subplot(1, 7, 7)
+# plt.axis('off')
+# plt.imshow(nerdy_plus_op, cmap='gray')
+# # plt.title('nERdy+')
+
+# plt.subplots_adjust(wspace=0.02)
+
+# plt.savefig('rtn16_segmentation_comparison.png', bbox_inches='tight', pad_inches=0)
+
+# # plt.show()
+# plt.close()
+
+# exit()
+
 
 def load_all_data():
 
     p4m = load_models()
 
     gt_data = []
-    analyzer_data = []
-    erv2_data = []
-    ernet_data = []
-    nerdy_data = []
-    # nerdynet_data = []
-    # nerdy_adapt_data = []
-    # eq_nerdy = []
-    # eq_p4m = []
-    # p4m_adaptive_data = []
+    # analyzer_data = []
+    # erv2_data = []
+    # ernet_data = []
+    # nerdy_data = []
 
-    # nerdy150_data = []
-    # p4m_v2_blur_data = []
 
     p4m_vecadam_data = []
     # p4m_vecadam_adaptive_data = []
@@ -209,48 +280,48 @@ def load_all_data():
                 # file = f'{prefix}{group}/adaptive_mask/{group}{num}_er_mean_mask.png'
                 gt_data.append(imageio.imread(file))
 
-                # file = f'{prefix}{group}/analyzer_op/ER_{analyzer_prefix[group]}e{num}.png'
+                # # file = f'{prefix}{group}/analyzer_op/ER_{analyzer_prefix[group]}e{num}.png'
                 
-                file = f'{prefix}{group}/analyzer_op/resized_op/{group}{num}_out.png'
-                # analyzer_data.append(SMet.resize_analyzer_bin_op(imageio.imread(file)))
+                # file = f'{prefix}{group}/analyzer_op/resized_op/{group}{num}_out.png'
+                # # analyzer_data.append(SMet.resize_analyzer_bin_op(imageio.imread(file)))
                 
-                analyzer_data.append(erosion(imageio.imread(file)))
+                # analyzer_data.append(erosion(imageio.imread(file)))
 
-                file = f'{prefix}{group}/erv2_op/sted_{group}{num}_er_mean_out_bin.png'
-                erv2_data.append(erosion(imageio.imread(file)))
+                # file = f'{prefix}{group}/erv2_op/sted_{group}{num}_er_mean_out_bin.png'
+                # erv2_data.append(erosion(imageio.imread(file)))
 
-                file = f'{prefix}{group}/ernet_op/sted_{group}{num}_er_mean_out.png'
-                ernet_data.append(erosion(imageio.imread(file)))
+                # file = f'{prefix}{group}/ernet_op/sted_{group}{num}_er_mean_out.png'
+                # ernet_data.append(erosion(imageio.imread(file)))
 
-                file = f'{prefix}{group}/nerdy_op/Series0{num:02d}_decon_converted_mean_proc_v2_enhance.png'
-                nerdy_data.append(imageio.imread(file))
+                # file = f'{prefix}{group}/nerdy_op/Series0{num:02d}_decon_converted_mean_proc_v2_enhance.png'
+                # nerdy_data.append(imageio.imread(file))
 
-                # file = f'{prefix}{group}/nerdynet_op_seg/sted_{group}{num}_er_mean_pred.png'
-                # file = f'{prefix}{group}/nerdynet-op/sted_{group}{num}_er_mean_pred.png' # BESTTTT
+                # # file = f'{prefix}{group}/nerdynet_op_seg/sted_{group}{num}_er_mean_pred.png'
+                # # file = f'{prefix}{group}/nerdynet-op/sted_{group}{num}_er_mean_pred.png' # BESTTTT
 
-                # file = f'{prefix}{group}/nerdynet_v2/sted_{group}{num}_er_mean_pred.png'
-                # nerdynet_data.append(imageio.imread(file))
+                # # file = f'{prefix}{group}/nerdynet_v2/sted_{group}{num}_er_mean_pred.png'
+                # # nerdynet_data.append(imageio.imread(file))
 
-                # file = f'{prefix}{group}/nerdy_adaptive_mask/sted_{group}{num}_er_mean_pred.png'
-                # nerdy_adapt_data.append(imageio.imread(file))
+                # # file = f'{prefix}{group}/nerdy_adaptive_mask/sted_{group}{num}_er_mean_pred.png'
+                # # nerdy_adapt_data.append(imageio.imread(file))
 
-                # file = f'{prefix}{group}/equi-nnet/sted_{group}{num}_er_mean_pred.png'
-                # eq_nerdy.append(imageio.imread(file))
+                # # file = f'{prefix}{group}/equi-nnet/sted_{group}{num}_er_mean_pred.png'
+                # # eq_nerdy.append(imageio.imread(file))
 
-                # file = f'{prefix}{group}/p4m_v2/sted_{group}{num}_er_mean_pred.png'
-                # eq_p4m.append(imageio.imread(file))
+                # # file = f'{prefix}{group}/p4m_v2/sted_{group}{num}_er_mean_pred.png'
+                # # eq_p4m.append(imageio.imread(file))
 
-                # file = f'{prefix}{group}/nerdy_150/sted_{group}{num}_er_mean_pred.png'
-                # nerdy150_data.append(imageio.imread(file))
+                # # file = f'{prefix}{group}/nerdy_150/sted_{group}{num}_er_mean_pred.png'
+                # # nerdy150_data.append(imageio.imread(file))
 
-                # p4m_adaptive = f'{prefix}{group}/p4m_adaptive/sted_{group}{num}_er_mean_pred.png'
-                # p4m_adaptive = f'{prefix}{group}/p4m_v2/sted_{group}{num}_er_mean_pred.png'
-                # p4m_v2_blur = f'{prefix}{group}/blur_p4m_v2/sted_{group}{num}_er_mean_pred.png'
+                # # p4m_adaptive = f'{prefix}{group}/p4m_adaptive/sted_{group}{num}_er_mean_pred.png'
+                # # p4m_adaptive = f'{prefix}{group}/p4m_v2/sted_{group}{num}_er_mean_pred.png'
+                # # p4m_v2_blur = f'{prefix}{group}/blur_p4m_v2/sted_{group}{num}_er_mean_pred.png'
                 
-                # p4m_adaptive_data.append(imageio.imread(p4m_adaptive))
-                # p4m_v2_blur_data.append(imageio.imread(p4m_v2_blur))
+                # # p4m_adaptive_data.append(imageio.imread(p4m_adaptive))
+                # # p4m_v2_blur_data.append(imageio.imread(p4m_v2_blur))
 
-                # file = f'/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/{group}/er_mean_blur/{group}{num}_er_mean_blur.png'
+                # # file = f'/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/{group}/er_mean_blur/{group}{num}_er_mean_blur.png'
 
                 file = f'/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/{group}/images/sted_{group}{num}_er_mean.png'
 
@@ -269,7 +340,8 @@ def load_all_data():
     # return gt_data, p4m_v2_blur_data
     # return gt_data, p4m_vecadam_data, p4m_vecadam_adaptive_data
 
-    return gt_data, analyzer_data, erv2_data, ernet_data, nerdy_data, p4m_vecadam_data
+    # return gt_data, analyzer_data, erv2_data, ernet_data, nerdy_data, p4m_vecadam_data
+    return gt_data, p4m_vecadam_data
 
 
 def compute_iou_metrics(pred_data, gt_data, process_pred_fn=None):
@@ -357,49 +429,129 @@ def compute_dice_coefficient(pred_data, gt_data, process_pred_fn=None):
 def print_metric_results(metric_name, metric_value):
     print(f'{metric_name}: {metric_value}')
 
-def get_segmentation_metrics(analyzer_data, erv2_data, ernet_data, nerdy_data, p4m_vecadam_data, gt_data):
-    analyzer_iou = compute_iou_metrics(analyzer_data, gt_data)
-    erv2_iou = compute_iou_metrics(erv2_data, gt_data)
-    ernet_iou = compute_iou_metrics(ernet_data, gt_data)
-    nerdy_iou = compute_iou_metrics(nerdy_data, gt_data)
+# def get_segmentation_metrics(analyzer_data, erv2_data, ernet_data, nerdy_data, p4m_vecadam_data, gt_data):
+def get_segmentation_metrics(p4m_vecadam_data, gt_data):
+    # analyzer_iou = compute_iou_metrics(analyzer_data, gt_data)
+    # erv2_iou = compute_iou_metrics(erv2_data, gt_data)
+    # ernet_iou = compute_iou_metrics(ernet_data, gt_data)
+    # nerdy_iou = compute_iou_metrics(nerdy_data, gt_data)
     p4m_vecadam_iou = compute_iou_metrics(p4m_vecadam_data, gt_data)
 
-    analyzer_f1 = compute_f1_score(analyzer_data, gt_data)
-    erv2_f1 = compute_f1_score(erv2_data, gt_data)
-    ernet_f1 = compute_f1_score(ernet_data, gt_data)
-    nerdy_f1 = compute_f1_score(nerdy_data, gt_data)
+    # analyzer_f1 = compute_f1_score(analyzer_data, gt_data)
+    # erv2_f1 = compute_f1_score(erv2_data, gt_data)
+    # ernet_f1 = compute_f1_score(ernet_data, gt_data)
+    # nerdy_f1 = compute_f1_score(nerdy_data, gt_data)
     p4m_vecadam_f1 = compute_f1_score(p4m_vecadam_data, gt_data)
 
-    analyzer_dice = compute_dice_coefficient(analyzer_data, gt_data)
-    erv2_dice = compute_dice_coefficient(erv2_data, gt_data)
-    ernet_dice = compute_dice_coefficient(ernet_data, gt_data)
-    nerdy_dice = compute_dice_coefficient(nerdy_data, gt_data)
+    # analyzer_dice = compute_dice_coefficient(analyzer_data, gt_data)
+    # erv2_dice = compute_dice_coefficient(erv2_data, gt_data)
+    # ernet_dice = compute_dice_coefficient(ernet_data, gt_data)
+    # nerdy_dice = compute_dice_coefficient(nerdy_data, gt_data)
     p4m_vecadam_dice = compute_dice_coefficient(p4m_vecadam_data, gt_data)
 
 
-    print_metric_results('Analyzer f1', analyzer_f1)
-    print_metric_results('ERnet', ernet_f1)
-    print_metric_results('ERnet_v2', erv2_f1)
-    print_metric_results('Nerdy', nerdy_f1)
+    # print_metric_results('Analyzer f1', analyzer_f1)
+    # print_metric_results('ERnet', ernet_f1)
+    # print_metric_results('ERnet_v2', erv2_f1)
+    # print_metric_results('Nerdy', nerdy_f1)
 
     print_metric_results('P4M v2 VecAdam f1', p4m_vecadam_f1)
 
-    print_metric_results('Analyzer dice', analyzer_dice)
-    print_metric_results('ERnet', ernet_dice)
-    print_metric_results('ERnet_v2', erv2_dice)
-    print_metric_results('Nerdy', nerdy_dice)
+    # print_metric_results('Analyzer dice', analyzer_dice)
+    # print_metric_results('ERnet', ernet_dice)
+    # print_metric_results('ERnet_v2', erv2_dice)
+    # print_metric_results('Nerdy', nerdy_dice)
 
     print_metric_results('P4M v2 VecAdam dice', p4m_vecadam_dice)
 
-    print_metric_results('Analyzer iou', analyzer_iou)
-    print_metric_results('ERnet', ernet_iou)
-    print_metric_results('ERnet_v2', erv2_iou)
-    print_metric_results('Nerdy', nerdy_iou)
+    # print_metric_results('Analyzer iou', analyzer_iou)
+    # print_metric_results('ERnet', ernet_iou)
+    # print_metric_results('ERnet_v2', erv2_iou)
+    # print_metric_results('Nerdy', nerdy_iou)
 
     print_metric_results('P4M v2 VecAdam iou', p4m_vecadam_iou)
 
 
 # gt_data, analyzer_data, erv2_data, ernet_data, nerdy_data, p4m_vecadam_data = load_all_data()
+
+# gt_data, p4m_data = load_all_data()
+
+# get_segmentation_metrics(analyzer_data, erv2_data, ernet_data, nerdy_data, p4m_vecadam_data, gt_data)
+
+# get_segmentation_metrics(p4m_data, gt_data)
+
+# exit()
+
+
+# gt_skel = imageio.imread('/localhome/asa420/MIAL/data/confocal-data/vess_enh_unet/climp/gt_skel/climp1_proc_skel.png')
+
+# # skel to graph
+# gt_graph = GMet.get_graph(gt_skel)
+
+# analyzer_mask = imageio.imread('/localhome/asa420/MIAL/data/confocal-data/analyzer_masks/climp/ER_climp1.png')
+# # get resized skeleton
+# analyzer_seg = SMet.process_analyzer_output(analyzer_mask)
+# # skel to graph
+# analyzer_graph = GMet.seg_to_graph(analyzer_seg/255.)
+
+
+# ernet_skel = imageio.imread('/localhome/asa420/MIAL/data/confocal-data/ernet_masks/climp/climp1_er_mean_out.png')
+# # ernet_skel = GMet.seg_to_graph(erosion(ernet_skel/255.))
+# ernet_graph = GMet.seg_to_graph(ernet_skel/255.)
+
+# erv2_skel = imageio.imread('/localhome/asa420/MIAL/data/confocal-data/erv2_new_masks/climp/climp1_er_mean_out_0000.png')
+# # erv2_skel = GMet.seg_to_graph(erosion(erv2_skel/255.))
+# erv2_graph = GMet.seg_to_graph(erv2_skel/255.)
+
+# nerdy_skel = imageio.imread('/localhome/asa420/MIAL/data/confocal-data/Climp/er_mean_proc/climp1_er_mean_proc_enhance.png')
+# nerdy_graph = GMet.seg_to_graph(nerdy_skel/255.)
+
+# p4m_vecadam_file = f'/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/{group}/p4m_vecadam_op/sted_{group}{seq}_er_mean_pred.png'
+
+# input_file = '/localhome/asa420/MIAL/data/confocal-data/Climp/er_mean/climp1_er_mean.png'
+
+# p4m = load_models()
+# p4m_vecadam_seg = process_op(input_file, p4m)
+
+# p4m_vecadam_graph = GMet.seg_to_graph(p4m_vecadam_seg/255.)
+
+
+def plot_graph(graph, input_file):
+    plt.imshow(imageio.imread(input_file), cmap='gray')
+
+    degree_list = graph.degree
+
+    tgraph = copy.deepcopy(graph)
+
+    # for i, val in enumerate(degree_list):
+    #     print(val)
+    #     if val[1] < 3:
+    #         tgraph.remove_node(i)
+
+
+    node_set = tgraph.nodes
+
+    degree_list = tgraph.degree
+    node_coords = np.array([node_set[node]['o'] for node in node_set])
+    nps = [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
+    nps = np.array(nps)
+
+    for (s,e) in graph.edges():
+        ps = graph[s][e][0]['pts']
+        plt.plot(ps[:,1], ps[:,0], 'green')
+
+    plt.plot(nps[:,1], nps[:,0], '.', markerfacecolor='red', markeredgecolor='red', mew=1)
+
+    # plt.show()
+    plt.axis('off')
+    # plt.savefig('/localhome/asa420/MIAL/data/confocal_movies/RTN/new_op_jul/er_mean/rtn4_overlay.png', bbox_inches='tight', pad_inches=0.0)
+    plt.savefig('climp1_analyzer_graph_overlay.png', bbox_inches='tight', pad_inches=0, dpi=200)
+    plt.close()
+
+
+# plot_graph(analyzer_graph, input_file)
+# exit()
+
 
 
 def get_graphs():
@@ -418,25 +570,31 @@ def get_graphs():
     for group in groups:
         for seq in range(1, 17):
             with contextlib.suppress(Exception):
-                gt_graph = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/{group}/skel/sted_{group}{seq}_proc_skel.png')
+                gt_graph = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/{group}/gt_skel/sted_{group}{seq}_proc_skel.png')
 
+                # skel to graph
                 gt_graph = GMet.get_graph(gt_graph)
                 gt_graphs.append(gt_graph)
 
                 analyzer_skel = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/{group}/analyzer_skel/ER_{sym[group]}{seq}.png')
+                # get resized skeleton
                 analyzer_skel = GMet.process_analyzer_skel(analyzer_skel)
+
+                # skel to graph
                 analyzer_skel = GMet.get_graph(analyzer_skel)
                 analyzer_graphs.append(analyzer_skel)
 
-                erv2_skel = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/{group}/erv2_op/sted_{group}{seq}_er_mean_out_bin.png')
-
-                erv2_skel = GMet.seg_to_graph(erosion(erv2_skel/255.))
-                erv2_graphs.append(erv2_skel)
-
                 ernet_skel = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/{group}/ernet_op/sted_{group}{seq}_er_mean_out.png')
 
-                ernet_skel = GMet.seg_to_graph(erosion(ernet_skel/255.))
+                # ernet_skel = GMet.seg_to_graph(erosion(ernet_skel/255.))
+                ernet_skel = GMet.seg_to_graph(ernet_skel/255.)
                 ernet_graphs.append(ernet_skel)
+
+                erv2_skel = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/{group}/erv2_op/sted_{group}{seq}_er_mean_out_bin.png')
+
+                # erv2_skel = GMet.seg_to_graph(erosion(erv2_skel/255.))
+                erv2_skel = GMet.seg_to_graph(erv2_skel/255.)
+                erv2_graphs.append(erv2_skel)
 
                 nerdy_skel = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/{group}/nerdy_op/Series0{seq:02d}_decon_converted_mean_proc_v2_enhance.png')
 
@@ -452,6 +610,8 @@ def get_graphs():
                 p4m_vecadam_graphs.append(p4m_vecadam_skel)
 
     return gt_graphs, analyzer_graphs, erv2_graphs, ernet_graphs, nerdy_graphs, p4m_vecadam_graphs
+
+    # return gt_graphs, p4m_vecadam_graphs
 
 
 # def get_graph_metrics(data_list, method):
@@ -472,24 +632,34 @@ def get_graph_metrics(data_list):
     graph_metrics = [GMet.simple_analysis(g) for g in data_list]
     return graph_metrics
 
-gt_data, analyzer_data, erv2_data, ernet_data, nerdy_data, p4m_vecadam_data = get_graphs()
+# gt_data, analyzer_data, erv2_data, ernet_data, nerdy_data, p4m_vecadam_data = get_graphs()
+
+gt_graphs, analyzer_graphs, erv2_graphs, ernet_graphs, nerdy_graphs, p4m_vecadam_graphs = get_graphs()
+
+# gt_data, p4m_vecadam_data = get_graphs()
 
 
-def get_all_metrics():
-    gt_graph_metrics = get_graph_metrics(gt_data)
-    analyzer_graph_metrics = get_graph_metrics(analyzer_data)
-    erv2_graph_metrics = get_graph_metrics(erv2_data)
-    ernet_graph_metrics = get_graph_metrics(ernet_data)
-    nerdy_graph_metrics = get_graph_metrics(nerdy_data)
-    # nerdynet_graph_metrics = get_graph_metrics(nerdynet_data, None)
-    # adaptive_metrics = get_graph_metrics(nerdy_adapt_data, None)
-    # nerdy_p4m_v2_metrics = get_graph_metrics(eq_p4m, None)
+# def get_all_metrics():
+#     gt_graph_metrics = get_graph_metrics(gt_data)
+#     analyzer_graph_metrics = get_graph_metrics(analyzer_data)
+#     erv2_graph_metrics = get_graph_metrics(erv2_data)
+#     ernet_graph_metrics = get_graph_metrics(ernet_data)
+#     nerdy_graph_metrics = get_graph_metrics(nerdy_data)
+#     p4m_vecadam_metrics = get_graph_metrics(p4m_vecadam_data)
 
-    p4m_vecadam_metrics = get_graph_metrics(p4m_vecadam_data)
+#     return gt_graph_metrics, analyzer_graph_metrics, erv2_graph_metrics, ernet_graph_metrics, nerdy_graph_metrics, p4m_vecadam_metrics
+    # return gt_graph_metrics, p4m_vecadam_metrics
 
-    return gt_graph_metrics, analyzer_graph_metrics, erv2_graph_metrics, ernet_graph_metrics, nerdy_graph_metrics, p4m_vecadam_metrics
+gt_graph_metrics = get_graph_metrics(gt_graphs)
+analyzer_graph_metrics = get_graph_metrics(analyzer_graphs)
+erv2_graph_metrics = get_graph_metrics(erv2_graphs)
+ernet_graph_metrics = get_graph_metrics(ernet_graphs)
+nerdy_graph_metrics = get_graph_metrics(nerdy_graphs)
+p4m_vecadam_metrics = get_graph_metrics(p4m_vecadam_graphs)
 
-gt_graph_metrics, analyzer_graph_metrics, erv2_graph_metrics, ernet_graph_metrics, nerdy_graph_metrics, p4m_vecadam_metrics = get_all_metrics()
+# gt_graph_metrics, analyzer_graph_metrics, erv2_graph_metrics, ernet_graph_metrics, nerdy_graph_metrics, p4m_vecadam_metrics = get_all_metrics()
+
+# gt_graph_metrics, p4m_vecadam_metrics = get_all_metrics()
 
 
 def get_mean(nparr):
@@ -545,21 +715,17 @@ p4m_vecadam_metrics = get_mean(np.array(p4m_vecadam_metrics).T)
 
 
 analyzer_error = get_error(gt_graph_metrics, analyzer_graph_metrics)
-erv2_error = get_error(gt_graph_metrics, erv2_graph_metrics)
 ernet_error = get_error(gt_graph_metrics, ernet_graph_metrics)
+erv2_error = get_error(gt_graph_metrics, erv2_graph_metrics)
 nerdy_error = get_error(gt_graph_metrics, nerdy_graph_metrics)
 p4m_vecadam_error = get_error(gt_graph_metrics, p4m_vecadam_metrics)
 
 
-print(analyzer_error)
-print(erv2_error)
-print(ernet_error)
-print(nerdy_error)
-# print(nerdynet_error)
-# print(adaptive_error)
-
-# print(nerdy_p4m_v2_error)
-print(p4m_vecadam_error)
+# print(analyzer_error)
+# print(ernet_error)
+# print(erv2_error)
+# print(nerdy_error)
+# print(p4m_vecadam_error)
 
 
 # method = ['AnalyzER', 'ERnet', 'ERnet-v2', 'nERdy', 'nERdy+']

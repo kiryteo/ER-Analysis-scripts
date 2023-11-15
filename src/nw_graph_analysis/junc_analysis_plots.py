@@ -307,26 +307,26 @@ def plot_iso_ref_ratio():
     y, col = df['Ratio'].max()+0.0010, 'k'
 
     plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
-    plt.text((x1+x2)*.5, y, "***", ha='center', va='bottom', color=col, fontsize=10)
+    plt.text((x1+x2)*.5, y, "***", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
 
     x1, x2 = 0, 1
     # y, col = df['Ratio'].max()+0.0025, 'k'
     y, col = df['Ratio'].max()+0.0010, 'k'
 
     plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
-    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
 
     x1, x2 = 0, 2
     y, col = df['Ratio'].max()+0.0028, 'k'
 
     plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
-    plt.text((x1+x2)*.5, y, "**", ha='center', va='bottom', color=col, fontsize=10)
+    plt.text((x1+x2)*.5, y, "**", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
 
     x1, x2 = 0, 3
     y, col = df['Ratio'].max()+0.0046, 'k'
 
     plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
-    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
 
 
     # plt.grid(True)
@@ -382,31 +382,31 @@ def plot_tub_len_ratio():
     y, col = 23.6, 'k'
 
     plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.1, y+0.1, y], lw=1, c=col)
-    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
 
     x1, x2 = 1, 2
     y, col = 23.6, 'k'
 
     plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.1, y+0.1, y], lw=1, c=col)
-    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
 
     x1, x2 = 0, 1
     y, col = 23.6, 'k'
 
     plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.1, y+0.1, y], lw=1, c=col)
-    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
 
     x1, x2 = 0, 2
     y, col = 24.4, 'k'
 
     plt.plot([x1, x1, x2, x2], [y, y+0.1, y+0.1, y], lw=1, c=col)
-    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
 
     x1, x2 = 0, 3
     y, col = 25.2, 'k'
 
     plt.plot([x1, x1, x2, x2], [y, y+0.1, y+0.1, y], lw=1, c=col)
-    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
 
 
     # plt.grid(True)
@@ -550,81 +550,149 @@ def get_cc_area_ratio(group, total_seq):
 #     pkl.dump(rtn_fuz_area, f)
 
 
-atl_iso_area = pkl.load(open('atl_iso_CC_area.pkl', 'rb'))
+# atl_iso_area = pkl.load(open('atl_iso_CC_area.pkl', 'rb'))
+# climp_iso_area = pkl.load(open('climp_iso_CC_area.pkl', 'rb'))
+# control_iso_area = pkl.load(open('control_iso_CC_area.pkl', 'rb'))
+# rtn_iso_area = pkl.load(open('rtn_iso_CC_area.pkl', 'rb'))
+
+# df = pd.DataFrame()
+# # df['CC_area'] = pd.Series(np.concatenate((control_iso_area, rtn_iso_area,climp_iso_area, atl_iso_area)))
+
+# # df['CC_area'] = pd.Series(np.concatenate((control_fuz_area, rtn_fuz_area,climp_fuz_area, atl_fuz_area)))
+
+# df['CC_area'] = pd.Series(np.concatenate((control_iso_area, rtn_iso_area,climp_iso_area, atl_iso_area)))
+
+# df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_iso_area), ['Reticulon'] * len(rtn_iso_area), ['Climp'] * len(climp_iso_area), ['Atlastin'] * len(atl_iso_area))))
+
+# # df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_fuz_area), ['Reticulon'] * len(rtn_fuz_area), ['Climp'] * len(climp_fuz_area), ['Atlastin'] * len(atl_fuz_area))))
+
+# ax = sns.boxplot(data=df, x='Group', y='CC_area', showfliers=False, width=0.9)
+
+# # plt.ylim(0, 172) # fuz
+# plt.ylim(0, 28.4) # iso
+# plt.xlim(-1, 4.0)
+
+# yt = ax.get_yticks()
+# yt = [f'{y:.2f}' for y in yt]
+# ax.set_yticklabels(yt, fontsize=12)
+# ax.set_xticklabels(ax.get_xticklabels(), fontsize=12, rotation=45)
+
+# x1, x2 = 2, 3 
+# # y, col = 154, 'k' # fuz
+# y, col = 25.4, 'k'
+
+# plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.05, y+0.05, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "***", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
+
+# x1, x2 = 1, 2
+# y, col = 25.4, 'k'
+
+# plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.05, y+0.05, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
+
+# x1, x2 = 0, 1
+# y, col = 25.4, 'k'
+
+# plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.05, y+0.05, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
+
+# x1, x2 = 0, 2
+# y, col = 26.4, 'k'
+
+# plt.plot([x1, x1, x2, x2], [y, y+0.05, y+0.05, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "**", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
+
+# x1, x2 = 0, 3
+# y, col = 27.4, 'k'
+
+# plt.plot([x1, x1, x2, x2], [y, y+0.05, y+0.05, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
+
+
+# # plt.grid(True)
+# ax.grid(axis='y')
+# # plt.xlabel('Group', fontsize=15)
+# # plt.ylabel('Ratio', fontsize=15)
+# plt.gcf().set_size_inches(2.5, 6)
+
+# plt.savefig(f'nERdy_iso_CC_area_v5_fin', bbox_inches='tight', pad_inches=0.1)
+# # plt.show()
+
+# plt.close()
+
+# exit()
+
+
 # atl_fuz_area = pkl.load(open('atl_fuz_CC_area.pkl', 'rb'))
-climp_iso_area = pkl.load(open('climp_iso_CC_area.pkl', 'rb'))
 # climp_fuz_area = pkl.load(open('climp_fuz_CC_area.pkl', 'rb'))
-control_iso_area = pkl.load(open('control_iso_CC_area.pkl', 'rb'))
 # control_fuz_area = pkl.load(open('control_fuz_CC_area.pkl', 'rb'))
-rtn_iso_area = pkl.load(open('rtn_iso_CC_area.pkl', 'rb'))
 # rtn_fuz_area = pkl.load(open('rtn_fuz_CC_area.pkl', 'rb'))
 
-df = pd.DataFrame()
-# df['CC_area'] = pd.Series(np.concatenate((control_iso_area, rtn_iso_area,climp_iso_area, atl_iso_area)))
+
+# df = pd.DataFrame()
+# # df['CC_area'] = pd.Series(np.concatenate((control_iso_area, rtn_iso_area,climp_iso_area, atl_iso_area)))
+
+# # df['CC_area'] = pd.Series(np.concatenate((control_fuz_area, rtn_fuz_area,climp_fuz_area, atl_fuz_area)))
 
 # df['CC_area'] = pd.Series(np.concatenate((control_fuz_area, rtn_fuz_area,climp_fuz_area, atl_fuz_area)))
 
-df['CC_area'] = pd.Series(np.concatenate((control_iso_area, rtn_iso_area,climp_iso_area, atl_iso_area)))
-
-df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_iso_area), ['Reticulon'] * len(rtn_iso_area), ['Climp'] * len(climp_iso_area), ['Atlastin'] * len(atl_iso_area))))
-
 # df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_fuz_area), ['Reticulon'] * len(rtn_fuz_area), ['Climp'] * len(climp_fuz_area), ['Atlastin'] * len(atl_fuz_area))))
 
-ax = sns.boxplot(data=df, x='Group', y='CC_area', showfliers=False, width=0.9)
+# ax = sns.boxplot(data=df, x='Group', y='CC_area', showfliers=False, width=0.9)
 
-# plt.ylim(0, 172) # fuz
-plt.ylim(0, 28.4) # iso
-plt.xlim(-1, 4.0)
+# plt.ylim(0, 173) # fuz
+# # plt.ylim(0, 28.4) # iso
+# plt.xlim(-1, 4.0)
 
-yt = ax.get_yticks()
-yt = [f'{y:.2f}' for y in yt]
-ax.set_yticklabels(yt, fontsize=12)
-ax.set_xticklabels(ax.get_xticklabels(), fontsize=12, rotation=45)
+# yt = ax.get_yticks()
+# yt = [f'{y:.2f}' for y in yt]
+# ax.set_yticklabels(yt, fontsize=12)
+# ax.set_xticklabels(ax.get_xticklabels(), fontsize=12, rotation=45)
 
-x1, x2 = 2, 3 
-# y, col = 154, 'k' # fuz
-y, col = 25.4, 'k'
+# x1, x2 = 2, 3 
+# y, col = 155, 'k' # fuz
 
-plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.05, y+0.05, y], lw=1, c=col)
-plt.text((x1+x2)*.5, y, "***", ha='center', va='bottom', color=col, fontsize=10)
+# plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.2, y+0.2, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "***", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
 
-x1, x2 = 1, 2
-y, col = 25.4, 'k'
+# x1, x2 = 1, 2
+# y, col = 155, 'k'
 
-plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.05, y+0.05, y], lw=1, c=col)
-plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+# plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.2, y+0.2, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
 
-x1, x2 = 0, 1
-y, col = 25.4, 'k'
+# x1, x2 = 0, 1
+# y, col = 155, 'k'
 
-plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.05, y+0.05, y], lw=1, c=col)
-plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+# plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.2, y+0.2, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
 
-x1, x2 = 0, 2
-y, col = 26.4, 'k'
+# x1, x2 = 0, 2
+# y, col = 161, 'k'
 
-plt.plot([x1, x1, x2, x2], [y, y+0.05, y+0.05, y], lw=1, c=col)
-plt.text((x1+x2)*.5, y, "**", ha='center', va='bottom', color=col, fontsize=10)
+# plt.plot([x1, x1, x2, x2], [y, y+0.2, y+0.2, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "**", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
 
-x1, x2 = 0, 3
-y, col = 27.4, 'k'
+# x1, x2 = 0, 3
+# y, col = 167, 'k'
 
-plt.plot([x1, x1, x2, x2], [y, y+0.05, y+0.05, y], lw=1, c=col)
-plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+# plt.plot([x1, x1, x2, x2], [y, y+0.2, y+0.2, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
 
 
-# plt.grid(True)
-ax.grid(axis='y')
-# plt.xlabel('Group', fontsize=15)
-# plt.ylabel('Ratio', fontsize=15)
-plt.gcf().set_size_inches(2.5, 6)
+# # plt.grid(True)
+# ax.grid(axis='y')
+# # plt.xlabel('Group', fontsize=15)
+# # plt.ylabel('Ratio', fontsize=15)
+# plt.gcf().set_size_inches(2.5, 6)
 
-plt.savefig(f'nERdy_iso_CC_area_v5_fin', bbox_inches='tight', pad_inches=0.1)
-# plt.show()
+# plt.savefig(f'nERdy_fuz_CC_area_v5_fin2', bbox_inches='tight', pad_inches=0.1)
+# # plt.show()
 
-plt.close()
+# plt.close()
 
-exit()
+# exit()
+
 # atl_fuz_iso_ratio = get_cc_area_ratio('ATL', 26)
 # climp_fuz_iso_ratio = get_cc_area_ratio('Climp', 31)
 # control_fuz_iso_ratio = get_cc_area_ratio('Control', 31)
@@ -657,52 +725,52 @@ exit()
 
 # ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, width=0.9)
 
-# plt.ylim(0, 8.7)
+# plt.ylim(0, 8.2)
 # plt.xlim(-1, 4.0)
 
 # yt = ax.get_yticks()
 # yt = [f'{y:.2f}' for y in yt]
-# ax.set_yticklabels(yt, fontsize=13)
-# ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=45)
+# ax.set_yticklabels(yt, fontsize=12)
+# ax.set_xticklabels(ax.get_xticklabels(), fontsize=12, rotation=45)
 
 # x1, x2 = 2, 3
 # y, col = 7.4, 'k'
 
-# plt.plot([x1, x1, x2, x2], [y, y+0.01, y+0.01, y], lw=1, c=col)
-# plt.text((x1+x2)*.5, y, "**", ha='center', va='bottom', color=col, fontsize=10)
+# plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.01, y+0.01, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "**", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
 
 # x1, x2 = 1, 2
+# y, col = 7.4, 'k'
+
+# plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.01, y+0.01, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "***", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
+
+# x1, x2 = 0, 1
+# y, col = 7.4, 'k'
+
+# plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.01, y+0.01, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
+
+# x1, x2 = 0, 2
 # y, col = 7.65, 'k'
 
 # plt.plot([x1, x1, x2, x2], [y, y+0.01, y+0.01, y], lw=1, c=col)
-# plt.text((x1+x2)*.5, y, "***", ha='center', va='bottom', color=col, fontsize=10)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
 
-# x1, x2 = 0, 1
+# x1, x2 = 0, 3
 # y, col = 7.9, 'k'
 
 # plt.plot([x1, x1, x2, x2], [y, y+0.01, y+0.01, y], lw=1, c=col)
-# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
-
-# x1, x2 = 0, 2
-# y, col = 8.15, 'k'
-
-# plt.plot([x1, x1, x2, x2], [y, y+0.01, y+0.01, y], lw=1, c=col)
-# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
-
-# x1, x2 = 0, 3
-# y, col = 8.4, 'k'
-
-# plt.plot([x1, x1, x2, x2], [y, y+0.01, y+0.01, y], lw=1, c=col)
-# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
 
 
 # # plt.grid(True)
 # ax.grid(axis='y')
 # # plt.xlabel('Group', fontsize=15)
 # # plt.ylabel('Ratio', fontsize=15)
-# plt.gcf().set_size_inches(2.5, 8)
+# plt.gcf().set_size_inches(2.5, 6)
 
-# plt.savefig(f'nERdy_fuz_iso_CC_area_ratio_v5', bbox_inches='tight', pad_inches=0.1)
+# plt.savefig(f'nERdy_fuz_iso_CC_area_ratio_v5_fin', bbox_inches='tight', pad_inches=0.1)
 # # plt.show()
 
 # plt.close()
@@ -726,8 +794,9 @@ exit()
 # with open('rtn_fuz_iso_junc_ratio.pkl', 'wb') as f:
 #     pkl.dump(rtn_fuz_iso_junc_ratio, f)
 
-# control_fuz_iso_junc_ratio = pkl.load(open('control_fuz_iso_junc_ratio.pkl', 'rb'))
 
+
+# control_fuz_iso_junc_ratio = pkl.load(open('control_fuz_iso_junc_ratio.pkl', 'rb'))
 # atl_fuz_iso_junc_ratio = pkl.load(open('atl_fuz_iso_junc_ratio.pkl', 'rb'))
 # climp_fuz_iso_junc_ratio = pkl.load(open('climp_fuz_iso_junc_ratio.pkl', 'rb'))
 # rtn_fuz_iso_junc_ratio = pkl.load(open('rtn_fuz_iso_junc_ratio.pkl', 'rb'))
@@ -750,7 +819,7 @@ exit()
 
 # ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, width=0.9)
 
-# plt.ylim(0, 4.2)
+# plt.ylim(0, 3.9)
 # plt.xlim(-1, 4.0)
 
 # yt = ax.get_yticks()
@@ -761,41 +830,41 @@ exit()
 # x1, x2 = 2, 3
 # y, col = 3.45, 'k'
 
-# plt.plot([x1, x1, x2, x2], [y, y+0.005, y+0.005, y], lw=1, c=col)
-# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+# plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.005, y+0.005, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
 
 # x1, x2 = 1, 2
-# y, col = 3.55, 'k'
+# y, col = 3.45, 'k'
 
-# plt.plot([x1, x1, x2, x2], [y, y+0.005, y+0.005, y], lw=1, c=col)
-# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+# plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.005, y+0.005, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
 
 # x1, x2 = 0, 1
-# y, col = 3.65, 'k'
+# y, col = 3.45, 'k'
 
-# plt.plot([x1, x1, x2, x2], [y, y+0.005, y+0.005, y], lw=1, c=col)
-# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+# plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.005, y+0.005, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
 
 # x1, x2 = 0, 2
-# y, col = 3.75, 'k'
+# y, col = 3.58, 'k'
 
 # plt.plot([x1, x1, x2, x2], [y, y+0.005, y+0.005, y], lw=1, c=col)
-# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
 
 # x1, x2 = 0, 3
-# y, col = 3.85, 'k'
+# y, col = 3.71, 'k'
 
 # plt.plot([x1, x1, x2, x2], [y, y+0.005, y+0.005, y], lw=1, c=col)
-# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
 
 
 # # plt.grid(True)
 # ax.grid(axis='y')
 # # plt.xlabel('Group', fontsize=15)
 # # plt.ylabel('Ratio', fontsize=15)
-# plt.gcf().set_size_inches(2.5, 8)
+# plt.gcf().set_size_inches(2.5, 6)
 
-# plt.savefig(f'nERdy_fuz_iso_CC_num_ratio_v5', bbox_inches='tight', pad_inches=0.1)
+# plt.savefig(f'nERdy_fuz_iso_CC_num_ratio_v5_fin', bbox_inches='tight', pad_inches=0.1)
 # # plt.show()
 
 # plt.close()
@@ -917,47 +986,47 @@ def get_CC_mean_variation(channel, region, measure):
 
 
     ax.set_xlim(-1, 3.0)
-    ax.set_ylim(0, 0.113)
+    ax.set_ylim(0, 0.115)
 
     yt = ax.get_yticks()
     yt = [f'{y:.2f}' for y in yt]
-    ax.set_yticklabels(yt, fontsize=13)
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=45)
+    ax.set_yticklabels(yt, fontsize=12)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=12, rotation=45)
 
     # x1, x2 = 2, 3
-    # y, col = 0.46, 'k'
+    # y, col = 0.069, 'k'
 
-    # plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
+    # plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.0005, y+0.0005, y], lw=1, c=col)
     # plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
 
     x1, x2 = 1, 2
-    y, col = 0.102, 'k'
+    y, col = 0.105, 'k'
 
-    plt.plot([x1, x1, x2, x2], [y, y+0.0005, y+0.0005, y], lw=1, c=col)
+    plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.0005, y+0.0005, y], lw=1, c=col)
     plt.text((x1+x2)*.5, y, "**", ha='center', va='bottom', color=col, fontsize=10)
 
     x1, x2 = 0, 1
     y, col = 0.105, 'k'
 
-    plt.plot([x1, x1, x2, x2], [y, y+0.0005, y+0.0005, y], lw=1, c=col)
+    plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.0005, y+0.0005, y], lw=1, c=col)
     plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
 
     # x1, x2 = 1, 3
-    # y, col = 0.074, 'k'
+    # y, col = 0.161, 'k'
 
-    # plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
+    # plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.0005, y+0.0005, y], lw=1, c=col)
     # plt.text((x1+x2)*.5, y, "**", ha='center', va='bottom', color=col, fontsize=10)
 
     x1, x2 = 0, 2
-    y, col = 0.108, 'k'
+    y, col = 0.11, 'k'
 
     plt.plot([x1, x1, x2, x2], [y, y+0.0005, y+0.0005, y], lw=1, c=col)
     plt.text((x1+x2)*.5, y, "***", ha='center', va='bottom', color=col, fontsize=10)
 
     # x1, x2 = 0, 3
-    # y, col = 0.076, 'k'
+    # y, col = 0.075, 'k'
 
-    # plt.plot([x1, x1, x2, x2], [y, y+0.0001, y+0.0001, y], lw=1, c=col)
+    # plt.plot([x1, x1, x2, x2], [y, y+0.0005, y+0.0005, y], lw=1, c=col)
     # plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10)
 
 
@@ -965,9 +1034,9 @@ def get_CC_mean_variation(channel, region, measure):
     ax.grid(axis='y')
     # plt.xlabel('Group', fontsize=15)
     # plt.ylabel('Ratio', fontsize=15)
-    plt.gcf().set_size_inches(2.5, 8)
+    plt.gcf().set_size_inches(2.5, 6)
 
-    plt.savefig(f'nERdy_Seq_{measure}_CC_mean_{region}_{channel}_v5', bbox_inches='tight', pad_inches=0.1)
+    plt.savefig(f'nERdy_Seq_{measure}_CC_mean_{region}_{channel}_v5_fin', bbox_inches='tight', pad_inches=0.1)
     # plt.show()
 
     plt.close()
@@ -1026,8 +1095,8 @@ def get_CC_mean_variation(channel, region, measure):
 # get_CC_mean_variation('mch', 'iso', 'mean')
 # get_CC_mean_variation('mch', 'fuz', 'mean')
 # get_CC_mean_variation('mch', 'iso', 'std')
-get_CC_mean_variation('mch', 'fuz', 'std')
-exit()
+# get_CC_mean_variation('mch', 'fuz', 'std')
+# exit()
 
 def get_correlation(l1, l2):
     corr = []
@@ -1045,13 +1114,13 @@ def get_CC_mean_correlation(region):
     # climp_mch = pkl.load(open(f'pickles/Climp_mch_{region}_CC_mean.pkl', 'rb'))
     # rtn_mch = pkl.load(open(f'pickles/RTN_mch_{region}_CC_mean.pkl', 'rb'))
 
-    atl_egfp = pkl.load(open(f'ATL_egfp_{region}_CC_mean_unet.pkl', 'rb'))
-    climp_egfp = pkl.load(open(f'Climp_egfp_{region}_CC_mean_unet.pkl', 'rb'))
-    rtn_egfp = pkl.load(open(f'RTN_egfp_{region}_CC_mean_unet.pkl', 'rb'))
+    atl_egfp = pkl.load(open(f'ATL_egfp_{region}_CC_mean_nerdy.pkl', 'rb'))
+    climp_egfp = pkl.load(open(f'Climp_egfp_{region}_CC_mean_nerdy.pkl', 'rb'))
+    rtn_egfp = pkl.load(open(f'RTN_egfp_{region}_CC_mean_nerdy.pkl', 'rb'))
 
-    atl_mch = pkl.load(open(f'ATL_mch_{region}_CC_mean_unet.pkl', 'rb'))
-    climp_mch = pkl.load(open(f'Climp_mch_{region}_CC_mean_unet.pkl', 'rb'))
-    rtn_mch = pkl.load(open(f'RTN_mch_{region}_CC_mean_unet.pkl', 'rb'))
+    atl_mch = pkl.load(open(f'ATL_mch_{region}_CC_mean_nerdy.pkl', 'rb'))
+    climp_mch = pkl.load(open(f'Climp_mch_{region}_CC_mean_nerdy.pkl', 'rb'))
+    rtn_mch = pkl.load(open(f'RTN_mch_{region}_CC_mean_nerdy.pkl', 'rb'))
 
     atl_corr = get_correlation(atl_egfp, atl_mch)
     climp_corr = get_correlation(climp_egfp, climp_mch)
@@ -1065,33 +1134,79 @@ def get_CC_mean_correlation(region):
 
     pal = {'Reticulon': colors[1], 'Climp': colors[2], 'Atlastin': colors[3]}
 
+    # ax = sns.boxplot(data=df, x='Group', y='Cross-Correlation', showfliers=False, width=0.9, palette=pal)
+
+    # # ax.set_ylim(-0.31, 0.65)
+    # # ax.set_xlim(-1, 3.0)
+
+    # yt = ax.get_yticks()
+    # yt = [f'{y:.2f}' for y in yt]
+    # ax.set_yticklabels(yt, fontsize=13)
+    # ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=90)
+
+    # # region_name = 'Isolated' if region == 'iso' else 'Overlapping'
+
+    # box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Climp', 'Reticulon')]
+
+    # statannot.add_stat_annotation(ax, x='Group', y='Cross-Correlation', data=df, box_pairs=box_pairs,
+    #                               test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=15)
+
     ax = sns.boxplot(data=df, x='Group', y='Cross-Correlation', showfliers=False, width=0.9, palette=pal)
 
-    # ax.set_ylim(-0.31, 0.65)
-    # ax.set_xlim(-1, 3.0)
+    # plt.ylim(-0.4, 0.53) # iso
+    plt.ylim(-0.35, 0.55)
+    plt.xlim(-1, 3.0)
 
     yt = ax.get_yticks()
     yt = [f'{y:.2f}' for y in yt]
     ax.set_yticklabels(yt, fontsize=13)
-    ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=90)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=45)
 
-    # region_name = 'Isolated' if region == 'iso' else 'Overlapping'
+    # x1, x2 = 2, 3
+    # y, col = 3.45, 'k'
 
-    box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Climp', 'Reticulon')]
+    # plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.005, y+0.005, y], lw=1, c=col)
+    # plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
 
-    statannot.add_stat_annotation(ax, x='Group', y='Cross-Correlation', data=df, box_pairs=box_pairs,
-                                  test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=15)
+    x1, x2 = 1, 2
+    # y, col = 0.49, 'k' # iso
+    y, col = 0.48, 'k'
+
+    plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.005, y+0.005, y], lw=1, c=col)
+    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
+
+    x1, x2 = 0, 1
+    # y, col = 0.49, 'k' # iso
+    y, col = 0.48, 'k'
+
+    plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.005, y+0.005, y], lw=1, c=col)
+    plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
+
+    x1, x2 = 0, 2 # only for fuz
+    y, col = 0.51, 'k'
+
+    plt.plot([x1, x1, x2, x2], [y, y+0.005, y+0.005, y], lw=1, c=col)
+    plt.text((x1+x2)*.5, y, "*", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
+
+    # x1, x2 = 0, 3
+    # y, col = 3.71, 'k'
+
+    # plt.plot([x1, x1, x2, x2], [y, y+0.005, y+0.005, y], lw=1, c=col)
+    # plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
 
     # plt.title(f'{region_name} CC mean cross-correlation between ERmoxGFP and mCherry over 100 frames', fontsize=20)
-    plt.grid(True)
-    plt.xlabel('Group', fontsize=15)
+    # plt.grid(True)
+
+    ax.grid(axis='y')
+
+    # plt.xlabel('Group', fontsize=15)
     # plt.ylabel('Number of junctions (normalized)', fontsize=24)
-    plt.ylabel('Correlation coefficient', fontsize=15)
+    # plt.ylabel('Correlation coefficient', fontsize=15)
     # plt.show()
     # plt.gcf().set_size_inches(16, 4)
-    plt.gcf().set_size_inches(2.5, 8)
+    plt.gcf().set_size_inches(2.5, 6)
     # plt.savefig('num_juncs_iso_norm.png', bbox_inches='tight', pad_inches=0.6)
-    plt.savefig(f'UNet_CC_mean_cross_corr_{region}_v3.png', bbox_inches='tight', pad_inches=0.1)
+    plt.savefig(f'nERdy_CC_mean_cross_corr_{region}_v4.png', bbox_inches='tight', pad_inches=0.1)
     plt.close()
 
 

@@ -14,7 +14,7 @@ class GraphMetrics:
         pass
 
     def get_graph(self, skel):
-        return sknw.build_sknw(skel, multi=False, iso=False)
+        return sknw.build_sknw(skel, multi=True, iso=False)
 
     def process_analyzer_skel(self, analyzer_skel):
         """
@@ -27,6 +27,9 @@ class GraphMetrics:
         op[np.where(op==mval)] = 0
         op[np.where(op!=mval) and np.where(op!=0)] = 255
         op = op/255
+
+        plt.imshow(op)
+        plt.show()
 
         return skeletonize(op).astype(np.uint16)
 
