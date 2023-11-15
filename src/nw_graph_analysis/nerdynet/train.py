@@ -4,8 +4,9 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, random_split
 from torchvision import transforms
 
-from model import NerdyNet
+from model import nERdy, D4nERdy
 from dataloader import ERDataset
+from vectoradam import VectorAdam
 
 import numpy as np
 
@@ -15,11 +16,19 @@ torch.manual_seed(34)
 
 in_channels = 1
 out_channels = 1
-model = NerdyNet(in_channels, out_channels)
+model = D4nERdy(in_channels, out_channels)
 
 # Define your loss function and optimizer
 criterion = nn.BCEWithLogitsLoss()
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+# optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+lr = 8e-4
+betas = (0.9, 0.999)
+eps = 1e-8
+
+optimizer = VectorAdam(
+    [{'params': model.parameters(), 'axis': -1}],
+     lr=lr, betas=betas, eps=eps)
 
 
 # Define transformation for dataset
@@ -29,7 +38,7 @@ transform = transforms.Compose([
 
 # Define path and dataset
 
-root_dir = '/localhome/asa420/MIAL/data/confocal-data/vess_enh_unet/'
+root_dir = '/path/to/your/dataset'
 
 dataset = ERDataset(root_dir, transform=transform)
 
@@ -83,4 +92,4 @@ average_test_loss = test_loss / len(test_loader)
 print(f"Average Test Loss: {average_test_loss}")
 
 # Save the trained model
-torch.save(model.state_dict(), 'nerdy_model.pth')
+torch.save(model.state_dict(), 'D4nERdy_model.pth')
