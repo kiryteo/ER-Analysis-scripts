@@ -105,14 +105,14 @@ def get_num_iso_ref_per_seq(group, total_seq):
         # print(f'ATL{seq} has {len(label_id_junctions)} isolated junctions')
         iso, fuz = junc_analysis.get_junction_areas(label_ids)
 
-        iso_ids = [(u, v) for (u, v) in ref_graph.edges() if (u in iso and v in iso)]
+        iso_tub_ids = [(u, v) for (u, v) in ref_graph.edges() if (u in iso and v in iso)]
 
         # edge[0]][edge[1]][0] if multi='True'
 
         # tub_len = [(u, v) for (u, v) in ref_graph.edges() if (u in iso_ids and v in iso_ids)]
 
         tub_len = [len(ref_graph[edge[0]][edge[1]]['pts'])
-            for edge in iso_ids if len(ref_graph[edge[0]][edge[1]]['pts']) > 3]
+            for edge in iso_tub_ids if len(ref_graph[edge[0]][edge[1]]['pts']) > 3]
 
         # print(tub_len)
 

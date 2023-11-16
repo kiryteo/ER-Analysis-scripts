@@ -14,7 +14,7 @@ class GraphMetrics:
         pass
 
     def get_graph(self, skel):
-        return sknw.build_sknw(skel, multi=True, iso=False)
+        return sknw.build_sknw(skel, multi=False, iso=False)
 
     def process_analyzer_skel(self, analyzer_skel):
         """
@@ -27,9 +27,8 @@ class GraphMetrics:
         op[np.where(op==mval)] = 0
         op[np.where(op!=mval) and np.where(op!=0)] = 255
         op = op/255
-
-        plt.imshow(op)
-        plt.show()
+        # plt.imshow(op)
+        # plt.show()
 
         return skeletonize(op).astype(np.uint16)
 
@@ -75,6 +74,10 @@ class GraphMetrics:
         size_G0_nodes = G0.number_of_nodes()
         ratio_nodes = size_G0_nodes / no_nodes
         ratio_edges = size_G0_edges / no_edges
+        avg_clustering = nx.average_clustering(G)
+        local_efficiency = nx.local_efficiency(G)
+        global_efficiency = nx.global_efficiency(G)
+        density = nx.density(G)
         return [
             no_nodes,
             no_edges,
@@ -82,7 +85,11 @@ class GraphMetrics:
             clustering,
             compo,
             ratio_nodes,
-            ratio_edges
+            ratio_edges,
+            avg_clustering,
+            local_efficiency,
+            global_efficiency,
+            density
         ]
     
     def seg_to_graph(self, seg_img):

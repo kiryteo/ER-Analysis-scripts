@@ -136,7 +136,7 @@ class NNet(nn.Module):
 
 def load_models():
     p4m = NNet(1, 1)
-    p4m.load_state_dict(torch.load('NNet_groupy_p4m_v2_VecAdam.pth'))
+    p4m.load_state_dict(torch.load('nw_graph_analysis/NNet_groupy_p4m_v2_VecAdam.pth'))
 
     # p4m_adaptive = NNet(1, 1)
     # p4m_adaptive.load_state_dict(torch.load('NNet_groupy_p4m_v2_VecAdam_adaptive.pth'))
@@ -204,13 +204,13 @@ def process_op(imgpath, model):
 
 # nerdy_op = imageio.imread('/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/rtn/nerdy_op/Series016_decon_converted_mean_proc_v2_enhance.png')
 
-p4m = load_models()
-nerdy_plus_op = process_op('/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/control/images/sted_control8_er_mean.png', p4m)
+# p4m = load_models()
+# nerdy_plus_op = process_op('/localhome/asa420/MIAL/data/sted-data/vess_enh_unet/control/images/sted_control8_er_mean.png', p4m)
 
-imageio.imsave('STED_control8_er_mean_pred_nerdy+.png', nerdy_plus_op)
+# imageio.imsave('STED_control8_er_mean_pred_nerdy+.png', nerdy_plus_op)
 
 
-exit()
+# exit()
 
 # plt.subplot(1, 7, 1)
 # plt.axis('off')
@@ -721,11 +721,11 @@ nerdy_error = get_error(gt_graph_metrics, nerdy_graph_metrics)
 p4m_vecadam_error = get_error(gt_graph_metrics, p4m_vecadam_metrics)
 
 
-# print(analyzer_error)
-# print(ernet_error)
-# print(erv2_error)
-# print(nerdy_error)
-# print(p4m_vecadam_error)
+print(analyzer_error)
+print(ernet_error)
+print(erv2_error)
+print(nerdy_error)
+print(p4m_vecadam_error)
 
 
 # method = ['AnalyzER', 'ERnet', 'ERnet-v2', 'nERdy', 'nERdy+']

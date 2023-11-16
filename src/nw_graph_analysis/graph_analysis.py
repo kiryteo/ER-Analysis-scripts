@@ -7,6 +7,143 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 
+from junction_analysis_modules import JunctionAnalysisModules as JAM
+import statannot
+
+junc_analysis = JAM('confocal')
+
+confocal_data_path = '/localhome/asa420/MIAL/data/confocal-data/'
+
+groups = {'ATL': 26, 'Climp': 31, 'RTN': 29, 'Control':31}
+
+def get_graph_measure(group):
+    data = []
+    for seq in range(1, groups[group]+1):
+        ref_junctions, per_frame_junctions, labelled_img, ref_graph = junc_analysis.label_junctions(group, seq)
+
+        label_ids = junc_analysis.get_ref_junc_per_CC_id(ref_junctions, labelled_img)
+
+        iso_ids = [id for id in label_ids if len(label_ids[id]) == 1]
+        fuz_ids = [id for id in label_ids if len(label_ids[id]) > 1]
+
+        # closeness_centrality = nx.closeness_centrality(ref_graph)
+
+        # betweenness_centrality = nx.betweenness_centrality(ref_graph)
+
+        degree_centrality = nx.degree_centrality(ref_graph)
+
+        # print(iso_ids)
+        # print(closeness_centrality)
+
+        # closeness_centrality_iso = [closeness_centrality[id] for id in iso_ids if id in closeness_centrality]
+
+        # betweenness_centrality_iso = [betweenness_centrality[id] for id in iso_ids if id in betweenness_centrality]
+
+        degree_centrality_iso = [degree_centrality[id] for id in iso_ids if id in degree_centrality]
+
+        # data.extend(closeness_centrality_iso)
+
+        # data.extend(betweenness_centrality_iso)
+
+        data.extend(degree_centrality_iso)
+
+    return data
+
+# atl_data = get_graph_measure('ATL')
+# climp_data = get_graph_measure('Climp')
+# control_data = get_graph_measure('Control')
+# rtn_data = get_graph_measure('RTN')
+
+# with open('closeness_centrality_data.pkl', 'wb') as f:
+#     pickle.dump([atl_data, climp_data, control_data, rtn_data], f)
+
+# with open('closeness_centrality_data.pkl', 'rb') as f:
+#     atl_data, climp_data, control_data, rtn_data = pickle.load(f)
+
+# with open('betweenness_centrality_data.pkl', 'wb') as f:
+    # pickle.dump([atl_data, climp_data, control_data, rtn_data], f)
+
+# with open('degree_centrality_data.pkl', 'wb') as f:
+    # pickle.dump([atl_data, climp_data, control_data, rtn_data], f)
+
+# with open('degree_centrality_data.pkl', 'rb') as f:
+#     atl_data, climp_data, control_data, rtn_data = pickle.load(f)
+
+with open('closeness_centrality_data.pkl', 'rb') as f:    
+    atl_data, climp_data, control_data, rtn_data = pickle.load(f)
+
+
+df = pd.DataFrame()
+df['closeness_centrality'] = pd.Series(np.concatenate((control_data, rtn_data, climp_data, atl_data)))
+# df['degree_centrality'] = pd.Series(np.concatenate((control_data, rtn_data, climp_data, atl_data)))
+df['Group'] = pd.Series(['Control']*len(control_data) + ['Reticulon']*len(rtn_data) + ['Climp']*len(climp_data) + ['Atlastin']*len(atl_data))
+
+# ax = sns.boxplot(x='Group', y='betweenness_centrality', data=df, showfliers=False, width=0.9)
+
+ax = sns.boxplot(x='Group', y='closeness_centrality', data=df, showfliers=False, width=0.9)
+
+plt.ylim(0.0, 0.255)
+plt.xlim(-1, 4.0)
+
+yt = ax.get_yticks()
+yt = [f'{y:.2f}' for y in yt]
+ax.set_yticklabels(yt, fontsize=12)
+ax.set_xticklabels(ax.get_xticklabels(), fontsize=12, rotation=45)
+
+x1, x2 = 2, 3
+# y, col = 0.0565, 'k' # degree centrality
+y, col = 0.215, 'k' # betweenness centrality
+
+plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.0005, y+0.0005, y], lw=1, c=col)
+plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
+
+x1, x2 = 1, 2
+y, col = 0.215, 'k'
+
+plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.0005, y+0.0005, y], lw=1, c=col)
+plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
+
+x1, x2 = 0, 1
+y, col = 0.215, 'k'
+
+plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.0005, y+0.0005, y], lw=1, c=col)
+plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
+
+x1, x2 = 1, 3
+y, col = 0.225, 'k'
+
+plt.plot([x1, x1, x2, x2], [y, y+0.0005, y+0.0005, y], lw=1, c=col)
+plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
+
+x1, x2 = 0, 2
+y, col = 0.235, 'k'
+
+plt.plot([x1, x1, x2, x2], [y, y+0.0005, y+0.0005, y], lw=1, c=col)
+plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
+
+x1, x2 = 0, 3
+y, col = 0.245, 'k'
+
+plt.plot([x1, x1, x2, x2], [y, y+0.0005, y+0.0005, y], lw=1, c=col)
+plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
+
+# box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'),
+#                     ('Reticulon', 'Control')]
+
+# # statannot.add_stat_annotation(ax, x='Group', y='betweenness_centrality', data=df, box_pairs=box_pairs,
+# statannot.add_stat_annotation(ax, x='Group', y='closeness_centrality', data=df, box_pairs=box_pairs,
+#                                 test='Mann-Whitney', text_format='star', loc='inside', verbose=0, fontsize=11, line_height=0.01, linewidth=1.0)
+
+ax.grid(axis='y')
+    # plt.xlabel('Group', fontsize=15)
+    # plt.ylabel('Ratio', fontsize=15)
+plt.gcf().set_size_inches(2.5, 6)
+
+plt.savefig('closeness_centrality_boxplot.png', dpi=300, bbox_inches='tight', pad_inches=0.1)
+# plt.show()
+plt.close()
+
+exit()
 
 
 def create_graph_data_pickles(group):
