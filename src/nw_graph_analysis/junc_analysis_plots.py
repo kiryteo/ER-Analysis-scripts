@@ -126,6 +126,155 @@ def get_num_iso_ref_per_seq(group, total_seq):
     return data
 
 
+def get_num_iso(group, total_seq):
+    data = []
+    for seq in range(1, total_seq+1):
+        ref_junctions, per_frame_junctions, labelled_img, ref_graph = junc_analysis.label_junctions(group, seq)
+
+        label_ids = junc_analysis.get_ref_junc_per_CC_id(ref_junctions, labelled_img)
+
+        # label_id_junctions = get_junctions_per_cc_id(label_ids, per_frame_junctions, labelled_img, 'iso')
+
+        # print(f'ATL{seq} has {len(label_id_junctions)} isolated junctions')
+        iso, fuz = junc_analysis.get_junction_areas(label_ids)
+
+        data.append(len(iso))
+
+    return data
+
+# atl_data = get_num_iso('ATL', 26)
+# climp_data = get_num_iso('Climp', 31)
+# control_data = get_num_iso('Control', 31)
+# rtn_data = get_num_iso('RTN', 29)
+
+# with open('atl_iso_num.pkl', 'wb') as f:
+#     pkl.dump(atl_data, f)
+
+# with open('climp_iso_num.pkl', 'wb') as f:
+#     pkl.dump(climp_data, f)
+
+# with open('control_iso_num.pkl', 'wb') as f:
+#     pkl.dump(control_data, f)
+
+# with open('rtn_iso_num.pkl', 'wb') as f:
+#     pkl.dump(rtn_data, f)
+
+atl_data = pkl.load(open('atl_iso_num.pkl', 'rb'))
+climp_data = pkl.load(open('climp_iso_num.pkl', 'rb'))
+control_data = pkl.load(open('control_iso_num.pkl', 'rb'))
+rtn_data = pkl.load(open('rtn_iso_num.pkl', 'rb'))
+
+df = pd.DataFrame()
+
+df['Iso'] = pd.Series(np.concatenate((control_data, rtn_data, climp_data, atl_data)))
+
+df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_data), ['Reticulon'] * len(rtn_data), ['Climp'] * len(climp_data), ['Atlastin'] * len(atl_data))))
+
+# df['Ratio'] = pd.Series(np.concatenate((control_fuz_iso_ratio, rtn_fuz_iso_ratio, climp_fuz_iso_ratio, atl_fuz_iso_ratio)))
+
+# df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_fuz_iso_ratio), ['Reticulon'] * len(rtn_fuz_iso_ratio), ['Climp'] * len(climp_fuz_iso_ratio), ['Atlastin'] * len(atl_fuz_iso_ratio))))
+
+# df['CC_area'] = pd.Series(np.concatenate((control_iso_area, rtn_iso_area,climp_iso_area, atl_iso_area)))
+# df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_iso_area), ['Reticulon'] * len(rtn_iso_area), ['Climp'] * len(climp_iso_area), ['Atlastin'] * len(atl_iso_area))))
+
+# df['CC_area'] = pd.Series(np.concatenate((control_fuz_area, rtn_fuz_area,climp_fuz_area, atl_fuz_area)))
+# df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_fuz_area), ['Reticulon'] * len(rtn_fuz_area), ['Climp'] * len(climp_fuz_area), ['Atlastin'] * len(atl_fuz_area))))
+
+ax = sns.boxplot(data=df, x='Group', y='Iso', showfliers=False, width=0.9)
+
+plt.ylim(0, 95)
+plt.xlim(-1, 4.0)
+
+yt = ax.get_yticks()
+yt = [f'{y:.1f}' for y in yt]
+ax.set_yticklabels(yt, fontsize=13)
+ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=45)
+
+# x1, x2 = 2, 3
+# y, col = 3.45, 'k'
+
+# plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.005, y+0.005, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
+
+# x1, x2 = 1, 2
+# y, col = 3.45, 'k'
+
+# plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.005, y+0.005, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
+
+x1, x2 = 0, 1
+y, col = 90, 'k'
+
+plt.plot([x1+0.1, x1+0.1, x2-0.1, x2-0.1], [y, y+0.05, y+0.05, y], lw=1, c=col)
+plt.text((x1+x2)*.5, y, "*", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
+
+# x1, x2 = 0, 2
+# y, col = 3.58, 'k'
+
+# plt.plot([x1, x1, x2, x2], [y, y+0.005, y+0.005, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
+
+# x1, x2 = 0, 3
+# y, col = 3.71, 'k'
+
+# plt.plot([x1, x1, x2, x2], [y, y+0.005, y+0.005, y], lw=1, c=col)
+# plt.text((x1+x2)*.5, y, "****", ha='center', va='bottom', color=col, fontsize=10, fontweight='bold')
+
+# box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'),
+#                 ('Reticulon', 'Control')]
+
+# statannot.add_stat_annotation(ax, x='Group', y='Iso', data=df, box_pairs=box_pairs,
+#                                 test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=13)
+
+
+# plt.grid(True)
+ax.grid(axis='y')
+plt.xlabel('Group', fontsize=15)
+plt.ylabel('Number of Junctions', fontsize=15)
+plt.gcf().set_size_inches(2.5, 6)
+
+plt.savefig('nERdy_iso_num_v4', bbox_inches='tight', pad_inches=0.1)
+
+# plt.savefig(f'nERdy_fuz_iso_CC_num_ratio_v5_fin', bbox_inches='tight', pad_inches=0.1)
+# plt.show()
+
+plt.close()
+exit()
+
+ax.set_ylim(ymin=0, ymax=160)
+
+plt.ylim(0, 4.0)
+# plt.xlim(-1, 4.0)
+
+yt = ax.get_yticks()
+yt = [f'{y:.1f}' for y in yt]
+ax.set_yticklabels(yt, fontsize=13)
+ax.set_xticklabels(ax.get_xticklabels(), fontsize=13, rotation=90)
+
+box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Reticulon'), ('Atlastin', 'Control'), ('Climp', 'Reticulon'), ('Climp', 'Control'),
+                ('Reticulon', 'Control')]
+
+# statannot.add_stat_annotation(ax, x='Group', y='Ratio', data=df, box_pairs=box_pairs,
+                                # test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=13)
+
+# plt.grid(True)
+
+# ax.set_ylim(ymin=0, ymax=160)
+# ax.set_ylim(bottom=0, top=160)
+
+ax.grid(axis='y')
+# plt.xlabel('Group', fontsize=15)
+# plt.ylabel('Ratio', fontsize=15)
+ 
+plt.gcf().set_size_inches(2, 8)
+
+plt.savefig(f'nERdy_fuz_iso_junc_CC_ratio_v4_no_annot', bbox_inches='tight', pad_inches=0.1)
+# plt.show()
+
+plt.close()
+
+
+
 def get_num_iso_ref_total_tub_len(group, total_seq):
     data = []
 
