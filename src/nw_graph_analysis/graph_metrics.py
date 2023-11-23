@@ -74,8 +74,8 @@ class GraphMetrics:
         size_G0_nodes = G0.number_of_nodes()
         ratio_nodes = size_G0_nodes / no_nodes
         ratio_edges = size_G0_edges / no_edges
-        avg_clustering = nx.average_clustering(G)
-        local_efficiency = nx.local_efficiency(G)
+        # avg_clustering = nx.average_clustering(G)
+        # local_efficiency = nx.local_efficiency(G)
         global_efficiency = nx.global_efficiency(G)
         density = nx.density(G)
         return [
@@ -86,8 +86,8 @@ class GraphMetrics:
             compo,
             ratio_nodes,
             ratio_edges,
-            avg_clustering,
-            local_efficiency,
+            # avg_clustering,
+            # local_efficiency,
             global_efficiency,
             density
         ]
