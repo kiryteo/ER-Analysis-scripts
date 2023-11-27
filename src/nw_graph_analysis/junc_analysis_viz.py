@@ -13,12 +13,83 @@ from junction_analysis_modules import JunctionAnalysisModules as JAM
 
 from segmentation_analysis import process_op, load_models
 
+junc_analysis = JAM('confocal')
+
 # confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
 
 # sted_data_path = '/localhome/asa420/MIAL/data/live-cell-movies/Sep2023-sted-analysis/'
 
-junc_analysis = JAM('confocal')
+def plot_skel_graphs(skel):
+    graph = sknw.build_sknw(skel, multi=True, iso=False)
 
+    # plt.imshow(analyzer_skel, cmap='gray')
+    plt.imshow(np.zeros((128, 128)), cmap='gray')
+
+    
+
+    for (s,e) in graph.edges():
+        ps = graph[s][e][0]['pts']
+        plt.plot(ps[:,1], ps[:,0], 'green')
+    
+    plt.plot(nps[:,1], nps[:,0], '.', markerfacecolor='red', markeredgecolor='red', mew=2)
+
+    plt.axis('off')
+
+    plt.show()
+
+
+gt_skel_path = '/localhome/asa420/MIAL/data/confocal-data/vess_enh_unet/climp/gt_skel/climp1_proc_skel.png'
+
+analyzer_bin = '/localhome/asa420/MIAL/data/confocal-data/analyzer_masks/climp/ER_climp1_bin_res.png'
+
+ernet_bin = '/localhome/asa420/MIAL/data/confocal-data/ernet_masks/climp/climp1_er_mean_out.png'
+
+erv2_bin = '/localhome/asa420/MIAL/data/confocal-data/erv2_new_masks/climp/climp1_er_mean_out_bin.png'
+
+nerdy_skel = '/localhome/asa420/MIAL/data/confocal-data/Climp/er_mean_proc/climp1_er_mean_proc_enhance_skel.png'
+
+# p4m = load_models()
+# p4m_vecadam_seg = process_op('/localhome/asa420/MIAL/data/confocal-data/Climp/er_mean/climp1_er_mean.png', p4m)
+
+# p4m_vecadam_skel = skeletonize(p4m_vecadam_seg/255.)
+# nerdy_plus_graph = sknw.build_sknw(p4m_vecadam_skel, multi=True, iso=False)
+
+
+gt_graph = sknw.build_sknw(imageio.imread(gt_skel_path), multi=True, iso=False)
+
+analyzer_skel = skeletonize(imageio.imread(analyzer_bin)/255.)
+analyzer_graph = sknw.build_sknw(analyzer_skel, multi=True, iso=False)
+
+ernet_skel = skeletonize(imageio.imread(ernet_bin)/255.)
+ernet_graph = sknw.build_sknw(ernet_skel, multi=True, iso=False)
+
+erv2_skel = skeletonize(imageio.imread(erv2_bin)/255.)
+erv2_graph = sknw.build_sknw(erv2_skel, multi=True, iso=False)
+
+nerdy_graph = sknw.build_sknw(imageio.imread(nerdy_skel), multi=True, iso=False)
+
+z = np.zeros((128, 128))
+
+plt.imshow(z)
+
+node_set = gt_graph.nodes
+
+degree_list = gt_graph.degree
+node_coords = np.array([node_set[node]['o'] for node in node_set])
+nps = [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
+nps = np.array(nps)
+
+for (s,e) in gt_graph.edges():
+    ps = gt_graph[s][e][0]['pts']
+    plt.plot(ps[:,1], ps[:,0], 'green')
+
+plt.plot(nps[:,1], nps[:,0], 'o', markerfacecolor='red', markeredgecolor='red', mew=2)
+
+plt.axis('off')
+
+plt.show()
+
+exit()
 
 # nerdy_seg = imageio.imread(f'/localhome/asa420/MIAL/data/confocal-data/Climp/er_mean_proc/climp1_er_mean_proc_enhance.png')
 # ernet_skel = skeletonize(nerdy_seg/255.).astype(np.uint16)
