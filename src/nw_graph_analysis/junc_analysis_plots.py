@@ -168,6 +168,7 @@ df = pd.DataFrame()
 
 df['Iso'] = pd.Series(np.concatenate((control_data, rtn_data, climp_data, atl_data)))
 
+
 df['Group'] = pd.Series(np.concatenate((['Control'] * len(control_data), ['Reticulon'] * len(rtn_data), ['Climp'] * len(climp_data), ['Atlastin'] * len(atl_data))))
 
 # df['Ratio'] = pd.Series(np.concatenate((control_fuz_iso_ratio, rtn_fuz_iso_ratio, climp_fuz_iso_ratio, atl_fuz_iso_ratio)))

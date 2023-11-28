@@ -19,24 +19,77 @@ junc_analysis = JAM('confocal')
 
 # sted_data_path = '/localhome/asa420/MIAL/data/live-cell-movies/Sep2023-sted-analysis/'
 
+
+def create_junc_viz():
+    ref_skel = imageio.imread('/localhome/asa420/MIAL/data/confocal-data/ATL/er_mean_proc/atl9_proc_skel.png')
+
+    ref_graph = sknw.build_sknw(ref_skel, multi=True, iso=False)
+    ref_nodes = ref_graph.nodes
+    ref_degree_list = ref_graph.degree
+
+    ref_node_coords = np.array([ref_nodes[node]['o'] for node in ref_nodes])
+
+    ref_nps = [ref_node_coords[i] for i, val in enumerate(ref_degree_list) if val[1] > 2]
+
+    ref_nps = np.array(ref_nps)
+
+    for i in range(100):
+        er = imageio.imread(f'/localhome/asa420/MIAL/data/confocal-data/ATL/std/A9_decon_t0{i:02d}_ch00_std.png')
+        skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal-data/ATL/skel/A9_decon_t0{i:02d}_ch00_skel.png')
+
+        graph = sknw.build_sknw(skel, multi=True, iso=False)
+        nodes = graph.nodes
+        degree_list = graph.degree
+
+        node_coords = np.array([nodes[node]['o'] for node in nodes])
+
+        nps = [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
+
+        nps = np.array(nps)
+
+        plt.imshow(er, cmap='gray')
+
+        # for (s, e) in graph.edges():
+        #     ps = graph[s][e][0]['pts']
+        #     plt.plot(ps[:, 1], ps[:, 0], 'green')
+
+        plt.plot(ref_nps[:, 1], ref_nps[:, 0], '.', markerfacecolor='red', markeredgecolor='red', mew=1.5)
+
+        plt.plot(nps[:, 1], nps[:, 0], '.', markerfacecolor='blue', markeredgecolor='blue', mew=1.4)
+
+        plt.axis('off')
+
+        # plt.show()
+        plt.savefig(f'/localhome/asa420/MIAL/data/confocal-data/ATL/A9_junc_viz/A9_junc_viz_t{i:02d}.png', bbox_inches='tight', pad_inches=0.0)
+
+        plt.close()
+
+
+create_junc_viz()
+exit()
+
+
 def plot_skel_graphs(skel):
     graph = sknw.build_sknw(skel, multi=True, iso=False)
 
-    # plt.imshow(analyzer_skel, cmap='gray')
-    plt.imshow(np.zeros((128, 128)), cmap='gray')
+    node_set = graph.nodes
+    degree_list = graph.degree
 
+    node_coords = np.array([node_set[node]['o'] for node in node_set])
+    nps = [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
+    nps = np.array(nps)
+
+    return graph, nps
+
+    # for (s,e) in graph.edges():
+    #     ps = graph[s][e][0]['pts']
+    #     plt.plot(ps[:,1], ps[:,0], 'green')
     
+    # plt.plot(nps[:,1], nps[:,0], '.', markerfacecolor='red', markeredgecolor='red', mew=2)
 
-    for (s,e) in graph.edges():
-        ps = graph[s][e][0]['pts']
-        plt.plot(ps[:,1], ps[:,0], 'green')
-    
-    plt.plot(nps[:,1], nps[:,0], '.', markerfacecolor='red', markeredgecolor='red', mew=2)
+    # plt.axis('off')
 
-    plt.axis('off')
-
-    plt.show()
-
+    # plt.show()
 
 gt_skel_path = '/localhome/asa420/MIAL/data/confocal-data/vess_enh_unet/climp/gt_skel/climp1_proc_skel.png'
 
@@ -53,6 +106,79 @@ nerdy_skel = '/localhome/asa420/MIAL/data/confocal-data/Climp/er_mean_proc/climp
 
 # p4m_vecadam_skel = skeletonize(p4m_vecadam_seg/255.)
 # nerdy_plus_graph = sknw.build_sknw(p4m_vecadam_skel, multi=True, iso=False)
+
+plt.imshow(np.zeros((128, 128)), cmap='gray')
+gt_skel = imageio.imread(gt_skel_path)
+
+gt_graph, gt_nps = plot_skel_graphs(gt_skel)
+# ernet_graph, ernet_nps = plot_skel_graphs(skeletonize(imageio.imread(ernet_bin)/255.))
+
+# analyzer_graph, analyzer_nps = plot_skel_graphs(skeletonize(imageio.imread(analyzer_bin)/255.))
+
+# erv2_graph, erv2_nps = plot_skel_graphs(skeletonize(imageio.imread(erv2_bin)/255.))
+
+nerdy_graph, nerdy_nps = plot_skel_graphs(imageio.imread(nerdy_skel))
+
+# p4m_graph, p4m_nps = plot_skel_graphs(p4m_vecadam_skel)
+
+plt.imshow(np.zeros((128, 128)), cmap='gray')
+
+for (s, e) in gt_graph.edges():
+    ps = gt_graph[s][e][0]['pts']
+    plt.plot(ps[:, 1], ps[:, 0], 'green')
+
+
+# plt.plot(ernet_nps[:, 1], ernet_nps[:, 0], '.', markerfacecolor='blue', markeredgecolor='blue', mew=2)
+
+# for (s, e) in analyzer_graph.edges():
+#     ps = analyzer_graph[s][e][0]['pts']
+#     plt.plot(ps[:, 1], ps[:, 0], 'red')
+
+# for (s, e) in ernet_graph.edges():
+#     ps = ernet_graph[s][e][0]['pts']
+#     plt.plot(ps[:, 1], ps[:, 0], 'red')
+
+# for (s, e) in erv2_graph.edges():
+    # ps = erv2_graph[s][e][0]['pts']
+    # plt.plot(ps[:, 1], ps[:, 0], 'red')
+
+# for (s, e) in nerdy_graph.edges():
+#     ps = nerdy_graph[s][e][0]['pts']
+#     plt.plot(ps[:, 1], ps[:, 0], 'red')
+
+# for (s, e) in p4m_graph.edges():
+#     ps = p4m_graph[s][e][0]['pts']
+#     plt.plot(ps[:, 1], ps[:, 0], 'red')
+
+plt.plot(gt_nps[:, 1], gt_nps[:, 0], 'o', markerfacecolor='None', markeredgecolor='yellow', mew=1.5)
+
+# plt.plot(erv2_nps[:, 1], erv2_nps[:, 0], 'o', markerfacecolor='blue', markeredgecolor='None', mew=1.5)
+
+# plt.plot(ernet_nps[:, 1], ernet_nps[:, 0], 'o', markerfacecolor='blue', markeredgecolor='None', mew=1.5)
+
+# plt.plot(analyzer_nps[:, 1], analyzer_nps[:, 0], 'o', markerfacecolor='blue', markeredgecolor='None', mew=1.5)
+
+# plt.plot(nerdy_nps[:, 1], nerdy_nps[:, 0], 'o', markerfacecolor='blue', markeredgecolor='None', mew=1.5)
+
+# plt.plot(p4m_nps[:, 1], p4m_nps[:, 0], 'o', markerfacecolor='blue', markeredgecolor='None', mew=1.5)
+
+plt.axis('off')
+
+# plt.savefig('climp1_gt_vs_analyzer.png', bbox_inches='tight', pad_inches=0.0)
+
+# plt.savefig('climp1_gt_vs_erv2.png', bbox_inches='tight', pad_inches=0.0)
+
+# plt.savefig('climp1_gt_vs_nerdy.png', bbox_inches='tight', pad_inches=0.0)
+
+# plt.savefig('climp1_gt_vs_p4m.png', bbox_inches='tight', pad_inches=0.0)
+
+plt.savefig('climp1_gt.png', bbox_inches='tight', pad_inches=0.0)
+
+plt.close()
+
+# plt.show()
+
+exit()
 
 
 gt_graph = sknw.build_sknw(imageio.imread(gt_skel_path), multi=True, iso=False)

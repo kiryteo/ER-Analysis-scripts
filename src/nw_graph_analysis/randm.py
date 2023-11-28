@@ -6,6 +6,20 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pickle as pkl
 import statannot
+import imageio
+
+
+# def runner(writer):
+#     pref = '/localhome/asa420/MIAL/data/confocal-data/ATL/A9_junc_viz/'
+#     for frame in range(100):
+#         filename = f'{pref}A9_junc_viz_t{frame:02d}.png'
+#         image = imageio.imread(filename)
+#         writer.append_data(image)
+
+# def create_sequence():
+#     with imageio.get_writer(f'atl9_junc_viz.gif', mode='I', duration=0.5) as writer:
+#         runner(writer)
+
 
 
 def get_graph_perf():

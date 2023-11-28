@@ -697,15 +697,15 @@ def get_graph_metrics(data_list):
 
 # gt_data, analyzer_data, erv2_data, ernet_data, nerdy_data, p4m_vecadam_data = get_graphs()
 
-gt_graphs, analyzer_graphs, erv2_graphs, ernet_graphs, nerdy_graphs, p4m_graphs = get_graphs()
+# gt_graphs, analyzer_graphs, erv2_graphs, ernet_graphs, nerdy_graphs, p4m_graphs = get_graphs()
 
 
-gt_graph_metrics = np.array(gt_graphs).T
-analyzer_graph_metrics = np.array(analyzer_graphs).T
-erv2_graph_metrics = np.array(erv2_graphs).T
-ernet_graph_metrics = np.array(ernet_graphs).T
-nerdy_graph_metrics = np.array(nerdy_graphs).T
-p4m_graph_metrics = np.array(p4m_graphs).T
+# gt_graph_metrics = np.array(gt_graphs).T
+# analyzer_graph_metrics = np.array(analyzer_graphs).T
+# erv2_graph_metrics = np.array(erv2_graphs).T
+# ernet_graph_metrics = np.array(ernet_graphs).T
+# nerdy_graph_metrics = np.array(nerdy_graphs).T
+# p4m_graph_metrics = np.array(p4m_graphs).T
 
 
 def get_rel_error(gt, method):
@@ -764,43 +764,43 @@ def get_variation(op):
         data.append(metric)
     return data
 
-analyzer_error = get_rel_error(gt_graph_metrics, analyzer_graph_metrics)
-# print(analyzer_error)
-analyzer = get_variation(analyzer_error)
-with open('sted_analyzer.pkl', 'wb') as f:
-    pickle.dump(analyzer, f)
+# analyzer_error = get_rel_error(gt_graph_metrics, analyzer_graph_metrics)
+# # print(analyzer_error)
+# analyzer = get_variation(analyzer_error)
+# with open('sted_analyzer.pkl', 'wb') as f:
+#     pickle.dump(analyzer, f)
 
-print('----------------------')
-ernet_error = get_rel_error(gt_graph_metrics, ernet_graph_metrics)
-ernet = get_variation(ernet_error)
+# print('----------------------')
+# ernet_error = get_rel_error(gt_graph_metrics, ernet_graph_metrics)
+# ernet = get_variation(ernet_error)
 
-with open('sted_ernet.pkl', 'wb') as f:
-    pickle.dump(ernet, f)
+# with open('sted_ernet.pkl', 'wb') as f:
+#     pickle.dump(ernet, f)
 
-print('----------------------')
-erv2_error = get_rel_error(gt_graph_metrics, erv2_graph_metrics)
-erv2 = get_variation(erv2_error)
+# print('----------------------')
+# erv2_error = get_rel_error(gt_graph_metrics, erv2_graph_metrics)
+# erv2 = get_variation(erv2_error)
 
-with open('sted_erv2.pkl', 'wb') as f:
-    pickle.dump(erv2, f)
+# with open('sted_erv2.pkl', 'wb') as f:
+#     pickle.dump(erv2, f)
 
-print('----------------------')
-nerdy_error = get_rel_error(gt_graph_metrics, nerdy_graph_metrics)
-nerdy = get_variation(nerdy_error)
+# print('----------------------')
+# nerdy_error = get_rel_error(gt_graph_metrics, nerdy_graph_metrics)
+# nerdy = get_variation(nerdy_error)
 
-with open('sted_nerdy.pkl', 'wb') as f:
-    pickle.dump(nerdy, f)
+# with open('sted_nerdy.pkl', 'wb') as f:
+#     pickle.dump(nerdy, f)
 
-print('----------------------')
-p4m_error = get_rel_error(gt_graph_metrics, p4m_graph_metrics)
-p4m = get_variation(p4m_error)
+# print('----------------------')
+# p4m_error = get_rel_error(gt_graph_metrics, p4m_graph_metrics)
+# p4m = get_variation(p4m_error)
 
-with open('sted_p4m.pkl', 'wb') as f:
-    pickle.dump(p4m, f)
+# with open('sted_p4m.pkl', 'wb') as f:
+#     pickle.dump(p4m, f)
 
-print('----------------------')
+# print('----------------------')
 
-exit()
+# exit()
 
 # gt_data, p4m_vecadam_data = get_graphs()
 
@@ -816,12 +816,12 @@ exit()
 #     return gt_graph_metrics, analyzer_graph_metrics, erv2_graph_metrics, ernet_graph_metrics, nerdy_graph_metrics, p4m_vecadam_metrics
     # return gt_graph_metrics, p4m_vecadam_metrics
 
-gt_graph_metrics = np.array(get_graph_metrics(gt_graphs)).T
-analyzer_graph_metrics = np.array(get_graph_metrics(analyzer_graphs)).T
-erv2_graph_metrics = np.array(get_graph_metrics(erv2_graphs)).T
-ernet_graph_metrics = np.array(get_graph_metrics(ernet_graphs)).T
-nerdy_graph_metrics = np.array(get_graph_metrics(nerdy_graphs)).T
-p4m_vecadam_metrics = np.array(get_graph_metrics(p4m_vecadam_graphs)).T
+# gt_graph_metrics = np.array(get_graph_metrics(gt_graphs)).T
+# analyzer_graph_metrics = np.array(get_graph_metrics(analyzer_graphs)).T
+# erv2_graph_metrics = np.array(get_graph_metrics(erv2_graphs)).T
+# ernet_graph_metrics = np.array(get_graph_metrics(ernet_graphs)).T
+# nerdy_graph_metrics = np.array(get_graph_metrics(nerdy_graphs)).T
+# p4m_vecadam_metrics = np.array(get_graph_metrics(p4m_vecadam_graphs)).T
 
 
 def get_rel_error(gt, method):
@@ -849,28 +849,28 @@ def get_variation(op):
 #     for metric in op:
 #         print(np.nanstd(metric))
 
-op = get_rel_error(gt_graph_metrics, analyzer_graph_metrics)
-get_variation(op)
+# op = get_rel_error(gt_graph_metrics, analyzer_graph_metrics)
+# get_variation(op)
 
-print('----------------------')
+# print('----------------------')
 
-op = get_rel_error(gt_graph_metrics, erv2_graph_metrics)
-get_variation(op)
-print('----------------------')
+# op = get_rel_error(gt_graph_metrics, erv2_graph_metrics)
+# get_variation(op)
+# print('----------------------')
 
-op = get_rel_error(gt_graph_metrics, ernet_graph_metrics)
-get_variation(op)
-print('----------------------')
+# op = get_rel_error(gt_graph_metrics, ernet_graph_metrics)
+# get_variation(op)
+# print('----------------------')
 
-op = get_rel_error(gt_graph_metrics, nerdy_graph_metrics)
-get_variation(op)
-print('----------------------')
+# op = get_rel_error(gt_graph_metrics, nerdy_graph_metrics)
+# get_variation(op)
+# print('----------------------')
 
-op = get_rel_error(gt_graph_metrics, p4m_vecadam_metrics)
-get_variation(op)
-print('----------------------')
+# op = get_rel_error(gt_graph_metrics, p4m_vecadam_metrics)
+# get_variation(op)
+# print('----------------------')
 
-exit()
+# exit()
 
 # gt_graph_metrics, analyzer_graph_metrics, erv2_graph_metrics, ernet_graph_metrics, nerdy_graph_metrics, p4m_vecadam_metrics = get_all_metrics()
 
