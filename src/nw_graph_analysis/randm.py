@@ -23,22 +23,32 @@ import imageio
 
 
 def get_graph_perf():
-    sted_analyzer = pkl.load(open('nw_graph_analysis/sted_analyzer.pkl', 'rb'))
-    sted_ernet = pkl.load(open('nw_graph_analysis/sted_ernet.pkl', 'rb'))
-    sted_ernet_v2 = pkl.load(open('nw_graph_analysis/sted_ernet_v2.pkl', 'rb'))
-    sted_nerdy = pkl.load(open('nw_graph_analysis/sted_nerdy.pkl', 'rb'))
-    sted_p4m = pkl.load(open('nw_graph_analysis/sted_p4m.pkl', 'rb'))
+    # sted_analyzer = pkl.load(open('nw_graph_analysis/sted_analyzer.pkl', 'rb'))
+    # sted_ernet = pkl.load(open('nw_graph_analysis/sted_ernet.pkl', 'rb'))
+    # sted_ernet_v2 = pkl.load(open('nw_graph_analysis/sted_ernet_v2.pkl', 'rb'))
+    # sted_nerdy = pkl.load(open('nw_graph_analysis/sted_nerdy.pkl', 'rb'))
+    # sted_p4m = pkl.load(open('nw_graph_analysis/sted_p4m.pkl', 'rb'))
+
+    # df = pd.DataFrame()
+
+    # val_data = sted_analyzer + sted_ernet + sted_ernet_v2 + sted_nerdy + sted_p4m
+
+    # l1 = [value for sublist in val_data for value in sublist]
+    
+    # df['Values'] = l1
+
+    # metric_names = []
+    # method_names = []
+    sted_climp_analyzer = pkl.load(open('nw_graph_analysis/sted_climp_analyzer_graph_err.pkl', 'rb'))
+    sted_climp_ernet = pkl.load(open('nw_graph_analysis/sted_climp_ernet_graph_err.pkl', 'rb'))
+    sted_climp_ernet_v2 = pkl.load(open('nw_graph_analysis/sted_climp_ernet_v2_graph_err.pkl', 'rb'))
+    sted_climp_nerdy = pkl.load(open('nw_graph_analysis/sted_climp_nerdy_graph_err.pkl', 'rb'))
+    sted_climp_nerdy_p4m = pkl.load(open('nw_graph_analysis/sted_climp_nerdy_p4m_graph_err.pkl', 'rb'))
 
     df = pd.DataFrame()
 
-    val_data = sted_analyzer + sted_ernet + sted_ernet_v2 + sted_nerdy + sted_p4m
+    val_data = sted_climp_analyzer + sted_climp_ernet + sted_climp_ernet_v2 + sted_climp_nerdy + sted_climp_nerdy_p4m
 
-    l1 = [value for sublist in val_data for value in sublist]
-    
-    df['Values'] = l1
-
-    metric_names = []
-    method_names = []
     
 
 
