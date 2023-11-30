@@ -22,7 +22,7 @@ import imageio
 
 
 
-def get_graph_perf():
+def get_graph_perf(group):
     # sted_analyzer = pkl.load(open('nw_graph_analysis/sted_analyzer.pkl', 'rb'))
     # sted_ernet = pkl.load(open('nw_graph_analysis/sted_ernet.pkl', 'rb'))
     # sted_ernet_v2 = pkl.load(open('nw_graph_analysis/sted_ernet_v2.pkl', 'rb'))
@@ -39,17 +39,478 @@ def get_graph_perf():
 
     # metric_names = []
     # method_names = []
-    sted_climp_analyzer = pkl.load(open('nw_graph_analysis/sted_climp_analyzer_graph_err.pkl', 'rb'))
-    sted_climp_ernet = pkl.load(open('nw_graph_analysis/sted_climp_ernet_graph_err.pkl', 'rb'))
-    sted_climp_ernet_v2 = pkl.load(open('nw_graph_analysis/sted_climp_ernet_v2_graph_err.pkl', 'rb'))
-    sted_climp_nerdy = pkl.load(open('nw_graph_analysis/sted_climp_nerdy_graph_err.pkl', 'rb'))
-    sted_climp_nerdy_p4m = pkl.load(open('nw_graph_analysis/sted_climp_nerdy_p4m_graph_err.pkl', 'rb'))
+    sted_climp_analyzer = pkl.load(open(f'nw_graph_analysis/sted_{group}_analyzer_graph_err.pkl', 'rb'))
+    sted_climp_ernet = pkl.load(open(f'nw_graph_analysis/sted_{group}_ernet_graph_err.pkl', 'rb'))
+    sted_climp_ernet_v2 = pkl.load(open(f'nw_graph_analysis/sted_{group}_erv2_graph_err.pkl', 'rb'))
+    sted_climp_nerdy = pkl.load(open(f'nw_graph_analysis/sted_{group}_nerdy_graph_err.pkl', 'rb'))
+    sted_climp_nerdy_p4m = pkl.load(open(f'nw_graph_analysis/sted_{group}_p4m_graph_err.pkl', 'rb'))
+
+    sted_climp_analyzer = np.array(sted_climp_analyzer).T
+    sted_climp_ernet = np.array(sted_climp_ernet).T
+    sted_climp_ernet_v2 = np.array(sted_climp_ernet_v2).T
+    sted_climp_nerdy = np.array(sted_climp_nerdy).T
+    sted_climp_nerdy_p4m = np.array(sted_climp_nerdy_p4m).T
+
+
+    # num_nodes_climp_analyzer = sted_climp_analyzer[0]
+    # num_nodes_climp_ernet = sted_climp_ernet[0]
+    # num_nodes_climp_ernet_v2 = sted_climp_ernet_v2[0]
+    # num_nodes_climp_nerdy = sted_climp_nerdy[0]
+    # num_nodes_climp_nerdy_p4m = sted_climp_nerdy_p4m[0]
+
+    # num_edges_climp_analyzer = sted_climp_analyzer[1]
+    # num_edges_climp_ernet = sted_climp_ernet[1]
+    # num_edges_climp_ernet_v2 = sted_climp_ernet_v2[1]
+    # num_edges_climp_nerdy = sted_climp_nerdy[1]
+    # num_edges_climp_nerdy_p4m = sted_climp_nerdy_p4m[1]
+
+    # assortativity_climp_analyzer = sted_climp_analyzer[2]
+    # assortativity_climp_ernet = sted_climp_ernet[2]
+    # assortativity_climp_ernet_v2 = sted_climp_ernet_v2[2]
+    # assortativity_climp_nerdy = sted_climp_nerdy[2]
+    # assortativity_climp_nerdy_p4m = sted_climp_nerdy_p4m[2]
+
+    # clustering_climp_analyzer = sted_climp_analyzer[3]
+    # clustering_climp_ernet = sted_climp_ernet[3]
+    # clustering_climp_ernet_v2 = sted_climp_ernet_v2[3]
+    # clustering_climp_nerdy = sted_climp_nerdy[3]
+    # clustering_climp_nerdy_p4m = sted_climp_nerdy_p4m[3]
+
+    # ratio_nodes_climp_analyzer = sted_climp_analyzer[5]
+    # ratio_nodes_climp_ernet = sted_climp_ernet[5]
+    # ratio_nodes_climp_ernet_v2 = sted_climp_ernet_v2[5]
+    # ratio_nodes_climp_nerdy = sted_climp_nerdy[5]
+    # ratio_nodes_climp_nerdy_p4m = sted_climp_nerdy_p4m[5]
+
+    # ratio_edges_climp_analyzer = sted_climp_analyzer[6]
+    # ratio_edges_climp_ernet = sted_climp_ernet[6]
+    # ratio_edges_climp_ernet_v2 = sted_climp_ernet_v2[6]
+    # ratio_edges_climp_nerdy = sted_climp_nerdy[6]
+    # ratio_edges_climp_nerdy_p4m = sted_climp_nerdy_p4m[6]
+
+    # assortativity_climp_analyzer = sted_climp_analyzer[2]
+    # assortativity_climp_ernet = sted_climp_ernet[2]
+    # assortativity_climp_ernet_v2 = sted_climp_ernet_v2[2]
+    # assortativity_climp_nerdy = sted_climp_nerdy[2]
+    # assortativity_climp_nerdy_p4m = sted_climp_nerdy_p4m[2]
+
+    clustering_climp_analyzer = sted_climp_analyzer[3]
+    clustering_climp_ernet = sted_climp_ernet[3]
+    clustering_climp_ernet_v2 = sted_climp_ernet_v2[3]
+    clustering_climp_nerdy = sted_climp_nerdy[3]
+    clustering_climp_nerdy_p4m = sted_climp_nerdy_p4m[3]
+
+    num_components_climp_analyzer = sted_climp_analyzer[4]
+    num_components_climp_ernet = sted_climp_ernet[4]
+    num_components_climp_ernet_v2 = sted_climp_ernet_v2[4]
+    num_components_climp_nerdy = sted_climp_nerdy[4]
+    num_components_climp_nerdy_p4m = sted_climp_nerdy_p4m[4]
+
+    global_efficiency_climp_analyzer = sted_climp_analyzer[7]
+    global_efficiency_climp_ernet = sted_climp_ernet[7]
+    global_efficiency_climp_ernet_v2 = sted_climp_ernet_v2[7]
+    global_efficiency_climp_nerdy = sted_climp_nerdy[7]
+    global_efficiency_climp_nerdy_p4m = sted_climp_nerdy_p4m[7]
+
+    density_climp_analyzer = sted_climp_analyzer[8]
+    density_climp_ernet = sted_climp_ernet[8]
+    density_climp_ernet_v2 = sted_climp_ernet_v2[8]
+    density_climp_nerdy = sted_climp_nerdy[8]
+    density_climp_nerdy_p4m = sted_climp_nerdy_p4m[8]
 
     df = pd.DataFrame()
 
-    val_data = sted_climp_analyzer + sted_climp_ernet + sted_climp_ernet_v2 + sted_climp_nerdy + sted_climp_nerdy_p4m
+    # val_data = assortativity_climp_analyzer + assortativity_climp_ernet + assortativity_climp_ernet_v2 + assortativity_climp_nerdy + assortativity_climp_nerdy_p4m +
+    val_data = clustering_climp_analyzer + clustering_climp_ernet + clustering_climp_ernet_v2 + clustering_climp_nerdy + clustering_climp_nerdy_p4m + num_components_climp_analyzer + num_components_climp_ernet + num_components_climp_ernet_v2 + num_components_climp_nerdy + num_components_climp_nerdy_p4m + global_efficiency_climp_analyzer + global_efficiency_climp_ernet + global_efficiency_climp_ernet_v2 + global_efficiency_climp_nerdy + global_efficiency_climp_nerdy_p4m + density_climp_analyzer + density_climp_ernet + density_climp_ernet_v2 + density_climp_nerdy + density_climp_nerdy_p4m
 
+    # val_data = num_nodes_climp_analyzer + num_nodes_climp_ernet + num_nodes_climp_ernet_v2 + num_nodes_climp_nerdy + num_nodes_climp_nerdy_p4m + num_edges_climp_analyzer + num_edges_climp_ernet + num_edges_climp_ernet_v2 + num_edges_climp_nerdy + num_edges_climp_nerdy_p4m + ratio_nodes_climp_analyzer + ratio_nodes_climp_ernet + ratio_nodes_climp_ernet_v2 + ratio_nodes_climp_nerdy + ratio_nodes_climp_nerdy_p4m + ratio_edges_climp_analyzer + ratio_edges_climp_ernet + ratio_edges_climp_ernet_v2 + ratio_edges_climp_nerdy + ratio_edges_climp_nerdy_p4m
+    #  clustering_climp_analyzer + clustering_climp_ernet + clustering_climp_ernet_v2 + clustering_climp_nerdy + clustering_climp_nerdy_p4m
+    # assortativity_climp_analyzer + assortativity_climp_ernet + assortativity_climp_ernet_v2 + assortativity_climp_nerdy + assortativity_climp_nerdy_p4m
+
+    # l1 = [value for sublist in val_data for value in sublist]
+
+    df['Values'] = val_data
+
+    metric_names = []
+
+    # metric_names.append(['Num_nodes']*len(num_nodes_climp_analyzer))
+    # metric_names.append(['Num_nodes']*len(num_nodes_climp_ernet))
+    # metric_names.append(['Num_nodes']*len(num_nodes_climp_ernet_v2))
+    # metric_names.append(['Num_nodes']*len(num_nodes_climp_nerdy))
+    # metric_names.append(['Num_nodes']*len(num_nodes_climp_nerdy_p4m))
+
+    # metric_names.append(['Num_edges']*len(num_edges_climp_analyzer))
+    # metric_names.append(['Num_edges']*len(num_edges_climp_ernet))
+    # metric_names.append(['Num_edges']*len(num_edges_climp_ernet_v2))
+    # metric_names.append(['Num_edges']*len(num_edges_climp_nerdy))
+    # metric_names.append(['Num_edges']*len(num_edges_climp_nerdy_p4m))
+
+    # metric_names.append(['Assortativity']*len(assortativity_climp_analyzer))
+    # metric_names.append(['Assortativity']*len(assortativity_climp_ernet))
+    # metric_names.append(['Assortativity']*len(assortativity_climp_ernet_v2))
+    # metric_names.append(['Assortativity']*len(assortativity_climp_nerdy))
+    # metric_names.append(['Assortativity']*len(assortativity_climp_nerdy_p4m))
+
+    # metric_names.append(['Clustering']*len(clustering_climp_analyzer))
+    # metric_names.append(['Clustering']*len(clustering_climp_ernet))
+    # metric_names.append(['Clustering']*len(clustering_climp_ernet_v2))
+    # metric_names.append(['Clustering']*len(clustering_climp_nerdy))
+    # metric_names.append(['Clustering']*len(clustering_climp_nerdy_p4m))
+
+    # metric_names.append(['ratio_nodes']*len(ratio_nodes_climp_analyzer))
+    # metric_names.append(['ratio_nodes']*len(ratio_nodes_climp_ernet))
+    # metric_names.append(['ratio_nodes']*len(ratio_nodes_climp_ernet_v2))
+    # metric_names.append(['ratio_nodes']*len(ratio_nodes_climp_nerdy))
+    # metric_names.append(['ratio_nodes']*len(ratio_nodes_climp_nerdy_p4m))
+
+    # metric_names.append(['ratio_edges']*len(ratio_edges_climp_analyzer))
+    # metric_names.append(['ratio_edges']*len(ratio_edges_climp_ernet))
+    # metric_names.append(['ratio_edges']*len(ratio_edges_climp_ernet_v2))
+    # metric_names.append(['ratio_edges']*len(ratio_edges_climp_nerdy))
+    # metric_names.append(['ratio_edges']*len(ratio_edges_climp_nerdy_p4m))
+
+    # metric_names.append(['Assortativity_coeff']*len(assortativity_climp_analyzer))
+    # metric_names.append(['Assortativity_coeff']*len(assortativity_climp_ernet))
+    # metric_names.append(['Assortativity_coeff']*len(assortativity_climp_ernet_v2))
+    # metric_names.append(['Assortativity_coeff']*len(assortativity_climp_nerdy))
+    # metric_names.append(['Assortativity_coeff']*len(assortativity_climp_nerdy_p4m))
+
+    metric_names.append(['Clustering_coeff']*len(clustering_climp_analyzer))
+    metric_names.append(['Clustering_coeff']*len(clustering_climp_ernet))
+    metric_names.append(['Clustering_coeff']*len(clustering_climp_ernet_v2))
+    metric_names.append(['Clustering_coeff']*len(clustering_climp_nerdy))
+    metric_names.append(['Clustering_coeff']*len(clustering_climp_nerdy_p4m))
+
+    metric_names.append(['Num_components']*len(num_components_climp_analyzer))
+    metric_names.append(['Num_components']*len(num_components_climp_ernet))
+    metric_names.append(['Num_components']*len(num_components_climp_ernet_v2))
+    metric_names.append(['Num_components']*len(num_components_climp_nerdy))
+    metric_names.append(['Num_components']*len(num_components_climp_nerdy_p4m))
+
+    metric_names.append(['Global_efficiency']*len(global_efficiency_climp_analyzer))
+    metric_names.append(['Global_efficiency']*len(global_efficiency_climp_ernet))
+    metric_names.append(['Global_efficiency']*len(global_efficiency_climp_ernet_v2))
+    metric_names.append(['Global_efficiency']*len(global_efficiency_climp_nerdy))
+    metric_names.append(['Global_efficiency']*len(global_efficiency_climp_nerdy_p4m))
+
+    metric_names.append(['Density']*len(density_climp_analyzer))
+    metric_names.append(['Density']*len(density_climp_ernet))
+    metric_names.append(['Density']*len(density_climp_ernet_v2))
+    metric_names.append(['Density']*len(density_climp_nerdy))
+    metric_names.append(['Density']*len(density_climp_nerdy_p4m))
+
+
+
+    method_names = []    
     
+    # method_names.append(['AnalyzER']*len(sted_climp_analyzer[2]))
+    # method_names.append(['ERnet']*len(sted_climp_ernet[2]))
+    # method_names.append(['ERnet-v2']*len(sted_climp_ernet_v2[2]))
+    # method_names.append(['nERdy']*len(sted_climp_nerdy[2]))
+    # method_names.append(['nERdy+']*len(sted_climp_nerdy_p4m[2]))
+
+    method_names.append(['AnalyzER']*len(sted_climp_analyzer[3]))
+    method_names.append(['ERnet']*len(sted_climp_ernet[3]))
+    method_names.append(['ERnet-v2']*len(sted_climp_ernet_v2[3]))
+    method_names.append(['nERdy']*len(sted_climp_nerdy[3]))
+    method_names.append(['nERdy+']*len(sted_climp_nerdy_p4m[3]))
+
+    method_names.append(['AnalyzER']*len(sted_climp_analyzer[4]))
+    method_names.append(['ERnet']*len(sted_climp_ernet[4]))
+    method_names.append(['ERnet-v2']*len(sted_climp_ernet_v2[4]))
+    method_names.append(['nERdy']*len(sted_climp_nerdy[4]))
+    method_names.append(['nERdy+']*len(sted_climp_nerdy_p4m[4]))
+
+    method_names.append(['AnalyzER']*len(sted_climp_analyzer[7]))
+    method_names.append(['ERnet']*len(sted_climp_ernet[7]))
+    method_names.append(['ERnet-v2']*len(sted_climp_ernet_v2[7]))
+    method_names.append(['nERdy']*len(sted_climp_nerdy[7]))
+    method_names.append(['nERdy+']*len(sted_climp_nerdy_p4m[7]))
+
+    method_names.append(['AnalyzER']*len(sted_climp_analyzer[8]))
+    method_names.append(['ERnet']*len(sted_climp_ernet[8]))
+    method_names.append(['ERnet-v2']*len(sted_climp_ernet_v2[8]))
+    method_names.append(['nERdy']*len(sted_climp_nerdy[8]))
+    method_names.append(['nERdy+']*len(sted_climp_nerdy_p4m[8]))
+
+    df['Metric'] = [value for sublist in metric_names for value in sublist]
+
+    df['Method'] = [value for sublist in method_names for value in sublist]
+
+    # sns.set(style="whitegrid")
+    ax = sns.boxplot(x="Method", y="Values", hue="Metric", data=df, showfliers=False, width=0.8, palette="Set2")
+
+    # plt.ylim(0, 0.8)
+    # plt.xlim(-1, 4.0)
+
+    yt = ax.get_yticks()
+    yt = [f'{y:.1f}' for y in yt]
+    ax.set_yticklabels(yt, fontsize=12)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=12)#, rotation=45)
+
+    ax.grid(axis='y')#, linestyle='-', linewidth=0.5, color='white')
+    plt.xlabel('Method', fontsize=15)
+    plt.ylabel('Error', fontsize=15)
+
+    # plt.subplots_adjust(hspace=0.3)
+
+    plt.gcf().set_size_inches(6, 8)
+    # plt.gcf().set_size_inches(4, 6)
+
+    # plt.show()
+    plt.savefig(f'nw_graph_analysis/confocal_{group}_graph_err_p2.png', dpi=300, bbox_inches='tight', pad_inches=0.1)
+
+    plt.close()
+
+
+def get_conf_graph_perf(group):
+    # sted_analyzer = pkl.load(open('nw_graph_analysis/sted_analyzer.pkl', 'rb'))
+    # sted_ernet = pkl.load(open('nw_graph_analysis/sted_ernet.pkl', 'rb'))
+    # sted_ernet_v2 = pkl.load(open('nw_graph_analysis/sted_ernet_v2.pkl', 'rb'))
+    # sted_nerdy = pkl.load(open('nw_graph_analysis/sted_nerdy.pkl', 'rb'))
+    # sted_p4m = pkl.load(open('nw_graph_analysis/sted_p4m.pkl', 'rb'))
+
+    # df = pd.DataFrame()
+
+    # val_data = sted_analyzer + sted_ernet + sted_ernet_v2 + sted_nerdy + sted_p4m
+
+    # l1 = [value for sublist in val_data for value in sublist]
+    
+    # df['Values'] = l1
+
+    # metric_names = []
+    # method_names = []
+    climp_analyzer = pkl.load(open(f'nw_graph_analysis/{group}_analyzer_graph_err.pkl', 'rb'))
+    climp_ernet = pkl.load(open(f'nw_graph_analysis/{group}_ernet_graph_err.pkl', 'rb'))
+    climp_ernet_v2 = pkl.load(open(f'nw_graph_analysis/{group}_erv2_graph_err.pkl', 'rb'))
+    climp_nerdy = pkl.load(open(f'nw_graph_analysis/{group}_nerdy_graph_err.pkl', 'rb'))
+    climp_nerdy_p4m = pkl.load(open(f'nw_graph_analysis/{group}_p4m_graph_err.pkl', 'rb'))
+
+    sted_climp_analyzer = np.array(climp_analyzer)
+    sted_climp_ernet = np.array(climp_ernet)
+    sted_climp_ernet_v2 = np.array(climp_ernet_v2)
+    sted_climp_nerdy = np.array(climp_nerdy)
+    sted_climp_nerdy_p4m = np.array(climp_nerdy_p4m)
+
+
+    # num_nodes_climp_analyzer = sted_climp_analyzer[0]
+    # num_nodes_climp_ernet = sted_climp_ernet[0]
+    # num_nodes_climp_ernet_v2 = sted_climp_ernet_v2[0]
+    # num_nodes_climp_nerdy = sted_climp_nerdy[0]
+    # num_nodes_climp_nerdy_p4m = sted_climp_nerdy_p4m[0]
+
+    # num_edges_climp_analyzer = sted_climp_analyzer[1]
+    # num_edges_climp_ernet = sted_climp_ernet[1]
+    # num_edges_climp_ernet_v2 = sted_climp_ernet_v2[1]
+    # num_edges_climp_nerdy = sted_climp_nerdy[1]
+    # num_edges_climp_nerdy_p4m = sted_climp_nerdy_p4m[1]
+
+    # assortativity_climp_analyzer = sted_climp_analyzer[2]
+    # assortativity_climp_ernet = sted_climp_ernet[2]
+    # assortativity_climp_ernet_v2 = sted_climp_ernet_v2[2]
+    # assortativity_climp_nerdy = sted_climp_nerdy[2]
+    # assortativity_climp_nerdy_p4m = sted_climp_nerdy_p4m[2]
+
+    # clustering_climp_analyzer = sted_climp_analyzer[3]
+    # clustering_climp_ernet = sted_climp_ernet[3]
+    # clustering_climp_ernet_v2 = sted_climp_ernet_v2[3]
+    # clustering_climp_nerdy = sted_climp_nerdy[3]
+    # clustering_climp_nerdy_p4m = sted_climp_nerdy_p4m[3]
+
+    # ratio_nodes_climp_analyzer = sted_climp_analyzer[5]
+    # ratio_nodes_climp_ernet = sted_climp_ernet[5]
+    # ratio_nodes_climp_ernet_v2 = sted_climp_ernet_v2[5]
+    # ratio_nodes_climp_nerdy = sted_climp_nerdy[5]
+    # ratio_nodes_climp_nerdy_p4m = sted_climp_nerdy_p4m[5]
+
+    # ratio_edges_climp_analyzer = sted_climp_analyzer[6]
+    # ratio_edges_climp_ernet = sted_climp_ernet[6]
+    # ratio_edges_climp_ernet_v2 = sted_climp_ernet_v2[6]
+    # ratio_edges_climp_nerdy = sted_climp_nerdy[6]
+    # ratio_edges_climp_nerdy_p4m = sted_climp_nerdy_p4m[6]
+
+    # assortativity_climp_analyzer = sted_climp_analyzer[2]
+    # assortativity_climp_ernet = sted_climp_ernet[2]
+    # assortativity_climp_ernet_v2 = sted_climp_ernet_v2[2]
+    # assortativity_climp_nerdy = sted_climp_nerdy[2]
+    # assortativity_climp_nerdy_p4m = sted_climp_nerdy_p4m[2]
+
+    clustering_climp_analyzer = sted_climp_analyzer[3]
+    clustering_climp_ernet = sted_climp_ernet[3]
+    clustering_climp_ernet_v2 = sted_climp_ernet_v2[3]
+    clustering_climp_nerdy = sted_climp_nerdy[3]
+    clustering_climp_nerdy_p4m = sted_climp_nerdy_p4m[3]
+
+    num_components_climp_analyzer = sted_climp_analyzer[4]
+    num_components_climp_ernet = sted_climp_ernet[4]
+    num_components_climp_ernet_v2 = sted_climp_ernet_v2[4]
+    num_components_climp_nerdy = sted_climp_nerdy[4]
+    num_components_climp_nerdy_p4m = sted_climp_nerdy_p4m[4]
+
+    global_efficiency_climp_analyzer = sted_climp_analyzer[7]
+    global_efficiency_climp_ernet = sted_climp_ernet[7]
+    global_efficiency_climp_ernet_v2 = sted_climp_ernet_v2[7]
+    global_efficiency_climp_nerdy = sted_climp_nerdy[7]
+    global_efficiency_climp_nerdy_p4m = sted_climp_nerdy_p4m[7]
+
+    density_climp_analyzer = sted_climp_analyzer[8]
+    density_climp_ernet = sted_climp_ernet[8]
+    density_climp_ernet_v2 = sted_climp_ernet_v2[8]
+    density_climp_nerdy = sted_climp_nerdy[8]
+    density_climp_nerdy_p4m = sted_climp_nerdy_p4m[8]
+
+    df = pd.DataFrame()
+
+    # val_data = assortativity_climp_analyzer + assortativity_climp_ernet + assortativity_climp_ernet_v2 + assortativity_climp_nerdy + assortativity_climp_nerdy_p4m +
+    val_data = clustering_climp_analyzer + clustering_climp_ernet + clustering_climp_ernet_v2 + clustering_climp_nerdy + clustering_climp_nerdy_p4m + num_components_climp_analyzer + num_components_climp_ernet + num_components_climp_ernet_v2 + num_components_climp_nerdy + num_components_climp_nerdy_p4m + global_efficiency_climp_analyzer + global_efficiency_climp_ernet + global_efficiency_climp_ernet_v2 + global_efficiency_climp_nerdy + global_efficiency_climp_nerdy_p4m + density_climp_analyzer + density_climp_ernet + density_climp_ernet_v2 + density_climp_nerdy + density_climp_nerdy_p4m
+
+    # val_data = num_nodes_climp_analyzer + num_nodes_climp_ernet + num_nodes_climp_ernet_v2 + num_nodes_climp_nerdy + num_nodes_climp_nerdy_p4m + num_edges_climp_analyzer + num_edges_climp_ernet + num_edges_climp_ernet_v2 + num_edges_climp_nerdy + num_edges_climp_nerdy_p4m + ratio_nodes_climp_analyzer + ratio_nodes_climp_ernet + ratio_nodes_climp_ernet_v2 + ratio_nodes_climp_nerdy + ratio_nodes_climp_nerdy_p4m + ratio_edges_climp_analyzer + ratio_edges_climp_ernet + ratio_edges_climp_ernet_v2 + ratio_edges_climp_nerdy + ratio_edges_climp_nerdy_p4m
+    #  clustering_climp_analyzer + clustering_climp_ernet + clustering_climp_ernet_v2 + clustering_climp_nerdy + clustering_climp_nerdy_p4m
+    # assortativity_climp_analyzer + assortativity_climp_ernet + assortativity_climp_ernet_v2 + assortativity_climp_nerdy + assortativity_climp_nerdy_p4m
+
+    # l1 = [value for sublist in val_data for value in sublist]
+
+    df['Values'] = val_data
+
+    metric_names = []
+
+    # metric_names.append(['Num_nodes']*len(num_nodes_climp_analyzer))
+    # metric_names.append(['Num_nodes']*len(num_nodes_climp_ernet))
+    # metric_names.append(['Num_nodes']*len(num_nodes_climp_ernet_v2))
+    # metric_names.append(['Num_nodes']*len(num_nodes_climp_nerdy))
+    # metric_names.append(['Num_nodes']*len(num_nodes_climp_nerdy_p4m))
+
+    # metric_names.append(['Num_edges']*len(num_edges_climp_analyzer))
+    # metric_names.append(['Num_edges']*len(num_edges_climp_ernet))
+    # metric_names.append(['Num_edges']*len(num_edges_climp_ernet_v2))
+    # metric_names.append(['Num_edges']*len(num_edges_climp_nerdy))
+    # metric_names.append(['Num_edges']*len(num_edges_climp_nerdy_p4m))
+
+    # metric_names.append(['Assortativity']*len(assortativity_climp_analyzer))
+    # metric_names.append(['Assortativity']*len(assortativity_climp_ernet))
+    # metric_names.append(['Assortativity']*len(assortativity_climp_ernet_v2))
+    # metric_names.append(['Assortativity']*len(assortativity_climp_nerdy))
+    # metric_names.append(['Assortativity']*len(assortativity_climp_nerdy_p4m))
+
+    # metric_names.append(['Clustering']*len(clustering_climp_analyzer))
+    # metric_names.append(['Clustering']*len(clustering_climp_ernet))
+    # metric_names.append(['Clustering']*len(clustering_climp_ernet_v2))
+    # metric_names.append(['Clustering']*len(clustering_climp_nerdy))
+    # metric_names.append(['Clustering']*len(clustering_climp_nerdy_p4m))
+
+    # metric_names.append(['ratio_nodes']*len(ratio_nodes_climp_analyzer))
+    # metric_names.append(['ratio_nodes']*len(ratio_nodes_climp_ernet))
+    # metric_names.append(['ratio_nodes']*len(ratio_nodes_climp_ernet_v2))
+    # metric_names.append(['ratio_nodes']*len(ratio_nodes_climp_nerdy))
+    # metric_names.append(['ratio_nodes']*len(ratio_nodes_climp_nerdy_p4m))
+
+    # metric_names.append(['ratio_edges']*len(ratio_edges_climp_analyzer))
+    # metric_names.append(['ratio_edges']*len(ratio_edges_climp_ernet))
+    # metric_names.append(['ratio_edges']*len(ratio_edges_climp_ernet_v2))
+    # metric_names.append(['ratio_edges']*len(ratio_edges_climp_nerdy))
+    # metric_names.append(['ratio_edges']*len(ratio_edges_climp_nerdy_p4m))
+
+    # metric_names.append(['Assortativity_coeff']*len(assortativity_climp_analyzer))
+    # metric_names.append(['Assortativity_coeff']*len(assortativity_climp_ernet))
+    # metric_names.append(['Assortativity_coeff']*len(assortativity_climp_ernet_v2))
+    # metric_names.append(['Assortativity_coeff']*len(assortativity_climp_nerdy))
+    # metric_names.append(['Assortativity_coeff']*len(assortativity_climp_nerdy_p4m))
+
+    metric_names.append(['Clustering_coeff']*len(clustering_climp_analyzer))
+    metric_names.append(['Clustering_coeff']*len(clustering_climp_ernet))
+    metric_names.append(['Clustering_coeff']*len(clustering_climp_ernet_v2))
+    metric_names.append(['Clustering_coeff']*len(clustering_climp_nerdy))
+    metric_names.append(['Clustering_coeff']*len(clustering_climp_nerdy_p4m))
+
+    metric_names.append(['Num_components']*len(num_components_climp_analyzer))
+    metric_names.append(['Num_components']*len(num_components_climp_ernet))
+    metric_names.append(['Num_components']*len(num_components_climp_ernet_v2))
+    metric_names.append(['Num_components']*len(num_components_climp_nerdy))
+    metric_names.append(['Num_components']*len(num_components_climp_nerdy_p4m))
+
+    metric_names.append(['Global_efficiency']*len(global_efficiency_climp_analyzer))
+    metric_names.append(['Global_efficiency']*len(global_efficiency_climp_ernet))
+    metric_names.append(['Global_efficiency']*len(global_efficiency_climp_ernet_v2))
+    metric_names.append(['Global_efficiency']*len(global_efficiency_climp_nerdy))
+    metric_names.append(['Global_efficiency']*len(global_efficiency_climp_nerdy_p4m))
+
+    metric_names.append(['Density']*len(density_climp_analyzer))
+    metric_names.append(['Density']*len(density_climp_ernet))
+    metric_names.append(['Density']*len(density_climp_ernet_v2))
+    metric_names.append(['Density']*len(density_climp_nerdy))
+    metric_names.append(['Density']*len(density_climp_nerdy_p4m))
+
+    method_names = []    
+    
+    # method_names.append(['AnalyzER']*len(sted_climp_analyzer[2]))
+    # method_names.append(['ERnet']*len(sted_climp_ernet[2]))
+    # method_names.append(['ERnet-v2']*len(sted_climp_ernet_v2[2]))
+    # method_names.append(['nERdy']*len(sted_climp_nerdy[2]))
+    # method_names.append(['nERdy+']*len(sted_climp_nerdy_p4m[2]))
+
+    method_names.append(['AnalyzER']*len(sted_climp_analyzer[3]))
+    method_names.append(['ERnet']*len(sted_climp_ernet[3]))
+    method_names.append(['ERnet-v2']*len(sted_climp_ernet_v2[3]))
+    method_names.append(['nERdy']*len(sted_climp_nerdy[3]))
+    method_names.append(['nERdy+']*len(sted_climp_nerdy_p4m[3]))
+
+    method_names.append(['AnalyzER']*len(sted_climp_analyzer[4]))
+    method_names.append(['ERnet']*len(sted_climp_ernet[4]))
+    method_names.append(['ERnet-v2']*len(sted_climp_ernet_v2[4]))
+    method_names.append(['nERdy']*len(sted_climp_nerdy[4]))
+    method_names.append(['nERdy+']*len(sted_climp_nerdy_p4m[4]))
+
+    method_names.append(['AnalyzER']*len(sted_climp_analyzer[7]))
+    method_names.append(['ERnet']*len(sted_climp_ernet[7]))
+    method_names.append(['ERnet-v2']*len(sted_climp_ernet_v2[7]))
+    method_names.append(['nERdy']*len(sted_climp_nerdy[7]))
+    method_names.append(['nERdy+']*len(sted_climp_nerdy_p4m[7]))
+
+    method_names.append(['AnalyzER']*len(sted_climp_analyzer[8]))
+    method_names.append(['ERnet']*len(sted_climp_ernet[8]))
+    method_names.append(['ERnet-v2']*len(sted_climp_ernet_v2[8]))
+    method_names.append(['nERdy']*len(sted_climp_nerdy[8]))
+    method_names.append(['nERdy+']*len(sted_climp_nerdy_p4m[8]))
+
+    # df['Metric'] = [value for sublist in metric_names for value in sublist]
+    print(metric_names)
+    print(method_names)
+
+    exit()
+
+    df['Method'] = [value for sublist in method_names for value in sublist]
+
+    # sns.set(style="whitegrid")
+    ax = sns.boxplot(x="Method", y="Values", hue="Metric", data=df, showfliers=False, width=0.8, palette="Set2")
+
+    # plt.ylim(0, 0.8)
+    # plt.xlim(-1, 4.0)
+
+    yt = ax.get_yticks()
+    yt = [f'{y:.1f}' for y in yt]
+    ax.set_yticklabels(yt, fontsize=12)
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=12)#, rotation=45)
+
+    ax.grid(axis='y')#, linestyle='-', linewidth=0.5, color='white')
+    plt.xlabel('Method', fontsize=15)
+    plt.ylabel('Error', fontsize=15)
+
+    # plt.subplots_adjust(hspace=0.3)
+
+    plt.gcf().set_size_inches(6, 8)
+    # plt.gcf().set_size_inches(4, 6)
+
+    # plt.show()
+    plt.savefig(f'nw_graph_analysis/confocal_{group}_graph_err_p2.png', dpi=300, bbox_inches='tight', pad_inches=0.1)
+
+    plt.close()
+
+
+get_conf_graph_perf('atl')
+get_conf_graph_perf('climp')
+get_conf_graph_perf('rtn')
+get_conf_graph_perf('control')
+exit()
 
 
 def get_group_seg_perf(group):
