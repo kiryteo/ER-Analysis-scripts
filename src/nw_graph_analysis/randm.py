@@ -24,7 +24,6 @@ import imageio
 def std_data(data):
     return list((data - min(data)) / (max(data) - min(data)))
 
-
 def get_graph_perf(group):
     # sted_analyzer = pkl.load(open('nw_graph_analysis/sted_analyzer.pkl', 'rb'))
     # sted_ernet = pkl.load(open('nw_graph_analysis/sted_ernet.pkl', 'rb'))
@@ -887,7 +886,7 @@ def get_segmentation_perf():
     #                     test='Mann-Whitney', text_format='star', loc='inside', verbose=2)
 
 
-    ax.grid(axis='y')#, linestyle='-', linewidth=0.5, color='white')
+    ax.grid(axis='y')
     plt.xlabel('Metric', fontsize=16)
     plt.ylabel('Value', fontsize=16)
 
