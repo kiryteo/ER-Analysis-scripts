@@ -14,10 +14,15 @@ import matplotlib.pyplot as plt
 from skimage import measure
 from skimage.measure import label, regionprops
 from skimage.morphology import dilation, closing
-from junction_analysis_modules import JunctionAnalysis as JA
+from statannotations.Annotator import Annotator
+from junction_analysis_modules import JunctionAnalysisModules as JA
 
-confocal_data_path = '/localhome/asa420/MIAL/data/confocal_movies/'
-junc_analysis = JA(confocal_data_path)
+confocal_data_path = '/localhome/asa420/MIAL/data/confocal-data/'
+sted_data_path = '/localhome/asa420/MIAL/data/sted-data/'
+# junc_analysis = JA(confocal_data_path)
+# junc_analysis = JA(sted_data_path)
+
+junc_analysis = JA('sted')
 
 
 group_dict = {'ATL': 26, 'Climp': 31, 'Control': 31, 'RTN': 29}
@@ -47,15 +52,22 @@ def get_cc_ids(labelled_img, region):
 
     return cc_ids
 
+#ref_junctions, per_frame_junctions, labelled_img, _ = junc_analysis.label_junctions('ATL', 2)
+#print(ref_junctions)
+
+#exit()
+
 def get_fuz_cc_outline(group, series_num, region):
-    ref_junctions, per_frame_junctions, labelled_img = junc_analysis.label_junctions(group, series_num)
+    ref_junctions, per_frame_junctions, labelled_img, _ = junc_analysis.label_junctions(group, series_num)
+
+    if len(ref_junctions) == 0:
+        return None
 
     # dict with ids as key and (x, y) as value
-    label_ids, unassigned_cc_dict = junc_analysis.separate_junc_cc(ref_junctions, per_frame_junctions, labelled_img)
+    label_ids = junc_analysis.separate_junc_cc(ref_junctions, labelled_img)
 
     # iso, fuz, unk: list of lists with x, y
-    iso, fuz, unk = junc_analysis.get_junction_areas(label_ids, unassigned_cc_dict)
-
+    iso, fuz = junc_analysis.get_junction_areas(label_ids)
 
     if region == 'iso':
         cc = get_cc_ids(labelled_img, iso)
@@ -65,21 +77,31 @@ def get_fuz_cc_outline(group, series_num, region):
 
     cc_coords = {each: np.where(labelled_img==each) for each in cc}
 
+    ratio_data = []
+
+    for id in cc:
+        num = len(label_ids[id])
+        den = len(cc_coords[id][0])
+        # ratio_data.append(num/ den)
+        ratio_data.append(den/ num)
+
     # iso_cc_coords = {each: np.where(labelled_img==each) for each in iso_cc}
     # fuz_cc_coords = {each: np.where(labelled_img==each) for each in fuz_cc}
     # unk_cc_coords = {each: np.where(labelled_img==each) for each in unk_cc}
 
-    spread_img = np.zeros((128, 128))
-    for v in cc_coords.values():
-        spread_img[v[0], v[1]] = 255.
+    # spread_img = np.zeros((128, 128))
+    # for v in cc_coords.values():
+    #     spread_img[v[0], v[1]] = 255.
 
-    # spread_img = dilation(spread_img)
-    spread_img = closing(spread_img)
-    # spread_img = dilation(spread_img)
+    # # spread_img = dilation(spread_img)
+    # spread_img = closing(spread_img)
+    # # spread_img = dilation(spread_img)
 
-    lab_img = label(spread_img, connectivity=2)
+    # lab_img = label(spread_img, connectivity=2)
 
-    return lab_img, ref_junctions
+#    return lab_img
+    return ratio_data
+
 
 def get_intersection(a, b):
     # a = (np.array([19, 20, 20, 124]), np.array([124, 122, 123, 43]))
@@ -101,6 +123,188 @@ def get_intersection(a, b):
 
     return intersection
 
+def get_fuz_cc_variance_data(group):
+    data = []
+    for series in range(1, group_dict[group]+1):
+#        ser_data = []
+#        lab_img = get_fuz_cc_outline(group, series, 'fuz')
+#        num_fuz_patches = np.unique(lab_img).shape[0] - 1
+        ratio_data = get_fuz_cc_outline(group, series, 'fuz')
+        if ratio_data:
+            data.extend(ratio_data)
+        else:
+            continue
+
+
+#        try:
+            #img = imageio.imread(f'/localhome/asa420/MIAL/data/confocal-data/{group}/er_mean/{group.lower()}{series}_er_mean.png')
+#            img = imageio.imread(f'/localhome/asa420/MIAL/data/sted-data/{group.lower()}/{group.lower()}{series}_er_mean.png')
+
+#            img = (img - np.min(img)) / (np.max(img) - np.min(img))
+
+#            for patch in range(1, num_fuz_patches+1):
+                # get variance per patch in img
+#                patch_coords = np.where(lab_img==patch)
+#                size = len(patch_coords[0])
+
+#                patch_pixels = img[patch_coords]
+
+                #patch_var = np.var(patch_pixels)
+#                patch_mean = np.mean(patch_pixels)
+
+                #data.append(patch_var/size)
+#                data.append(patch_mean)
+#                ser_data.append(size)
+#        except:
+#            pass
+#        data.append(np.mean(ser_data))
+
+    # data = (data - np.min(data)) / (np.max(data) - np.min(data))
+    return data
+
+
+# with open('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/ATL_fuz_cc_patches.pkl', 'rb') as f:
+#     atl = pkl.load(f)
+
+# with open('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/Climp_fuz_cc_patches.pkl', 'rb') as f:
+#     climp = pkl.load(f)
+
+# with open('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/Control_fuz_cc_patches.pkl', 'rb') as f:
+#     control = pkl.load(f)
+
+# with open('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/RTN_fuz_cc_patches.pkl', 'rb') as f:
+#     rtn = pkl.load(f)
+
+# print(atl)
+
+# exit()
+
+# atl = get_fuz_cc_variance_data('ATL')
+climp = get_fuz_cc_variance_data('Climp')
+control = get_fuz_cc_variance_data('Control')
+rtn = get_fuz_cc_variance_data('RTN')
+
+# with open('atl_tot_junc_ref_junc_ratio.pkl', 'wb') as f:
+#     pkl.dump(atl, f)
+
+# with open('sted_climp_tot_junc_ref_junc_ratio.pkl', 'wb') as f:
+#     pkl.dump(climp, f)
+
+# with open('sted_control_tot_junc_ref_junc_ratio.pkl', 'wb') as f:
+#     pkl.dump(control, f)
+
+# with open('sted_rtn_tot_junc_ref_junc_ratio.pkl', 'wb') as f:
+#     pkl.dump(rtn, f)
+
+# with open('atl_tot_junc_ref_junc_ratio.pkl', 'rb') as f:
+#     atl = pkl.load(f)
+
+with open('sted_climp_tot_junc_ref_junc_ratio.pkl', 'rb') as f:
+    climp = pkl.load(f)
+
+with open('sted_control_tot_junc_ref_junc_ratio.pkl', 'rb') as f:
+    control = pkl.load(f)
+
+with open('sted_rtn_tot_junc_ref_junc_ratio.pkl', 'rb') as f:
+    rtn = pkl.load(f)
+
+
+
+#atl = (atl - np.min(atl)) / (np.max(atl) - np.min(atl))
+#climp = (climp - np.min(climp)) / (np.max(climp) - np.min(climp))
+#control = (control - np.min(control)) / (np.max(control) - np.min(control))
+#rtn = (rtn - np.min(rtn)) / (np.max(rtn) - np.min(rtn))
+
+#with open('sted_climp_fuz_var_data.pkl', 'wb') as f:
+#    pkl.dump(climp, f)
+
+#with open('sted_control_fuz_var_data.pkl', 'wb') as f:
+#    pkl.dump(control, f)
+
+#with open('sted_rtn_fuz_var_data.pkl', 'wb') as f:
+#    pkl.dump(rtn, f)
+
+
+#with open('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/sted_Climp_fuz_cc_variance_data.pkl', 'rb') as f:
+#    climp = pkl.load(f)
+
+#with open('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/sted_Control_fuz_cc_variance_data.pkl', 'rb') as f:
+#    control = pkl.load(f)
+
+#with open('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/sted_RTN_fuz_cc_variance_data.pkl', 'rb') as f:  
+#    rtn = pkl.load(f)
+
+
+# with open('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/conf_ATL_fuz_cc_variance_data.pkl', 'rb') as f:
+#     atl = pkl.load(f)
+
+# with open('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/conf_Climp_fuz_cc_variance_data.pkl', 'rb') as f:
+#     climp = pkl.load(f)
+
+# with open('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/conf_Control_fuz_cc_variance_data.pkl', 'rb') as f:
+#     control = pkl.load(f)
+
+# with open('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/conf_RTN_fuz_cc_variance_data.pkl', 'rb') as f:
+#     rtn = pkl.load(f)
+
+
+df = pd.DataFrame()
+# df['Variance'] = pd.Series(np.concatenate((control, rtn, climp, atl)))
+# df['Group'] = pd.Series(np.concatenate((['Control']*len(control), ['Reticulon']*len(rtn), ['Climp']*len(climp), ['Atlastin']*len(atl))))
+
+df['Variance'] = pd.Series(np.concatenate((control, rtn, climp)))
+df['Group'] = pd.Series(np.concatenate((['Control']*len(control), ['Reticulon']*len(rtn), ['Climp']*len(climp))))
+
+colors = sns.color_palette(n_colors=4)
+
+# pal = {'Control': colors[0], 'Reticulon': colors[1], 'Climp': colors[2], 'Atlastin': colors[3]}
+
+pal = {'Control': colors[0], 'Reticulon': colors[1], 'Climp': colors[2]}
+
+ax = sns.boxplot(data=df, x='Group', y='Variance', showfliers=False, width=0.6, palette=pal)
+
+# box_pairs = [('Atlastin', 'Climp'), ('Atlastin', 'Control'), ('Atlastin', 'Reticulon'), ('Climp', 'Control'), ('Climp', 'Reticulon'), ('Control', 'Reticulon')]
+
+
+
+box_pairs = [('Climp', 'Control'), ('Climp', 'Reticulon'), ('Control', 'Reticulon')]
+
+annotator = Annotator(ax, box_pairs, data=df, x='Group', y='Variance')
+annotator.configure(test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=9)
+
+annotator.apply_and_annotate()
+
+
+
+# statannot.add_stat_annotation(ax, x='Region', y='Variance', data=df, box_pairs=box_pairs,
+#                                     test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=15)
+
+# plt.ylim(0, 45)
+
+yt = ax.get_yticks()
+yt = [f'{y:.1f}' for y in yt]
+ax.set_xticklabels(ax.get_xticklabels(), fontsize=9, rotation=45)
+ax.set_yticklabels(yt, fontsize=9)
+
+# plt.legend(['ATL', 'Climp', 'Control', 'RTN'], fontsize=15)
+
+plt.xlabel('Group', fontsize=12)
+#plt.ylabel('Mean CC area', fontsize=13)
+#plt.ylabel('CC area mean', fontsize=13)
+plt.ylabel('Ratio', fontsize=12)
+plt.gcf().set_size_inches(2, 6)
+#plt.title(f'Mean of Overlapping CC in \n mean projection over CC area (STED) ', fontsize=12)
+#plt.title('Isolated CC area mean \n per time-series (Confocal)', fontsize=12)
+#plt.title('Overlapping CC area mean \n per time-series (STED)', fontsize=12)
+#plt.title('Mean of Overlapping CC intensity in \n mean projection per time series (STED)', fontsize=12)
+
+# plt.title('Ratio of Total junctions and reference \n junctions in Overlapping CC (STED)', fontsize=12)
+
+plt.savefig('sted_fuz_cc_area_ref_junc_ratio_v5.png', dpi=300, bbox_inches='tight')
+# plt.savefig('conf_fuz_cc_variance.png', dpi=300, bbox_inches='tight')
+plt.close()
+
+exit()
 
 def get_ref_junc_per_fuz_CC(group):
     data = []
