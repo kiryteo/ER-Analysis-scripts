@@ -23,6 +23,7 @@ sted_data_path = '/localhome/asa420/MIAL/data/sted-data/'
 # junc_analysis = JA(sted_data_path)
 
 junc_analysis = JA('sted')
+# junc_analysis = JA('confocal')
 
 
 group_dict = {'ATL': 26, 'Climp': 31, 'Control': 31, 'RTN': 29}
@@ -77,13 +78,19 @@ def get_fuz_cc_outline(group, series_num, region):
 
     cc_coords = {each: np.where(labelled_img==each) for each in cc}
 
-    ratio_data = []
+    # ratio_data = []
+
+    xdata = []
+    ydata = []
 
     for id in cc:
         num = len(label_ids[id])
         den = len(cc_coords[id][0])
         # ratio_data.append(num/ den)
-        ratio_data.append(den/ num)
+        # ratio_data.append(den/ num)
+
+        xdata.append(num)
+        ydata.append(den)
 
     # iso_cc_coords = {each: np.where(labelled_img==each) for each in iso_cc}
     # fuz_cc_coords = {each: np.where(labelled_img==each) for each in fuz_cc}
@@ -100,7 +107,8 @@ def get_fuz_cc_outline(group, series_num, region):
     # lab_img = label(spread_img, connectivity=2)
 
 #    return lab_img
-    return ratio_data
+    # return ratio_data
+    return xdata, ydata
 
 
 def get_intersection(a, b):
@@ -124,16 +132,28 @@ def get_intersection(a, b):
     return intersection
 
 def get_fuz_cc_variance_data(group):
-    data = []
+    # data = []
+    X = []
+    Y = []
     for series in range(1, group_dict[group]+1):
 #        ser_data = []
 #        lab_img = get_fuz_cc_outline(group, series, 'fuz')
 #        num_fuz_patches = np.unique(lab_img).shape[0] - 1
-        ratio_data = get_fuz_cc_outline(group, series, 'fuz')
-        if ratio_data:
-            data.extend(ratio_data)
+        # ratio_data = get_fuz_cc_outline(group, series, 'fuz')
+
+        xd, yd = get_fuz_cc_outline(group, series, 'fuz')
+
+        if xd and yd:
+            X.extend(xd)
+            Y.extend(yd)
         else:
             continue
+
+
+        # if ratio_data:
+        #     data.extend(ratio_data)
+        # else:
+        #     continue
 
 
 #        try:
@@ -159,8 +179,250 @@ def get_fuz_cc_variance_data(group):
 #            pass
 #        data.append(np.mean(ser_data))
 
-    # data = (data - np.min(data)) / (np.max(data) - np.min(data))
-    return data
+
+    # return data
+    return X, Y
+
+from plantcv import plantcv as pcv
+
+
+def get_skeleton(self, img_path):
+    """
+    @param img_path: path to image
+    @return: skeleton (ndarray) - skeleton of the image
+    """
+    img = imageio.imread(img_path)
+    # # for blur sted
+    # img = skimage.transform.resize(img, (32, 32), anti_aliasing=True)
+    return pcv.morphology.skeletonize(mask=img)
+
+def skel_to_graph(skel_img_path):
+    """
+    @param skel_img_path:
+    @return:
+    """
+    # fname_suffix = skel_img_path.split('/')[-1].split('.')[0].split('_')[-1]
+    # if fname_suffix == 'skel':
+    #     return sknw.build_sknw(imageio.imread(skel_img_path), multi=True, iso=False)
+    # elif fname_suffix == 'filt':
+    skel = get_skeleton(skel_img_path)
+    return sknw.build_sknw(skel, multi=False, iso=False)
+
+# def get_all_junc(group, num_series):
+#     # get reference junctions based on mean projection frame and per frame junctions for each series, all groups
+#     """
+
+#     @param group: group to be analyzed
+#     @param num_series: sequence number
+#     @return: nps (list) - provides all junctions with degree > 2 from the mean projection proc skeleton, per_frame_junctions (list) - provides all junctions per skel frame
+#     """
+
+#     # pr
+#     group_pref = {'ATL':'A', 'Climp':'C', 'Control':'Ct', 'RTN':'R'}
+
+#     # mean_er = f'{self.confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{num_series}_er_mean.png'
+
+#     # mean_skel = f'{self.confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_proc_skel.png'
+#     # mean_skel = f'{self.data_path}{group}/er_mean_proc/{group.lower()}{num_series}_proc_skel.png'
+
+#     mean_skel_path = f'{sted_data_path}vess_enh_unet/{group.lower()}/gt_skel/sted_{group.lower()}{num_series}_proc_skel.png'
+#     # else:
+#     #     mean_skel_path = f'{self.data_path}vess_enh_unet/{group.lower()}/gt_skel/{group.lower()}{num_series}_proc_skel.png'
+
+#     if os.path.exists(mean_skel_path):
+#         ref_graph = skel_to_graph(mean_skel_path)
+
+#         # ref_junctions = self.get_ref_junctions(self.skel_to_graph(mean_skel))
+#         ref_junctions = get_junctions(mean_skel_path)
+#         ref_junctions = [[each[0], each[1]] for each in ref_junctions]
+
+#         per_frame_junctions = []
+        
+#         # for frame in range(fr_start, fr_end):
+#         for frame in range(100):
+
+#             # er_path = f'{self.data_path}{group}/std/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_std.png'
+
+#             # skeleton_path = f'{self.data_path}{group}/preproc/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_proc_enhance.png'
+            
+#             # pipeline
+#             # skeleton_path = f'{self.data_path}{group}/skel/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
+
+#             # UNet pipeline
+#             skeleton_path = f'{self.data_path}/vess_enh_unet/{group.lower()}/skel/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
+
+#             junctions = self.get_junctions(skeleton_path)
+
+#             junc_array = [[junc[0], junc[1]] for junc in junctions]
+#             per_frame_junctions.extend(junc_array)
+    
+#     else:
+#         ref_junctions = []
+#         per_frame_junctions = []
+#         ref_graph = []
+
+#     return ref_junctions, per_frame_junctions, ref_graph
+
+
+# def label_junctions(group, series_num):
+#         """
+#         Get connected component output for junction classification
+#         """
+
+
+#         ref_junctions, per_frame_junctions, ref_graph = self.get_all_junc(group, series_num)
+
+#         if len(ref_junctions) == 0:
+#             return [], [], [], []
+
+#         ref_junctions = np.array(ref_junctions)
+#         per_frame_junctions = np.array(per_frame_junctions)
+
+#         junc_spread_img = np.zeros((128, 128))
+
+#         for junction in per_frame_junctions:
+#             junc_spread_img[junction[0], junction[1]] = 255.
+
+#         labelled_img = label(junc_spread_img, connectivity=2)
+#         # imageio.imsave('Climp12_junc_labelled.png', labelled_img)
+#         # fig.add_subplot(1,2,2)
+#         # plt.axis('off')
+#         # plt.imshow(labelled_img, cmap='gray')
+#         # plt.savefig('Climp12_junc_labelled.png', bbox_inches='tight', pad_inches=0, dpi=700)
+#         # plt.close()
+#         # plt.show()
+#         # exit()
+
+#         return ref_junctions, per_frame_junctions, labelled_img, ref_graph
+
+def get_junc_sum_per_frame(group, series_num, region):
+
+    ref_junctions, per_frame_junctions, labelled_img, _ = junc_analysis.label_junctions(group, series_num)
+
+    # dict with ids as key and (x, y) as value
+    label_ids = junc_analysis.separate_junc_cc(ref_junctions, labelled_img)
+
+    # iso, fuz, unk: list of lists with x, y
+    iso, fuz = junc_analysis.get_junction_areas(label_ids)
+
+    if region == 'iso':
+        cc = get_cc_ids(labelled_img, iso)
+    else:
+        cc = get_cc_ids(labelled_img, fuz)
+    # # unk_cc = get_cc_ids(labelled_img, unk)
+
+    cc_coords = {each: np.where(labelled_img==each) for each in cc}
+
+    new_dt = {}
+
+    for k, v in cc_coords.items():
+        pairs = list(zip(v[0], v[1]))
+        new_dt[k] = pairs
+
+    mean_frame_dt = {}
+    pf_dt = {}
+
+    mean_proj_frame = imageio.imread(f'{sted_data_path}/vess_enh_unet/{group.lower()}/nerdynet_v2/sted_{group.lower()}{series_num}_er_mean_pred.png')
+
+    mean_proj_frame = (mean_proj_frame - np.min(mean_proj_frame)) / (np.max(mean_proj_frame) - np.min(mean_proj_frame))
+
+    mean_skel = pcv.morphology.skeletonize(mask=mean_proj_frame)
+
+    mean_graph = sknw.build_sknw(mean_skel, multi=False, iso=False)
+
+    mean_node_set, mean_degree_list = mean_graph.nodes, mean_graph.degree
+
+    # get node coordinates
+    mean_node_coords = np.array([mean_node_set[node]['o'] for node in mean_node_set])
+
+    # return coordinates of junctions with degree > 2
+    mean_junctions = [mean_node_coords[i] for i, val in enumerate(mean_degree_list) if val[1] > 2]
+
+    for frame in range(100):
+
+        # UNet pipeline
+        skeleton_path = f'{sted_data_path}/vess_enh_unet/{group.lower()}/skel/{group_pref[group]}{series_num}_decon_t0{frame:02d}_ch00_skel.png'
+
+        # img = imageio.imread(skeleton_path)
+        # skel = pcv.morphology.skeletonize(mask=img)
+        skel = imageio.imread(skeleton_path)
+        graph = sknw.build_sknw(skel, multi=False, iso=False)
+
+        node_set, degree_list = graph.nodes, graph.degree
+
+        # get node coordinates
+        node_coords = np.array([node_set[node]['o'] for node in node_set])
+
+        # return coordinates of junctions with degree > 2    
+        junctions = [node_coords[i] for i, val in enumerate(degree_list) if val[1] > 2]
+
+        # print(junctions)
+        for junction in junctions:
+            for key, value in new_dt.items():
+                if (junction[0], junction[1]) in value:
+                    if key not in pf_dt:
+                        pf_dt[key] = 1
+                    pf_dt[key] += 1
+
+    for junction in mean_junctions:
+        for key, value in new_dt.items():
+            if (junction[0], junction[1]) in value:
+                if key not in mean_frame_dt:
+                    mean_frame_dt[key] = 1
+                mean_frame_dt[key] += 1
+
+    # print(pf_dt)
+    # print(mean_frame_dt)
+    # exit()
+    return pf_dt, mean_frame_dt
+
+def get_junc_ratio_data(group):
+    ratio_data = []
+    for ser in range(1, 17):
+        try:
+            pf_dt, mean_frame_dt = get_junc_sum_per_frame(group, ser, 'fuz')
+            keys = list(pf_dt.keys())
+            for k in keys:
+                ratio_data.append(pf_dt[k]/mean_frame_dt[k])
+        except:
+            continue
+    return ratio_data
+
+# print(ratio_data)
+# plt.plot(ratio_data)
+# plt.show()
+
+ctrl = get_junc_ratio_data('Control')
+rtn = get_junc_ratio_data('RTN')
+climp = get_junc_ratio_data('Climp')
+
+df = pd.DataFrame()
+df['Ratio'] = pd.Series(np.concatenate((ctrl, rtn, climp)))
+df['Group'] = pd.Series(np.concatenate((['Control']*len(ctrl), ['Reticulon']*len(rtn), ['Climp']*len(climp))))
+
+ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, width=0.6)
+
+box_pairs = [('Climp', 'Control'), ('Climp', 'Reticulon'), ('Control', 'Reticulon')]
+annotator = Annotator(ax, box_pairs, data=df, x='Group', y='Ratio')
+annotator.configure(test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=9)
+annotator.apply_and_annotate()
+
+yt = ax.get_yticks()
+yt = [f'{y:.2f}' for y in yt]
+ax.set_xticklabels(ax.get_xticklabels(), fontsize=9, rotation=45)
+ax.set_yticklabels(yt, fontsize=9)
+
+plt.xlabel('Group', fontsize=12)
+plt.ylabel('Ratio', fontsize=12)
+plt.gcf().set_size_inches(2, 6)
+
+plt.savefig('sted_fuz_cc_junc_sum_ratio_v5.png', dpi=300, bbox_inches='tight')
+
+# plt.show()
+plt.close()
+
+exit()
+
 
 
 # with open('/localhome/asa420/ER-Analysis-scripts/src/nw_graph_analysis/ATL_fuz_cc_patches.pkl', 'rb') as f:
@@ -180,9 +442,60 @@ def get_fuz_cc_variance_data(group):
 # exit()
 
 # atl = get_fuz_cc_variance_data('ATL')
-climp = get_fuz_cc_variance_data('Climp')
-control = get_fuz_cc_variance_data('Control')
-rtn = get_fuz_cc_variance_data('RTN')
+# climp = get_fuz_cc_variance_data('Climp')
+# control = get_fuz_cc_variance_data('Control')
+# rtn = get_fuz_cc_variance_data('RTN')
+
+
+climpX, climpY = get_fuz_cc_variance_data('Climp')
+rtnX, rtnY = get_fuz_cc_variance_data('RTN')
+controlX, controlY = get_fuz_cc_variance_data('Control')
+atlX, atlY = get_fuz_cc_variance_data('ATL')
+# if element in climpX is greater than 15, remove it along with corresponding element in climpY
+
+climpX = [x for x in climpX if x < 15]
+climpY = [y for y in climpY if y < 500]
+
+rtnX = [x for x in rtnX if x < 30]
+rtnY = [y for y in rtnY if y < 1000]
+
+# controlX = [x for x in controlX if x < 30]
+# controlY = [y for y in controlY if y < 1000]
+
+# atlX = [x for x in atlX if x < 30]
+# atlY = [y for y in atlY if y < 1000]
+
+
+fig = plt.figure()
+ax = fig.add_subplot(111)
+
+
+ax.scatter(climpX, climpY, label='Climp', alpha=0.5)
+ax.scatter(rtnX, rtnY, label='RTN', alpha=0.5)
+ax.scatter(controlX, controlY, label='Control', alpha=0.5)
+ax.scatter(atlX, atlY, label='ATL', alpha=0.5)
+# plt.scatter(controlX, controlY)
+# plt.scatter(rtnX, rtnY)
+# plt.scatter(atlX, atlY)
+
+plt.ylim(0, 800)
+plt.xlim(0, 30)
+
+plt.legend()
+
+plt.title('#junctions vs #reference junctions in Overlapping CC')
+
+plt.xlabel('#reference junctions')
+plt.ylabel('#junctions')
+
+plt.savefig('Tot_junc_ref_junc_scatter.png', dpi=300, bbox_inches='tight', pad_inches=0.1)
+
+plt.close()
+
+# plt.show()
+
+exit()
+
 
 # with open('atl_tot_junc_ref_junc_ratio.pkl', 'wb') as f:
 #     pkl.dump(atl, f)

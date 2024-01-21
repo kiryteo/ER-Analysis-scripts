@@ -8,6 +8,7 @@ import copy
 import graph_connector_modules as gcm
 import matplotlib.pyplot as plt
 import skimage
+import os
 
 confocal_data_path = '/localhome/asa420/MIAL/data/confocal-data/'
 sted_data_path = '/localhome/asa420/MIAL/data/sted-data/'
@@ -37,7 +38,9 @@ class JunctionAnalysisModules:
         # if fname_suffix == 'skel':
         #     return sknw.build_sknw(imageio.imread(skel_img_path), multi=True, iso=False)
         # elif fname_suffix == 'filt':
-        skel = self.get_skeleton(skel_img_path)
+        # skel = self.get_skeleton(skel_img_path)
+
+        skel = imageio.imread(skel_img_path)
         return sknw.build_sknw(skel, multi=False, iso=False)
     
     # node_connector
@@ -143,31 +146,37 @@ class JunctionAnalysisModules:
         else:
             mean_skel_path = f'{self.data_path}vess_enh_unet/{group.lower()}/gt_skel/{group.lower()}{num_series}_proc_skel.png'
 
-        ref_graph = self.skel_to_graph(mean_skel_path)
+        if os.path.exists(mean_skel_path):
+            ref_graph = self.skel_to_graph(mean_skel_path)
 
-        # ref_junctions = self.get_ref_junctions(self.skel_to_graph(mean_skel))
-        ref_junctions = self.get_junctions(mean_skel_path)
-        ref_junctions = [[each[0], each[1]] for each in ref_junctions]
+            # ref_junctions = self.get_ref_junctions(self.skel_to_graph(mean_skel))
+            ref_junctions = self.get_junctions(mean_skel_path)
+            ref_junctions = [[each[0], each[1]] for each in ref_junctions]
 
-        per_frame_junctions = []
-        
-        # for frame in range(fr_start, fr_end):
-        for frame in range(100):
-
-            # er_path = f'{self.data_path}{group}/std/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_std.png'
-
-            # skeleton_path = f'{self.data_path}{group}/preproc/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_proc_enhance.png'
+            per_frame_junctions = []
             
-            # pipeline
-            # skeleton_path = f'{self.data_path}{group}/skel/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
+            # for frame in range(fr_start, fr_end):
+            for frame in range(100):
 
-            # UNet pipeline
-            skeleton_path = f'{self.data_path}/vess_enh_unet/{group.lower()}/skel/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
+                # er_path = f'{self.data_path}{group}/std/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_std.png'
 
-            junctions = self.get_junctions(skeleton_path)
+                # skeleton_path = f'{self.data_path}{group}/preproc/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_proc_enhance.png'
+                
+                # pipeline
+                # skeleton_path = f'{self.data_path}{group}/skel/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
 
-            junc_array = [[junc[0], junc[1]] for junc in junctions]
-            per_frame_junctions.extend(junc_array)
+                # UNet pipeline
+                skeleton_path = f'{self.data_path}/vess_enh_unet/{group.lower()}/skel/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
+
+                junctions = self.get_junctions(skeleton_path)
+
+                junc_array = [[junc[0], junc[1]] for junc in junctions]
+                per_frame_junctions.extend(junc_array)
+        
+        else:
+            ref_junctions = []
+            per_frame_junctions = []
+            ref_graph = []
 
         return ref_junctions, per_frame_junctions, ref_graph
 
@@ -178,6 +187,9 @@ class JunctionAnalysisModules:
 
 
         ref_junctions, per_frame_junctions, ref_graph = self.get_all_junc(group, series_num)
+
+        if len(ref_junctions) == 0:
+            return [], [], [], []
 
         ref_junctions = np.array(ref_junctions)
         per_frame_junctions = np.array(per_frame_junctions)
