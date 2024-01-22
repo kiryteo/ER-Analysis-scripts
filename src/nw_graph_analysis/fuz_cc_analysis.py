@@ -11,6 +11,7 @@ import statannot
 import scipy
 from scipy import ndimage
 import matplotlib.pyplot as plt
+from plantcv import plantcv as pcv
 from skimage import measure
 from skimage.measure import label, regionprops
 from skimage.morphology import dilation, closing
@@ -22,8 +23,8 @@ sted_data_path = '/localhome/asa420/MIAL/data/sted-data/'
 # junc_analysis = JA(confocal_data_path)
 # junc_analysis = JA(sted_data_path)
 
-junc_analysis = JA('sted')
-# junc_analysis = JA('confocal')
+# junc_analysis = JA('sted')
+junc_analysis = JA('confocal')
 
 
 group_dict = {'ATL': 26, 'Climp': 31, 'Control': 31, 'RTN': 29}
@@ -57,6 +58,241 @@ def get_cc_ids(labelled_img, region):
 #print(ref_junctions)
 
 #exit()
+
+def get_edges(conn_graph, iso_ids):
+    if len(iso_ids) > 0:
+        return [(u, v) for (u, v) in conn_graph.edges() if (u in iso_ids and v in iso_ids)]
+
+
+def get_iso_iso_len_mean(group):
+    data = []
+    for ser in range(1, group_dict[group]+1):
+        ref_junctions, per_frame_junctions, labelled_img, conn_graph = junc_analysis.label_junctions(group, ser)
+
+        # dict with ids as key and (x, y) as value
+        label_ids = junc_analysis.separate_junc_cc(ref_junctions, labelled_img)
+
+        # iso, fuz, unk: list of lists with x, y
+        iso, fuz = junc_analysis.get_junction_areas(label_ids)
+
+        iso_ids = get_cc_ids(labelled_img, iso)
+
+        iso_iso = get_edges(conn_graph, iso_ids)
+
+        len_data = [len(conn_graph[edge[0]][edge[1]]['pts']) for edge in iso_iso]
+
+        data.append(np.mean(len_data))
+
+    return data
+
+
+# atl = get_iso_iso_len_mean('ATL')
+# climp = get_iso_iso_len_mean('Climp')
+# control = get_iso_iso_len_mean('Control')
+# rtn = get_iso_iso_len_mean('RTN')
+
+# with open('atl_iso_iso_len_mean.pkl', 'wb') as f:
+#     pkl.dump(atl, f)
+
+# with open('climp_iso_iso_len_mean.pkl', 'wb') as f:
+#     pkl.dump(climp, f)
+
+# with open('control_iso_iso_len_mean.pkl', 'wb') as f:
+#     pkl.dump(control, f)
+
+# with open('rtn_iso_iso_len_mean.pkl', 'wb') as f:
+#     pkl.dump(rtn, f)
+
+# with open('atl_iso_iso_len_mean.pkl', 'rb') as f:
+#     atl = pkl.load(f)
+
+# with open('climp_iso_iso_len_mean.pkl', 'rb') as f:
+#     climp = pkl.load(f)
+
+# with open('control_iso_iso_len_mean.pkl', 'rb') as f:
+#     control = pkl.load(f)
+
+# with open('rtn_iso_iso_len_mean.pkl', 'rb') as f:
+#     rtn = pkl.load(f)
+
+
+# df = pd.DataFrame()
+# df['Mean'] = pd.Series(np.concatenate((control, rtn, climp, atl)))
+# df['Group'] = pd.Series(np.concatenate((['Control']*len(control), ['Reticulon']*len(rtn), ['Climp']*len(climp), ['Atlastin']*len(atl))))
+
+# ax = sns.boxplot(data=df, x='Group', y='Mean', showfliers=False, width=0.8)
+
+# # box_pairs = [('ATL', 'Climp'), ('ATL', 'Control'), ('ATL', 'RTN'), ('Climp', 'Control'), ('Climp', 'RTN'), ('Control', 'RTN')]
+# # annotator = Annotator(ax, box_pairs, data=df, x='Group', y='Mean')
+# # annotator.configure(test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=9)
+# # annotator.apply_and_annotate()
+
+# plt.ylim(4, 15.9)
+
+
+# yt = ax.get_yticks()
+# yt = [f'{y:.1f}' for y in yt]
+# ax.set_xticklabels(ax.get_xticklabels(), fontsize=11, rotation=45)
+# ax.set_yticklabels(yt, fontsize=11)
+
+# # plt.xlabel('Group', fontsize=12)
+# # plt.ylabel('Mean', fontsize=12)
+# plt.gcf().set_size_inches(2, 5)
+
+# plt.savefig('conf_iso_iso_len_mean_v4.png', dpi=300, bbox_inches='tight')
+
+# plt.close()
+
+# exit()
+
+#TODO: junc ratio and CC area ratio needs check
+
+def get_fuz_iso_ref_junc_ratio(group):
+    ratio_data = []
+    # data = []
+    for ser in range(1, group_dict[group]+1):
+        ref_junctions, per_frame_junctions, labelled_img, _ = junc_analysis.label_junctions(group, ser)
+
+        # dict with ids as key and (x, y) as value
+        label_ids = junc_analysis.separate_junc_cc(ref_junctions, labelled_img)
+
+        # iso, fuz, unk: list of lists with x, y
+        iso, fuz = junc_analysis.get_junction_areas(label_ids)
+
+        iso_ids = get_cc_ids(labelled_img, iso)
+        fuz_ids = get_cc_ids(labelled_img, fuz)
+
+        # data.append(len(iso_ids))
+
+        # ratio = len(fuz_ids)/len(iso_ids)
+        ratio = len(fuz)/len(iso)
+
+        ratio_data.append(ratio)
+
+        iso_cc_coords = {each: np.where(labelled_img==each) for each in iso_ids}
+        fuz_cc_coords = {each: np.where(labelled_img==each) for each in fuz_ids}
+
+
+
+    return ratio_data
+    # return data
+
+
+# atl = get_fuz_iso_ref_junc_ratio('ATL')
+# climp = get_fuz_iso_ref_junc_ratio('Climp')
+# control = get_fuz_iso_ref_junc_ratio('Control')
+# rtn = get_fuz_iso_ref_junc_ratio('RTN')
+
+# with open('atl_fuz_iso_CC_area_ratio.pkl', 'wb') as f:
+#     pkl.dump(atl, f)
+
+# with open('climp_fuz_iso_CC_area_ratio.pkl', 'wb') as f:
+#     pkl.dump(climp, f)
+
+# with open('control_fuz_iso_CC_area_ratio.pkl', 'wb') as f:
+#     pkl.dump(control, f)
+
+# with open('rtn_fuz_iso_CC_area_ratio.pkl', 'wb') as f:
+#     pkl.dump(rtn, f)
+
+# with open('atl_fuz_iso_CC_area_ratio.pkl', 'rb') as f:
+#     atl = pkl.load(f)
+
+# with open('climp_fuz_iso_CC_area_ratio.pkl', 'rb') as f:
+#     climp = pkl.load(f)
+
+# with open('control_fuz_iso_CC_area_ratio.pkl', 'rb') as f:
+#     control = pkl.load(f)
+
+# with open('rtn_fuz_iso_CC_area_ratio.pkl', 'rb') as f:
+#     rtn = pkl.load(f)
+
+
+# with open('atl_fuz_iso_ref_junc_ratio.pkl', 'wb') as f:
+#     pkl.dump(atl, f)
+
+# with open('climp_fuz_iso_ref_junc_ratio.pkl', 'wb') as f:
+#     pkl.dump(climp, f)
+
+# with open('control_fuz_iso_ref_junc_ratio.pkl', 'wb') as f:
+#     pkl.dump(control, f)
+
+# with open('rtn_fuz_iso_ref_junc_ratio.pkl', 'wb') as f:
+#     pkl.dump(rtn, f)
+
+# with open('atl_fuz_iso_ref_junc_ratio.pkl', 'rb') as f:
+#     atl = pkl.load(f)
+
+# with open('climp_fuz_iso_ref_junc_ratio.pkl', 'rb') as f:
+#     climp = pkl.load(f)
+
+# with open('control_fuz_iso_ref_junc_ratio.pkl', 'rb') as f:
+#     control = pkl.load(f)
+
+# with open('rtn_fuz_iso_ref_junc_ratio.pkl', 'rb') as f:
+#     rtn = pkl.load(f)
+
+
+# with open('atl_iso_ref_junc_num.pkl', 'wb') as f:
+#     pkl.dump(atl, f)
+
+# with open('climp_iso_ref_junc_num.pkl', 'wb') as f:
+#     pkl.dump(climp, f)
+
+# with open('control_iso_ref_junc_num.pkl', 'wb') as f:
+#     pkl.dump(control, f)
+
+# with open('rtn_iso_ref_junc_num.pkl', 'wb') as f:
+#     pkl.dump(rtn, f)
+
+with open('atl_iso_ref_junc_num.pkl', 'rb') as f:
+    atl = pkl.load(f)
+
+with open('climp_iso_ref_junc_num.pkl', 'rb') as f:
+    climp = pkl.load(f)
+
+with open('control_iso_ref_junc_num.pkl', 'rb') as f:
+    control = pkl.load(f)
+
+with open('rtn_iso_ref_junc_num.pkl', 'rb') as f:
+    rtn = pkl.load(f)
+
+
+df = pd.DataFrame()
+df['Ratio'] = pd.Series(np.concatenate((control, rtn, climp, atl)))
+df['Group'] = pd.Series(np.concatenate((['Control']*len(control), ['Reticulon']*len(rtn), ['Climp']*len(climp), ['Atlastin']*len(atl))))
+
+ax = sns.boxplot(data=df, x='Group', y='Ratio', showfliers=False, width=0.8)
+
+# box_pairs = [('ATL', 'Climp'), ('ATL', 'Control'), ('ATL', 'RTN'), ('Climp', 'Control'), ('Climp', 'RTN'), ('Control', 'RTN')]
+# annotator = Annotator(ax, box_pairs, data=df, x='Group', y='Ratio')
+# annotator.configure(test='Mann-Whitney', text_format='star', loc='inside', verbose=2, fontsize=9)
+# annotator.apply_and_annotate()
+
+# plt.ylim(0, 1.15)
+
+plt.ylim(0, 109)
+
+yt = ax.get_yticks()
+yt = [f'{y:.1f}' for y in yt]
+ax.set_xticklabels(ax.get_xticklabels(), fontsize=11, rotation=45)
+ax.set_yticklabels(yt, fontsize=11)
+
+# ax.grid(axis='y')
+# plt.xlabel('Group', fontsize=12)
+# plt.ylabel('Ratio', fontsize=12)
+# plt.ylabel('Ref Junctions', fontsize=12)
+plt.gcf().set_size_inches(2, 5)
+
+# plt.savefig('conf_fuz_iso_cc_area_ratio_v3.png', dpi=300, bbox_inches='tight')
+
+plt.savefig('conf_iso_ref_junc_num_v4.png', dpi=300, bbox_inches='tight')
+
+plt.close()
+
+exit()
+
+
 
 def get_fuz_cc_outline(group, series_num, region):
     ref_junctions, per_frame_junctions, labelled_img, _ = junc_analysis.label_junctions(group, series_num)
@@ -183,117 +419,7 @@ def get_fuz_cc_variance_data(group):
     # return data
     return X, Y
 
-from plantcv import plantcv as pcv
 
-
-def get_skeleton(self, img_path):
-    """
-    @param img_path: path to image
-    @return: skeleton (ndarray) - skeleton of the image
-    """
-    img = imageio.imread(img_path)
-    # # for blur sted
-    # img = skimage.transform.resize(img, (32, 32), anti_aliasing=True)
-    return pcv.morphology.skeletonize(mask=img)
-
-def skel_to_graph(skel_img_path):
-    """
-    @param skel_img_path:
-    @return:
-    """
-    # fname_suffix = skel_img_path.split('/')[-1].split('.')[0].split('_')[-1]
-    # if fname_suffix == 'skel':
-    #     return sknw.build_sknw(imageio.imread(skel_img_path), multi=True, iso=False)
-    # elif fname_suffix == 'filt':
-    skel = get_skeleton(skel_img_path)
-    return sknw.build_sknw(skel, multi=False, iso=False)
-
-# def get_all_junc(group, num_series):
-#     # get reference junctions based on mean projection frame and per frame junctions for each series, all groups
-#     """
-
-#     @param group: group to be analyzed
-#     @param num_series: sequence number
-#     @return: nps (list) - provides all junctions with degree > 2 from the mean projection proc skeleton, per_frame_junctions (list) - provides all junctions per skel frame
-#     """
-
-#     # pr
-#     group_pref = {'ATL':'A', 'Climp':'C', 'Control':'Ct', 'RTN':'R'}
-
-#     # mean_er = f'{self.confocal_data_path}{group}/new_op_jul/er_mean/{group.lower()}{num_series}_er_mean.png'
-
-#     # mean_skel = f'{self.confocal_data_path}{group}/new_op_jul/er_mean_proc/{group.lower()}{num_series}_proc_skel.png'
-#     # mean_skel = f'{self.data_path}{group}/er_mean_proc/{group.lower()}{num_series}_proc_skel.png'
-
-#     mean_skel_path = f'{sted_data_path}vess_enh_unet/{group.lower()}/gt_skel/sted_{group.lower()}{num_series}_proc_skel.png'
-#     # else:
-#     #     mean_skel_path = f'{self.data_path}vess_enh_unet/{group.lower()}/gt_skel/{group.lower()}{num_series}_proc_skel.png'
-
-#     if os.path.exists(mean_skel_path):
-#         ref_graph = skel_to_graph(mean_skel_path)
-
-#         # ref_junctions = self.get_ref_junctions(self.skel_to_graph(mean_skel))
-#         ref_junctions = get_junctions(mean_skel_path)
-#         ref_junctions = [[each[0], each[1]] for each in ref_junctions]
-
-#         per_frame_junctions = []
-        
-#         # for frame in range(fr_start, fr_end):
-#         for frame in range(100):
-
-#             # er_path = f'{self.data_path}{group}/std/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_std.png'
-
-#             # skeleton_path = f'{self.data_path}{group}/preproc/{group_pref[group]}{num_series}/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_proc_enhance.png'
-            
-#             # pipeline
-#             # skeleton_path = f'{self.data_path}{group}/skel/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
-
-#             # UNet pipeline
-#             skeleton_path = f'{self.data_path}/vess_enh_unet/{group.lower()}/skel/{group_pref[group]}{num_series}_decon_t0{frame:02d}_ch00_skel.png'
-
-#             junctions = self.get_junctions(skeleton_path)
-
-#             junc_array = [[junc[0], junc[1]] for junc in junctions]
-#             per_frame_junctions.extend(junc_array)
-    
-#     else:
-#         ref_junctions = []
-#         per_frame_junctions = []
-#         ref_graph = []
-
-#     return ref_junctions, per_frame_junctions, ref_graph
-
-
-# def label_junctions(group, series_num):
-#         """
-#         Get connected component output for junction classification
-#         """
-
-
-#         ref_junctions, per_frame_junctions, ref_graph = self.get_all_junc(group, series_num)
-
-#         if len(ref_junctions) == 0:
-#             return [], [], [], []
-
-#         ref_junctions = np.array(ref_junctions)
-#         per_frame_junctions = np.array(per_frame_junctions)
-
-#         junc_spread_img = np.zeros((128, 128))
-
-#         for junction in per_frame_junctions:
-#             junc_spread_img[junction[0], junction[1]] = 255.
-
-#         labelled_img = label(junc_spread_img, connectivity=2)
-#         # imageio.imsave('Climp12_junc_labelled.png', labelled_img)
-#         # fig.add_subplot(1,2,2)
-#         # plt.axis('off')
-#         # plt.imshow(labelled_img, cmap='gray')
-#         # plt.savefig('Climp12_junc_labelled.png', bbox_inches='tight', pad_inches=0, dpi=700)
-#         # plt.close()
-#         # plt.show()
-#         # exit()
-
-#         return ref_junctions, per_frame_junctions, labelled_img, ref_graph
 
 def get_junc_sum_per_frame(group, series_num, region):
 
@@ -371,16 +497,13 @@ def get_junc_sum_per_frame(group, series_num, region):
                     mean_frame_dt[key] = 1
                 mean_frame_dt[key] += 1
 
-    # print(pf_dt)
-    # print(mean_frame_dt)
-    # exit()
     return pf_dt, mean_frame_dt
 
-def get_junc_ratio_data(group):
+def get_junc_ratio_data(group, region):
     ratio_data = []
     for ser in range(1, 17):
         try:
-            pf_dt, mean_frame_dt = get_junc_sum_per_frame(group, ser, 'fuz')
+            pf_dt, mean_frame_dt = get_junc_sum_per_frame(group, ser, region)
             keys = list(pf_dt.keys())
             for k in keys:
                 ratio_data.append(pf_dt[k]/mean_frame_dt[k])
@@ -388,13 +511,10 @@ def get_junc_ratio_data(group):
             continue
     return ratio_data
 
-# print(ratio_data)
-# plt.plot(ratio_data)
-# plt.show()
 
-ctrl = get_junc_ratio_data('Control')
-rtn = get_junc_ratio_data('RTN')
-climp = get_junc_ratio_data('Climp')
+ctrl = get_junc_ratio_data('Control', 'iso')
+rtn = get_junc_ratio_data('RTN', 'iso')
+climp = get_junc_ratio_data('Climp', 'iso')
 
 df = pd.DataFrame()
 df['Ratio'] = pd.Series(np.concatenate((ctrl, rtn, climp)))
@@ -416,7 +536,7 @@ plt.xlabel('Group', fontsize=12)
 plt.ylabel('Ratio', fontsize=12)
 plt.gcf().set_size_inches(2, 6)
 
-plt.savefig('sted_fuz_cc_junc_sum_ratio_v5.png', dpi=300, bbox_inches='tight')
+plt.savefig('sted_iso_cc_junc_sum_ratio_v5.png', dpi=300, bbox_inches='tight')
 
 # plt.show()
 plt.close()
