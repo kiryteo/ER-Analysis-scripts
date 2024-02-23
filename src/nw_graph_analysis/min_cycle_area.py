@@ -3,10 +3,153 @@ import sknw
 import networkx as nx
 import numpy as np
 import math
-from shapely.geometry import Polygon
+# from shapely.geometry import Polygon
 import pickle
 import pandas as pd
 import statannot
+
+import skimage
+from scipy import ndimage
+
+import matplotlib.pyplot as plt
+
+# more props
+# circularity = 4 * pi * area / perimeter^2
+# curvature = 1 / radius of curvature
+# fourier descriptors
+
+
+# img = imageio.imread('/localhome/asa420/MIAL/data/confocal-data/vess_enh_unet/atl/gt_skel/atl1_proc_skel.png')
+
+# invskel = np.invert(img)
+
+# edt = ndimage.distance_transform_edt(invskel)
+
+# cc = skimage.morphology.label(edt, connectivity=2)
+
+# cntrs = skimage.measure.find_contours(cc, 0.8)
+
+# # print(len(cntrs))
+
+# plt.imshow(cc, cmap='gray')
+# for cntr in cntrs:
+#     plt.plot(cntr[:, 1], cntr[:, 0], linewidth=2)
+
+# # plt.imshow(img, cmap='gray')
+# plt.axis('off')
+# plt.show()
+
+# exit()
+
+
+def get_shape_props(group):
+
+    group_num_dict = {'atl': 26, 'climp': 31, 'control': 31, 'rtn': 29}
+
+    df = pd.DataFrame()
+
+    for num in range(1, group_num_dict[group] + 1):
+        skel = imageio.imread(f'/localhome/asa420/MIAL/data/confocal-data/vess_enh_unet/{group}/gt_skel/{group}{num}_proc_skel.png')
+
+        invskel = np.invert(skel)
+
+        edt = ndimage.distance_transform_edt(invskel)
+
+        cc = skimage.morphology.label(edt, connectivity=2)
+
+        props = skimage.measure.regionprops_table(cc, properties=('area', 'area_convex', 'area_filled', 'axis_major_length', 'axis_minor_length', 'eccentricity', 'equivalent_diameter_area', 'feret_diameter_max', 'inertia_tensor', 'inertia_tensor_eigvals', 'orientation', 'perimeter'))
+
+        new_df = pd.DataFrame.from_dict(props)
+
+        # remove small objects
+        new_df = new_df[(new_df['area'] > 3) & (new_df['area'] < 500)]
+
+        df = pd.concat([df, new_df], ignore_index=True)
+
+    # print(df)
+        
+    # df.to_csv(f'{group}_skel_props.csv', index=False)
+    return df
+
+
+# atl = get_shape_props('atl')
+# climp = get_shape_props('climp')
+# control = get_shape_props('control')
+# rtn = get_shape_props('rtn')
+
+# ndf = pd.concat([atl, climp, control, rtn], ignore_index=True)
+
+# ndf.to_csv('all_skel_props.csv', index=False)
+
+# data = pd.read_csv('skel_props_v2.csv')
+
+# # remove the rows where area_convex is > 300
+# data = data[data['area_convex'] < 300]
+
+# data = data[data['area'] > 5]
+
+# data.to_csv('skel_props_v2.csv', index=False)
+
+df = pd.read_csv('skel_props_v3.csv')
+
+df = df.drop(['id'], axis=1)
+
+X = df.drop('target', axis=1)
+y = df['target']
+
+import pandas as pd
+import numpy as np
+from sklearn.feature_selection import SelectKBest, f_classif
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report
+
+from xgboost import XGBClassifier
+import time
+
+k_best_features = SelectKBest(score_func=f_classif, k=16)
+X_selected = k_best_features.fit_transform(X, y)
+selected_features = X.columns[k_best_features.get_support(indices=True)]
+# print("Selected features:", selected_features)
+
+# X_train, X_test, y_train, y_test = train_test_split(X_selected, y, test_size=0.3, random_state=42)
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Train Random Forest classifier
+# clf = RandomForestClassifier(random_state=42)
+# clf.fit(X_train, y_train)
+
+xgb = XGBClassifier(n_estimators=200, max_depth=3, learning_rate=0.1, random_state=42)
+training_start = time.perf_counter()
+xgb.fit(X_train, y_train)
+training_end = time.perf_counter()
+prediction_start = time.perf_counter()
+preds = xgb.predict(X_test)
+prediction_end = time.perf_counter()
+acc_xgb = (preds == y_test).sum().astype(float) / len(preds)*100
+xgb_train_time = training_end-training_start
+xgb_prediction_time = prediction_end-prediction_start
+print("XGBoost's prediction accuracy is: %3.2f" % (acc_xgb))
+print("Time consumed for training: %4.3f" % (xgb_train_time))
+print("Time consumed for prediction: %6.5f seconds" % (xgb_prediction_time))
+
+
+# Evaluate classifier
+# y_pred = clf.predict(X_test)
+# print("Classification Report:")
+# print(classification_report(y_test, y_pred))
+
+# Step 6: Interpretation and Validation
+# Analyze feature importance provided by the classifier
+# feature_importance = pd.Series(clf.feature_importances_, index=selected_features)
+# print("Feature Importance:")
+# print(feature_importance)
+
+
+
+
+exit()
 
 def calculate_angle(point, reference_point):
     x, y = point[0] - reference_point[0], point[1] - reference_point[1]
