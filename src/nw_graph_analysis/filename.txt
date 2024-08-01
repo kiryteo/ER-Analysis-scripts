@@ -1,9 +1,0 @@
-R3_RTN v.s. R3_Control: P_val=3.597e-170 U_stat=1.095e+08
-R2_RTN v.s. R2_Control: P_val=9.346e-10 U_stat=7.708e+07
-R3_ATL v.s. R3_Climp: P_val=1.069e-103 U_stat=5.621e+07
-R1_RTN v.s. R1_Control: P_val=3.027e-236 U_stat=6.005e+07
-R1_ATL v.s. R1_Climp: P_val=1.286e-118 U_stat=1.019e+08
-R1_Climp v.s. R1_RTN: P_val=4.904e-86 U_stat=5.409e+07
-R2_ATL v.s. R2_Climp: P_val=1.090e-110 U_stat=5.981e+07
-R2_Climp v.s. R2_RTN: P_val=8.106e-27 U_stat=6.835e+07
-R3_Climp v.s. R3_RTN: P_val=4.131e-24 U_stat=5.392e+07
